@@ -8,11 +8,14 @@ const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 type Phase =
   | 'intro'
+  | 'partida_instr'
   | 'partida_wait'
   | 'partida_go'
   | 'trans_alvo'
+  | 'alvo_instr'
   | 'alvo_go'
   | 'trans_seq'
+  | 'seq_instr'
   | 'seq_wait'
   | 'seq_go'
   | 'result';
@@ -75,18 +78,13 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
     if (phase === 'trans_alvo') {
       phaseTimer.current = setTimeout(() => {
-        const target = Math.floor(Math.random() * 4);
-        const order = shuffle([0, 1, 2, 3]);
-        setAlvoTarget(target);
-        setAlvoOrder(order);
-        signalTime.current = Date.now();
-        setPhase('alvo_go');
+        setPhase('alvo_instr');
       }, 1600);
     }
 
     if (phase === 'trans_seq') {
       phaseTimer.current = setTimeout(() => {
-        setPhase('seq_wait');
+        setPhase('seq_instr');
       }, 1600);
     }
 
@@ -173,7 +171,55 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
           </View>
         </View>
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.btnPrimary} onPress={() => setPhase('partida_wait')} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.btnPrimary} onPress={() => setPhase('partida_instr')} activeOpacity={0.8}>
+            <Text style={styles.btnPrimaryText}>COMEÇAR</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // ── INSTRUCTION SCREENS ──────────────────────────────────────────────────────
+  const INSTR_DATA = {
+    partida_instr: {
+      icon: '🏎',
+      name: 'PARTIDA',
+      desc: 'Aperte o mais rápido possível assim que o círculo verde aparecer. Sem pressa, espera aparecer, pois será penalizado em caso de queimar a largada.',
+      onStart: () => setPhase('partida_wait'),
+    },
+    alvo_instr: {
+      icon: '🎯',
+      name: 'ALVO',
+      desc: 'Toque no círculo com a cor indicada no topo em cada rodada quando ele aparecer. Ignore as outras cores.',
+      onStart: () => {
+        const target = Math.floor(Math.random() * 4);
+        const order = shuffle([0, 1, 2, 3]);
+        setAlvoTarget(target);
+        setAlvoOrder(order);
+        signalTime.current = Date.now();
+        setPhase('alvo_go');
+      },
+    },
+    seq_instr: {
+      icon: '🧠',
+      name: 'SEQUÊNCIA',
+      desc: 'Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho).',
+      onStart: () => setPhase('seq_wait'),
+    },
+  } as const;
+
+  if (phase === 'partida_instr' || phase === 'alvo_instr' || phase === 'seq_instr') {
+    const instr = INSTR_DATA[phase];
+    return (
+      <View style={styles.root}>
+        {renderHeader(5)}
+        <View style={styles.instrBody}>
+          <Text style={styles.instrIcon}>{instr.icon}</Text>
+          <Text style={styles.instrName}>{instr.name}</Text>
+          <Text style={styles.instrDesc}>{instr.desc}</Text>
+        </View>
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.btnPrimary} onPress={instr.onStart} activeOpacity={0.8}>
             <Text style={styles.btnPrimaryText}>COMEÇAR</Text>
           </TouchableOpacity>
         </View>
@@ -321,6 +367,11 @@ const styles = StyleSheet.create({
   modeIconBox: { alignItems: 'center', gap: 8 },
   modeIconEmoji: { fontSize: 36 },
   modeIconLabel: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 1 },
+
+  instrBody: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 16 },
+  instrIcon: { fontSize: 72 },
+  instrName: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: 1.5 },
+  instrDesc: { fontSize: 15, color: '#7a8aa0', textAlign: 'center', lineHeight: 24 },
 
   miniGameArea: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
   miniModeLabel: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5 },
