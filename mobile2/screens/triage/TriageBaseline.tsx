@@ -392,9 +392,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       <View style={styles.root}>
         {renderHeader(5)}
         <Pressable style={styles.tapArea} onPressIn={handleSeqTap}>
-          <Text style={styles.miniModeLabel}>MODO SEQUÊNCIA</Text>
-          <Text style={styles.goText}>GO</Text>
-          <Text style={styles.tapHint}>TOQUE AGORA!</Text>
+          <View style={styles.greenCircle} />
         </Pressable>
       </View>
     );

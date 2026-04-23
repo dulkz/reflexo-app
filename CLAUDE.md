@@ -259,3 +259,36 @@ A condição é **estruturalmente irrepetível** sem flag persistida: na próxim
 - **Prop `userProfile: UserProfile` obrigatória em todas as 4 telas principais** — Home, Historico, Ciencia, Perfil recebem `userProfile` do App.tsx. Qualquer nova tela principal deve seguir o mesmo padrão.
 - **`editMode` em `TriageModal` não chama `advanceTo`** — em modo edição, o progresso parcial não é salvo no AsyncStorage para não corromper o estado de triagem concluída.
 - **JourneyMap embeddável (não fullscreen)**: o componente é uma `View` pura, sem `ScrollView` próprio. Sempre embuti dentro de um scroll externo. `TriageJourneyMap` é o único que adiciona chrome de página ao redor.
+
+---
+
+### Sessão — Grupo 1: 4 correções pontuais de bugs (2026-04-23)
+
+#### (a) Arquivos modificados
+- `mobile2/screens/Perfil.tsx`
+- `mobile2/screens/triage/TriageBaseline.tsx`
+- `mobile2/screens/ModoAlvo.tsx`
+- `mobile2/screens/ModoSequencia.tsx`
+
+#### (b) Causa raiz + (c) correção aplicada
+
+**Bug 1 — Card "SEU PRÓXIMO ALVO" duplicado no Perfil (`Perfil.tsx`)**
+`JourneyMap` já renderiza internamente um card "SEU PRÓXIMO ALVO" como rodapé (footer card em `JourneyMap.tsx`). `Perfil.tsx` renderizava um segundo card idêntico (`journeyNextCard`) manualmente logo abaixo do `<JourneyMap compact />`. Resultado: dois cards em sequência na seção "MINHA JORNADA".
+Correção: removido o card manual em `Perfil.tsx`, o `useMemo` `deltaToNext` que o alimentava (único consumidor), e o import de `calculateDeltaToNextMilestone` que ficou orfão.
+
+**Bug 2 — Segunda tela "GO / TOQUE AGORA!" na triagem do Modo Sequência (`TriageBaseline.tsx`)**
+A fase `seq_go` renderizava `<Text>GO</Text>` + `<Text>TOQUE AGORA!</Text>` como estímulo do mini-teste. O countdown já exibe "GO" (verde) ao final — o usuário via a palavra "GO" duas vezes em sequência (countdown → jitter → seq_go), causando confusão sobre quando devia reagir.
+Correção: fase `seq_go` agora exibe `<View style={styles.greenCircle} />` (estilo já existente, reutilizado), consistente com a linguagem visual de círculo colorido usada em `partida_go` e no `ModoSequencia` real. Nenhum texto após a contagem regressiva.
+
+**Bug 3a — Sem pausa antes da primeira rodada no Modo Alvo (`ModoAlvo.tsx`)**
+O botão "INICIAR" chamava `startRound()` diretamente, que apenas aguardava o `READY_DELAY` fixo de 700 ms antes de exibir os círculos. Esse delay é curto e constante, portanto não há jitter real: o usuário pode antecipar o estímulo.
+Correção: adicionado estado `'initial_wait'`, constantes `INITIAL_WAIT_MIN = 1000` / `INITIAL_WAIT_MAX = 3000` ms (range compatível com os outros modos: Partida 1000–4000, Sequência 1000–2200), ref `initialWaitTimer` com cleanup. O botão "INICIAR" chama `startInitialWait()`, que seta o estado `'initial_wait'` e aguarda delay aleatório antes de chamar `startRound()`.
+
+**Bug 3b — Cor do round anterior visível durante intervalo entre rounds (`ModoAlvo.tsx`)**
+O hint de cor condicionava em `gameState === 'ready' || gameState === 'challenge'`. Porém durante `'ready'`, `startChallenge()` ainda não foi chamada (executa após `READY_DELAY = 700 ms`), então `targetIdx` ainda é o valor do round anterior. O usuário via a cor que veio antes da hora.
+Correção: hint de cor (`hintBadge`) agora exibe apenas durante `gameState === 'challenge'`. Durante `'initial_wait'` e `'ready'` exibe um indicador de espera (`👁️ aguarde o estímulo`) no mesmo slot visual, sinalizando que o próximo estímulo ainda não foi revelado.
+
+**Bug 4 — No-Go previsível no Modo Sequência (`ModoSequencia.tsx`)**
+`buildSequence()` criava um array de 16 Go + 4 NoGo e embaralhava. A proporção era sempre exatamente 80/20: após ver 16 Go e 0 NoGo, o usuário sabia que os restantes seriam NoGo. Isso transforma controle inibitório reflexo em tarefa de contagem.
+Correção: `buildSequence()` reescrita com probabilidade independente por evento — primeiro sinal sempre Go (âncora de feedback imediato), cada sinal seguinte com `Math.random() < 0.25` de ser NoGo sem memória dos sinais anteriores. Constante `GO_COUNT` removida. Texto da tela de instrução atualizado de "20%" para "~25%".
+`TriageBaseline.tsx` (mini-teste de Sequência): sinal único, sempre Go, para garantir medição de RT. O fix #2 já torna o estímulo visual consistente (círculo verde). Nenhuma mudança de probabilidade necessária no mini-teste.

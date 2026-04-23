@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 
 const TOTAL_SIGNALS = 20;
-const GO_COUNT = 16;
 const MIN_INTERVAL = 1000;
 const MAX_INTERVAL = 2200;
 const SIGNAL_DURATION = 1400;
@@ -40,16 +39,14 @@ interface Props {
 }
 
 function buildSequence(): SignalType[] {
+  // First signal is always Go to give the user an immediate feedback anchor.
+  // Each subsequent signal has 25% independent probability of being No-Go —
+  // no fixed total, so the user cannot count signals to predict upcoming No-Go.
   const seq: SignalType[] = ['go'];
-  const remaining: SignalType[] = [
-    ...Array(GO_COUNT - 1).fill('go'),
-    ...Array(TOTAL_SIGNALS - GO_COUNT).fill('nogo'),
-  ];
-  for (let i = remaining.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+  for (let i = 1; i < TOTAL_SIGNALS; i++) {
+    seq.push(Math.random() < 0.25 ? 'nogo' : 'go');
   }
-  return [...seq, ...remaining];
+  return seq;
 }
 
 export default function ModoSequencia({ onComplete, onBack }: Props) {
@@ -196,7 +193,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
           <View style={styles.instrBox}>
             <Text style={styles.instrLine}>① <Text style={{ color: '#10b981', fontWeight: '700' }}>CÍRCULO VERDE</Text> → toque imediatamente (Go)</Text>
             <Text style={styles.instrLine}>② <Text style={{ color: '#ef4444', fontWeight: '700' }}>CÍRCULO VERMELHO</Text> → não toque! (NoGo)</Text>
-            <Text style={[styles.instrLine, { color: '#f59e0b' }]}>③ 20% dos sinais são NoGo — não se precipite</Text>
+            <Text style={[styles.instrLine, { color: '#f59e0b' }]}>③ ~25% dos sinais são NoGo — não se precipite</Text>
           </View>
           <View style={styles.signalDemo}>
             <View style={styles.demoItem}>

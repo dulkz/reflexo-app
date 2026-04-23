@@ -8,6 +8,8 @@ import { getLevelInfo } from '../utils/levels';
 const TOTAL_ROUNDS = 10;
 const ERROR_PENALTY = 150;
 const READY_DELAY = 700;
+const INITIAL_WAIT_MIN = 1000;
+const INITIAL_WAIT_MAX = 3000;
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -18,7 +20,7 @@ const CIRCLE_COLORS = [
   { key: 'ROXO',    color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)'  },
 ];
 
-type AlvoState = 'intro' | 'ready' | 'challenge' | 'correct' | 'wrong' | 'done';
+type AlvoState = 'intro' | 'initial_wait' | 'ready' | 'challenge' | 'correct' | 'wrong' | 'done';
 
 interface RoundResult { rt: number; correct: boolean; penalizedRt: number; targetIdx: number }
 
@@ -48,6 +50,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
   const responded = useRef(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const readyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialWaitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
@@ -55,6 +58,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
   useEffect(() => () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     if (readyTimer.current) clearTimeout(readyTimer.current);
+    if (initialWaitTimer.current) clearTimeout(initialWaitTimer.current);
   }, []);
 
   // Timer starts after 'challenge' render commit — circles are on screen before counting begins.
@@ -83,6 +87,12 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
     setGameState('ready');
     readyTimer.current = setTimeout(startChallenge, READY_DELAY);
   }, [startChallenge]);
+
+  const startInitialWait = useCallback(() => {
+    setGameState('initial_wait');
+    const delay = INITIAL_WAIT_MIN + Math.random() * (INITIAL_WAIT_MAX - INITIAL_WAIT_MIN);
+    initialWaitTimer.current = setTimeout(startRound, delay);
+  }, [startRound]);
 
   const handleCirclePress = useCallback((pressedColorIdx: number) => {
     if (responded.current || gameState !== 'challenge') return;
@@ -152,7 +162,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
               </View>
             ))}
           </View>
-          <TouchableOpacity style={styles.startBtn} onPress={startRound} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
             <Text style={styles.startBtnText}>INICIAR</Text>
           </TouchableOpacity>
         </View>
@@ -176,8 +186,16 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
 
       {renderDots()}
 
-      {/* Target hint */}
-      {(gameState === 'ready' || gameState === 'challenge') && (
+      {/* Waiting indicator — shown before first round and between rounds; hides the next target color */}
+      {(gameState === 'initial_wait' || gameState === 'ready') && (
+        <View style={styles.hintArea}>
+          <Text style={styles.waitingIcon}>👁️</Text>
+          <Text style={styles.waitingHint}>aguarde o estímulo</Text>
+        </View>
+      )}
+
+      {/* Target hint — only shown once circles are on screen */}
+      {gameState === 'challenge' && (
         <View style={styles.hintArea}>
           <Text style={styles.hintLabel}>TOQUE NO CÍRCULO</Text>
           <View style={[styles.hintBadge, { backgroundColor: targetColor.bg, borderColor: targetColor.color + '66' }]}>
@@ -206,8 +224,8 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
         </View>
       )}
 
-      {/* Ready overlay */}
-      {gameState === 'ready' && (
+      {/* Waiting dots overlay — initial_wait and ready share the same visual */}
+      {(gameState === 'initial_wait' || gameState === 'ready') && (
         <View style={styles.centeredFull}>
           <Text style={styles.waitingDots}>· · ·</Text>
         </View>
@@ -279,6 +297,8 @@ const styles = StyleSheet.create({
 
   centeredFull: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   waitingDots: { fontSize: 32, color: '#1a2540', letterSpacing: 12 },
+  waitingIcon: { fontSize: 26, marginBottom: 6 },
+  waitingHint: { fontSize: 10, fontWeight: '700', color: '#2d3a55', letterSpacing: 1.5 },
 
   gridContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
   grid: { width: 280, height: 280, flexDirection: 'row', flexWrap: 'wrap', gap: 16 },

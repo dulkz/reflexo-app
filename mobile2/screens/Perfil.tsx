@@ -13,7 +13,6 @@ import {
   getAmbition,
   getNextMilestone,
   getMilestonesState,
-  calculateDeltaToNextMilestone,
 } from '../utils/ambition';
 import { GROUP_COLOR } from '../config/ambitions';
 import JourneyMap from '../components/JourneyMap';
@@ -235,13 +234,6 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
     [ambition, baselineMs, currentBestMs],
   );
 
-  const deltaToNext = useMemo(
-    () => ambition
-      ? calculateDeltaToNextMilestone(currentBestMs, ambition.id, baselineMs)
-      : null,
-    [ambition, currentBestMs, baselineMs],
-  );
-
   const isBrainHealth = ambition?.group === 'brain_health';
   const ambitionGroupColor = ambition ? GROUP_COLOR[ambition.group] : '#3b82f6';
 
@@ -335,19 +327,6 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
               </View>
             )}
 
-            {/* Next-target footer card */}
-            {!isBrainHealth && nextMilestone && deltaToNext !== null && deltaToNext > 0 && (
-              <View style={[styles.journeyNextCard, { borderColor: ambitionGroupColor + '33' }]}>
-                <Text style={styles.journeyNextKicker}>SEU PRÓXIMO ALVO</Text>
-                <Text style={styles.journeyNextLabel}>
-                  {nextMilestone.label}
-                  {'  '}
-                  <Text style={[styles.journeyNextDelta, { color: ambitionGroupColor }]}>
-                    faltam {deltaToNext} ms
-                  </Text>
-                </Text>
-              </View>
-            )}
           </View>
         ) : null}
 
