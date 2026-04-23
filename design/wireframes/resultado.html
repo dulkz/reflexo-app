@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reflexo · Resultado</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ========== Resultado screen (adaptativo) ========== */
+
+  .result-header {
+    padding: 12px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .result-header .close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .result-header .mode-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+  .result-header .mode-label strong { color: var(--text); }
+
+  /* Hero do resultado */
+  .result-hero {
+    padding: 24px 24px 12px;
+    text-align: center;
+    position: relative;
+  }
+  .result-hero .eyebrow {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .result-hero .num-hero {
+    font-size: 108px;
+    font-weight: 200;
+    letter-spacing: -5px;
+    font-variant-numeric: tabular-nums;
+    line-height: 0.85;
+    margin-bottom: 4px;
+    transition: color 0.4s;
+  }
+  .result-hero .num-hero .unit {
+    font-size: 28px;
+    color: var(--text-muted);
+    margin-left: 4px;
+    font-weight: 300;
+    letter-spacing: 0;
+  }
+  .result-hero .level-pill {
+    margin-top: 6px;
+    padding: 8px 18px;
+    font-size: 15px;
+  }
+
+  /* Escala */
+  .scale {
+    margin: 20px 24px 0;
+    padding: 16px 18px 14px;
+    background: var(--bg-card);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+  }
+  .scale-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .scale-bar {
+    position: relative;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(to right,
+      var(--level-elite-extremo) 0%,
+      var(--level-elite) 17%,
+      var(--level-muito-bom) 35%,
+      var(--level-bom) 52%,
+      var(--level-abaixo-media) 75%,
+      var(--level-devagar) 100%);
+    margin-bottom: 10px;
+  }
+  .scale-bar .marker {
+    position: absolute;
+    top: 50%;
+    width: 3px;
+    height: 28px;
+    background: #fff;
+    border-radius: 2px;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15), 0 2px 8px rgba(0, 0, 0, 0.4);
+    transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .scale-bar .marker::after {
+    content: 'VOCÊ';
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .scale-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  /* Benchmark */
+  .benchmark-card {
+    margin: 14px 24px 0;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(59, 130, 246, 0.03));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .benchmark-card .icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .benchmark-card .text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .benchmark-card .text strong {
+    font-variant-numeric: tabular-nums;
+  }
+  .benchmark-card .text .small {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: block;
+    margin-top: 2px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Compare cards */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 24px;
+    margin-top: 14px;
+  }
+  .compare-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .compare-card .label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .compare-card .value {
+    font-size: 24px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .compare-card .sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .compare-card.positive .value { color: var(--level-elite); }
+  .compare-card.negative .value { color: var(--level-abaixo-media); }
+  .compare-card.warning  .value { color: var(--level-devagar); }
+
+  /* Fatigue callout (Sequência) */
+  .fatigue-callout {
+    margin: 14px 24px 0;
+    padding: 14px 16px;
+    border-radius: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    border: 1px solid var(--border);
+  }
+  .fatigue-callout .icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .fatigue-callout .text {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--text);
+  }
+  .fatigue-callout .text strong { font-weight: 700; }
+  .fatigue-callout.warn {
+    background: rgba(245, 158, 11, 0.05);
+    border-color: rgba(245, 158, 11, 0.2);
+  }
+  .fatigue-callout.warn .icon { background: rgba(245, 158, 11, 0.15); color: var(--level-abaixo-media); }
+  .fatigue-callout.ok {
+    background: rgba(16, 185, 129, 0.05);
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+  .fatigue-callout.ok .icon { background: rgba(16, 185, 129, 0.15); color: var(--level-elite); }
+
+  /* Rounds section */
+  .rounds-section {
+    padding: 22px 24px 0;
+  }
+  .rounds-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .rounds-title-row .title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .rounds-title-row .meta {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .rounds-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 5px;
+    height: 90px;
+    padding-top: 14px;
+  }
+  .round-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+  .round-bar .bar-wrap {
+    width: 100%;
+    height: 70px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .round-bar .bar {
+    width: 100%;
+    border-radius: 5px 5px 2px 2px;
+    min-height: 4px;
+    transition: height 0.6s ease-out;
+    opacity: 0.9;
+  }
+  .round-bar.discarded .bar { opacity: 0.3; }
+  .round-bar.error      .bar { background: var(--level-devagar) !important; opacity: 0.5; }
+  .round-bar .ms {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .round-bar.discarded .ms { text-decoration: line-through; opacity: 0.5; }
+  .round-bar.error .ms { color: var(--level-devagar); }
+
+  /* Sequência timeline (20 segmentos) */
+  .seq-timeline {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+  .seq-timeline-bar {
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    gap: 2px;
+    height: 32px;
+    margin-bottom: 10px;
+  }
+  .seq-seg {
+    border-radius: 3px;
+    position: relative;
+    min-height: 8px;
+  }
+  .seq-seg.hit              { background: var(--level-elite); }
+  .seq-seg.miss             { background: var(--level-devagar); opacity: 0.4; }
+  .seq-seg.commission       { background: var(--level-devagar); }
+  .seq-seg.correct-inhibit  { background: var(--level-muito-bom); opacity: 0.7; }
+  .seq-halves {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .seq-halves .half {
+    text-align: center;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .seq-halves .half .val {
+    display: block;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 2px;
+    letter-spacing: 0;
+    text-transform: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .seq-legend {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .seq-legend .lg {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .seq-legend .sw {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+  }
+
+  /* Scroll wrapper — conteúdo rolável acima das CTAs */
+  .result-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    padding-bottom: 8px;
+  }
+  .result-scroll::-webkit-scrollbar { display: none; }
+
+  /* Override: phone-screen não rola, quem rola é .result-scroll */
+  .phone-screen { overflow: hidden !important; }
+
+  /* CTAs — sempre visíveis na base */
+  .cta-section {
+    padding: 14px 20px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+    background:
+      linear-gradient(to bottom, rgba(11, 18, 32, 0) 0%, var(--bg-phone) 35%);
+    backdrop-filter: blur(6px);
+    position: relative;
+    z-index: 10;
+  }
+  .cta-section .secondary-row {
+    display: flex;
+    gap: 8px;
+  }
+  .cta-section .secondary-row .btn { flex: 1; font-size: 14px; padding: 13px 12px; }
+
+  .home-indicator {
+    width: 134px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 3px;
+    margin: 0 auto 8px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="desktop-wrapper">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="right">●●●● ⌁ ▰▰▰</span>
+        </div>
+
+        <!-- Área rolável — tudo entre header e CTAs -->
+        <div class="result-scroll">
+
+        <!-- Header -->
+        <div class="result-header">
+          <a href="home.html" class="close-btn" aria-label="Fechar">✕</a>
+          <div class="mode-label" id="modeLabel"><strong>PARTIDA</strong> · SESSÃO COMPLETA</div>
+          <div style="width: 36px;"></div>
+        </div>
+
+        <!-- Hero -->
+        <div class="result-hero">
+          <div class="eyebrow" id="heroEyebrow">Sua reação</div>
+          <div class="num-hero" id="heroNum">247<span class="unit">ms</span></div>
+          <div class="level-pill" id="heroPill">
+            <span class="dot bg-muito-bom" id="heroPillDot"></span>
+            <span class="text-muito-bom" id="heroPillLabel">Muito Bom</span>
+          </div>
+        </div>
+
+        <!-- Escala -->
+        <div class="scale">
+          <div class="scale-title">Onde você está</div>
+          <div class="scale-bar">
+            <div class="marker" id="scaleMarker" style="left: 0%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span>&lt;150</span>
+            <span>200</span>
+            <span>250</span>
+            <span>300</span>
+            <span>400</span>
+            <span>+</span>
+          </div>
+        </div>
+
+        <!-- Benchmark (adaptativo) -->
+        <div class="benchmark-card" id="benchmarkCard">
+          <div class="icon" id="bmIcon">🏎️</div>
+          <div class="text" id="bmText"></div>
+        </div>
+
+        <!-- Fatigue callout (só Sequência) -->
+        <div class="fatigue-callout" id="fatigueCallout" style="display:none;">
+          <div class="icon" id="fatigueIcon"></div>
+          <div class="text" id="fatigueText"></div>
+        </div>
+
+        <!-- Compare cards (adaptativo) -->
+        <div class="compare-grid" id="compareGrid"></div>
+
+        <!-- Rounds / Timeline (adaptativo) -->
+        <div class="rounds-section" id="roundsSection">
+          <div class="rounds-title-row">
+            <div class="title" id="roundsTitle">As 7 rodadas</div>
+            <div class="meta" id="roundsMeta">As 2 piores descartadas</div>
+          </div>
+          <div id="roundsContent">
+            <div class="rounds-bars" id="roundsBars"></div>
+          </div>
+        </div>
+
+        </div><!-- /.result-scroll -->
+
+        <!-- CTAs -->
+        <div class="cta-section">
+          <a href="#" class="btn btn-primary btn-full" id="playAgain">Jogar novamente</a>
+          <div class="secondary-row">
+            <a href="#" class="btn btn-secondary" id="crossMode"></a>
+            <a href="home.html" class="btn btn-ghost">Início</a>
+          </div>
+        </div>
+
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+    <div class="screen-label" id="screenLabel">TELA 5 — RESULTADO · PARTIDA</div>
+  </div>
+</div>
+
+<script>
+  // ========================================================================
+  // RESULTADO — adaptativo por modo (partida / alvo / sequencia)
+  // ========================================================================
+  const params = new URLSearchParams(window.location.search);
+  const mode   = params.get('mode') || 'partida';
+
+  // ========================================================================
+  // Parsing compartilhado do Alvo — fonte única da verdade (times).
+  // Acurácia, erros e até o avg são DERIVADOS desta lista.
+  // Isso evita que mocks parciais mostrem acurácia 100% junto com 1 erro, etc.
+  // ========================================================================
+  const ALVO_DEFAULT_TIMES = '310,285,295,302E,270,325,288,305,298,312';
+  const ALVO_PENALTY_MS = 150;
+  let alvoRounds = null;
+  let alvoAccuracy = 0, alvoErrors = 0, alvoTotal = 10, alvoDerivedAvg = null, alvoDerivedBest = null;
+  if (mode === 'alvo') {
+    const timesStr = params.get('times') || ALVO_DEFAULT_TIMES;
+    alvoRounds = timesStr.split(',').map(t => ({
+      ms: parseInt(t.replace('E', '')),
+      error: t.endsWith('E')
+    })).filter(r => !isNaN(r.ms));
+    alvoErrors = alvoRounds.filter(r => r.error).length;
+    alvoTotal = alvoRounds.length;
+    alvoAccuracy = Math.round(((alvoTotal - alvoErrors) / alvoTotal) * 100);
+    const withPenalty = alvoRounds.map(r => r.error ? r.ms + ALVO_PENALTY_MS : r.ms);
+    alvoDerivedAvg = Math.round(withPenalty.reduce((s, v) => s + v, 0) / withPenalty.length);
+    alvoDerivedBest = Math.min(...alvoRounds.filter(r => !r.error).map(r => r.ms));
+    if (!isFinite(alvoDerivedBest)) alvoDerivedBest = Math.min(...alvoRounds.map(r => r.ms));
+  }
+
+  const numOr = (v, d) => Number.isFinite(v) ? v : d;
+  const avg    = alvoDerivedAvg  !== null ? alvoDerivedAvg  : numOr(parseInt(params.get('avg')),  247);
+  const best   = alvoDerivedBest !== null ? alvoDerivedBest : numOr(parseInt(params.get('best')), 235);
+  const pb     = numOr(parseInt(params.get('pb')),   mode === 'alvo' ? 285 : 235);
+  const yday   = numOr(parseInt(params.get('yday')), 259);
+
+  // ========================================================================
+  // Faixas & cores
+  // ========================================================================
+  function getLevel(ms) {
+    if (ms < 150) return { key: 'elite-extremo', label: 'Elite Extremo' };
+    if (ms < 200) return { key: 'elite',         label: 'Elite' };
+    if (ms < 250) return { key: 'muito-bom',     label: 'Muito Bom' };
+    if (ms < 300) return { key: 'bom',           label: 'Bom' };
+    if (ms < 400) return { key: 'abaixo-media',  label: 'Abaixo da Média' };
+    return          { key: 'devagar',            label: 'Devagar' };
+  }
+  function getLevelColor(key) {
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue('--level-' + key).trim();
+  }
+  function msToScalePercent(ms) {
+    const anchors = [
+      { ms: 100, pct: 0 }, { ms: 150, pct: 17 }, { ms: 200, pct: 35 },
+      { ms: 250, pct: 52 }, { ms: 300, pct: 65 }, { ms: 400, pct: 85 }, { ms: 500, pct: 100 }
+    ];
+    if (ms <= anchors[0].ms) return 0;
+    if (ms >= anchors[anchors.length - 1].ms) return 100;
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const a = anchors[i], b = anchors[i + 1];
+      if (ms >= a.ms && ms <= b.ms) {
+        const t = (ms - a.ms) / (b.ms - a.ms);
+        return a.pct + t * (b.pct - a.pct);
+      }
+    }
+    return 50;
+  }
+
+  // ========================================================================
+  // Hero, escala (iguais em todos os modos)
+  // ========================================================================
+  const level = getLevel(avg);
+  document.getElementById('heroNum').innerHTML = `${avg}<span class="unit">ms</span>`;
+  document.getElementById('heroNum').style.color = getLevelColor(level.key);
+  document.getElementById('heroPillDot').className = 'dot bg-' + level.key;
+  document.getElementById('heroPillLabel').className = 'text-' + level.key;
+  document.getElementById('heroPillLabel').textContent = level.label;
+
+  const marker = document.getElementById('scaleMarker');
+  requestAnimationFrame(() => {
+    setTimeout(() => { marker.style.left = msToScalePercent(avg) + '%'; }, 200);
+  });
+
+  // ========================================================================
+  // Labels do modo
+  // ========================================================================
+  const MODE_INFO = {
+    partida:   { label: 'PARTIDA',   eyebrow: 'Sua reação',      nextMode: 'alvo',      nextLabel: '🎯 Modo Alvo' },
+    alvo:      { label: 'ALVO',      eyebrow: 'Sua resposta',    nextMode: 'sequencia', nextLabel: '📶 Modo Sequência' },
+    sequencia: { label: 'SEQUÊNCIA', eyebrow: 'RT médio',        nextMode: 'partida',   nextLabel: '🏁 Modo Partida' }
+  };
+  const info = MODE_INFO[mode];
+  document.getElementById('modeLabel').innerHTML = `<strong>${info.label}</strong> · SESSÃO COMPLETA`;
+  document.getElementById('heroEyebrow').textContent = info.eyebrow;
+  document.getElementById('playAgain').href = mode + '.html';
+  document.getElementById('crossMode').textContent = info.nextLabel;
+  document.getElementById('crossMode').href = info.nextMode + '.html';
+  document.getElementById('screenLabel').textContent = 'TELA 5 — RESULTADO · ' + info.label;
+
+  // ========================================================================
+  // Benchmark por modo
+  // ========================================================================
+  const F1_ELITE = 200;
+  const BENCHMARKS = {
+    partida: () => {
+      const delta = Math.max(0, avg - F1_ELITE);
+      if (delta === 0) {
+        return {
+          icon: '🏆',
+          html: 'Você atingiu o nível de <strong>piloto de F1 de ponta</strong>.' +
+                '<span class="small">Abaixo de 200 ms = Elite. Fonte: Vienna Reaction Apparatus (PMC/Br J Sports Med)</span>'
+        };
+      }
+      return {
+        icon: '🏎️',
+        html: `Você está a <strong>${delta} ms</strong> do nível de <strong>piloto de F1 de ponta</strong>.` +
+              '<span class="small">F1 de ponta: &lt;200 ms. Fonte: Vienna Reaction Apparatus / reactionf1.com</span>'
+      };
+    },
+    alvo: () => {
+      // Boxeador de elite: ~240ms com >95% acurácia (Loturco 2015)
+      return {
+        icon: '🥊',
+        html: `Boxeadores de elite executam em <strong>~240 ms</strong> com <strong>&gt;95%</strong> de acurácia.` +
+              '<span class="small">Fonte: Loturco et al. 2015 — Seleção Brasileira de Boxe</span>'
+      };
+    },
+    sequencia: () => {
+      return {
+        icon: '🧠',
+        html: 'Consistência em sequência é o marcador mais próximo do treino do <strong>estudo ACTIVE (NIH, 2026)</strong>.' +
+              '<span class="small">25% menos diagnósticos de demência em 20 anos · Coe et al., Alzheimer\'s & Dementia</span>'
+      };
+    }
+  };
+  const bm = BENCHMARKS[mode]();
+  document.getElementById('bmIcon').textContent = bm.icon;
+  document.getElementById('bmText').innerHTML = bm.html;
+
+  // ========================================================================
+  // Compare cards por modo
+  // ========================================================================
+  const compareGrid = document.getElementById('compareGrid');
+
+  function renderCompareCard(label, value, sub, kind) {
+    const cls = kind ? ('compare-card ' + kind) : 'compare-card';
+    return `
+      <div class="${cls}">
+        <div class="label">${label}</div>
+        <div class="value">${value}</div>
+        <div class="sub">${sub}</div>
+      </div>
+    `;
+  }
+
+  if (mode === 'partida') {
+    const diffYday = avg - yday;
+    let ydayV, ydayS, ydayKind;
+    if (diffYday < 0) {
+      ydayV = '−' + Math.abs(diffYday) + ' ms';
+      ydayS = 'Melhorou';
+      ydayKind = 'positive';
+    } else if (diffYday > 0) {
+      ydayV = '+' + diffYday + ' ms';
+      ydayS = 'Piorou';
+      ydayKind = 'negative';
+    } else {
+      ydayV = '—';
+      ydayS = 'Igual a ontem';
+      ydayKind = '';
+    }
+
+    const newPB = avg <= pb;
+    const pbV = newPB ? (avg + ' ms') : (pb + ' ms');
+    const pbS = newPB ? '🏆 Nova melhor!' : ('+' + (avg - pb) + ' ms da sua melhor');
+    const pbKind = newPB ? 'positive' : '';
+
+    compareGrid.innerHTML =
+      renderCompareCard('vs ontem', ydayV, ydayS, ydayKind) +
+      renderCompareCard('Sua melhor', pbV, pbS, pbKind);
+  }
+
+  else if (mode === 'alvo') {
+    // Valores derivados de alvoRounds (fonte única da verdade)
+    const accuracy = alvoAccuracy;
+    const errors   = alvoErrors;
+    const total    = alvoTotal;
+    const accKind  = accuracy >= 95 ? 'positive' : (accuracy >= 80 ? '' : 'warning');
+    const errKind  = errors === 0 ? 'positive' : (errors <= 2 ? '' : 'warning');
+
+    compareGrid.innerHTML =
+      renderCompareCard('Acurácia', accuracy + '%', (accuracy >= 95 ? 'Nível elite' : 'Meta: &gt;95%'), accKind) +
+      renderCompareCard('Erros', `${errors} <span style="font-size:14px;color:var(--text-dim);">/ ${total}</span>`, errors === 0 ? 'Sem penalidades' : `+${errors * 150} ms de penalidade`, errKind);
+  }
+
+  else if (mode === 'sequencia') {
+    const accuracy = parseInt(params.get('accuracy')) || 90;
+    const fatigue  = parseInt(params.get('fatigue'))  || 0;
+    const accKind = accuracy >= 90 ? 'positive' : (accuracy >= 70 ? '' : 'warning');
+    let fatKind = '', fatSub = 'Sem fadiga detectada';
+    if (fatigue > 15)       { fatKind = 'warning'; fatSub = 'Queda significativa'; }
+    else if (fatigue > 5)   { fatKind = 'negative'; fatSub = 'Leve desaceleração'; }
+    else if (fatigue < -5)  { fatKind = 'positive'; fatSub = 'Ficou mais rápido'; }
+
+    const fatValue = (fatigue > 0 ? '+' : '') + fatigue + '%';
+
+    compareGrid.innerHTML =
+      renderCompareCard('Índice de fadiga', fatValue, fatSub, fatKind) +
+      renderCompareCard('Acurácia', accuracy + '%', `${params.get('errors') || 0} erros em 20`, accKind);
+  }
+
+  // ========================================================================
+  // Fatigue callout (só Sequência)
+  // ========================================================================
+  if (mode === 'sequencia') {
+    const fatigue = parseInt(params.get('fatigue')) || 0;
+    const avgFirst = parseInt(params.get('avgFirst')) || avg;
+    const avgLast  = parseInt(params.get('avgLast')) || avg;
+    const callout = document.getElementById('fatigueCallout');
+    const iconEl  = document.getElementById('fatigueIcon');
+    const textEl  = document.getElementById('fatigueText');
+
+    if (fatigue > 15) {
+      callout.className = 'fatigue-callout warn';
+      iconEl.textContent = '⚠';
+      textEl.innerHTML = `Queda de <strong>${fatigue}%</strong> do início para o fim da série (${avgFirst} → ${avgLast} ms). Sinal de <strong>fadiga cognitiva</strong> — tente novamente descansado.`;
+      callout.style.display = 'flex';
+    } else if (fatigue <= 5 && fatigue >= -5) {
+      callout.className = 'fatigue-callout ok';
+      iconEl.textContent = '✓';
+      textEl.innerHTML = `Você manteve RT consistente (${avgFirst} → ${avgLast} ms). <strong>Atenção sustentada sólida</strong> — é o que os estudos de saúde cerebral medem.`;
+      callout.style.display = 'flex';
+    } else if (fatigue < -5) {
+      callout.className = 'fatigue-callout ok';
+      iconEl.textContent = '↗';
+      textEl.innerHTML = `Você ficou <strong>${Math.abs(fatigue)}%</strong> mais rápido ao longo da série — perfil que aquece com o jogo.`;
+      callout.style.display = 'flex';
+    }
+  }
+
+  // ========================================================================
+  // Rounds / Timeline por modo
+  // ========================================================================
+  const roundsTitle = document.getElementById('roundsTitle');
+  const roundsMeta  = document.getElementById('roundsMeta');
+  const roundsBars  = document.getElementById('roundsBars');
+  const roundsContent = document.getElementById('roundsContent');
+
+  if (mode === 'partida') {
+    const timesParam = params.get('times') || '251,238,298,255,241,235,279';
+    const roundsRaw = timesParam.split(',').map(t => {
+      const fs = t.endsWith('F');
+      return { ms: parseInt(t.replace('F', '')), falseStart: fs };
+    }).filter(r => !isNaN(r.ms));
+
+    roundsTitle.textContent = 'As 7 rodadas';
+    roundsMeta.textContent  = 'As 2 piores descartadas';
+
+    const nonFS = roundsRaw.map((r, i) => ({ ...r, idx: i })).filter(r => !r.falseStart);
+    const sortedDesc = [...nonFS].sort((a, b) => b.ms - a.ms);
+    const discardedIdx = new Set(sortedDesc.slice(0, 2).map(r => r.idx));
+    roundsRaw.forEach((r, i) => { if (r.falseStart) discardedIdx.add(i); });
+
+    const maxMs = Math.max(...roundsRaw.map(r => r.ms), 400);
+    roundsRaw.forEach((r, i) => {
+      const lvl = getLevel(r.ms);
+      const pct = Math.min(100, (r.ms / maxMs) * 100);
+      const color = r.falseStart ? getLevelColor('devagar') : getLevelColor(lvl.key);
+      const classes = ['round-bar'];
+      if (discardedIdx.has(i)) classes.push('discarded');
+      if (r.falseStart) classes.push('error');
+      const bar = document.createElement('div');
+      bar.className = classes.join(' ');
+      bar.innerHTML = `
+        <div class="bar-wrap">
+          <div class="bar" style="height: 0%; background: ${color};"></div>
+        </div>
+        <div class="ms">${r.falseStart ? 'FL' : r.ms}</div>
+      `;
+      roundsBars.appendChild(bar);
+      setTimeout(() => { bar.querySelector('.bar').style.height = pct + '%'; }, 200 + i * 60);
+    });
+  }
+
+  else if (mode === 'alvo') {
+    // Reusa alvoRounds (parseado na seção de compartilhamento acima)
+    const roundsRaw = alvoRounds;
+
+    roundsTitle.textContent = `As ${roundsRaw.length} rodadas`;
+    roundsMeta.textContent  = alvoErrors === 0
+      ? 'Verde = acerto · sem erros'
+      : 'Verde = acerto · Vermelho = erro';
+
+    const maxMs = Math.max(...roundsRaw.map(r => r.ms), 400);
+    roundsRaw.forEach((r, i) => {
+      const lvl = getLevel(r.ms);
+      const pct = Math.min(100, (r.ms / maxMs) * 100);
+      const color = r.error ? getLevelColor('devagar') : getLevelColor(lvl.key);
+      const classes = ['round-bar'];
+      if (r.error) classes.push('error');
+      const bar = document.createElement('div');
+      bar.className = classes.join(' ');
+      bar.innerHTML = `
+        <div class="bar-wrap">
+          <div class="bar" style="height: 0%; background: ${color};"></div>
+        </div>
+        <div class="ms">${r.ms}</div>
+      `;
+      roundsBars.appendChild(bar);
+      setTimeout(() => { bar.querySelector('.bar').style.height = pct + '%'; }, 200 + i * 50);
+    });
+  }
+
+  else if (mode === 'sequencia') {
+    roundsTitle.textContent = 'A sequência · 20 sinais';
+    roundsMeta.textContent  = 'Primeira metade vs segunda';
+
+    const timelineParam = params.get('timeline') || '';
+    const events = timelineParam.split(',').map(e => {
+      if (e.startsWith('H')) return { type: 'hit', ms: parseInt(e.slice(1)) };
+      if (e === 'M') return { type: 'miss' };
+      if (e === 'C') return { type: 'commission' };
+      if (e === 'I') return { type: 'correct-inhibit' };
+      return { type: 'hit', ms: 300 };
+    });
+
+    const avgFirst = parseInt(params.get('avgFirst')) || avg;
+    const avgLast  = parseInt(params.get('avgLast'))  || avg;
+
+    // Substitui a seção de bars por timeline + halves
+    roundsContent.innerHTML = `
+      <div class="seq-timeline">
+        <div class="seq-timeline-bar" id="seqBar"></div>
+        <div class="seq-halves">
+          <div class="half">1ª metade<span class="val">${avgFirst} ms</span></div>
+          <div class="half">2ª metade<span class="val">${avgLast} ms</span></div>
+        </div>
+        <div class="seq-legend">
+          <span class="lg"><span class="sw" style="background:var(--level-elite)"></span>Go ok</span>
+          <span class="lg"><span class="sw" style="background:var(--level-muito-bom);opacity:0.7"></span>NoGo ok</span>
+          <span class="lg"><span class="sw" style="background:var(--level-devagar)"></span>Tocou no NoGo</span>
+          <span class="lg"><span class="sw" style="background:var(--level-devagar);opacity:0.4"></span>Perdeu Go</span>
+        </div>
+      </div>
+    `;
+    const seqBar = document.getElementById('seqBar');
+    events.forEach((e, i) => {
+      const seg = document.createElement('div');
+      seg.className = 'seq-seg ' + e.type;
+      seqBar.appendChild(seg);
+    });
+  }
+
+</script>
+</body>
+</html>

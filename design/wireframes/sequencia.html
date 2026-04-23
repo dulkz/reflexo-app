@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reflexo · Sequência</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ========== Sequência screen específico ========== */
+
+  .seq-screen { position: relative; height: 100%; }
+
+  .game-header {
+    padding: 12px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 50;
+  }
+  .game-header .close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .game-header .round-counter {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .game-header .round-counter strong { color: var(--text); }
+
+  /* Progress bar contínua (20 segmentos) */
+  .progress-bar {
+    padding: 14px 24px 0;
+  }
+  .segments {
+    display: flex;
+    gap: 3px;
+    height: 4px;
+  }
+  .segments .seg {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .segments .seg.hit       { background: var(--level-elite); }
+  .segments .seg.miss      { background: var(--level-devagar); opacity: 0.5; }
+  .segments .seg.commission{ background: var(--level-devagar); }
+  .segments .seg.correct-inhibit { background: var(--level-muito-bom); }
+  .segments .seg.active    { background: var(--text); }
+
+  /* Game zone */
+  .game-zone {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    cursor: pointer;
+  }
+
+  .state {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 24px;
+    text-align: center;
+  }
+  .state.active { display: flex; }
+
+  /* ===== Intro ===== */
+  .state-intro .icon-mark {
+    width: 80px; height: 80px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--level-abaixo-media), #b45309);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 40px rgba(245, 158, 11, 0.25);
+  }
+  .state-intro h2 { margin-bottom: 8px; }
+  .state-intro p {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 300px;
+    margin-bottom: 16px;
+  }
+  .signal-legend {
+    display: flex;
+    gap: 24px;
+    margin: 4px 0 18px;
+  }
+  .legend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .legend-item .legend-shape {
+    width: 52px; height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .legend-go {
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #4ade80, var(--signal) 50%, #0f8562 100%);
+    box-shadow: 0 0 20px rgba(34, 211, 164, 0.4);
+  }
+  .legend-nogo {
+    position: relative;
+    color: var(--level-devagar);
+  }
+  .legend-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .legend-go + .legend-label { color: var(--level-elite); }
+  .legend-nogo + .legend-label { color: var(--level-devagar); }
+  .legend-item .legend-action {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+  }
+  .rules-list {
+    text-align: left;
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    max-width: 300px;
+    width: 100%;
+    border: 1px solid var(--border);
+  }
+  .rules-list li {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 5px 0;
+    list-style: none;
+    position: relative;
+    padding-left: 22px;
+    line-height: 1.4;
+  }
+  .rules-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--level-abaixo-media);
+    font-weight: 700;
+  }
+  .rules-list li strong { color: var(--text); }
+
+  /* ===== Ready ===== */
+  .state-ready .ready-num {
+    font-size: 120px;
+    font-weight: 200;
+    color: var(--text-muted);
+    line-height: 1;
+  }
+  .state-ready .ready-label {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  /* ===== Interval (entre sinais) ===== */
+  .state-interval {
+    background: transparent;
+  }
+  .state-interval .dim-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    opacity: 0.3;
+  }
+
+  /* ===== Go signal ===== */
+  .go-circle {
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #4ade80, var(--signal) 50%, #0f8562 100%);
+    box-shadow:
+      0 0 60px rgba(34, 211, 164, 0.5),
+      0 0 120px rgba(34, 211, 164, 0.25),
+      inset 0 4px 20px rgba(255, 255, 255, 0.25);
+    animation: signalIn 0.1s ease-out;
+  }
+  @keyframes signalIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  /* ===== No-Go signal ===== */
+  .nogo-shape {
+    width: 240px; height: 240px;
+    position: relative;
+    animation: signalIn 0.1s ease-out;
+  }
+  .nogo-shape::before,
+  .nogo-shape::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 8%;
+    width: 84%;
+    height: 32px;
+    background: var(--level-devagar);
+    border-radius: 8px;
+    transform-origin: center;
+    box-shadow:
+      0 0 40px rgba(239, 68, 68, 0.5),
+      0 0 80px rgba(239, 68, 68, 0.25);
+  }
+  .nogo-shape::before { transform: translateY(-50%) rotate(45deg); }
+  .nogo-shape::after  { transform: translateY(-50%) rotate(-45deg); }
+  .nogo-hint {
+    position: absolute;
+    bottom: 80px;
+    font-size: 12px;
+    color: var(--level-devagar);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: 0.7;
+  }
+
+  /* ===== Flash feedback (brief) ===== */
+  .flash-feedback {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 50;
+  }
+  .flash-feedback.show {
+    opacity: 1;
+    transform: translate(-50%, -60%);
+  }
+  .flash-feedback.hit { background: rgba(16, 185, 129, 0.15); color: var(--level-elite); border: 1px solid rgba(16, 185, 129, 0.3); }
+  .flash-feedback.err { background: rgba(239, 68, 68, 0.15); color: var(--level-devagar); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+  .home-indicator {
+    width: 134px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 3px;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+<div class="desktop-wrapper">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen seq-screen">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="right">●●●● ⌁ ▰▰▰</span>
+        </div>
+
+        <!-- Header -->
+        <div class="game-header">
+          <a href="home.html" class="close-btn" aria-label="Sair">✕</a>
+          <div class="round-counter" id="roundCounter">
+            <span class="label-eyebrow">SEQUÊNCIA</span>
+          </div>
+          <div style="width: 36px;"></div>
+        </div>
+
+        <!-- Progress bar segmentada (20) -->
+        <div class="progress-bar" id="progressBar" style="visibility: hidden;">
+          <div class="segments" id="segments">
+            <!-- preenchido dinamicamente: 20 segmentos -->
+          </div>
+        </div>
+
+        <!-- Game zone -->
+        <div class="game-zone" id="gameZone">
+
+          <!-- Flash feedback -->
+          <div class="flash-feedback" id="flashFeedback"></div>
+
+          <!-- Intro -->
+          <div class="state state-intro active" id="state-intro">
+            <div class="icon-mark">📶</div>
+            <h2>Sequência</h2>
+            <p>20 sinais em série, sem pausa. Toque nos verdes. Ignore os vermelhos.</p>
+
+            <div class="signal-legend">
+              <div class="legend-item">
+                <div class="legend-shape">
+                  <div style="width: 44px; height: 44px;" class="legend-go"></div>
+                </div>
+                <div class="legend-label">GO</div>
+                <div class="legend-action">Toque</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-shape">
+                  <svg width="44" height="44" viewBox="0 0 44 44">
+                    <line x1="10" y1="10" x2="34" y2="34" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+                    <line x1="34" y1="10" x2="10" y2="34" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="legend-label">NÃO</div>
+                <div class="legend-action">Ignore</div>
+              </div>
+            </div>
+
+            <ul class="rules-list">
+              <li><strong>20 sinais</strong> · intervalos variáveis</li>
+              <li><strong>~80% são Go</strong> · ~20% são No-Go</li>
+              <li>Comparamos primeira e segunda metade (<strong>fadiga</strong>)</li>
+            </ul>
+            <button class="btn btn-primary btn-large" onclick="startGame()" style="min-width: 200px;">
+              Começar
+            </button>
+          </div>
+
+          <!-- Ready -->
+          <div class="state state-ready" id="state-ready">
+            <div class="ready-num" id="readyNum">3</div>
+            <div class="ready-label">Prepare-se</div>
+          </div>
+
+          <!-- Interval (dark, between signals) -->
+          <div class="state state-interval" id="state-interval">
+            <div class="dim-dot"></div>
+          </div>
+
+          <!-- Go signal -->
+          <div class="state state-go" id="state-go">
+            <div class="go-circle"></div>
+          </div>
+
+          <!-- No-Go signal -->
+          <div class="state state-nogo" id="state-nogo">
+            <div class="nogo-shape"></div>
+            <div class="nogo-hint">Não toque</div>
+          </div>
+
+        </div>
+
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+    <div class="screen-label">TELA 4 — SEQUÊNCIA</div>
+  </div>
+</div>
+
+<script>
+  // ========================================================================
+  // SEQUÊNCIA — Go/No-Go com atenção sustentada
+  // ========================================================================
+  const TOTAL_SIGNALS = 20;
+  const NOGO_COUNT = 4;       // 20% de No-Go (GDD)
+  const SIGNAL_DISPLAY_MAX = 1400; // ms máximo que sinal fica visível
+  const INTERVAL_MIN = 1000;
+  const INTERVAL_MAX = 2200;
+  const COUNTDOWN_MS = 700;
+
+  // Tipos de resposta por sinal:
+  // 'hit'              = Go + tap ok (RT registrado)
+  // 'miss'             = Go + sem tap (omission)
+  // 'commission'       = NoGo + tap (erro)
+  // 'correct-inhibit'  = NoGo + sem tap (ok)
+  let sequence = [];        // ['go' | 'nogo'] de tamanho 20
+  let responses = [];       // [{ type, ms? }]
+  let currentIdx = 0;
+  let signalShownAt = 0;
+  let signalTimeout = null;
+  let intervalTimeout = null;
+  let state = 'intro';
+  let awaitingTap = false;
+  let currentSignal = null; // 'go' | 'nogo'
+
+  const zone = document.getElementById('gameZone');
+  const progressBar = document.getElementById('progressBar');
+  const segments = document.getElementById('segments');
+  const roundCounter = document.getElementById('roundCounter');
+  const flash = document.getElementById('flashFeedback');
+
+  // Prepara 20 segmentos
+  for (let i = 0; i < TOTAL_SIGNALS; i++) {
+    const s = document.createElement('div');
+    s.className = 'seg';
+    segments.appendChild(s);
+  }
+
+  function showState(s) {
+    ['intro', 'ready', 'interval', 'go', 'nogo'].forEach(k => {
+      document.getElementById('state-' + k).classList.remove('active');
+    });
+    document.getElementById('state-' + s).classList.add('active');
+    state = s;
+  }
+
+  function updateHeader() {
+    if (state === 'intro') {
+      roundCounter.innerHTML = '<span class="label-eyebrow">SEQUÊNCIA</span>';
+    } else {
+      roundCounter.innerHTML = `Sinal <strong>${currentIdx + 1}</strong> de ${TOTAL_SIGNALS}`;
+    }
+  }
+
+  function updateSegments() {
+    const segs = segments.querySelectorAll('.seg');
+    segs.forEach((s, i) => {
+      s.classList.remove('hit', 'miss', 'commission', 'correct-inhibit', 'active');
+      if (i < responses.length) {
+        s.classList.add(responses[i].type);
+      } else if (i === responses.length) {
+        s.classList.add('active');
+      }
+    });
+  }
+
+  function buildSequence() {
+    // 16 Go + 4 NoGo, embaralhados com garantia de que primeiro sinal é Go
+    const seq = [...Array(TOTAL_SIGNALS - NOGO_COUNT).fill('go'), ...Array(NOGO_COUNT).fill('nogo')];
+    // Fisher-Yates shuffle
+    for (let i = seq.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [seq[i], seq[j]] = [seq[j], seq[i]];
+    }
+    // Garante primeiro como Go (melhora UX no primeiro sinal)
+    if (seq[0] === 'nogo') {
+      const firstGoIdx = seq.indexOf('go');
+      [seq[0], seq[firstGoIdx]] = [seq[firstGoIdx], seq[0]];
+    }
+    return seq;
+  }
+
+  function startGame() {
+    currentIdx = 0;
+    responses = [];
+    sequence = buildSequence();
+    progressBar.style.visibility = 'visible';
+    updateSegments();
+    showState('ready');
+    setTimeout(nextSignal, COUNTDOWN_MS);
+  }
+
+  function nextSignal() {
+    if (currentIdx >= TOTAL_SIGNALS) return finishGame();
+    updateHeader();
+    updateSegments();
+
+    // Intervalo escuro antes do sinal
+    showState('interval');
+    const interval = INTERVAL_MIN + Math.random() * (INTERVAL_MAX - INTERVAL_MIN);
+    intervalTimeout = setTimeout(() => {
+      // Mostra sinal
+      currentSignal = sequence[currentIdx];
+      awaitingTap = true;
+      signalShownAt = performance.now();
+      showState(currentSignal);
+      // Timeout de exibição do sinal
+      signalTimeout = setTimeout(onSignalTimeout, SIGNAL_DISPLAY_MAX);
+    }, interval);
+  }
+
+  function onSignalTimeout() {
+    if (!awaitingTap) return;
+    awaitingTap = false;
+    if (currentSignal === 'go') {
+      // Miss
+      responses.push({ type: 'miss' });
+      showFlash('err', 'Perdeu');
+    } else {
+      // Correct inhibition
+      responses.push({ type: 'correct-inhibit' });
+      showFlash('hit', 'Bom — ignorou');
+    }
+    advance();
+  }
+
+  function onTap() {
+    if (state === 'intro' || state === 'ready') return;
+    if (!awaitingTap) return;
+    clearTimeout(signalTimeout);
+    const rt = Math.round(performance.now() - signalShownAt);
+    awaitingTap = false;
+
+    if (currentSignal === 'go') {
+      responses.push({ type: 'hit', ms: rt });
+      showFlash('hit', rt + ' ms');
+    } else {
+      responses.push({ type: 'commission' });
+      showFlash('err', 'Era NÃO');
+    }
+    advance();
+  }
+
+  function advance() {
+    currentIdx++;
+    updateSegments();
+    if (currentIdx >= TOTAL_SIGNALS) {
+      setTimeout(finishGame, 800);
+    } else {
+      nextSignal();
+    }
+  }
+
+  function showFlash(kind, text) {
+    flash.className = 'flash-feedback ' + kind + ' show';
+    flash.textContent = text;
+    setTimeout(() => { flash.className = 'flash-feedback ' + kind; }, 500);
+  }
+
+  function finishGame() {
+    // Cálculo conforme GDD §Sequência:
+    // - Avg RT (apenas hits)
+    // - Acurácia: (hits + correctInhibits) / total
+    // - Índice de fadiga: delta% entre 1ª e 2ª metade (só hits)
+    const hits = responses.filter(r => r.type === 'hit');
+    const halfIdx = Math.floor(TOTAL_SIGNALS / 2);
+    const hitsFirst = responses.slice(0, halfIdx).filter(r => r.type === 'hit');
+    const hitsLast = responses.slice(halfIdx).filter(r => r.type === 'hit');
+
+    const avg = hits.length
+      ? Math.round(hits.reduce((s, r) => s + r.ms, 0) / hits.length)
+      : 0;
+    const best = hits.length ? Math.min(...hits.map(r => r.ms)) : 0;
+
+    const avgFirst = hitsFirst.length
+      ? hitsFirst.reduce((s, r) => s + r.ms, 0) / hitsFirst.length
+      : avg;
+    const avgLast = hitsLast.length
+      ? hitsLast.reduce((s, r) => s + r.ms, 0) / hitsLast.length
+      : avg;
+    const fatigueIdx = avgFirst > 0
+      ? Math.round(((avgLast - avgFirst) / avgFirst) * 100)
+      : 0;
+
+    const correctCount = responses.filter(r => r.type === 'hit' || r.type === 'correct-inhibit').length;
+    const accuracy = Math.round((correctCount / TOTAL_SIGNALS) * 100);
+    const errors = TOTAL_SIGNALS - correctCount;
+
+    // Serializa a timeline completa (para mostrar no resultado)
+    const timeline = responses.map(r => {
+      if (r.type === 'hit') return 'H' + r.ms;
+      if (r.type === 'miss') return 'M';
+      if (r.type === 'commission') return 'C';
+      if (r.type === 'correct-inhibit') return 'I';
+      return '';
+    }).join(',');
+
+    const pb = 285;
+    const yday = 305;
+
+    const url = `resultado.html?mode=sequencia&avg=${avg}&best=${best}`
+              + `&accuracy=${accuracy}&errors=${errors}`
+              + `&fatigue=${fatigueIdx}&avgFirst=${Math.round(avgFirst)}&avgLast=${Math.round(avgLast)}`
+              + `&timeline=${encodeURIComponent(timeline)}&pb=${pb}&yday=${yday}`;
+    window.location.href = url;
+  }
+
+  // ==== Event listeners ====
+  zone.addEventListener('click', (e) => {
+    if (e.target.closest('.btn')) return;
+    onTap();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (state === 'intro') startGame();
+      else onTap();
+    }
+  });
+</script>
+</body>
+</html>

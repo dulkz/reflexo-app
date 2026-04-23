@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reflexo · Ciência</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ========== Ciência screen ========== */
+
+  .science-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+  }
+  .science-scroll::-webkit-scrollbar { display: none; }
+  .phone-screen { overflow: hidden !important; }
+
+  .science-header {
+    padding: 12px 20px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .science-header .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .science-header .title-center {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .science-header .share-btn {
+    width: 36px; height: 36px;
+    color: var(--text-muted);
+    font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Intro hero — grande número + promessa */
+  .sci-hero {
+    padding: 18px 24px 0;
+    text-align: center;
+  }
+  .sci-hero .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .sci-hero .big-stat {
+    font-size: 76px;
+    font-weight: 200;
+    letter-spacing: -3px;
+    line-height: 0.9;
+    color: var(--level-elite);
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sci-hero .big-stat .unit {
+    font-size: 36px;
+    margin-left: 2px;
+    font-weight: 300;
+  }
+  .sci-hero .claim {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 6px 8px 0;
+    color: var(--text);
+  }
+  .sci-hero .claim strong { color: var(--level-elite); }
+  .sci-hero .source-inline {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+  }
+
+  /* Blocos de conteúdo */
+  .section {
+    padding: 28px 24px 0;
+  }
+  .section .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .section p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .section p strong { color: var(--text); font-weight: 600; }
+
+  /* Mechanism cards — o 'como' */
+  .mech-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .mech-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .mech-card .num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--level-muito-bom);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .mech-card .body .t {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    line-height: 1.25;
+  }
+  .mech-card .body .d {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* Recomendação card */
+  .freq-card {
+    margin: 18px 24px 0;
+    padding: 20px 20px 18px;
+    background:
+      linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.04)),
+      var(--bg-card);
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 18px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .freq-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--level-elite), transparent);
+  }
+  .freq-card .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--level-elite);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .freq-nums {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 6px 0 10px;
+  }
+  .freq-nums .pair .n {
+    font-size: 46px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    line-height: 1;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .freq-nums .pair .l {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+    display: block;
+  }
+  .freq-nums .x {
+    font-size: 24px;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+  .freq-card .note {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-top: 4px;
+  }
+
+  /* Benchmark proofs — RT por atleta */
+  .bench-list {
+    margin-top: 4px;
+  }
+  .bench-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .bench-row .ico {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .bench-row .who {
+    flex: 1;
+    min-width: 0;
+  }
+  .bench-row .who .name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .bench-row .who .study {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.2px;
+  }
+  .bench-row .rt {
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .bench-row .rt .band {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Tone box — ligação com o usuário */
+  .tone-box {
+    margin: 20px 24px 0;
+    padding: 16px 18px;
+    background: rgba(139, 92, 246, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.18);
+    border-radius: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .tone-box .icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: rgba(139, 92, 246, 0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .tone-box .txt {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.45;
+  }
+  .tone-box .txt em {
+    font-style: normal;
+    color: var(--level-elite-extremo);
+    font-weight: 600;
+  }
+
+  /* Fontes */
+  .sources {
+    padding: 26px 24px 0;
+  }
+  .source-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+  .source-item:last-child { border-bottom: none; }
+  .source-item strong {
+    color: var(--text);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+    font-size: 13px;
+  }
+  .source-item .link {
+    color: var(--level-bom);
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-top: 4px;
+    word-break: break-all;
+  }
+
+  .bottom-spacer { height: 24px; }
+
+  /* Tab bar */
+  .tab-bar {
+    padding: 10px 12px 24px;
+    display: flex;
+    justify-content: space-around;
+    background: rgba(5, 10, 20, 0.85);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 0 0;
+    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tab .icon {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .tab.active { color: var(--text); }
+  .tab.active .icon { color: var(--level-muito-bom); }
+
+  .home-indicator {
+    width: 134px;
+    height: 5px;
+    background: var(--text);
+    border-radius: 3px;
+    margin: 4px auto 6px;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="desktop-wrapper">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="right">●●●● ⌁ ▰▰▰</span>
+        </div>
+
+        <!-- Área rolável -->
+        <div class="science-scroll">
+
+          <!-- Header -->
+          <div class="science-header">
+            <a href="home.html" class="back-btn" aria-label="Voltar">‹</a>
+            <div class="title-center">Ciência</div>
+            <a href="#" class="share-btn" aria-label="Compartilhar">↗</a>
+          </div>
+
+          <!-- Hero claim -->
+          <div class="sci-hero">
+            <div class="eyebrow">Por que treinar reação</div>
+            <div class="big-stat">25<span class="unit">%</span></div>
+            <div class="claim">
+              Menos diagnósticos de <strong>demência em 20 anos</strong><br>
+              entre quem treinou velocidade de processamento.
+            </div>
+            <div class="source-inline">Estudo ACTIVE · 2.802 adultos · NIH · Coe et al., 2026</div>
+          </div>
+
+          <!-- Mecanismo — como funciona -->
+          <div class="section">
+            <div class="eyebrow">Como funciona</div>
+            <h2>Treinar reação é treinar o cérebro.</h2>
+            <p>
+              Quando você vê um sinal e responde em menos de 300 ms,
+              seu cérebro não está pensando — está <strong>executando</strong>.
+              É um reflexo cognitivo: percepção visual, decisão e comando motor
+              disparados em paralelo.
+            </p>
+            <p>
+              Esse circuito é treinável. E o efeito colateral bonito é que o
+              mesmo sistema que acelera seu jogo <strong>mantém seu cérebro ágil</strong>
+              por décadas.
+            </p>
+
+            <div class="mech-grid">
+              <div class="mech-card">
+                <div class="num">1</div>
+                <div class="body">
+                  <div class="t">Velocidade de processamento</div>
+                  <div class="d">O tempo entre ver e agir — o marcador mais estável de saúde cognitiva em estudos longitudinais.</div>
+                </div>
+              </div>
+              <div class="mech-card">
+                <div class="num">2</div>
+                <div class="body">
+                  <div class="t">Atenção sustentada</div>
+                  <div class="d">O Modo Sequência mede exatamente o que piora primeiro com fadiga e envelhecimento.</div>
+                </div>
+              </div>
+              <div class="mech-card">
+                <div class="num">3</div>
+                <div class="body">
+                  <div class="t">Controle inibitório (Go/No-Go)</div>
+                  <div class="d">Parar quando não deve continuar. A função executiva que os pilotos e cirurgiões mais usam.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recomendação de frequência -->
+          <div class="section" style="padding-top: 26px;">
+            <div class="eyebrow">A dose certa</div>
+            <h2>Pouco, mas todo dia.</h2>
+          </div>
+          <div class="freq-card">
+            <div class="tag">Recomendação</div>
+            <div class="freq-nums">
+              <div class="pair">
+                <div class="n">3</div>
+                <span class="l">vezes / semana</span>
+              </div>
+              <div class="x">×</div>
+              <div class="pair">
+                <div class="n">3</div>
+                <span class="l">minutos</span>
+              </div>
+            </div>
+            <div class="note">
+              É o que basta para manter o circuito ativo.<br>
+              Acima disso, ganho marginal. Abaixo, some rápido.
+            </div>
+          </div>
+
+          <!-- Benchmarks -->
+          <div class="section">
+            <div class="eyebrow">Para colocar em perspectiva</div>
+            <h2>Quem reage mais rápido que você.</h2>
+            <p>Referências reais medidas em laboratório — não hype.</p>
+
+            <div class="bench-list">
+              <div class="bench-row">
+                <div class="ico">🏎️</div>
+                <div class="who">
+                  <div class="name">Piloto de F1 de ponta</div>
+                  <div class="study">Vienna Reaction Apparatus</div>
+                </div>
+                <div class="rt">
+                  <span class="text-elite">180–200</span>
+                  <span class="band text-elite">Elite</span>
+                </div>
+              </div>
+
+              <div class="bench-row">
+                <div class="ico">🥊</div>
+                <div class="who">
+                  <div class="name">Boxeador olímpico</div>
+                  <div class="study">Loturco et al., 2015 · Seleção Brasileira</div>
+                </div>
+                <div class="rt">
+                  <span class="text-muito-bom">230–250</span>
+                  <span class="band text-muito-bom">Muito Bom</span>
+                </div>
+              </div>
+
+              <div class="bench-row">
+                <div class="ico">🎾</div>
+                <div class="who">
+                  <div class="name">Tenista ATP</div>
+                  <div class="study">Journal of Sports Sciences, 2019</div>
+                </div>
+                <div class="rt">
+                  <span class="text-muito-bom">240–260</span>
+                  <span class="band text-muito-bom">Muito Bom</span>
+                </div>
+              </div>
+
+              <div class="bench-row">
+                <div class="ico">👤</div>
+                <div class="who">
+                  <div class="name">Adulto saudável (25–45)</div>
+                  <div class="study">Meta-análise · PMC, 2021</div>
+                </div>
+                <div class="rt">
+                  <span class="text-bom">270–320</span>
+                  <span class="band text-bom">Bom</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tone — light message -->
+          <div class="tone-box">
+            <div class="icon">🧠</div>
+            <div class="txt">
+              Não prometemos genialidade nem juventude eterna.
+              Mas <em>três minutos três vezes por semana</em> mexem com um dos
+              sistemas mais sensíveis ao tempo que existem no seu corpo.
+              <br><br>
+              Isso já vale a pena.
+            </div>
+          </div>
+
+          <!-- Fontes -->
+          <div class="sources">
+            <div class="section-title" style="font-size:11px; font-weight:700; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px;">
+              Fontes
+            </div>
+
+            <div class="source-item">
+              <strong>Coe et al. (2026). The ACTIVE Study long-term follow-up.</strong>
+              Alzheimer's & Dementia · NIH.
+              <span class="link">Redução de 25% em diagnósticos de demência em 20 anos · N=2.802</span>
+            </div>
+
+            <div class="source-item">
+              <strong>Loturco et al. (2015). Reaction time in elite boxers.</strong>
+              International Journal of Sports Physiology and Performance.
+              <span class="link">Seleção Brasileira · RT ~240 ms · acurácia &gt; 95%</span>
+            </div>
+
+            <div class="source-item">
+              <strong>Vienna Reaction Apparatus — F1 reference data.</strong>
+              reactionf1.com · dados agregados de pilotos profissionais.
+              <span class="link">RT médio de ponta: &lt; 200 ms</span>
+            </div>
+
+            <div class="source-item">
+              <strong>Meta-analysis of simple reaction time in healthy adults.</strong>
+              PMC · 2021. Referência para faixa etária 25–55.
+              <span class="link">Média saudável: 270–320 ms (visual simples)</span>
+            </div>
+          </div>
+
+          <div class="bottom-spacer"></div>
+
+        </div><!-- /.science-scroll -->
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <a href="home.html" class="tab">
+            <span class="icon">▶</span>
+            <span>Jogar</span>
+          </a>
+          <a href="historico.html" class="tab">
+            <span class="icon">📊</span>
+            <span>Histórico</span>
+          </a>
+          <a href="ciencia.html" class="tab active">
+            <span class="icon">🧠</span>
+            <span>Ciência</span>
+          </a>
+          <a href="perfil.html" class="tab">
+            <span class="icon">●</span>
+            <span>Perfil</span>
+          </a>
+        </div>
+        <div class="home-indicator"></div>
+
+      </div>
+    </div>
+    <div class="screen-label">TELA 7 — CIÊNCIA</div>
+  </div>
+</div>
+</body>
+</html>

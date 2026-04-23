@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reflexo · Partida</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ========== Partida screen específico ========== */
+
+  .partida-screen { position: relative; height: 100%; }
+
+  .game-header {
+    padding: 12px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 50;
+  }
+  .game-header .close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .game-header .round-counter {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .game-header .round-counter strong { color: var(--text); }
+
+  /* Progress dots */
+  .progress-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 24px 0;
+  }
+  .progress-dots .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .progress-dots .dot.done  { background: var(--level-muito-bom); }
+  .progress-dots .dot.active{ background: var(--text); transform: scale(1.5); }
+  .progress-dots .dot.error { background: var(--level-devagar); }
+
+  /* Full-area game zone (tap target) */
+  .game-zone {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* State containers — um visível por vez */
+  .state {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 24px;
+    text-align: center;
+  }
+  .state.active { display: flex; }
+
+  /* Estado: intro */
+  .state-intro .icon-mark {
+    width: 80px; height: 80px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--level-muito-bom), #1e40af);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 40px rgba(59, 130, 246, 0.3);
+  }
+  .state-intro h2 { margin-bottom: 10px; }
+  .state-intro p {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 280px;
+    margin-bottom: 28px;
+  }
+  .rules-list {
+    text-align: left;
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 28px;
+    max-width: 300px;
+    width: 100%;
+    border: 1px solid var(--border);
+  }
+  .rules-list li {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 5px 0;
+    list-style: none;
+    position: relative;
+    padding-left: 22px;
+    line-height: 1.4;
+  }
+  .rules-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--level-muito-bom);
+    font-weight: 700;
+  }
+  .rules-list li strong { color: var(--text); }
+
+  /* Estado: waiting */
+  .state-waiting {
+    background: #000;
+  }
+  .state-waiting .wait-indicator {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  .state-waiting .wait-indicator::after {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--text-muted);
+    border-radius: 50%;
+  }
+  .state-waiting .label {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50%      { transform: scale(1.15); opacity: 1; }
+  }
+
+  /* Estado: signal */
+  .state-signal {
+    background: #001810;
+  }
+  .state-signal .signal-circle {
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #4ade80, var(--signal) 50%, #0f8562 100%);
+    box-shadow:
+      0 0 60px rgba(34, 211, 164, 0.6),
+      0 0 120px rgba(34, 211, 164, 0.3),
+      inset 0 4px 20px rgba(255, 255, 255, 0.3);
+    animation: signalIn 0.08s ease-out;
+  }
+  @keyframes signalIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  /* Estado: result */
+  .state-result .result-num {
+    font-size: 110px;
+    font-weight: 200;
+    letter-spacing: -5px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    animation: numIn 0.3s ease-out;
+  }
+  .state-result .result-num .unit {
+    font-size: 30px;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+  .state-result .result-meta {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 14px;
+    letter-spacing: 0.3px;
+  }
+  .state-result .result-level {
+    margin-top: 16px;
+  }
+  @keyframes numIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  /* Estado: false start */
+  .state-false-start {
+    background: #1a0810;
+  }
+  .state-false-start .fs-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+  }
+  .state-false-start h2 {
+    color: var(--level-devagar);
+    margin-bottom: 10px;
+  }
+  .state-false-start p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 260px;
+  }
+  .state-false-start .penalty {
+    margin-top: 20px;
+    padding: 10px 18px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 10px;
+    color: var(--level-devagar);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  /* Tap hint */
+  .tap-hint {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    opacity: 0.6;
+  }
+
+  .home-indicator {
+    width: 134px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 3px;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+<div class="desktop-wrapper">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen partida-screen">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="right">●●●● ⌁ ▰▰▰</span>
+        </div>
+
+        <!-- Header -->
+        <div class="game-header">
+          <a href="home.html" class="close-btn" aria-label="Sair">✕</a>
+          <div class="round-counter" id="roundCounter">
+            <span class="label-eyebrow">PARTIDA</span>
+          </div>
+          <div style="width: 36px;"></div>
+        </div>
+
+        <!-- Progress dots (ficam escondidos na intro) -->
+        <div class="progress-dots" id="progressDots" style="visibility: hidden;">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+
+        <!-- Game zone -->
+        <div class="game-zone" id="gameZone">
+
+          <!-- Intro -->
+          <div class="state state-intro active" id="state-intro">
+            <div class="icon-mark">🏁</div>
+            <h2>Partida</h2>
+            <p>Reação pura. Toque na tela o mais rápido que conseguir quando o círculo verde aparecer.</p>
+            <ul class="rules-list">
+              <li><strong>7 rodadas</strong> por sessão</li>
+              <li>Score = <strong>média das 5 melhores</strong></li>
+              <li>Tocar antes do sinal = <strong>+300 ms</strong></li>
+            </ul>
+            <button class="btn btn-primary btn-large" onclick="startGame()" style="min-width: 200px;">
+              Começar
+            </button>
+          </div>
+
+          <!-- Waiting -->
+          <div class="state state-waiting" id="state-waiting">
+            <div class="wait-indicator"></div>
+            <div class="label">Aguarde o sinal…</div>
+          </div>
+
+          <!-- Signal -->
+          <div class="state state-signal" id="state-signal">
+            <div class="signal-circle"></div>
+          </div>
+
+          <!-- Result -->
+          <div class="state state-result" id="state-result">
+            <div class="result-num"><span id="resultMs">247</span><span class="unit">ms</span></div>
+            <div class="result-level level-pill" id="resultLevel">
+              <span class="dot bg-muito-bom"></span>
+              <span class="text-muito-bom" id="resultLevelLabel">Muito Bom</span>
+            </div>
+            <div class="result-meta">Próxima rodada em instantes…</div>
+          </div>
+
+          <!-- False start -->
+          <div class="state state-false-start" id="state-false-start">
+            <div class="fs-icon">⚠️</div>
+            <h2>Falsa largada</h2>
+            <p>Você tocou antes do sinal. A rodada conta, mas com penalidade.</p>
+            <div class="penalty">+ 300 ms</div>
+          </div>
+
+        </div>
+
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+    <div class="screen-label">TELA 2 — PARTIDA</div>
+  </div>
+</div>
+
+<script>
+  // ========================================================================
+  // PARTIDA — lógica de jogo
+  // ========================================================================
+  const TOTAL_ROUNDS = 7;
+  const DELAY_MIN = 1000;  // ms (ver GDD: 1–4s)
+  const DELAY_MAX = 4000;
+  const FALSE_START_PENALTY = 300; // ms
+  const RESULT_DISPLAY_MS = 1400;
+  const FALSE_START_DISPLAY_MS = 1800;
+
+  let currentRound = 0;
+  let rounds = [];           // { ms, falseStart }
+  let signalAt = 0;
+  let waitTimeout = null;
+  let state = 'intro';       // 'intro' | 'waiting' | 'signal' | 'result' | 'falseStart'
+
+  const zone = document.getElementById('gameZone');
+  const dotsEl = document.getElementById('progressDots');
+  const roundCounter = document.getElementById('roundCounter');
+
+  function showState(s) {
+    ['intro', 'waiting', 'signal', 'result', 'false-start'].forEach(key => {
+      document.getElementById('state-' + key).classList.remove('active');
+    });
+    const target = s === 'falseStart' ? 'false-start' : s;
+    document.getElementById('state-' + target).classList.add('active');
+    state = s;
+  }
+
+  function updateHeader() {
+    if (currentRound === 0 && state === 'intro') {
+      roundCounter.innerHTML = '<span class="label-eyebrow">PARTIDA</span>';
+    } else {
+      roundCounter.innerHTML = `Rodada <strong>${currentRound + 1}</strong> de ${TOTAL_ROUNDS}`;
+    }
+  }
+
+  function updateDots() {
+    const dots = dotsEl.querySelectorAll('.dot');
+    dots.forEach((d, i) => {
+      d.classList.remove('done', 'active', 'error');
+      if (i < rounds.length) {
+        d.classList.add(rounds[i].falseStart ? 'error' : 'done');
+      } else if (i === rounds.length) {
+        d.classList.add('active');
+      }
+    });
+  }
+
+  function startGame() {
+    currentRound = 0;
+    rounds = [];
+    dotsEl.style.visibility = 'visible';
+    updateDots();
+    updateHeader();
+    nextRound();
+  }
+
+  function nextRound() {
+    updateHeader();
+    updateDots();
+    showState('waiting');
+    const delay = DELAY_MIN + Math.random() * (DELAY_MAX - DELAY_MIN);
+    waitTimeout = setTimeout(() => {
+      showState('signal');
+      signalAt = performance.now();
+    }, delay);
+  }
+
+  function onTap() {
+    if (state === 'waiting') {
+      // Falsa largada
+      clearTimeout(waitTimeout);
+      rounds.push({ ms: FALSE_START_PENALTY + 400, falseStart: true });
+      showState('falseStart');
+      updateDots();
+      setTimeout(advanceRound, FALSE_START_DISPLAY_MS);
+    } else if (state === 'signal') {
+      const rt = Math.round(performance.now() - signalAt);
+      rounds.push({ ms: rt, falseStart: false });
+      document.getElementById('resultMs').textContent = rt;
+      // Ajusta nível da pílula dinamicamente
+      const lvl = getLevel(rt);
+      const dot = document.querySelector('#resultLevel .dot');
+      const lab = document.getElementById('resultLevelLabel');
+      dot.className = 'dot bg-' + lvl.key;
+      lab.className = 'text-' + lvl.key;
+      lab.textContent = lvl.label;
+      showState('result');
+      updateDots();
+      setTimeout(advanceRound, RESULT_DISPLAY_MS);
+    }
+  }
+
+  function advanceRound() {
+    currentRound++;
+    if (currentRound >= TOTAL_ROUNDS) {
+      finishGame();
+    } else {
+      nextRound();
+    }
+  }
+
+  function finishGame() {
+    // Cálculo: média das 5 melhores de 7 (GDD §Partida)
+    const sorted = [...rounds].map(r => r.ms).sort((a, b) => a - b);
+    const best5 = sorted.slice(0, 5);
+    const avg = Math.round(best5.reduce((s, v) => s + v, 0) / 5);
+    const best = sorted[0];
+    const times = rounds.map(r => r.ms + (r.falseStart ? 'F' : '')).join(',');
+    // Passa também o melhor histórico (mockado por ora para demonstração)
+    const personalBest = 235;
+    const yesterday = 259;
+    const url = `resultado.html?avg=${avg}&best=${best}&times=${encodeURIComponent(times)}&pb=${personalBest}&yday=${yesterday}`;
+    window.location.href = url;
+  }
+
+  function getLevel(ms) {
+    if (ms < 150) return { key: 'elite-extremo', label: 'Elite Extremo' };
+    if (ms < 200) return { key: 'elite',         label: 'Elite' };
+    if (ms < 250) return { key: 'muito-bom',     label: 'Muito Bom' };
+    if (ms < 300) return { key: 'bom',           label: 'Bom' };
+    if (ms < 400) return { key: 'abaixo-media',  label: 'Abaixo da Média' };
+    return          { key: 'devagar',       label: 'Devagar' };
+  }
+
+  // Zona inteira é tap target (exceto estado intro que usa botão)
+  zone.addEventListener('click', (e) => {
+    if (state === 'intro' || state === 'result' || state === 'falseStart') return;
+    // Evita conflito com o botão
+    if (e.target.closest('.btn')) return;
+    onTap();
+  });
+
+  // Atalho de teclado: espaço também dispara tap
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (state === 'intro') startGame();
+      else onTap();
+    }
+  });
+</script>
+</body>
+</html>

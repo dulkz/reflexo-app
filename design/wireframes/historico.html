@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reflexo · Histórico</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ========== Histórico screen ========== */
+
+  /* Cores das linhas do modo no chart (conforme pedido) */
+  :root {
+    --mode-partida:   var(--level-muito-bom);     /* azul */
+    --mode-alvo:      var(--level-bom);           /* teal */
+    --mode-sequencia: var(--level-elite-extremo); /* roxo */
+  }
+
+  .hist-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+  }
+  .hist-scroll::-webkit-scrollbar { display: none; }
+  .phone-screen { overflow: hidden !important; }
+
+  /* Header */
+  .hist-header {
+    padding: 12px 20px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hist-header .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hist-header .title-center {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .hist-header .menu-btn {
+    width: 36px; height: 36px;
+    color: var(--text-muted);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Filtro de modos */
+  .mode-filter {
+    padding: 10px 16px 6px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .mode-filter::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-pill .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .filter-pill:hover { background: rgba(255, 255, 255, 0.08); color: var(--text); }
+  .filter-pill.active {
+    background: var(--text);
+    color: #0b1220;
+    border-color: var(--text);
+  }
+  .filter-pill.active .dot { opacity: 0.8; }
+
+  /* Card de resumo */
+  .summary-grid {
+    padding: 14px 20px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .sum-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .sum-card .lbl {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .sum-card .val {
+    font-size: 22px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .sum-card .val .unit {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 2px;
+  }
+  .sum-card .sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .sum-card .sub.streak {
+    color: var(--level-abaixo-media);
+    font-weight: 700;
+  }
+
+  /* Chart de evolução */
+  .chart-section {
+    padding: 22px 20px 0;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .section-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .section-title-row .hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: none;
+  }
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 12px 10px;
+  }
+  .chart-wrap {
+    width: 100%;
+    height: 160px;
+    position: relative;
+  }
+  .chart-wrap svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .chart-wrap .grid-line {
+    stroke: rgba(255,255,255,0.05);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+  }
+  .chart-wrap .axis-label {
+    fill: var(--text-dim);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .chart-wrap .line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: draw 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  @keyframes draw {
+    to { stroke-dashoffset: 0; }
+  }
+  .chart-wrap .dot {
+    stroke: var(--bg-card);
+    stroke-width: 1.5;
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+  .chart-wrap .dot.pb {
+    stroke-width: 2;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    padding: 10px 2px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .chart-legend .lg {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chart-legend .sw {
+    width: 14px;
+    height: 2.5px;
+    border-radius: 2px;
+  }
+  .chart-legend .lg.dim { opacity: 0.4; }
+
+  /* Sessões list */
+  .sessions-section {
+    padding: 22px 20px 0;
+  }
+  .session-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    transition: background 0.15s;
+  }
+  .session-row:hover { background: var(--bg-elevated); }
+  .session-row .mode-ico {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .session-row .mode-ico.partida   { background: var(--mode-partida); }
+  .session-row .mode-ico.alvo      { background: var(--mode-alvo); }
+  .session-row .mode-ico.sequencia { background: var(--mode-sequencia); }
+  .session-row .body {
+    flex: 1;
+    min-width: 0;
+  }
+  .session-row .head-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .session-row .head-line .mode {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1px;
+  }
+  .session-row .head-line .when {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+  .session-row .stats-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .session-row .stats-line .rt {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .session-row .stats-line .band {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .session-row .stats-line .band::before { content: '● '; }
+  .session-row .pb-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--level-abaixo-media);
+    text-transform: uppercase;
+  }
+
+  /* Mini bar de acurácia (Alvo / Sequência) */
+  .acc-mini {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .acc-mini .track {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+  }
+  .acc-mini .fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--level-elite);
+    transition: width 0.6s ease-out;
+  }
+  .acc-mini .fill.med  { background: var(--level-bom); }
+  .acc-mini .fill.low  { background: var(--level-abaixo-media); }
+  .acc-mini .pct {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 32px;
+    text-align: right;
+  }
+
+  /* Empty state */
+  .empty-state {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    display: none;
+  }
+  .empty-state .icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+    opacity: 0.6;
+  }
+
+  .bottom-spacer { height: 24px; }
+
+  /* Tab bar (mesmo padrão das outras telas) */
+  .tab-bar {
+    padding: 10px 12px 24px;
+    display: flex;
+    justify-content: space-around;
+    background: rgba(5, 10, 20, 0.85);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 0 0;
+    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tab .icon {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .tab.active { color: var(--text); }
+  .tab.active .icon { color: var(--level-muito-bom); }
+
+  .home-indicator {
+    width: 134px;
+    height: 5px;
+    background: var(--text);
+    border-radius: 3px;
+    margin: 4px auto 6px;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="desktop-wrapper">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="right">●●●● ⌁ ▰▰▰</span>
+        </div>
+
+        <!-- Área rolável -->
+        <div class="hist-scroll">
+
+          <!-- Header -->
+          <div class="hist-header">
+            <a href="home.html" class="back-btn" aria-label="Voltar">‹</a>
+            <div class="title-center">Histórico</div>
+            <a href="#" class="menu-btn" aria-label="Menu">⋯</a>
+          </div>
+
+          <!-- Filtro de modos -->
+          <div class="mode-filter" id="modeFilter">
+            <button class="filter-pill active" data-mode="all">Todos · <span id="countAll">12</span></button>
+            <button class="filter-pill" data-mode="partida">
+              <span class="dot" style="background: var(--mode-partida);"></span>
+              Partida · <span id="countPartida">7</span>
+            </button>
+            <button class="filter-pill" data-mode="alvo">
+              <span class="dot" style="background: var(--mode-alvo);"></span>
+              Alvo · <span id="countAlvo">3</span>
+            </button>
+            <button class="filter-pill" data-mode="sequencia">
+              <span class="dot" style="background: var(--mode-sequencia);"></span>
+              Sequência · <span id="countSequencia">2</span>
+            </button>
+          </div>
+
+          <!-- Resumo -->
+          <div class="summary-grid">
+            <div class="sum-card">
+              <div class="lbl">Melhor RT</div>
+              <div class="val text-muito-bom">247<span class="unit">ms</span></div>
+              <div class="sub">Partida · há 2 dias</div>
+            </div>
+            <div class="sum-card">
+              <div class="lbl">Mais jogado</div>
+              <div class="val">Partida</div>
+              <div class="sub">7 de 12 sessões</div>
+            </div>
+            <div class="sum-card">
+              <div class="lbl">Sequência atual</div>
+              <div class="val">5<span class="unit">dias</span></div>
+              <div class="sub streak">🔥 desde 18 Abr</div>
+            </div>
+            <div class="sum-card">
+              <div class="lbl">Total</div>
+              <div class="val">12</div>
+              <div class="sub">sessões em 15 dias</div>
+            </div>
+          </div>
+
+          <!-- Gráfico de evolução -->
+          <div class="chart-section">
+            <div class="section-title-row">
+              <div class="section-title">Evolução · RT médio</div>
+              <div class="hint">últimos 15 dias</div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-wrap">
+                <svg id="chartSvg" viewBox="0 0 300 160" preserveAspectRatio="none"></svg>
+              </div>
+              <div class="chart-legend" id="chartLegend">
+                <span class="lg" data-mode="partida"><span class="sw" style="background: var(--mode-partida);"></span>Partida</span>
+                <span class="lg" data-mode="alvo"><span class="sw" style="background: var(--mode-alvo);"></span>Alvo</span>
+                <span class="lg" data-mode="sequencia"><span class="sw" style="background: var(--mode-sequencia);"></span>Sequência</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de sessões -->
+          <div class="sessions-section">
+            <div class="section-title-row">
+              <div class="section-title" id="sessionsTitle">Sessões · 12</div>
+              <div class="hint">mais recentes primeiro</div>
+            </div>
+            <div id="sessionsList"></div>
+            <div class="empty-state" id="emptyState">
+              <div class="icon">📭</div>
+              <div>Nenhuma sessão neste filtro ainda.</div>
+            </div>
+          </div>
+
+          <div class="bottom-spacer"></div>
+
+        </div><!-- /.hist-scroll -->
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <a href="home.html" class="tab">
+            <span class="icon">▶</span>
+            <span>Jogar</span>
+          </a>
+          <a href="historico.html" class="tab active">
+            <span class="icon">📊</span>
+            <span>Histórico</span>
+          </a>
+          <a href="ciencia.html" class="tab">
+            <span class="icon">🧠</span>
+            <span>Ciência</span>
+          </a>
+          <a href="perfil.html" class="tab">
+            <span class="icon">●</span>
+            <span>Perfil</span>
+          </a>
+        </div>
+        <div class="home-indicator"></div>
+
+      </div>
+    </div>
+    <div class="screen-label">TELA 8 — HISTÓRICO</div>
+  </div>
+</div>
+
+<script>
+  // ========================================================================
+  // HISTÓRICO — dados mock (12 sessões, 15 dias)
+  // Coerente com as outras telas: Bruno, Partida evoluindo de ~272→247 ms,
+  // PB Partida 247 ms · PB Alvo 285 ms · Sequência 298 ms fadiga 2%
+  // ========================================================================
+  const MODE_META = {
+    partida:   { label: 'Partida',   emoji: '🏁', cssVar: '--mode-partida',   hue: 'muito-bom'    },
+    alvo:      { label: 'Alvo',      emoji: '🎯', cssVar: '--mode-alvo',      hue: 'bom'          },
+    sequencia: { label: 'Sequência', emoji: '📶', cssVar: '--mode-sequencia', hue: 'elite-extremo'},
+  };
+
+  // day = dias desde 8 Abr (0 = 8 Abr, 14 = 22 Abr / hoje)
+  const SESSIONS = [
+    { mode: 'partida',   date: 'Hoje, 20:14',   day: 14, avg: 251 },
+    { mode: 'alvo',      date: 'Ontem, 19:02',  day: 13, avg: 285, acc: 100, pb: true },
+    { mode: 'partida',   date: '20 Abr, 18:47', day: 12, avg: 247, pb: true },
+    { mode: 'sequencia', date: '19 Abr, 21:15', day: 11, avg: 298, acc: 95, fatigue: 2 },
+    { mode: 'partida',   date: '18 Abr, 20:32', day: 10, avg: 249 },
+    { mode: 'alvo',      date: '16 Abr, 19:10', day:  8, avg: 305, acc: 90 },
+    { mode: 'partida',   date: '15 Abr, 18:40', day:  7, avg: 254 },
+    { mode: 'sequencia', date: '14 Abr, 21:00', day:  6, avg: 315, acc: 85, fatigue: 12 },
+    { mode: 'alvo',      date: '13 Abr, 19:22', day:  5, avg: 312, acc: 80 },
+    { mode: 'partida',   date: '12 Abr, 18:30', day:  4, avg: 258 },
+    { mode: 'partida',   date: '10 Abr, 19:15', day:  2, avg: 272 },
+    { mode: 'partida',   date:  '8 Abr, 18:55', day:  0, avg: 266 },
+  ];
+
+  // ========================================================================
+  // Helpers — faixas (iguais ao resto do app)
+  // ========================================================================
+  function getLevel(ms) {
+    if (ms < 150) return { key: 'elite-extremo', label: 'Elite Extremo' };
+    if (ms < 200) return { key: 'elite',         label: 'Elite' };
+    if (ms < 250) return { key: 'muito-bom',     label: 'Muito Bom' };
+    if (ms < 300) return { key: 'bom',           label: 'Bom' };
+    if (ms < 400) return { key: 'abaixo-media',  label: 'Abaixo' };
+    return          { key: 'devagar',            label: 'Devagar' };
+  }
+  const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  // ========================================================================
+  // Estado
+  // ========================================================================
+  let activeFilter = 'all';
+
+  // ========================================================================
+  // Chart (SVG) — uma linha por modo
+  // ========================================================================
+  const CHART = {
+    w: 300, h: 160,
+    padL: 30, padR: 12, padT: 14, padB: 28,
+    yMin: 240, yMax: 320,  // faixa do eixo (ms). Invertido: menos = em cima.
+    dayMin: 0, dayMax: 14,
+  };
+
+  function xOf(day) {
+    const t = (day - CHART.dayMin) / (CHART.dayMax - CHART.dayMin);
+    return CHART.padL + t * (CHART.w - CHART.padL - CHART.padR);
+  }
+  function yOf(ms) {
+    const clamped = Math.max(CHART.yMin, Math.min(CHART.yMax, ms));
+    const t = (clamped - CHART.yMin) / (CHART.yMax - CHART.yMin);
+    return CHART.padT + t * (CHART.h - CHART.padT - CHART.padB);
+  }
+
+  function renderChart(filter) {
+    const svg = document.getElementById('chartSvg');
+    svg.innerHTML = '';
+
+    // Gridlines horizontais em 240, 280, 320 ms
+    [240, 280, 320].forEach((ms) => {
+      const y = yOf(ms);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', CHART.padL);
+      line.setAttribute('x2', CHART.w - CHART.padR);
+      line.setAttribute('y1', y);
+      line.setAttribute('y2', y);
+      line.setAttribute('class', 'grid-line');
+      svg.appendChild(line);
+
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('x', CHART.padL - 6);
+      lbl.setAttribute('y', y + 3);
+      lbl.setAttribute('text-anchor', 'end');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.textContent = ms;
+      svg.appendChild(lbl);
+    });
+
+    // Labels de tempo no eixo X
+    [
+      { day: 0,  text: '15 d' },
+      { day: 7,  text: '7 d'  },
+      { day: 14, text: 'hoje' },
+    ].forEach(t => {
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('x', xOf(t.day));
+      lbl.setAttribute('y', CHART.h - 10);
+      lbl.setAttribute('text-anchor', 'middle');
+      lbl.setAttribute('class', 'axis-label');
+      lbl.textContent = t.text;
+      svg.appendChild(lbl);
+    });
+
+    // Linhas por modo
+    Object.keys(MODE_META).forEach((mode, modeIdx) => {
+      if (filter !== 'all' && filter !== mode) return;
+      const color = cssVar(MODE_META[mode].cssVar);
+
+      const points = SESSIONS
+        .filter(s => s.mode === mode)
+        .sort((a, b) => a.day - b.day);
+
+      if (points.length < 2) {
+        // só pontos (linha precisa de pelo menos 2)
+      } else {
+        const d = points.map((p, i) => {
+          const x = xOf(p.day).toFixed(2);
+          const y = yOf(p.avg).toFixed(2);
+          return (i === 0 ? 'M' : 'L') + x + ',' + y;
+        }).join(' ');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('class', 'line');
+        path.setAttribute('stroke', color);
+        path.style.animationDelay = (modeIdx * 0.15) + 's';
+        svg.appendChild(path);
+      }
+
+      points.forEach((p, i) => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', xOf(p.day));
+        c.setAttribute('cy', yOf(p.avg));
+        c.setAttribute('r', p.pb ? 4.5 : 3);
+        c.setAttribute('fill', color);
+        c.setAttribute('class', 'dot' + (p.pb ? ' pb' : ''));
+        c.style.color = color;
+        c.style.animationDelay = (0.4 + modeIdx * 0.15 + i * 0.05) + 's';
+        svg.appendChild(c);
+      });
+    });
+
+    // Legenda — dim dos modos fora do filtro
+    document.querySelectorAll('#chartLegend .lg').forEach(lg => {
+      const m = lg.getAttribute('data-mode');
+      if (filter === 'all' || filter === m) lg.classList.remove('dim');
+      else lg.classList.add('dim');
+    });
+  }
+
+  // ========================================================================
+  // Lista de sessões
+  // ========================================================================
+  function renderSessions(filter) {
+    const list = document.getElementById('sessionsList');
+    list.innerHTML = '';
+
+    const filtered = filter === 'all'
+      ? SESSIONS
+      : SESSIONS.filter(s => s.mode === filter);
+
+    document.getElementById('sessionsTitle').textContent = 'Sessões · ' + filtered.length;
+
+    const empty = document.getElementById('emptyState');
+    if (filtered.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    filtered.forEach((s, i) => {
+      const meta = MODE_META[s.mode];
+      const level = getLevel(s.avg);
+      const row = document.createElement('a');
+      row.className = 'session-row';
+      row.href = s.mode + '.html';
+
+      // Mini bar de acurácia só para Alvo/Sequência
+      let accMini = '';
+      if (typeof s.acc === 'number') {
+        const fillClass = s.acc >= 95 ? '' : (s.acc >= 85 ? ' med' : ' low');
+        accMini = `
+          <div class="acc-mini">
+            <div class="track">
+              <div class="fill${fillClass}" style="width: 0%;" data-target="${s.acc}"></div>
+            </div>
+            <div class="pct">${s.acc}%</div>
+          </div>
+        `;
+      }
+
+      const pbBadge = s.pb ? '<span class="pb-badge">🏆 PB</span>' : '';
+
+      row.innerHTML = `
+        <div class="mode-ico ${s.mode}">${meta.emoji}</div>
+        <div class="body">
+          <div class="head-line">
+            <span class="mode">${meta.label}</span>
+            <span class="when">${s.date}</span>
+          </div>
+          <div class="stats-line">
+            <span class="rt">${s.avg} ms</span>
+            <span class="band text-${level.key}">${level.label}</span>
+            ${pbBadge}
+          </div>
+          ${accMini}
+        </div>
+      `;
+      list.appendChild(row);
+
+      // Anima mini bar de acurácia
+      const fill = row.querySelector('.acc-mini .fill');
+      if (fill) {
+        setTimeout(() => { fill.style.width = fill.dataset.target + '%'; }, 100 + i * 40);
+      }
+    });
+  }
+
+  // ========================================================================
+  // Filtro — handlers
+  // ========================================================================
+  document.querySelectorAll('#modeFilter .filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#modeFilter .filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.mode;
+      renderChart(activeFilter);
+      renderSessions(activeFilter);
+    });
+  });
+
+  // ========================================================================
+  // Render inicial
+  // ========================================================================
+  renderChart('all');
+  renderSessions('all');
+</script>
+</body>
+</html>

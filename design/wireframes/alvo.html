@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reflexo · Alvo</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ========== Alvo screen específico ========== */
+
+  .alvo-screen { position: relative; height: 100%; }
+
+  .game-header {
+    padding: 12px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 50;
+  }
+  .game-header .close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .game-header .round-counter {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .game-header .round-counter strong { color: var(--text); }
+
+  .progress-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    padding: 16px 24px 0;
+  }
+  .progress-dots .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .progress-dots .dot.done   { background: var(--level-muito-bom); }
+  .progress-dots .dot.active { background: var(--text); transform: scale(1.5); }
+  .progress-dots .dot.error  { background: var(--level-devagar); }
+
+  .game-zone {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .state {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 24px;
+    text-align: center;
+  }
+  .state.active { display: flex; }
+
+  /* ===== Intro ===== */
+  .state-intro .icon-mark {
+    width: 80px; height: 80px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--level-bom), #0e7490);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 40px rgba(6, 182, 212, 0.3);
+  }
+  .state-intro h2 { margin-bottom: 10px; }
+  .state-intro p {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 280px;
+    margin-bottom: 20px;
+  }
+  .rules-list {
+    text-align: left;
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    max-width: 300px;
+    width: 100%;
+    border: 1px solid var(--border);
+  }
+  .rules-list li {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 5px 0;
+    list-style: none;
+    position: relative;
+    padding-left: 22px;
+    line-height: 1.4;
+  }
+  .rules-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--level-bom);
+    font-weight: 700;
+  }
+  .rules-list li strong { color: var(--text); }
+
+  /* Mini exemplo do challenge */
+  .example-preview {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    width: 80px;
+    margin-bottom: 20px;
+  }
+  .example-preview .mini {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .example-preview .mini.target {
+    background: var(--level-muito-bom);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  }
+
+  /* ===== Ready ===== */
+  .state-ready .ready-num {
+    font-size: 120px;
+    font-weight: 200;
+    color: var(--text-muted);
+    line-height: 1;
+    animation: readyPulse 0.8s ease-out;
+  }
+  @keyframes readyPulse {
+    from { transform: scale(1.5); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  /* ===== Challenge ===== */
+  .challenge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+  .target-hint {
+    font-size: 15px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .target-hint .target-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    transition: background 0.2s;
+  }
+  .target-hint strong { color: var(--text); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
+
+  .circle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 30px;
+    width: 280px;
+    height: 280px;
+  }
+  .target-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+  }
+  .target-circle:active { transform: scale(0.92); }
+  .target-circle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 45%);
+    pointer-events: none;
+  }
+
+  /* Entrada dos círculos */
+  .target-circle {
+    animation: circleIn 0.12s ease-out;
+  }
+  @keyframes circleIn {
+    from { transform: scale(0.4); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  /* ===== Correct feedback ===== */
+  .state-correct .result-num {
+    font-size: 100px;
+    font-weight: 200;
+    letter-spacing: -4px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    animation: numIn 0.3s ease-out;
+  }
+  .state-correct .result-num .unit {
+    font-size: 28px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+  .state-correct .check-badge {
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: var(--level-elite);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    animation: checkIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes checkIn {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  @keyframes numIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  /* ===== Wrong feedback ===== */
+  .state-wrong {
+    background: #1a0810;
+  }
+  .state-wrong .wrong-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--level-devagar);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 16px;
+    animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  .state-wrong h2 { color: var(--level-devagar); margin-bottom: 8px; }
+  .state-wrong .penalty-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .state-wrong .penalty {
+    margin-top: 16px;
+    padding: 8px 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 10px;
+    color: var(--level-devagar);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .home-indicator {
+    width: 134px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 3px;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+<div class="desktop-wrapper">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen alvo-screen">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="right">●●●● ⌁ ▰▰▰</span>
+        </div>
+
+        <!-- Header -->
+        <div class="game-header">
+          <a href="home.html" class="close-btn" aria-label="Sair">✕</a>
+          <div class="round-counter" id="roundCounter">
+            <span class="label-eyebrow">ALVO</span>
+          </div>
+          <div style="width: 36px;"></div>
+        </div>
+
+        <!-- Progress dots (10 rodadas) -->
+        <div class="progress-dots" id="progressDots" style="visibility: hidden;">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+
+        <!-- Game zone -->
+        <div class="game-zone" id="gameZone">
+
+          <!-- Intro -->
+          <div class="state state-intro active" id="state-intro">
+            <div class="icon-mark">🎯</div>
+            <h2>Alvo</h2>
+            <p>Quatro círculos aparecem juntos. Toque no da cor indicada o mais rápido possível.</p>
+            <div class="example-preview">
+              <div class="mini"></div>
+              <div class="mini target"></div>
+              <div class="mini"></div>
+              <div class="mini"></div>
+            </div>
+            <ul class="rules-list">
+              <li><strong>10 rodadas</strong></li>
+              <li>Erro = <strong>+150 ms</strong> de penalidade</li>
+              <li>Velocidade <strong>e</strong> acurácia contam</li>
+            </ul>
+            <button class="btn btn-primary btn-large" onclick="startGame()" style="min-width: 200px;">
+              Começar
+            </button>
+          </div>
+
+          <!-- Ready countdown -->
+          <div class="state state-ready" id="state-ready">
+            <div class="ready-num" id="readyNum">3</div>
+          </div>
+
+          <!-- Challenge (4 circles) -->
+          <div class="state state-challenge" id="state-challenge">
+            <div class="challenge-container">
+              <div class="target-hint">
+                Toque no
+                <span class="target-dot" id="targetDot"></span>
+                <strong id="targetLabel">AZUL</strong>
+              </div>
+              <div class="circle-grid" id="circleGrid">
+                <div class="target-circle" id="c0"></div>
+                <div class="target-circle" id="c1"></div>
+                <div class="target-circle" id="c2"></div>
+                <div class="target-circle" id="c3"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Correct feedback -->
+          <div class="state state-correct" id="state-correct">
+            <div class="check-badge">✓</div>
+            <div class="result-num"><span id="correctMs">247</span><span class="unit">ms</span></div>
+          </div>
+
+          <!-- Wrong feedback -->
+          <div class="state state-wrong" id="state-wrong">
+            <div class="wrong-icon">✗</div>
+            <h2>Errou</h2>
+            <div class="penalty-sub">O alvo estava em outro lugar.</div>
+            <div class="penalty">+ 150 ms</div>
+          </div>
+
+        </div>
+
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+    <div class="screen-label">TELA 3 — ALVO</div>
+  </div>
+</div>
+
+<script>
+  // ========================================================================
+  // ALVO — escolha visual com distratores
+  // ========================================================================
+  const TOTAL_ROUNDS = 10;
+  const ERROR_PENALTY = 150;
+  const CORRECT_DISPLAY_MS = 900;
+  const WRONG_DISPLAY_MS   = 1400;
+  const READY_MS = 700;
+
+  // Paleta de cores para target/distractors (todas distinguíveis mas tematicamente coerentes)
+  const COLORS = [
+    { name: 'AZUL',    hex: '#3b82f6', key: 'muito-bom' },
+    { name: 'VERDE',   hex: '#10b981', key: 'elite' },
+    { name: 'LARANJA', hex: '#f59e0b', key: 'abaixo-media' },
+    { name: 'ROXO',    hex: '#8b5cf6', key: 'elite-extremo' },
+  ];
+
+  let currentRound = 0;
+  let rounds = []; // { ms, correct }
+  let challengeShownAt = 0;
+  let correctIdx = -1;
+  let state = 'intro';
+
+  const zone = document.getElementById('gameZone');
+  const dotsEl = document.getElementById('progressDots');
+  const roundCounter = document.getElementById('roundCounter');
+  const targetDot = document.getElementById('targetDot');
+  const targetLabel = document.getElementById('targetLabel');
+
+  function showState(s) {
+    ['intro', 'ready', 'challenge', 'correct', 'wrong'].forEach(k => {
+      document.getElementById('state-' + k).classList.remove('active');
+    });
+    document.getElementById('state-' + s).classList.add('active');
+    state = s;
+  }
+
+  function updateHeader() {
+    if (state === 'intro') {
+      roundCounter.innerHTML = '<span class="label-eyebrow">ALVO</span>';
+    } else {
+      roundCounter.innerHTML = `Rodada <strong>${currentRound + 1}</strong> de ${TOTAL_ROUNDS}`;
+    }
+  }
+
+  function updateDots() {
+    const dots = dotsEl.querySelectorAll('.dot');
+    dots.forEach((d, i) => {
+      d.classList.remove('done', 'active', 'error');
+      if (i < rounds.length) {
+        d.classList.add(rounds[i].correct ? 'done' : 'error');
+      } else if (i === rounds.length) {
+        d.classList.add('active');
+      }
+    });
+  }
+
+  function startGame() {
+    currentRound = 0;
+    rounds = [];
+    dotsEl.style.visibility = 'visible';
+    updateDots();
+    updateHeader();
+    nextRound();
+  }
+
+  function nextRound() {
+    updateHeader();
+    updateDots();
+    showState('ready');
+    setTimeout(renderChallenge, READY_MS);
+  }
+
+  function renderChallenge() {
+    // Embaralha paleta; [0] = target, [1] = distrator
+    const shuffled = [...COLORS].sort(() => Math.random() - 0.5);
+    const target = shuffled[0];
+    const distractor = shuffled[1];
+
+    // Atualiza hint
+    targetDot.style.background = target.hex;
+    targetLabel.textContent = target.name;
+
+    // Posição do target (0 a 3), embaralhada
+    correctIdx = Math.floor(Math.random() * 4);
+
+    for (let i = 0; i < 4; i++) {
+      const c = document.getElementById('c' + i);
+      c.style.background = (i === correctIdx) ? target.hex : distractor.hex;
+      c.dataset.correct = (i === correctIdx) ? '1' : '0';
+      // Reinicia animação
+      c.style.animation = 'none';
+      void c.offsetWidth;
+      c.style.animation = '';
+    }
+
+    showState('challenge');
+    challengeShownAt = performance.now();
+  }
+
+  // Handler nos 4 círculos
+  ['c0','c1','c2','c3'].forEach(id => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      if (state !== 'challenge') return;
+      const rt = Math.round(performance.now() - challengeShownAt);
+      const isCorrect = e.target.dataset.correct === '1';
+      rounds.push({ ms: rt, correct: isCorrect });
+
+      if (isCorrect) {
+        document.getElementById('correctMs').textContent = rt;
+        showState('correct');
+        setTimeout(advance, CORRECT_DISPLAY_MS);
+      } else {
+        showState('wrong');
+        setTimeout(advance, WRONG_DISPLAY_MS);
+      }
+      updateDots();
+    });
+  });
+
+  function advance() {
+    currentRound++;
+    if (currentRound >= TOTAL_ROUNDS) finishGame();
+    else nextRound();
+  }
+
+  function finishGame() {
+    // Score composto conforme GDD §Alvo:
+    // - RT médio (só das corretas? GDD exibe RT e acurácia separados; vamos usar média de todos)
+    //   aplicando +150ms penalidade nos erros, como define o GDD
+    const withPenalty = rounds.map(r => r.correct ? r.ms : r.ms + ERROR_PENALTY);
+    const avg = Math.round(withPenalty.reduce((s, v) => s + v, 0) / withPenalty.length);
+    const best = Math.min(...rounds.filter(r => r.correct).map(r => r.ms));
+    const correctCount = rounds.filter(r => r.correct).length;
+    const accuracy = Math.round((correctCount / rounds.length) * 100);
+    const errors = rounds.length - correctCount;
+    const times = rounds.map(r => r.ms + (r.correct ? '' : 'E')).join(',');
+
+    // Best histórico mockado
+    const pb = 285;
+    const yday = 305;
+
+    const url = `resultado.html?mode=alvo&avg=${avg}&best=${best}&accuracy=${accuracy}&errors=${errors}&times=${encodeURIComponent(times)}&pb=${pb}&yday=${yday}`;
+    window.location.href = url;
+  }
+</script>
+</body>
+</html>

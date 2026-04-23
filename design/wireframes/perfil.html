@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reflexo · Perfil</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ========== Perfil screen ========== */
+
+  .profile-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+  }
+  .profile-scroll::-webkit-scrollbar { display: none; }
+  .phone-screen { overflow: hidden !important; }
+
+  .profile-header {
+    padding: 12px 20px 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .profile-header .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .profile-header .title-center {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .profile-header .settings-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Identidade — avatar + nome */
+  .identity {
+    padding: 18px 24px 0;
+    text-align: center;
+  }
+  .avatar {
+    width: 82px; height: 82px;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 55%),
+      linear-gradient(135deg, var(--level-muito-bom), var(--level-elite-extremo));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+  }
+  .identity .name {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .identity .since {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+  }
+
+  /* Arquétipo hero */
+  .archetype-card {
+    margin: 22px 20px 0;
+    padding: 20px 20px 18px;
+    background:
+      linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(59, 130, 246, 0.05)),
+      var(--bg-card);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .archetype-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--level-bom), transparent);
+  }
+  .archetype-eyebrow {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .archetype-name {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+    color: var(--level-bom);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .archetype-name .emoji { font-size: 32px; }
+  .archetype-tagline {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 12px;
+    opacity: 0.85;
+  }
+  .archetype-traits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .trait-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .trait-pill .check { color: var(--level-elite); margin-right: 4px; }
+
+  /* Stats grid */
+  .stats-grid {
+    padding: 0 20px;
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 10px;
+    text-align: center;
+  }
+  .stat-box .val {
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .stat-box .unit {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 2px;
+    font-weight: 400;
+  }
+  .stat-box .lbl {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .stat-box .sub {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* Mode breakdown (melhor RT por modo) */
+  .mode-breakdown {
+    padding: 0 20px;
+    margin-top: 20px;
+  }
+  .mode-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .mode-row .mode-emoji {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .mode-row .mode-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .mode-row .mode-name .sub { display: block; font-size: 11px; color: var(--text-dim); font-weight: 400; margin-top: 2px; }
+  .mode-row .mode-val {
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .mode-row .mode-val .pill {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Progressão */
+  .progress-card {
+    margin: 20px 20px 0;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.04));
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 16px;
+  }
+  .progress-card .title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .progress-card .next-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--level-elite-extremo);
+    margin-bottom: 10px;
+  }
+  .progress-card .next-name .emoji { margin-right: 6px; }
+  .progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .progress-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .progress-item .check {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .progress-item.done .check {
+    background: var(--level-elite);
+    color: #041;
+  }
+  .progress-item.todo .check {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .progress-item.done .label { color: var(--text-muted); text-decoration: line-through; }
+  .progress-item .label strong {
+    color: var(--level-elite-extremo);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Histórico mini chart */
+  .history-section {
+    padding: 22px 20px 0;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .history-chart {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 16px 14px;
+  }
+  .history-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px;
+    height: 70px;
+    margin-bottom: 10px;
+  }
+  .history-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .history-bar-wrap .bar {
+    width: 100%;
+    border-radius: 4px 4px 2px 2px;
+    transition: height 0.6s ease-out;
+    opacity: 0.9;
+  }
+  .history-bar-wrap.latest .bar { opacity: 1; box-shadow: 0 0 0 2px rgba(255,255,255,0.12); }
+  .history-bar-wrap .day {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+    font-weight: 600;
+  }
+  .history-legend {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .history-legend strong {
+    color: var(--level-elite);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Conquistas */
+  .achievements {
+    padding: 22px 20px 0;
+  }
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .achievement {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .achievement.locked { opacity: 0.45; }
+  .achievement .ach-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--level-abaixo-media);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .achievement.locked .ach-icon { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+  .achievement .ach-txt { min-width: 0; flex: 1; }
+  .achievement .ach-txt .t {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 2px;
+  }
+  .achievement .ach-txt .d {
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.2;
+  }
+
+  /* Spacer acima da tab bar */
+  .bottom-spacer { height: 20px; }
+
+  /* Tab bar (igual Home) */
+  .tab-bar {
+    padding: 10px 12px 24px;
+    display: flex;
+    justify-content: space-around;
+    background: rgba(5, 10, 20, 0.85);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 0 0;
+    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tab .icon {
+    width: 24px; height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .tab.active { color: var(--text); }
+  .tab.active .icon { color: var(--level-muito-bom); }
+
+  .home-indicator {
+    width: 134px;
+    height: 5px;
+    background: var(--text);
+    border-radius: 3px;
+    margin: 4px auto 6px;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="desktop-wrapper">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="right">●●●● ⌁ ▰▰▰</span>
+        </div>
+
+        <!-- Área rolável -->
+        <div class="profile-scroll">
+
+          <!-- Header -->
+          <div class="profile-header">
+            <a href="home.html" class="back-btn" aria-label="Voltar">‹</a>
+            <div class="title-center">Perfil</div>
+            <a href="#" class="settings-btn" aria-label="Ajustes">⚙︎</a>
+          </div>
+
+          <!-- Identidade -->
+          <div class="identity">
+            <div class="avatar">B</div>
+            <div class="name">Bruno Baumer</div>
+            <div class="since">Jogando desde Abril · 12 sessões</div>
+          </div>
+
+          <!-- Arquétipo -->
+          <div class="archetype-card">
+            <div class="archetype-eyebrow">Seu arquétipo</div>
+            <div class="archetype-name">
+              <span class="emoji">🥊</span>
+              <span>O Atirador</span>
+            </div>
+            <div class="archetype-tagline">
+              RT médio, mas sua <strong>precisão é sua assinatura</strong>. O boxeador paciente que espera a brecha.
+            </div>
+            <div class="archetype-traits">
+              <span class="trait-pill"><span class="check">●</span>Acurácia &gt; 95%</span>
+              <span class="trait-pill"><span class="check">●</span>Zero falsas largadas</span>
+              <span class="trait-pill"><span class="check">●</span>Consistência 12 sessões</span>
+            </div>
+          </div>
+
+          <!-- Stats gerais -->
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="val">247<span class="unit">ms</span></div>
+              <div class="lbl">Melhor RT</div>
+              <div class="sub text-muito-bom">Muito Bom</div>
+            </div>
+            <div class="stat-box">
+              <div class="val">96<span class="unit">%</span></div>
+              <div class="lbl">Acurácia</div>
+              <div class="sub text-elite">Elite</div>
+            </div>
+            <div class="stat-box">
+              <div class="val">12</div>
+              <div class="lbl">Sessões</div>
+              <div class="sub" style="color:var(--text-muted);">últimos 21 dias</div>
+            </div>
+          </div>
+
+          <!-- Melhor por modo -->
+          <div class="mode-breakdown">
+            <div class="section-title" style="padding: 0 4px;">Melhor por modo</div>
+
+            <a href="partida.html" class="mode-row">
+              <div class="mode-emoji">🏁</div>
+              <div class="mode-name">
+                Partida
+                <span class="sub">Sua melhor largada</span>
+              </div>
+              <div class="mode-val">
+                <span class="text-muito-bom">247 ms</span>
+                <span class="pill text-muito-bom">● Muito Bom</span>
+              </div>
+            </a>
+
+            <a href="alvo.html" class="mode-row">
+              <div class="mode-emoji">🎯</div>
+              <div class="mode-name">
+                Alvo
+                <span class="sub">RT com penalidade</span>
+              </div>
+              <div class="mode-val">
+                <span class="text-bom">285 ms</span>
+                <span class="pill text-bom">● Bom · 100%</span>
+              </div>
+            </a>
+
+            <a href="sequencia.html" class="mode-row">
+              <div class="mode-emoji">📶</div>
+              <div class="mode-name">
+                Sequência
+                <span class="sub">20 sinais Go/No-Go</span>
+              </div>
+              <div class="mode-val">
+                <span class="text-bom">298 ms</span>
+                <span class="pill text-bom">● Bom · +2% fadiga</span>
+              </div>
+            </a>
+          </div>
+
+          <!-- Progressão para o próximo arquétipo -->
+          <div class="progress-card">
+            <div class="title">Para virar</div>
+            <div class="next-name"><span class="emoji">🏎️</span>O Piloto</div>
+            <div class="progress-list">
+              <div class="progress-item done">
+                <div class="check">✓</div>
+                <div class="label">Acurácia &gt; 95% consistente</div>
+              </div>
+              <div class="progress-item done">
+                <div class="check">✓</div>
+                <div class="label">Fadiga &lt; 5% em Sequência</div>
+              </div>
+              <div class="progress-item todo">
+                <div class="check">○</div>
+                <div class="label">Derrubar Partida abaixo de <strong>230 ms</strong> (−17 ms)</div>
+              </div>
+              <div class="progress-item todo">
+                <div class="check">○</div>
+                <div class="label">Atingir <strong>nível Muito Bom nos 3 modos</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Histórico -->
+          <div class="history-section">
+            <div class="section-title">Últimas 7 sessões · Partida</div>
+            <div class="history-chart">
+              <div class="history-bars" id="historyBars"></div>
+              <div class="history-legend">
+                <span>Melhor: <strong>247 ms</strong> há 2 dias</span>
+                <span style="color: var(--level-elite);">↓ 19 ms vs 21 dias atrás</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conquistas -->
+          <div class="achievements">
+            <div class="section-title">Conquistas · 3 de 8</div>
+            <div class="achievements-grid">
+              <div class="achievement">
+                <div class="ach-icon">🎯</div>
+                <div class="ach-txt">
+                  <div class="t">Sniper</div>
+                  <div class="d">Acurácia 100% em Alvo</div>
+                </div>
+              </div>
+              <div class="achievement">
+                <div class="ach-icon">🔥</div>
+                <div class="ach-txt">
+                  <div class="t">Rotina</div>
+                  <div class="d">7 dias consecutivos</div>
+                </div>
+              </div>
+              <div class="achievement">
+                <div class="ach-icon">⚡</div>
+                <div class="ach-txt">
+                  <div class="t">Abaixo de 250</div>
+                  <div class="d">RT &lt; 250 ms em Partida</div>
+                </div>
+              </div>
+              <div class="achievement locked">
+                <div class="ach-icon">🏎️</div>
+                <div class="ach-txt">
+                  <div class="t">Nível F1</div>
+                  <div class="d">RT &lt; 200 ms</div>
+                </div>
+              </div>
+              <div class="achievement locked">
+                <div class="ach-icon">🧠</div>
+                <div class="ach-txt">
+                  <div class="t">Sem fadiga</div>
+                  <div class="d">5 Sequências sem queda</div>
+                </div>
+              </div>
+              <div class="achievement locked">
+                <div class="ach-icon">🌟</div>
+                <div class="ach-txt">
+                  <div class="t">Piloto</div>
+                  <div class="d">Arquétipo desbloqueado</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom-spacer"></div>
+
+        </div><!-- /.profile-scroll -->
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <a href="home.html" class="tab">
+            <span class="icon">▶</span>
+            <span>Jogar</span>
+          </a>
+          <a href="historico.html" class="tab">
+            <span class="icon">📊</span>
+            <span>Histórico</span>
+          </a>
+          <a href="ciencia.html" class="tab">
+            <span class="icon">🧠</span>
+            <span>Ciência</span>
+          </a>
+          <a href="perfil.html" class="tab active">
+            <span class="icon">●</span>
+            <span>Perfil</span>
+          </a>
+        </div>
+        <div class="home-indicator"></div>
+
+      </div>
+    </div>
+    <div class="screen-label">TELA 6 — PERFIL DO JOGADOR</div>
+  </div>
+</div>
+
+<script>
+  // Mini histórico animado — dados mock de 7 sessões em Partida
+  const history = [
+    { day: '21d', ms: 266, key: 'bom' },
+    { day: '14d', ms: 272, key: 'bom' },
+    { day: '10d', ms: 258, key: 'bom' },
+    { day: '7d',  ms: 254, key: 'bom' },
+    { day: '4d',  ms: 249, key: 'muito-bom' },
+    { day: '2d',  ms: 247, key: 'muito-bom' },
+    { day: 'hoje', ms: 251, key: 'muito-bom' },
+  ];
+  const bars = document.getElementById('historyBars');
+  const maxMs = Math.max(...history.map(h => h.ms));
+  const minMs = Math.min(...history.map(h => h.ms));
+  history.forEach((h, i) => {
+    // Escala invertida: barras menores = melhor (mais rápido).
+    // Mapeia ms para altura 30-95% onde menor ms = maior barra.
+    const range = Math.max(1, maxMs - minMs);
+    const norm = 1 - (h.ms - minMs) / range; // 1 = melhor
+    const heightPct = 35 + norm * 60;
+    const color = getComputedStyle(document.documentElement)
+      .getPropertyValue('--level-' + h.key).trim();
+    const w = document.createElement('div');
+    w.className = 'history-bar-wrap' + (i === history.length - 1 ? ' latest' : '');
+    w.innerHTML = `
+      <div class="bar" style="height: 0%; background: ${color};"></div>
+      <div class="day">${h.day}</div>
+    `;
+    bars.appendChild(w);
+    setTimeout(() => { w.querySelector('.bar').style.height = heightPct + '%'; }, 200 + i * 80);
+  });
+</script>
+</body>
+</html>
