@@ -6,16 +6,31 @@ import {
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
+// Jitter ranges mirrored from main game screens:
+//   Partida  — ModoPartida.tsx:  MIN_DELAY=1000, MAX_DELAY=4000
+//   Alvo     — ModoAlvo.tsx:     READY_DELAY=700 (fixed)
+//   Sequência— ModoSequencia.tsx: MIN_INTERVAL=1000, MAX_INTERVAL=2200
+const PARTIDA_JITTER_MIN = 1000;
+const PARTIDA_JITTER_MAX = 4000;
+const ALVO_JITTER        = 700;
+const SEQ_JITTER_MIN     = 1000;
+const SEQ_JITTER_MAX     = 2200;
+
+const FALSE_START_MS = 300; // mirrors ModoPartida FALSE_START
+
 type Phase =
   | 'intro'
   | 'partida_instr'
   | 'countdown'
+  | 'partida_jitter'
   | 'partida_go'
   | 'trans_alvo'
   | 'alvo_instr'
+  | 'alvo_jitter'
   | 'alvo_go'
   | 'trans_seq'
   | 'seq_instr'
+  | 'seq_jitter'
   | 'seq_go'
   | 'result';
 
@@ -57,7 +72,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
   const signalTime = useRef(0);
   const phaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownNext = useRef<'partida_go' | 'alvo_go' | 'seq_go'>('partida_go');
+  const countdownNext = useRef<'partida_jitter' | 'alvo_jitter' | 'seq_jitter'>('partida_jitter');
 
   const clearTimer = () => {
     if (phaseTimer.current) { clearTimeout(phaseTimer.current); phaseTimer.current = null; }
@@ -71,7 +86,8 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
     if (phase === 'countdown') {
       setCountVal(3);
-      // Chained setTimeout: 3 → 2 → 1 → GO → stimulus
+      // Chained setTimeout: 3 → 2 → 1 → GO → jitter
+      // signalTime is NOT set here — it's set at jitter end when stimulus actually appears
       phaseTimer.current = setTimeout(() => {
         setCountVal(2);
         phaseTimer.current = setTimeout(() => {
@@ -79,12 +95,35 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
           phaseTimer.current = setTimeout(() => {
             setCountVal(0); // 0 renders as "GO"
             phaseTimer.current = setTimeout(() => {
-              signalTime.current = Date.now();
               setPhase(countdownNext.current);
             }, 600);
           }, 1000);
         }, 1000);
       }, 1000);
+    }
+
+    // Jitter phases — mirror main game delays; signalTime set right before stimulus
+    if (phase === 'partida_jitter') {
+      const delay = Math.floor(Math.random() * (PARTIDA_JITTER_MAX - PARTIDA_JITTER_MIN)) + PARTIDA_JITTER_MIN;
+      phaseTimer.current = setTimeout(() => {
+        signalTime.current = Date.now();
+        setPhase('partida_go');
+      }, delay);
+    }
+
+    if (phase === 'alvo_jitter') {
+      phaseTimer.current = setTimeout(() => {
+        signalTime.current = Date.now();
+        setPhase('alvo_go');
+      }, ALVO_JITTER);
+    }
+
+    if (phase === 'seq_jitter') {
+      const interval = SEQ_JITTER_MIN + Math.random() * (SEQ_JITTER_MAX - SEQ_JITTER_MIN);
+      phaseTimer.current = setTimeout(() => {
+        signalTime.current = Date.now();
+        setPhase('seq_go');
+      }, interval);
     }
 
     if (phase === 'trans_alvo') {
@@ -98,6 +137,14 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         setPhase('seq_instr');
       }, 1600);
     }
+  }, [phase]);
+
+  // Tap during partida jitter = false start, mirrors ModoPartida FALSE_START behaviour
+  const handlePartidaFalseStart = useCallback(() => {
+    if (phase !== 'partida_jitter') return;
+    clearTimer();
+    setRts(prev => ({ ...prev, partida: FALSE_START_MS }));
+    setPhase('trans_alvo');
   }, [phase]);
 
   const handlePartidaTap = useCallback(() => {
@@ -119,10 +166,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   const handleSeqTap = useCallback(() => {
     if (phase !== 'seq_go') return;
     const rt = Date.now() - signalTime.current;
-    setRts(prev => {
-      const updated = { ...prev, seq: rt };
-      return updated;
-    });
+    setRts(prev => ({ ...prev, seq: rt }));
     setPhase('result');
   }, [phase]);
 
@@ -189,7 +233,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       name: 'PARTIDA',
       desc: 'Aperte o mais rápido possível assim que o círculo verde aparecer. Sem pressa, espera aparecer, pois será penalizado em caso de queimar a largada.',
       onStart: () => {
-        countdownNext.current = 'partida_go';
+        countdownNext.current = 'partida_jitter';
         setPhase('countdown');
       },
     },
@@ -202,7 +246,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         const order = shuffle([0, 1, 2, 3]);
         setAlvoTarget(target);
         setAlvoOrder(order);
-        countdownNext.current = 'alvo_go';
+        countdownNext.current = 'alvo_jitter';
         setPhase('countdown');
       },
     },
@@ -211,7 +255,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       name: 'SEQUÊNCIA',
       desc: 'Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho).',
       onStart: () => {
-        countdownNext.current = 'seq_go';
+        countdownNext.current = 'seq_jitter';
         setPhase('countdown');
       },
     },
@@ -246,6 +290,41 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
           <Text style={[styles.countdownNum, isGo && styles.countdownGo]}>
             {isGo ? 'GO' : countVal}
           </Text>
+        </View>
+      </View>
+    );
+  }
+
+  // ── JITTER SCREENS — black screen + mode title, random delay before stimulus ─
+  if (phase === 'partida_jitter') {
+    // Pressable to catch false starts, mirroring ModoPartida waiting-state behaviour
+    return (
+      <Pressable style={styles.root} onPressIn={handlePartidaFalseStart}>
+        {renderHeader(5)}
+        <View style={styles.jitterArea}>
+          <Text style={styles.jitterLabel}>PARTIDA</Text>
+        </View>
+      </Pressable>
+    );
+  }
+
+  if (phase === 'alvo_jitter') {
+    return (
+      <View style={styles.root}>
+        {renderHeader(5)}
+        <View style={styles.jitterArea}>
+          <Text style={styles.jitterLabel}>ALVO</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (phase === 'seq_jitter') {
+    return (
+      <View style={styles.root}>
+        {renderHeader(5)}
+        <View style={styles.jitterArea}>
+          <Text style={styles.jitterLabel}>SEQUÊNCIA</Text>
         </View>
       </View>
     );
@@ -373,6 +452,9 @@ const styles = StyleSheet.create({
   countdownArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   countdownNum: { fontSize: 112, fontWeight: '900', color: '#fff', letterSpacing: -4, lineHeight: 116 },
   countdownGo: { color: '#10b981' },
+
+  jitterArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  jitterLabel: { fontSize: 22, fontWeight: '900', color: '#2d3a55', letterSpacing: 3 },
 
   miniModeLabel: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5 },
 

@@ -172,3 +172,31 @@ Adicionada fase `countdown` única e reutilizável que exibe 3→2→1→GO ante
 Fases removidas: `partida_wait` e `seq_wait` — eram buffers aleatórios sem contagem visual que existiam apenas para Partida e Sequência; o countdown os substitui com feedback visual consistente para todos os modos.
 
 Setup do Alvo: `setAlvoTarget` e `setAlvoOrder` continuam sendo chamados no `onStart` de `alvo_instr` (antes do countdown iniciar), mas `signalTime` foi desacoplado desse momento e agora é setado no fim do countdown, junto com os outros dois modos.
+
+---
+
+### Sessão — Jitter aleatório entre countdown e estímulo (2026-04-23)
+
+#### (a) Arquivo modificado
+- `mobile2/screens/triage/TriageBaseline.tsx`
+
+#### (b) Mudança
+Adicionadas 3 fases de espera aleatória (`partida_jitter`, `alvo_jitter`, `seq_jitter`) inseridas entre o GO do countdown e a aparição do estímulo. O objetivo é medir reflexo real em vez de antecipação: o usuário entra em estado de alerta após o GO, mas não sabe exatamente quando o estímulo vai surgir. A tela exibe apenas o nome do modo (`PARTIDA` / `ALVO` / `SEQUÊNCIA`) centralizado em cor quase invisível (`#2d3a55`) sobre fundo escuro.
+
+#### (c) Ranges de jitter — extraídos do jogo principal
+| Modo | Range | Tipo |
+|------|-------|------|
+| Partida | 1000–4000 ms | aleatório (`Math.floor(Math.random() * 3000) + 1000`) |
+| Alvo | 700 ms | fixo (`READY_DELAY`) |
+| Sequência | 1000–2200 ms | aleatório (`1000 + Math.random() * 1200`) |
+
+#### (d) Arquivos do jogo principal consultados
+- `mobile2/screens/ModoPartida.tsx` — constantes `MIN_DELAY=1000`, `MAX_DELAY=4000` (linha 9–10); lógica de jitter em `startRound` (linha 79)
+- `mobile2/screens/ModoAlvo.tsx` — constante `READY_DELAY=700` (linha 10); uso em `startRound` (linha 84)
+- `mobile2/screens/ModoSequencia.tsx` — constantes `MIN_INTERVAL=1000`, `MAX_INTERVAL=2200` (linha 9–10); lógica de jitter em `scheduleNext` (linha 119)
+
+#### (e) signalTime
+`signalTime.current` foi movido do fim do countdown para o fim de cada fase de jitter, imediatamente antes de `setPhase` para a fase de execução. Isso garante que o RT é medido a partir da aparição real do estímulo, não do GO.
+
+#### (f) Falsa largada preservada
+`partida_jitter` é renderizado como `Pressable`. Toque durante o jitter chama `handlePartidaFalseStart`, que cancela o timer, grava `partida = 300` (mesmo valor de `FALSE_START` em `ModoPartida.tsx`) e avança para `trans_alvo`. `alvo_jitter` e `seq_jitter` são `View` não-interativos.
