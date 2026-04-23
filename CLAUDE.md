@@ -292,3 +292,32 @@ Correção: hint de cor (`hintBadge`) agora exibe apenas durante `gameState === 
 `buildSequence()` criava um array de 16 Go + 4 NoGo e embaralhava. A proporção era sempre exatamente 80/20: após ver 16 Go e 0 NoGo, o usuário sabia que os restantes seriam NoGo. Isso transforma controle inibitório reflexo em tarefa de contagem.
 Correção: `buildSequence()` reescrita com probabilidade independente por evento — primeiro sinal sempre Go (âncora de feedback imediato), cada sinal seguinte com `Math.random() < 0.25` de ser NoGo sem memória dos sinais anteriores. Constante `GO_COUNT` removida. Texto da tela de instrução atualizado de "20%" para "~25%".
 `TriageBaseline.tsx` (mini-teste de Sequência): sinal único, sempre Go, para garantir medição de RT. O fix #2 já torna o estímulo visual consistente (círculo verde). Nenhuma mudança de probabilidade necessária no mini-teste.
+
+---
+
+### Sessão — Grupo 2: bug No-Go + texto instrução + redesign intro triagem (2026-04-23)
+
+#### (a) Arquivos modificados
+- `mobile2/screens/ModoSequencia.tsx`
+- `mobile2/screens/triage/TriageBaseline.tsx`
+
+#### (b) Causa raiz do bug No-Go quase nunca aparece (`ModoSequencia.tsx`)
+
+Em `scheduleNext`, o tipo visual do sinal era derivado no render via `sequence.current[signalIdx]`, onde `signalIdx` é estado React. O problema estava na combinação de dois comportamentos do React:
+
+1. `setSignalIdx(currentIdx)` seguido de `setGameState('signal')` são dois setState separados. Mesmo com batching do React 18, quando `currentIdx === 0` (primeiro sinal), `setSignalIdx(0)` é um **no-op** — `signalIdx` já era 0, então React não agenda atualização para esse estado. Apenas `setGameState('signal')` dispara o re-render.
+2. No re-render resultante, `gameState === 'signal'` é verdadeiro, mas `signalIdx` nunca passou pelo ciclo de atualização contextual do `scheduleNext` corrente — fica travado em 0, que é sempre `'go'` (primeiro sinal garantido por `buildSequence`).
+3. Para sinais subsequentes, um descompasso análogo pode ocorrer em frames de transição onde `gameState` e `signalIdx` não coalescem no mesmo commit, fazendo a cor do círculo refletir o índice anterior (frequentemente `'go'`).
+
+**Correção:** `currentSignalRef = useRef<SignalType>('go')` adicionado. Em `scheduleNext`, imediatamente antes de `setSignalIdx` e `setGameState`, o ref é escrito: `currentSignalRef.current = sequence.current[currentIdx]`. O render lê `currentSignalRef.current` (já atualizado antes de qualquer re-render ser disparado). `handleTap` também lê o ref em vez de `sequence.current[signalIdx]`, eliminando qualquer possibilidade de stale closure na classificação `hit` / `commission`.
+
+#### (c) Correções aplicadas
+
+**Correção 1 — Bug visual No-Go (`ModoSequencia.tsx`)**
+Vide causa raiz acima. Três pontos de mudança: (1) ref `currentSignalRef` adicionado; (2) ref escrito em `scheduleNext` antes dos setState; (3) render e `handleTap` passam a ler o ref em vez de `sequence.current[signalIdx]`.
+
+**Correção 2 — Texto instrução Modo Sequência (`ModoSequencia.tsx`)**
+Linha ③ do `instrBox` substituída de `"~25% dos sinais são NoGo — não se precipite"` para `"Você não sabe quando o vermelho vai aparecer. Cada sinal é uma surpresa."` — elimina comunicação de proporção fixa, que induzia o usuário a contar sinais para prever o vermelho.
+
+**Correção 3 — Redesign da tela intro do mini-teste de baseline (`TriageBaseline.tsx`)**
+Ícones soltos em linha (`modeIconsRow`) substituídos por 3 cards verticais compactos, um por modo. Cada card tem: barra lateral colorida (4 px, cor do modo), ícone grande, nome em bold colorido, keyword de métrica em caps pequena, faixa de tempo esperada. Cores por modo: Partida `#3b82f6`, Alvo `#06b6d4`, Sequência `#8b5cf6` — consistentes com as cores já usadas em cada tela de modo. Estilos antigos (`modeIconsRow`, `modeIconBox`, `modeIconEmoji`, `modeIconLabel`) substituídos por `modeCard`, `modeCardBar`, `modeCardIcon`, `modeCardContent`, `modeCardName`, `modeCardMetric`, `modeCardRange`. `subtitle.marginBottom` reduzido de 36 para 24 para acomodar os cards sem comprimir a tela.

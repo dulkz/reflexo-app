@@ -57,6 +57,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   const [countdown, setCountdown] = useState(3);
 
   const sequence = useRef<SignalType[]>([]);
+  const currentSignalRef = useRef<SignalType>('go');
   const signalStart = useRef(0);
   const responded = useRef(false);
   const signalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,6 +122,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       circleScale.setValue(0);
       Animated.spring(circleScale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }).start();
       signalStart.current = Date.now();
+      currentSignalRef.current = sequence.current[currentIdx]; // set before state to avoid render race
       setSignalIdx(currentIdx);
       setGameState('signal');
 
@@ -146,7 +148,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     if (signalTimer.current) clearTimeout(signalTimer.current);
 
     const rt = Date.now() - signalStart.current;
-    const currentSignal = sequence.current[signalIdx];
+    const currentSignal = currentSignalRef.current;
     const responseType: ResponseType = currentSignal === 'go' ? 'hit' : 'commission';
     const result: TrialResult = { signalType: currentSignal, responseType, rt };
     const newTrials = [...trials, result];
@@ -177,7 +179,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   const progress = trials.length / TOTAL_SIGNALS;
-  const currentSignalType = gameState === 'signal' ? sequence.current[signalIdx] : null;
+  const currentSignalType = gameState === 'signal' ? currentSignalRef.current : null;
 
   if (gameState === 'intro') {
     return (
@@ -193,7 +195,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
           <View style={styles.instrBox}>
             <Text style={styles.instrLine}>① <Text style={{ color: '#10b981', fontWeight: '700' }}>CÍRCULO VERDE</Text> → toque imediatamente (Go)</Text>
             <Text style={styles.instrLine}>② <Text style={{ color: '#ef4444', fontWeight: '700' }}>CÍRCULO VERMELHO</Text> → não toque! (NoGo)</Text>
-            <Text style={[styles.instrLine, { color: '#f59e0b' }]}>③ ~25% dos sinais são NoGo — não se precipite</Text>
+            <Text style={[styles.instrLine, { color: '#f59e0b' }]}>③ Você não sabe quando o vermelho vai aparecer. Cada sinal é uma surpresa.</Text>
           </View>
           <View style={styles.signalDemo}>
             <View style={styles.demoItem}>

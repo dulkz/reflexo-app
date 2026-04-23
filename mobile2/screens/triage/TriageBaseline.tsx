@@ -196,6 +196,11 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
   // ── INTRO ────────────────────────────────────────────────────────────────────
   if (phase === 'intro') {
+    const MODE_CARDS = [
+      { icon: '🏎', name: 'PARTIDA',   metric: 'VELOCIDADE DE REAÇÃO', range: '~200–400 ms', accent: '#3b82f6' },
+      { icon: '🎯', name: 'ALVO',      metric: 'PRECISÃO SOB PRESSÃO', range: '~300–600 ms', accent: '#06b6d4' },
+      { icon: '🧠', name: 'SEQUÊNCIA', metric: 'CONTROLE INIBITÓRIO',  range: '~250–500 ms', accent: '#8b5cf6' },
+    ];
     return (
       <View style={styles.root}>
         {renderHeader(5)}
@@ -204,18 +209,17 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
           <Text style={styles.subtitle}>
             1 largada de cada modo. Nenhuma delas entra no seu histórico. Sem pressão.
           </Text>
-          <View style={styles.modeIconsRow}>
-            {[
-              { icon: '🏎', label: 'Partida' },
-              { icon: '🎯', label: 'Alvo' },
-              { icon: '🧠', label: 'Sequência' },
-            ].map(m => (
-              <View key={m.label} style={styles.modeIconBox}>
-                <Text style={styles.modeIconEmoji}>{m.icon}</Text>
-                <Text style={styles.modeIconLabel}>{m.label}</Text>
+          {MODE_CARDS.map(m => (
+            <View key={m.name} style={styles.modeCard}>
+              <View style={[styles.modeCardBar, { backgroundColor: m.accent }]} />
+              <Text style={styles.modeCardIcon}>{m.icon}</Text>
+              <View style={styles.modeCardContent}>
+                <Text style={[styles.modeCardName, { color: m.accent }]}>{m.name}</Text>
+                <Text style={styles.modeCardMetric}>{m.metric}</Text>
+                <Text style={styles.modeCardRange}>{m.range}</Text>
               </View>
-            ))}
-          </View>
+            </View>
+          ))}
         </View>
         <View style={styles.footer}>
           <TouchableOpacity style={styles.btnPrimary} onPress={() => setPhase('partida_instr')} activeOpacity={0.8}>
@@ -436,11 +440,20 @@ const styles = StyleSheet.create({
 
   body: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
   title: { fontSize: 26, fontWeight: '900', color: '#fff', marginBottom: 12, letterSpacing: -0.5 },
-  subtitle: { fontSize: 15, color: '#4a5a7b', lineHeight: 23, marginBottom: 36 },
-  modeIconsRow: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
-  modeIconBox: { alignItems: 'center', gap: 8 },
-  modeIconEmoji: { fontSize: 36 },
-  modeIconLabel: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 1 },
+  subtitle: { fontSize: 15, color: '#4a5a7b', lineHeight: 23, marginBottom: 24 },
+
+  modeCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden', marginBottom: 10,
+  },
+  modeCardBar: { width: 4, alignSelf: 'stretch' },
+  modeCardIcon: { fontSize: 30, paddingHorizontal: 16, paddingVertical: 14 },
+  modeCardContent: { flex: 1, paddingVertical: 12, paddingRight: 14, gap: 2 },
+  modeCardName: { fontSize: 13, fontWeight: '900', letterSpacing: 1.5 },
+  modeCardMetric: { fontSize: 9, fontWeight: '700', color: '#4a5a7b', letterSpacing: 1.5 },
+  modeCardRange: { fontSize: 11, color: '#3a4a6b', fontWeight: '600', marginTop: 2 },
 
   instrBody: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 16 },
   instrIcon: { fontSize: 72 },
