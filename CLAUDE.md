@@ -143,3 +143,18 @@ Construção inicial do app em `mobile2/` com navegação por state machine em A
 - **Progresso discreta (5 dots)**: dots de progresso nas telas de triagem usam `width: 20` para dot ativo e `width: 8` para inativo (pill animada visualmente mas não com Animated API). Reproduzir esse padrão em fluxos futuros.
 - **Cores por grupo de ambição**: `elite_sport: #3b82f6`, `populational: #8b5cf6`, `brain_health: #10b981` — definidas em `GROUP_COLOR` em `ambitions.ts`. Usar sempre essas constantes, não hardcodar.
 - **Dark theme consistente**: background `#0b1220`, cards `#111a2e`, texto secundário `#4a5a7b`, texto mudo `#3a4a6b`, accent azul `#3b82f6`. Nenhuma tela deve introduzir cores de fundo fora dessa paleta sem discussão.
+
+---
+
+### Sessão — Telas de instrução antes de cada modo do mini-teste (2026-04-23)
+
+#### (a) Arquivo modificado
+- `mobile2/screens/triage/TriageBaseline.tsx`
+
+#### (b) Mudança
+Adicionadas 3 fases de instrução (`partida_instr`, `alvo_instr`, `seq_instr`) à state machine interna, uma antes de cada mini-jogo do baseline. Cada tela mostra o ícone grande do modo (mesmo usado nos cards da Home), o nome em bold grande e uma frase explicando a mecânica, seguida do botão "COMEÇAR". O fluxo passa de 9 para 12 fases: `intro` → `partida_instr` → `partida_wait` → `partida_go` → `trans_alvo` → `alvo_instr` → `alvo_go` → `trans_seq` → `seq_instr` → `seq_wait` → `seq_go` → `result`. O setup do alvo (target/order/signalTime) foi movido do `useEffect` de `trans_alvo` para o `onStart` de `alvo_instr`, executado no momento exato em que o usuário inicia o estímulo.
+
+#### (c) Textos exatos por modo
+- **PARTIDA** (🏎): "Aperte o mais rápido possível assim que o círculo verde aparecer. Sem pressa, espera aparecer, pois será penalizado em caso de queimar a largada."
+- **ALVO** (🎯): "Toque no círculo com a cor indicada no topo em cada rodada quando ele aparecer. Ignore as outras cores."
+- **SEQUÊNCIA** (🧠): "Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho)."
