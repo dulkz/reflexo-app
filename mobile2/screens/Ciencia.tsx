@@ -4,12 +4,14 @@ import {
   Platform, StatusBar as RNStatusBar,
   StyleProp, TextStyle,
 } from 'react-native';
+import { UserProfile } from '../types/user';
+import { getMetaBenchmark } from '../utils/ambition';
+import { GROUP_COLOR } from '../config/ambitions';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Renders text with **bold** markers as white bold spans. */
 function RichText({ children, style }: { children: string; style?: StyleProp<TextStyle> }) {
   const parts = children.split(/\*\*(.*?)\*\*/g);
   return (
@@ -26,7 +28,6 @@ const rich = StyleSheet.create({
   bold: { fontWeight: '800', color: '#e2e8f0' },
 });
 
-/** Section kicker + optional text headline */
 function SectionHeader({ kicker, headline }: { kicker: string; headline?: string }) {
   return (
     <View style={styles.sectionHeader}>
@@ -88,6 +89,14 @@ const BENCHMARKS = [
     color: '#3b82f6',
   },
   {
+    icon: '⚡',
+    name: 'Velocista olímpico',
+    source: 'Lipps et al., 2011 · Sprint start research',
+    range: '170–200 ms',
+    level: 'ELITE',
+    color: '#10b981',
+  },
+  {
     icon: '🧍',
     name: 'Adulto saudável (25–45)',
     source: 'Meta-análise · PMC, 2021',
@@ -103,11 +112,23 @@ const SOURCES = [
   'Loturco, I. et al. (2015). Reaction time and performance in combat sports. J Strength Cond Res.',
   'Buszard, T. et al. (2019). Working memory and attention in tennis. J Sports Sciences.',
   'Der, G. & Deary, I.J. (2006). Age and sex differences in reaction time in adulthood. Intelligence.',
+  'Lipps, D.B. et al. (2011). Considerations for developing a sprint start. J Sports Sciences.',
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-export default function Ciencia() {
+interface Props {
+  userProfile: UserProfile;
+}
+
+export default function Ciencia({ userProfile }: Props) {
+  const goalBenchmarkName = userProfile.triageCompleted && userProfile.ambitionId
+    ? getMetaBenchmark(userProfile.ambitionId)
+    : null;
+
+  // Highlight color: use the elite_sport group color (these are always elite_sport ambitions)
+  const goalHighlightColor = GROUP_COLOR['elite_sport'];
+
   return (
     <View style={styles.root}>
       <ScrollView
@@ -116,9 +137,7 @@ export default function Ciencia() {
       >
         <Text style={styles.pageTitle}>CIÊNCIA</Text>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            SEÇÃO 1 — POR QUE TREINAR REAÇÃO
-        ══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ SEÇÃO 1 — POR QUE TREINAR REAÇÃO ══ */}
         <SectionHeader kicker="POR QUE TREINAR REAÇÃO" />
 
         <View style={styles.heroStat}>
@@ -133,9 +152,7 @@ export default function Ciencia() {
           </View>
         </View>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            SEÇÃO 2 — COMO FUNCIONA
-        ══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ SEÇÃO 2 — COMO FUNCIONA ══ */}
         <SectionHeader
           kicker="COMO FUNCIONA"
           headline="Treinar reação é treinar o cérebro."
@@ -150,9 +167,7 @@ export default function Ciencia() {
           </RichText>
         </View>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            SEÇÃO 3 — 3 MECANISMOS NEURAIS
-        ══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ SEÇÃO 3 — 3 MECANISMOS NEURAIS ══ */}
         <SectionHeader kicker="3 MECANISMOS NEURAIS" />
 
         {MECHS.map(m => (
@@ -170,21 +185,16 @@ export default function Ciencia() {
           </View>
         ))}
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            SEÇÃO 4 — A DOSE CERTA
-        ══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ SEÇÃO 4 — A DOSE CERTA ══ */}
         <SectionHeader
           kicker="A DOSE CERTA"
           headline="Pouco, mas todo dia."
         />
 
         <View style={styles.freqCard}>
-          {/* Recommendation badge */}
           <View style={styles.freqBadge}>
             <Text style={styles.freqBadgeText}>RECOMENDAÇÃO</Text>
           </View>
-
-          {/* 3 × 3 display */}
           <View style={styles.freqMain}>
             <View style={styles.freqCol}>
               <Text style={styles.freqBig}>3</Text>
@@ -196,45 +206,58 @@ export default function Ciencia() {
               <Text style={styles.freqColLabel}>MINUTOS</Text>
             </View>
           </View>
-
-          {/* Rationale */}
           <Text style={styles.freqRationale}>
             É o que basta para manter o circuito ativo. Acima disso, ganho marginal. Abaixo, some rápido.
           </Text>
         </View>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            SEÇÃO 5 — PARA COLOCAR EM PERSPECTIVA
-        ══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ SEÇÃO 5 — PARA COLOCAR EM PERSPECTIVA ══ */}
         <SectionHeader
           kicker="PARA COLOCAR EM PERSPECTIVA"
           headline="Quem reage mais rápido que você."
         />
 
-        {BENCHMARKS.map(b => (
-          <View key={b.name} style={[styles.benchCard, { borderColor: b.color + '2a' }]}>
-            {/* Icon */}
-            <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
-              <Text style={styles.benchIconText}>{b.icon}</Text>
-            </View>
+        {BENCHMARKS.map(b => {
+          const isGoal = goalBenchmarkName !== null && b.name === goalBenchmarkName;
+          return (
+            <View
+              key={b.name}
+              style={[
+                styles.benchCard,
+                { borderColor: isGoal ? goalHighlightColor + 'aa' : b.color + '2a' },
+                isGoal && { borderWidth: 2 },
+              ]}
+            >
+              {/* SUA META badge */}
+              {isGoal && (
+                <View style={[styles.goalBadge, { backgroundColor: goalHighlightColor + '18' }]}>
+                  <Text style={[styles.goalBadgeText, { color: goalHighlightColor }]}>
+                    ← SUA META
+                  </Text>
+                </View>
+              )}
 
-            {/* Name + source */}
-            <View style={styles.benchInfo}>
-              <Text style={styles.benchName}>{b.name}</Text>
-              <Text style={styles.benchSource}>{b.source}</Text>
-            </View>
+              {/* Icon */}
+              <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
+                <Text style={styles.benchIconText}>{b.icon}</Text>
+              </View>
 
-            {/* Range + level */}
-            <View style={styles.benchRight}>
-              <Text style={[styles.benchRange, { color: b.color }]}>{b.range}</Text>
-              <Text style={[styles.benchLevel, { color: b.color }]}>{b.level}</Text>
-            </View>
-          </View>
-        ))}
+              {/* Name + source */}
+              <View style={styles.benchInfo}>
+                <Text style={styles.benchName}>{b.name}</Text>
+                <Text style={styles.benchSource}>{b.source}</Text>
+              </View>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            FECHAMENTO EDITORIAL
-        ══════════════════════════════════════════════════════════════════════ */}
+              {/* Range + level */}
+              <View style={styles.benchRight}>
+                <Text style={[styles.benchRange, { color: b.color }]}>{b.range}</Text>
+                <Text style={[styles.benchLevel, { color: b.color }]}>{b.level}</Text>
+              </View>
+            </View>
+          );
+        })}
+
+        {/* ══ FECHAMENTO EDITORIAL ══ */}
         <View style={styles.closingCard}>
           <Text style={styles.closingIcon}>🧠</Text>
           <View style={{ flex: 1 }}>
@@ -245,9 +268,7 @@ export default function Ciencia() {
           </View>
         </View>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            DISCLAIMER TÉCNICO
-        ══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ DISCLAIMER TÉCNICO ══ */}
         <View style={styles.toneBox}>
           <Text style={styles.toneIcon}>💡</Text>
           <Text style={styles.toneText}>
@@ -256,9 +277,7 @@ export default function Ciencia() {
           </Text>
         </View>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            FONTES
-        ══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ FONTES ══ */}
         <Text style={styles.sourcesTitle}>FONTES</Text>
         {SOURCES.map(s => (
           <Text key={s} style={styles.source}>• {s}</Text>
@@ -280,7 +299,6 @@ const styles = StyleSheet.create({
     letterSpacing: 4, marginBottom: 24,
   },
 
-  // ── Section headers ────────────────────────────────────────────────────────
   sectionHeader: { marginBottom: 16, marginTop: 8 },
   kicker: {
     fontSize: 10, fontWeight: '700', color: '#3a4a6b',
@@ -291,7 +309,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3, lineHeight: 28,
   },
 
-  // ── Hero stat (Seção 1) ────────────────────────────────────────────────────
   heroStat: {
     backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)', padding: 28,
@@ -314,7 +331,6 @@ const styles = StyleSheet.create({
     fontSize: 11, color: '#4a5a7b', textAlign: 'center', letterSpacing: 0.3,
   },
 
-  // ── Editorial block (Seção 2) ──────────────────────────────────────────────
   editorialBlock: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)', padding: 20,
@@ -325,7 +341,6 @@ const styles = StyleSheet.create({
   },
   editorialParaLast: { marginBottom: 0 },
 
-  // ── Mechanism cards (Seção 3) ─────────────────────────────────────────────
   mechCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     flexDirection: 'row', gap: 14, padding: 16, marginBottom: 10,
@@ -340,7 +355,6 @@ const styles = StyleSheet.create({
   mechTitle: { fontSize: 14, fontWeight: '800' },
   mechDesc: { fontSize: 13, color: '#4a5a7b', lineHeight: 19 },
 
-  // ── Frequency card (Seção 4) ──────────────────────────────────────────────
   freqCard: {
     backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)', padding: 24,
@@ -380,12 +394,19 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
 
-  // ── Benchmark cards (Seção 5) ─────────────────────────────────────────────
   benchCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     flexDirection: 'row', alignItems: 'center',
     gap: 12, padding: 14, marginBottom: 10,
+    // needed for absolute badge positioning
+    position: 'relative',
   },
+  goalBadge: {
+    position: 'absolute', top: 8, right: 8,
+    borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
+  },
+  goalBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
+
   benchIconBox: {
     width: 44, height: 44, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center',
@@ -399,7 +420,6 @@ const styles = StyleSheet.create({
   benchRange: { fontSize: 16, fontWeight: '900', letterSpacing: -0.5 },
   benchLevel: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5 },
 
-  // ── Closing editorial ──────────────────────────────────────────────────────
   closingCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
@@ -414,7 +434,6 @@ const styles = StyleSheet.create({
     fontSize: 15, fontWeight: '800', color: '#fff',
   },
 
-  // ── Disclaimer ─────────────────────────────────────────────────────────────
   toneBox: {
     backgroundColor: '#0f1829', borderRadius: 12, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)', padding: 14,
@@ -423,7 +442,6 @@ const styles = StyleSheet.create({
   toneIcon: { fontSize: 18 },
   toneText: { flex: 1, fontSize: 12, color: '#4a5a7b', lineHeight: 18 },
 
-  // ── Sources ────────────────────────────────────────────────────────────────
   sourcesTitle: {
     fontSize: 10, fontWeight: '700', color: '#3a4a6b',
     letterSpacing: 2.5, marginBottom: 10,

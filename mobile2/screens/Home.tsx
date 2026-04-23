@@ -5,6 +5,10 @@ import {
 } from 'react-native';
 import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
+import { UserProfile } from '../types/user';
+import {
+  getAmbition, getNextMilestone, calculateDeltaToNextMilestone, getMilestonesState,
+} from '../utils/ambition';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -14,6 +18,7 @@ interface Props {
   onStartSequencia: () => void;
   sessions: SessionRecord[];
   bestByMode: Record<ModeKey, number | null>;
+  userProfile: UserProfile;
 }
 
 const MODE_INFO = [
@@ -40,15 +45,19 @@ const MODE_INFO = [
   },
 ];
 
-export default function Home({ onStartPartida, onStartAlvo, onStartSequencia, sessions, bestByMode }: Props) {
-  const overallBest = sessions.length > 0
-    ? Math.min(...sessions.map(s => s.bestTime))
-    : null;
+export default function Home({
+  onStartPartida, onStartAlvo, onStartSequencia,
+  sessions, bestByMode, userProfile,
+}: Props) {
+  // Best score (average top-5) across all sessions — used for milestone comparison
+  const currentBestMs = useMemo(
+    () => sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : null,
+    [sessions],
+  );
 
-  // Gap to top F1 Elite tier (upper bound = 200 ms); negative = already at Elite level
-  const f1Gap = overallBest !== null ? Math.round(overallBest - 200) : null;
+  // Gap to top F1 Elite tier (upper bound = 200 ms) — fallback when triage not done
+  const f1Gap = currentBestMs !== null ? Math.round(currentBestMs - 200) : null;
 
-  // Best accuracy per mode (for alvo / sequencia)
   const bestAccByMode = useMemo(() => {
     const acc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null };
     for (const s of sessions) {
@@ -61,6 +70,54 @@ export default function Home({ onStartPartida, onStartAlvo, onStartSequencia, se
     return acc;
   }, [sessions]);
 
+  // ── Motivation card data ────────────────────────────────────────────────────
+  const motivData = useMemo(() => {
+    if (!userProfile.triageCompleted || !userProfile.ambitionId) return null;
+
+    const ambition = getAmbition(userProfile.ambitionId);
+    if (!ambition) return null;
+
+    const baselineMs = userProfile.baselineMs ?? null;
+
+    // Brain-health: qualitative milestones
+    if (ambition.group === 'brain_health') {
+      const nextM = getNextMilestone(baselineMs, currentBestMs, ambition.id);
+      return {
+        icon: ambition.icon,
+        type: 'qualitative' as const,
+        label: nextM ? `Próximo marco: ${nextM.label}` : `Meta ${ambition.name} em andamento`,
+        allBeaten: nextM === null,
+        ambitionName: ambition.name,
+      };
+    }
+
+    // Numeric milestones
+    const states = getMilestonesState(baselineMs, currentBestMs, ambition.id);
+    const allBeaten = states.every(s => s.status !== 'pendente');
+
+    if (allBeaten) {
+      return {
+        icon: ambition.icon,
+        type: 'all_beaten' as const,
+        ambitionName: ambition.name,
+        label: '',
+        allBeaten: true,
+      };
+    }
+
+    const delta = calculateDeltaToNextMilestone(currentBestMs, ambition.id, baselineMs);
+    const nextM = getNextMilestone(baselineMs, currentBestMs, ambition.id);
+
+    return {
+      icon: ambition.icon,
+      type: 'numeric' as const,
+      delta,
+      nextLabel: nextM?.label ?? ambition.name,
+      allBeaten: false,
+      ambitionName: ambition.name,
+    };
+  }, [userProfile, currentBestMs]);
+
   const handlers: Record<ModeKey, () => void> = {
     partida: onStartPartida,
     alvo: onStartAlvo,
@@ -70,7 +127,7 @@ export default function Home({ onStartPartida, onStartAlvo, onStartSequencia, se
   return (
     <View style={styles.root}>
 
-      {/* ── Fixed header: saudação + avatar ── */}
+      {/* ── Fixed header ── */}
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <View style={styles.headerLeft}>
           <Text style={styles.reflexoSmall}>REFLEXO</Text>
@@ -104,7 +161,6 @@ export default function Home({ onStartPartida, onStartAlvo, onStartSequencia, se
               <View style={[styles.modeAccentBar, { backgroundColor: mc.accent }]} />
               <View style={styles.modeCardInner}>
 
-                {/* Upper zone: icon + name + desc + arrow */}
                 <View style={styles.modeTop}>
                   <Text style={styles.modeIcon}>{m.icon}</Text>
                   <View style={{ flex: 1 }}>
@@ -114,10 +170,8 @@ export default function Home({ onStartPartida, onStartAlvo, onStartSequencia, se
                   <Text style={[styles.modeArrow, { color: mc.accent }]}>›</Text>
                 </View>
 
-                {/* Subtle divider */}
                 <View style={styles.modeDivider} />
 
-                {/* Lower zone: best score + level badge */}
                 {best !== null && best !== undefined && lvl ? (
                   <View style={styles.modeBottom}>
                     <Text style={styles.modeBestLabel}>
@@ -130,7 +184,6 @@ export default function Home({ onStartPartida, onStartAlvo, onStartSequencia, se
                     <View style={[styles.levelPill, { backgroundColor: lvl.bg }]}>
                       <View style={[styles.levelDot, { backgroundColor: lvl.color }]} />
                       <Text style={[styles.levelPillText, { color: lvl.color }]}>
-                        {/* Show first two words of level label to keep it compact */}
                         {lvl.label.split(' ').slice(0, 2).join(' ')}
                       </Text>
                     </View>
@@ -166,26 +219,67 @@ export default function Home({ onStartPartida, onStartAlvo, onStartSequencia, se
         </Text>
       </ScrollView>
 
-      {/* ── Fixed motivation card — always above tab bar ── */}
+      {/* ── Fixed motivation card ── */}
       <View style={styles.motivCard}>
-        <Text style={styles.motivIcon}>🏎</Text>
+        <Text style={styles.motivIcon}>
+          {motivData ? motivData.icon : '🏎'}
+        </Text>
         <View style={{ flex: 1 }}>
-          {f1Gap === null ? (
+          {/* ── No triage: original F1 hardcoded behavior ── */}
+          {!motivData && (
+            currentBestMs === null ? (
+              <Text style={styles.motivText}>
+                Complete seu primeiro treino para medir o gap até o nível F1!
+              </Text>
+            ) : f1Gap !== null && f1Gap > 0 ? (
+              <Text style={styles.motivText}>
+                {'Você está a '}
+                <Text style={styles.motivHighlight}>{f1Gap} ms</Text>
+                {' do nível de piloto de F1 de ponta.'}
+              </Text>
+            ) : (
+              <Text style={styles.motivText}>
+                {'Você já está no nível '}
+                <Text style={styles.motivHighlight}>Elite</Text>
+                {' de piloto de F1!'}
+              </Text>
+            )
+          )}
+
+          {/* ── Triage done: all beaten ── */}
+          {motivData?.type === 'all_beaten' && (
             <Text style={styles.motivText}>
-              Complete seu primeiro treino para medir o gap até o nível F1!
+              {'Meta '}
+              <Text style={styles.motivHighlight}>{motivData.ambitionName}</Text>
+              {' conquistada. Escolha sua próxima rota no Perfil.'}
             </Text>
-          ) : f1Gap > 0 ? (
-            <Text style={styles.motivText}>
-              {'Você está a '}
-              <Text style={styles.motivHighlight}>{f1Gap} ms</Text>
-              {' do nível de piloto de F1 de ponta.'}
-            </Text>
-          ) : (
-            <Text style={styles.motivText}>
-              {'Você já está no nível '}
-              <Text style={styles.motivHighlight}>Elite</Text>
-              {' de piloto de F1!'}
-            </Text>
+          )}
+
+          {/* ── Triage done: qualitative (brain_health) ── */}
+          {motivData?.type === 'qualitative' && (
+            <Text style={styles.motivText}>{motivData.label}</Text>
+          )}
+
+          {/* ── Triage done: numeric milestone ── */}
+          {motivData?.type === 'numeric' && (
+            currentBestMs === null ? (
+              <Text style={styles.motivText}>
+                Complete seu primeiro treino para ver o progresso até{' '}
+                <Text style={styles.motivHighlight}>{motivData.ambitionName}</Text>!
+              </Text>
+            ) : motivData.delta !== null && motivData.delta > 0 ? (
+              <Text style={styles.motivText}>
+                {'Você está a '}
+                <Text style={styles.motivHighlight}>{motivData.delta} ms</Text>
+                {` de ${motivData.nextLabel}.`}
+              </Text>
+            ) : (
+              <Text style={styles.motivText}>
+                {'Próximo marco: '}
+                <Text style={styles.motivHighlight}>{motivData.nextLabel}</Text>
+                {' — continue treinando!'}
+              </Text>
+            )
           )}
         </View>
       </View>
@@ -197,7 +291,6 @@ export default function Home({ onStartPartida, onStartAlvo, onStartSequencia, se
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0b1220' },
 
-  // ── Header ──────────────────────────────────────────────────────────────────
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -215,26 +308,21 @@ const styles = StyleSheet.create({
   },
   avatarLetter: { fontSize: 17, fontWeight: '800', color: '#fff' },
 
-  // ── Scroll ──────────────────────────────────────────────────────────────────
   scroll: { paddingHorizontal: 20, paddingBottom: 8 },
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 12 },
 
-  // ── Mode cards ──────────────────────────────────────────────────────────────
   modeCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     flexDirection: 'row', marginBottom: 10, overflow: 'hidden',
   },
   modeAccentBar: { width: 4 },
   modeCardInner: { flex: 1 },
-
   modeTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, paddingBottom: 12 },
   modeIcon: { fontSize: 26 },
   modeName: { fontSize: 13, fontWeight: '800', letterSpacing: 1.5 },
   modeDesc: { fontSize: 12, color: '#4a5a7b', marginTop: 2 },
   modeArrow: { fontSize: 22, fontWeight: '300', marginRight: 2 },
-
   modeDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginHorizontal: 14 },
-
   modeBottom: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 14, paddingVertical: 10,
@@ -242,7 +330,6 @@ const styles = StyleSheet.create({
   modeBestLabel: { fontSize: 12, color: '#4a5a7b', flexShrink: 1 },
   modeBestMs: { fontWeight: '700' },
   modeBestAcc: { color: '#4a5a7b' },
-
   levelPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4,
@@ -250,14 +337,12 @@ const styles = StyleSheet.create({
   },
   levelDot: { width: 6, height: 6, borderRadius: 3 },
   levelPillText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
-
   newPill: {
     borderWidth: 1, borderRadius: 6,
     paddingHorizontal: 8, paddingVertical: 3,
   },
   newPillText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 
-  // ── F1 insight ──────────────────────────────────────────────────────────────
   insightStrip: {
     flexDirection: 'row', gap: 12, alignItems: 'flex-start',
     backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
@@ -269,7 +354,6 @@ const styles = StyleSheet.create({
 
   footer: { fontSize: 11, color: '#2d3a55', textAlign: 'center', marginBottom: 4 },
 
-  // ── Motivation card (fixed, above tab bar) ───────────────────────────────────
   motivCard: {
     flexDirection: 'row',
     alignItems: 'center',

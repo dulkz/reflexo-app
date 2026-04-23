@@ -6,8 +6,17 @@ import {
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
 import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
+import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
 import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import {
+  getAmbition,
+  getNextMilestone,
+  getMilestonesState,
+  calculateDeltaToNextMilestone,
+} from '../utils/ambition';
+import { GROUP_COLOR } from '../config/ambitions';
+import JourneyMap from '../components/JourneyMap';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -17,6 +26,8 @@ const PT_MONTHS_LONG = ['janeiro','fevereiro','março','abril','maio','junho','j
 
 interface Props {
   sessions: SessionRecord[];
+  userProfile: UserProfile;
+  onOpenTriage: () => void;
 }
 
 // ── Gradient avatar ──────────────────────────────────────────────────────────
@@ -124,7 +135,6 @@ function BarChart({ sessions }: { sessions: SessionRecord[] }) {
           );
         })}
       </View>
-      {/* Insight line */}
       <Text style={chart.insight}>
         {improved
           ? `↓ Melhorou ${Math.abs(delta)} ms nas últimas ${sessions.length} sessões`
@@ -160,7 +170,7 @@ const chart = StyleSheet.create({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export default function Perfil({ sessions }: Props) {
+export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const archetype = useMemo(() => getArchetypeFromStats(stats), [stats]);
@@ -188,13 +198,52 @@ export default function Perfil({ sessions }: Props) {
 
   const last8 = useMemo(() => sessions.slice(0, 8).reverse(), [sessions]);
 
-  // Join date
   const joinedLabel = useMemo(() => {
     if (sessions.length === 0) return null;
     const oldest = sessions[sessions.length - 1];
     const d = new Date(oldest.date);
     return PT_MONTHS_LONG[d.getMonth()];
   }, [sessions]);
+
+  // ── Journey data ─────────────────────────────────────────────────────────────
+  const currentBestMs = useMemo(
+    () => sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : null,
+    [sessions],
+  );
+
+  const ambition = useMemo(
+    () => userProfile.triageCompleted && userProfile.ambitionId
+      ? getAmbition(userProfile.ambitionId) ?? null
+      : null,
+    [userProfile],
+  );
+
+  const baselineMs = userProfile.baselineMs ?? null;
+
+  const milestonesState = useMemo(() => {
+    if (!ambition) return [];
+    return getMilestonesState(baselineMs, currentBestMs, ambition.id);
+  }, [ambition, baselineMs, currentBestMs]);
+
+  const beatenCount = useMemo(
+    () => milestonesState.filter(s => s.status !== 'pendente').length,
+    [milestonesState],
+  );
+
+  const nextMilestone = useMemo(
+    () => ambition ? getNextMilestone(baselineMs, currentBestMs, ambition.id) : null,
+    [ambition, baselineMs, currentBestMs],
+  );
+
+  const deltaToNext = useMemo(
+    () => ambition
+      ? calculateDeltaToNextMilestone(currentBestMs, ambition.id, baselineMs)
+      : null,
+    [ambition, currentBestMs, baselineMs],
+  );
+
+  const isBrainHealth = ambition?.group === 'brain_health';
+  const ambitionGroupColor = ambition ? GROUP_COLOR[ambition.group] : '#3b82f6';
 
   return (
     <View style={styles.root}>
@@ -226,8 +275,6 @@ export default function Perfil({ sessions }: Props) {
             </View>
           </View>
           <Text style={styles.archetypeDesc}>{archetype.description}</Text>
-
-          {/* Evidence chips */}
           {evidenceChips.length > 0 && (
             <View style={styles.chipsRow}>
               {evidenceChips.map((chip, i) => (
@@ -239,6 +286,70 @@ export default function Perfil({ sessions }: Props) {
             </View>
           )}
         </View>
+
+        {/* ── MINHA JORNADA ── */}
+        {!userProfile.triageCompleted ? (
+          /* CTA for pre-triage users (also accessible after 3 dismissals) */
+          <View style={styles.journeyCTA}>
+            <Text style={styles.journeyCTATitle}>Defina sua meta</Text>
+            <Text style={styles.journeyCTADesc}>
+              Escolha uma ambição e veja sua jornada personalizada em todas as telas.
+            </Text>
+            <TouchableOpacity style={styles.journeyCTABtn} onPress={onOpenTriage} activeOpacity={0.8}>
+              <Text style={styles.journeyCTABtnText}>DEFINIR MINHA META</Text>
+            </TouchableOpacity>
+          </View>
+        ) : ambition ? (
+          <View style={styles.journeySection}>
+            {/* Header row */}
+            <View style={styles.journeySectionHeader}>
+              <Text style={styles.journeyKicker}>MINHA JORNADA</Text>
+            </View>
+            <View style={styles.journeyAmbitionRow}>
+              <Text style={styles.journeyAmbitionIcon}>{ambition.icon}</Text>
+              <Text style={[styles.journeyAmbitionName, { color: ambitionGroupColor }]}>
+                {ambition.name}
+              </Text>
+              <TouchableOpacity onPress={onOpenTriage} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.journeyChangeLink}>trocar meta</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Summary line */}
+            <Text style={styles.journeySummary}>
+              {isBrainHealth
+                ? `Baseline: ${baselineMs ?? '—'} ms · ${beatenCount} de ${ambition.milestones.length} marcos conquistados`
+                : `Baseline: ${baselineMs ?? '—'} ms · Meta: ${ambition.finalMetaMs ?? '—'} ms · ${beatenCount} de ${ambition.milestones.length} marcos batidos`
+              }
+            </Text>
+
+            {/* Compact journey map */}
+            {baselineMs !== null && (
+              <View style={styles.journeyMapWrap}>
+                <JourneyMap
+                  ambitionId={ambition.id}
+                  baselineMs={baselineMs}
+                  currentBestMs={currentBestMs}
+                  compact
+                />
+              </View>
+            )}
+
+            {/* Next-target footer card */}
+            {!isBrainHealth && nextMilestone && deltaToNext !== null && deltaToNext > 0 && (
+              <View style={[styles.journeyNextCard, { borderColor: ambitionGroupColor + '33' }]}>
+                <Text style={styles.journeyNextKicker}>SEU PRÓXIMO ALVO</Text>
+                <Text style={styles.journeyNextLabel}>
+                  {nextMilestone.label}
+                  {'  '}
+                  <Text style={[styles.journeyNextDelta, { color: ambitionGroupColor }]}>
+                    faltam {deltaToNext} ms
+                  </Text>
+                </Text>
+              </View>
+            )}
+          </View>
+        ) : null}
 
         {/* ── PARA VIRAR block ── */}
         {nextDef && archetype.targetCriteria.length > 0 && (
@@ -270,6 +381,24 @@ export default function Perfil({ sessions }: Props) {
                 </View>
               );
             })}
+
+            {/* Dynamic milestone criterion — injected when journey is active */}
+            {userProfile.triageCompleted && nextMilestone && !isBrainHealth &&
+             nextMilestone.type !== 'qualitative' && nextMilestone.ms !== undefined && (
+              <View style={styles.criterionRow}>
+                <View style={styles.criterionCircle}>
+                  {/* Pending by definition — it's the NEXT milestone not yet beaten */}
+                </View>
+                <Text style={styles.criterionLabel}>
+                  {`Bater próximo marco: ${nextMilestone.ms} ms`}
+                  {currentBestMs !== null && (
+                    <Text style={styles.criterionSuffix}>
+                      {` (delta: ${currentBestMs - nextMilestone.ms} ms)`}
+                    </Text>
+                  )}
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -282,18 +411,13 @@ export default function Perfil({ sessions }: Props) {
 
           return (
             <View key={m.key} style={styles.modeCard}>
-              {/* Icon box */}
               <View style={[styles.modeIconBox, { backgroundColor: mc.accent + '2a' }]}>
                 <Text style={styles.modeIconText}>{meta.icon}</Text>
               </View>
-
-              {/* Body */}
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={[styles.modeName, { color: mc.accent }]}>{meta.name}</Text>
                 <Text style={styles.modeSub}>{meta.sub}</Text>
               </View>
-
-              {/* Score + extras */}
               <View style={styles.modeRight}>
                 {m.best !== null && lvl ? (
                   <>
@@ -394,7 +518,6 @@ const styles = StyleSheet.create({
   archetypeKicker: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2, marginBottom: 3 },
   archetypeName: { fontSize: 18, fontWeight: '900', letterSpacing: 2 },
   archetypeDesc: { fontSize: 13, color: '#4a5a7b', lineHeight: 19, marginBottom: 14 },
-
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -403,6 +526,44 @@ const styles = StyleSheet.create({
   },
   chipDot: { width: 6, height: 6, borderRadius: 3 },
   chipText: { fontSize: 11, fontWeight: '600' },
+
+  // ── MINHA JORNADA — CTA (pre-triage) ─────────────────────────────────────
+  journeyCTA: {
+    backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
+    borderColor: 'rgba(59,130,246,0.2)', padding: 18,
+    marginBottom: 12, gap: 8, alignItems: 'flex-start',
+  },
+  journeyCTATitle: { fontSize: 15, fontWeight: '800', color: '#fff' },
+  journeyCTADesc: { fontSize: 13, color: '#4a5a7b', lineHeight: 19 },
+  journeyCTABtn: {
+    marginTop: 4, backgroundColor: '#3b82f6', borderRadius: 10,
+    paddingHorizontal: 16, paddingVertical: 10,
+  },
+  journeyCTABtnText: { fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 1.5 },
+
+  // ── MINHA JORNADA — seção (post-triage) ──────────────────────────────────
+  journeySection: {
+    backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)', padding: 16,
+    marginBottom: 12,
+  },
+  journeySectionHeader: { marginBottom: 10 },
+  journeyKicker: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5 },
+  journeyAmbitionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8,
+  },
+  journeyAmbitionIcon: { fontSize: 20 },
+  journeyAmbitionName: { flex: 1, fontSize: 15, fontWeight: '800' },
+  journeyChangeLink: { fontSize: 11, color: '#3b82f6', fontWeight: '600', textDecorationLine: 'underline' },
+  journeySummary: { fontSize: 11, color: '#4a5a7b', lineHeight: 17, marginBottom: 14 },
+  journeyMapWrap: { marginBottom: 8 },
+  journeyNextCard: {
+    backgroundColor: '#0d1b33', borderRadius: 10, borderWidth: 1,
+    padding: 12, marginTop: 4,
+  },
+  journeyNextKicker: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2, marginBottom: 4 },
+  journeyNextLabel: { fontSize: 13, fontWeight: '600', color: '#fff', lineHeight: 19 },
+  journeyNextDelta: { fontSize: 12, fontWeight: '800' },
 
   // ── PARA VIRAR ────────────────────────────────────────────────────────────
   paraVirarCard: {
@@ -414,7 +575,6 @@ const styles = StyleSheet.create({
   paraVirarTarget: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   paraVirarIcon: { fontSize: 16 },
   paraVirarName: { fontSize: 13, fontWeight: '800', letterSpacing: 1.5 },
-
   criterionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   criterionCircle: {
     width: 20, height: 20, borderRadius: 10,

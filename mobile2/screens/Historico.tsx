@@ -6,6 +6,8 @@ import {
 import Svg, { Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
+import { UserProfile } from '../types/user';
+import { getAmbition, getNextMilestone } from '../utils/ambition';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const DAY = 86_400_000;
@@ -21,7 +23,6 @@ function dayStart(ts: number): number {
   return d.getTime();
 }
 
-/** "há 2 dias" / "ontem" / "hoje" / "20 Abr" */
 function formatRelativeDate(ts: number): string {
   const diff = Math.round((dayStart(Date.now()) - dayStart(ts)) / DAY);
   if (diff === 0) return 'hoje';
@@ -31,7 +32,6 @@ function formatRelativeDate(ts: number): string {
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
-/** "Hoje, 20:14" / "Ontem, 19:02" / "20 Abr, 18:47" */
 function formatRelativeDateTime(ts: number): string {
   const d = new Date(ts);
   const time = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
@@ -41,7 +41,6 @@ function formatRelativeDateTime(ts: number): string {
   return `${d.getDate()} ${MONTHS[d.getMonth()]}, ${time}`;
 }
 
-/** "20 Abr" — short absolute date for streak start */
 function formatShortDate(ts: number): string {
   const d = new Date(ts);
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
@@ -72,9 +71,12 @@ const MODE_ICONS: Record<ModeKey, string> = {
 
 // ── EvoChart ──────────────────────────────────────────────────────────────────
 
-interface EvoProps { sessions: SessionRecord[] }
+interface EvoProps {
+  sessions: SessionRecord[];
+  userProfile?: UserProfile;
+}
 
-function EvoChart({ sessions }: EvoProps) {
+function EvoChart({ sessions, userProfile }: EvoProps) {
   const W = 320;
   const H = 140;
   const PAD = { t: 20, r: 8, b: 28, l: 40 };
@@ -88,8 +90,29 @@ function EvoChart({ sessions }: EvoProps) {
   const rawMin = Math.min(...allScores);
   const rawMax = Math.max(...allScores);
 
-  // Dynamic Y scale rounded to multiples of 20
-  const minV = Math.floor((rawMin - 20) / 20) * 20;
+  // ── Next milestone line ───────────────────────────────────────────────────
+  let nextMilestoneMs: number | null = null;
+  const isBrainHealth = userProfile?.triageCompleted &&
+    userProfile.ambitionId &&
+    getAmbition(userProfile.ambitionId)?.group === 'brain_health';
+
+  if (userProfile?.triageCompleted && userProfile.ambitionId && !isBrainHealth) {
+    const currentBestMs = Math.min(...allScores);
+    const next = getNextMilestone(
+      userProfile.baselineMs ?? null,
+      currentBestMs,
+      userProfile.ambitionId,
+    );
+    if (next && next.type !== 'qualitative' && next.ms !== undefined) {
+      nextMilestoneMs = next.ms;
+    }
+  }
+
+  // Dynamic Y scale — include milestone so the dashed line is always visible
+  const effectiveMin = nextMilestoneMs !== null
+    ? Math.min(rawMin, nextMilestoneMs)
+    : rawMin;
+  const minV = Math.floor((effectiveMin - 20) / 20) * 20;
   const maxV = Math.ceil((rawMax + 20) / 20) * 20;
   const range = maxV - minV || 80;
 
@@ -107,7 +130,6 @@ function EvoChart({ sessions }: EvoProps) {
     return PAD.l + (idx / (last20.length - 1)) * innerW;
   };
 
-  // X-axis tick labels
   const xTicks: { x: number; label: string; anchor: 'start' | 'middle' | 'end' }[] = [];
   if (useTimeBased) {
     xTicks.push({ x: PAD.l + innerW, label: 'hoje', anchor: 'end' });
@@ -117,10 +139,8 @@ function EvoChart({ sessions }: EvoProps) {
     const x15 = PAD.l + ((tNow - 15 * DAY - tMin) / timeSpan) * innerW;
     if (x15 >= PAD.l && x15 < x7 - 20)
       xTicks.push({ x: x15, label: '15d', anchor: 'middle' });
-    // Left-edge label: oldest date
     xTicks.push({ x: PAD.l, label: formatShortDate(tMin), anchor: 'start' });
   } else {
-    // Same-day sessions: show "Hoje" centred
     xTicks.push({ x: PAD.l + innerW / 2, label: 'Hoje', anchor: 'middle' });
   }
 
@@ -128,6 +148,15 @@ function EvoChart({ sessions }: EvoProps) {
 
   return (
     <View style={chart.wrapper}>
+      {/* Brain-health notice (no milestone line for qualitative journeys) */}
+      {isBrainHealth && (
+        <View style={chart.brainCard}>
+          <Text style={chart.brainText}>
+            🧠 Sua jornada é de consistência. Continue jogando regularmente.
+          </Text>
+        </View>
+      )}
+
       <Svg width={W} height={H}>
         {/* Y grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(p => {
@@ -148,6 +177,24 @@ function EvoChart({ sessions }: EvoProps) {
           <SvgText key={t.label} x={t.x} y={H - 5} fontSize={8}
             fill="#2d3a55" textAnchor={t.anchor}>{t.label}</SvgText>
         ))}
+
+        {/* Milestone dashed line */}
+        {nextMilestoneMs !== null && (
+          <React.Fragment>
+            <Line
+              x1={PAD.l} y1={toY(nextMilestoneMs)}
+              x2={W - PAD.r} y2={toY(nextMilestoneMs)}
+              stroke="#4a5a7b" strokeWidth={1}
+              strokeDasharray="4 3"
+            />
+            <SvgText
+              x={W - PAD.r - 2} y={toY(nextMilestoneMs) - 3}
+              fontSize={7} fill="#4a5a7b" textAnchor="end"
+            >
+              {`Próximo: ${nextMilestoneMs} ms`}
+            </SvgText>
+          </React.Fragment>
+        )}
 
         {/* Series per mode */}
         {modes.map(mode => {
@@ -193,6 +240,12 @@ const chart = StyleSheet.create({
     backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)', padding: 12, marginBottom: 20,
   },
+  brainCard: {
+    backgroundColor: 'rgba(16,185,129,0.08)', borderRadius: 8,
+    borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)',
+    paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10,
+  },
+  brainText: { fontSize: 12, color: '#10b981', lineHeight: 18 },
   legend: { flexDirection: 'row', gap: 16, justifyContent: 'center', marginTop: 4 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
@@ -201,12 +254,13 @@ const chart = StyleSheet.create({
 
 // ── Historico ─────────────────────────────────────────────────────────────────
 
-interface Props { sessions: SessionRecord[] }
+interface Props {
+  sessions: SessionRecord[];
+  userProfile: UserProfile;
+}
 
-export default function Historico({ sessions }: Props) {
+export default function Historico({ sessions, userProfile }: Props) {
   const [filter, setFilter] = useState<FilterKey>('all');
-
-  // ── Derived data ────────────────────────────────────────────────────────────
 
   const modeCounts = useMemo((): Record<FilterKey, number> => {
     const c: Record<FilterKey, number> = { all: sessions.length, partida: 0, alvo: 0, sequencia: 0 };
@@ -219,13 +273,11 @@ export default function Historico({ sessions }: Props) {
     [sessions, filter],
   );
 
-  // Best session overall (for MELHOR RT card)
   const bestRtSession = useMemo(() => {
     if (sessions.length === 0) return null;
     return sessions.reduce((best, s) => s.bestTime < best.bestTime ? s : best);
   }, [sessions]);
 
-  // Mode most played
   const { mostPlayed, modeCounts: modeCountsMap } = useMemo(() => {
     const counts: Record<ModeKey, number> = { partida: 0, alvo: 0, sequencia: 0 };
     for (const s of sessions) counts[s.mode]++;
@@ -236,7 +288,6 @@ export default function Historico({ sessions }: Props) {
     return { mostPlayed: sessions.length > 0 ? mp : null, modeCounts: counts };
   }, [sessions]);
 
-  // Streak of consecutive days (counting from today backwards)
   const streak = useMemo(() => {
     if (sessions.length === 0) return 0;
     const todayMs = dayStart(Date.now());
@@ -249,7 +300,6 @@ export default function Historico({ sessions }: Props) {
     return s;
   }, [sessions]);
 
-  // Date streak started (today − streak + 1 days)
   const streakStartTs = useMemo(() => {
     if (streak <= 1) return null;
     const d = new Date();
@@ -258,14 +308,12 @@ export default function Historico({ sessions }: Props) {
     return d.getTime();
   }, [streak]);
 
-  // Days since first session (inclusive)
   const daysSinceFirst = useMemo(() => {
     if (sessions.length === 0) return 0;
     const oldest = sessions[sessions.length - 1].date;
     return Math.max(1, Math.round((Date.now() - oldest) / DAY) + 1);
   }, [sessions]);
 
-  // PB session per mode (session with lowest bestTime per mode)
   const pbSessionByMode = useMemo(() => {
     const pb: Partial<Record<ModeKey, SessionRecord>> = {};
     for (const s of sessions) {
@@ -273,8 +321,6 @@ export default function Historico({ sessions }: Props) {
     }
     return pb as Record<ModeKey, SessionRecord | undefined>;
   }, [sessions]);
-
-  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <View style={styles.root}>
@@ -287,7 +333,6 @@ export default function Historico({ sessions }: Props) {
         {/* ── 4 summary cards ── */}
         <View style={styles.summaryGrid}>
 
-          {/* Card 1: Melhor RT */}
           <View style={styles.summaryCell}>
             {bestRtSession ? (
               <>
@@ -304,7 +349,6 @@ export default function Historico({ sessions }: Props) {
             <Text style={styles.sumLbl}>MELHOR RT</Text>
           </View>
 
-          {/* Card 2: Mais jogado */}
           <View style={styles.summaryCell}>
             {mostPlayed ? (
               <>
@@ -321,7 +365,6 @@ export default function Historico({ sessions }: Props) {
             <Text style={styles.sumLbl}>MAIS JOGADO</Text>
           </View>
 
-          {/* Card 3: Streak */}
           <View style={styles.summaryCell}>
             <Text style={[styles.sumVal, { color: streak > 0 ? '#f59e0b' : '#4a5a7b' }]}>
               {streak} {streak === 1 ? 'dia' : 'dias'}
@@ -334,7 +377,6 @@ export default function Historico({ sessions }: Props) {
             <Text style={styles.sumLbl}>STREAK ATUAL</Text>
           </View>
 
-          {/* Card 4: Total */}
           <View style={styles.summaryCell}>
             <Text style={styles.sumVal}>{sessions.length}</Text>
             <Text style={styles.sumSubtitle}>
@@ -348,7 +390,7 @@ export default function Historico({ sessions }: Props) {
         {sessions.length >= 1 && (
           <>
             <Text style={styles.sectionTitle}>EVOLUÇÃO</Text>
-            <EvoChart sessions={sessions} />
+            <EvoChart sessions={sessions} userProfile={userProfile} />
           </>
         )}
 
@@ -392,15 +434,10 @@ export default function Historico({ sessions }: Props) {
 
             return (
               <View key={s.id} style={styles.sessionCard}>
-                {/* Left accent bar */}
                 <View style={[styles.sessionAccent, { backgroundColor: mc.accent }]} />
-
-                {/* Mode icon box */}
                 <View style={[styles.sessionIconBox, { backgroundColor: mc.accent + '2a' }]}>
                   <Text style={styles.sessionIconText}>{MODE_ICONS[s.mode]}</Text>
                 </View>
-
-                {/* Body */}
                 <View style={styles.sessionBody}>
                   <View style={styles.sessionTop}>
                     <Text style={[styles.sessionMode, { color: mc.accent }]}>
@@ -408,30 +445,20 @@ export default function Historico({ sessions }: Props) {
                     </Text>
                     <Text style={styles.sessionDate}>{formatRelativeDateTime(s.date)}</Text>
                   </View>
-
                   <View style={styles.sessionStats}>
-                    {/* Score */}
                     <Text style={[styles.sessionScore, { color: lvl.color }]}>{s.score} ms</Text>
-
-                    {/* Level badge */}
                     <View style={[styles.levelMini, { backgroundColor: lvl.bg }]}>
                       <Text style={[styles.levelMiniText, { color: lvl.color }]}>{lvl.label}</Text>
                     </View>
-
-                    {/* PB badge */}
                     {isPB && (
                       <View style={styles.pbBadge}>
                         <Text style={styles.pbText}>🏆 PB</Text>
                       </View>
                     )}
-
-                    {/* Accuracy */}
                     {acc !== null && (
                       <Text style={styles.sessionAcc}>{acc}%</Text>
                     )}
                   </View>
-
-                  {/* Accuracy progress bar */}
                   {acc !== null && (
                     <View style={styles.accBarBg}>
                       <View style={[styles.accBarFill, { width: `${acc}%`, backgroundColor: mc.accent }]} />
@@ -456,7 +483,6 @@ const styles = StyleSheet.create({
   pageTitle: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: 4, marginBottom: 20 },
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 10 },
 
-  // ── Summary cards ────────────────────────────────────────────────────────────
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
   summaryCell: {
     width: '47.5%',
@@ -469,7 +495,6 @@ const styles = StyleSheet.create({
   sumSubtitle: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
   sumLbl: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 1.5, marginTop: 4 },
 
-  // ── Filter pills ─────────────────────────────────────────────────────────────
   filterRow: { marginBottom: 16 },
   pill: {
     borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
@@ -479,7 +504,6 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 13, fontWeight: '600', color: '#4a5a7b' },
   pillCount: { fontSize: 11, fontWeight: '500', color: '#2d3a55' },
 
-  // ── Session cards ─────────────────────────────────────────────────────────────
   sessionCard: {
     flexDirection: 'row',
     backgroundColor: '#111a2e', borderRadius: 12,
@@ -513,7 +537,6 @@ const styles = StyleSheet.create({
   accBarBg: { height: 3, backgroundColor: '#1a2540', borderRadius: 2 },
   accBarFill: { height: 3, borderRadius: 2 },
 
-  // ── Empty state ───────────────────────────────────────────────────────────────
   emptyState: { alignItems: 'center', paddingTop: 48, gap: 12 },
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 14, color: '#4a5a7b' },

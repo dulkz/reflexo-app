@@ -15,6 +15,7 @@ import { ModeKey } from './utils/levels';
 import { SessionRecord, loadSessions, saveSession, getBestByMode } from './utils/storage';
 import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
+import { getAmbition } from './utils/ambition';
 
 type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil';
 type GameScreen =
@@ -48,6 +49,8 @@ function AppInner() {
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile());
   const [triageVisible, setTriageVisible] = useState(false);
+  const [triageEditMode, setTriageEditMode] = useState(false);
+  const [milestoneBeat, setMilestoneBeat] = useState<string | null>(null);
 
   // Partida state
   const [partidaTimes, setPartidaTimes] = useState<number[]>([]);
@@ -68,11 +71,35 @@ function AppInner() {
   }, []);
 
   const addSession = useCallback(async (session: SessionRecord) => {
+    // Capture pre-session best for milestone comparison
+    const prevBest = sessions.length > 0
+      ? Math.min(...sessions.map(s => s.score))
+      : null;
+
     await saveSession(session);
     const updated = await loadSessions();
     setSessions(updated);
 
-    // Trigger triage after the very first session (if not done / not skipped too many times)
+    // ── Milestone beat detection ──────────────────────────────────────────────
+    if (userProfile.triageCompleted && userProfile.ambitionId) {
+      const newBest = updated.length > 0
+        ? Math.min(...updated.map(s => s.score))
+        : null;
+      if (prevBest !== null && newBest !== null && newBest < prevBest) {
+        const ambitionData = getAmbition(userProfile.ambitionId);
+        if (ambitionData) {
+          const beaten = ambitionData.milestones.find(m =>
+            m.type !== 'qualitative' &&
+            m.ms !== undefined &&
+            prevBest > m.ms &&
+            newBest <= m.ms,
+          );
+          if (beaten) setMilestoneBeat(beaten.label);
+        }
+      }
+    }
+
+    // ── Triage trigger after first session ────────────────────────────────────
     const profile = await loadUserProfile();
     if (
       updated.length === 1 &&
@@ -82,7 +109,7 @@ function AppInner() {
     ) {
       pendingTriage.current = true;
     }
-  }, []);
+  }, [sessions, userProfile]);
 
   // Navigate home — intercept to show triage if pending
   const goHome = useCallback(() => {
@@ -91,6 +118,12 @@ function AppInner() {
       pendingTriage.current = false;
       setTriageVisible(true);
     }
+  }, []);
+
+  // Open triage in edit mode (from Perfil "trocar meta" link)
+  const openTriageForEdit = useCallback(() => {
+    setTriageEditMode(true);
+    setTriageVisible(true);
   }, []);
 
   const bestByMode = getBestByMode(sessions);
@@ -160,6 +193,7 @@ function AppInner() {
   const handleTriageComplete = useCallback(async (updated: UserProfile) => {
     setUserProfile(updated);
     setTriageVisible(false);
+    setTriageEditMode(false);
   }, []);
 
   const handleTriageDismiss = useCallback(async () => {
@@ -171,6 +205,7 @@ function AppInner() {
     await saveUserProfile(updated);
     setUserProfile(updated);
     setTriageVisible(false);
+    setTriageEditMode(false);
   }, [userProfile]);
 
   // ── Render game screen ──────────────────────────────────────────────────────
@@ -185,6 +220,7 @@ function AppInner() {
             onStartSequencia={() => setGameScreen('sequencia')}
             sessions={sessions}
             bestByMode={bestByMode}
+            userProfile={userProfile}
           />
         );
       case 'partida':
@@ -249,9 +285,15 @@ function AppInner() {
       {/* Screen content */}
       <View style={[styles.content, inGame && styles.contentFullscreen]}>
         {activeTab === 'jogar'    && renderGame()}
-        {activeTab === 'historico'&& <Historico sessions={sessions} />}
-        {activeTab === 'ciencia'  && <Ciencia />}
-        {activeTab === 'perfil'   && <Perfil sessions={sessions} />}
+        {activeTab === 'historico'&& <Historico sessions={sessions} userProfile={userProfile} />}
+        {activeTab === 'ciencia'  && <Ciencia userProfile={userProfile} />}
+        {activeTab === 'perfil'   && (
+          <Perfil
+            sessions={sessions}
+            userProfile={userProfile}
+            onOpenTriage={openTriageForEdit}
+          />
+        )}
       </View>
 
       {/* Tab bar — hidden during active game */}
@@ -286,7 +328,29 @@ function AppInner() {
           userProfile={userProfile}
           onComplete={handleTriageComplete}
           onDismiss={handleTriageDismiss}
+          editMode={triageEditMode}
         />
+      </Modal>
+
+      {/* Milestone beat toast */}
+      <Modal
+        visible={milestoneBeat !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMilestoneBeat(null)}
+      >
+        <TouchableOpacity
+          style={styles.toastOverlay}
+          onPress={() => setMilestoneBeat(null)}
+          activeOpacity={1}
+        >
+          <View style={styles.toastCard}>
+            <Text style={styles.toastEmoji}>🏆</Text>
+            <Text style={styles.toastTitle}>MARCO BATIDO!</Text>
+            <Text style={styles.toastLabel}>{milestoneBeat}</Text>
+            <Text style={styles.toastSub}>Toque para continuar</Text>
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -314,4 +378,26 @@ const styles = StyleSheet.create({
     width: 24, height: 2,
     backgroundColor: '#3b82f6', borderRadius: 1,
   },
+
+  // ── Milestone toast ──────────────────────────────────────────────────────────
+  toastOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center', justifyContent: 'center',
+    padding: 32,
+  },
+  toastCard: {
+    backgroundColor: '#111a2e', borderRadius: 20, borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.4)',
+    padding: 32, alignItems: 'center', gap: 8, width: '100%',
+  },
+  toastEmoji: { fontSize: 52 },
+  toastTitle: {
+    fontSize: 18, fontWeight: '900', color: '#f59e0b',
+    letterSpacing: 2, marginTop: 4,
+  },
+  toastLabel: {
+    fontSize: 15, fontWeight: '600', color: '#fff',
+    textAlign: 'center', lineHeight: 22,
+  },
+  toastSub: { fontSize: 11, color: '#3a4a6b', marginTop: 8, letterSpacing: 1 },
 });

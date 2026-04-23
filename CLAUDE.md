@@ -200,3 +200,62 @@ Adicionadas 3 fases de espera aleatória (`partida_jitter`, `alvo_jitter`, `seq_
 
 #### (f) Falsa largada preservada
 `partida_jitter` é renderizado como `Pressable`. Toque durante o jitter chama `handlePartidaFalseStart`, que cancela o timer, grava `partida = 300` (mesmo valor de `FALSE_START` em `ModoPartida.tsx`) e avança para `trans_alvo`. `alvo_jitter` e `seq_jitter` são `View` não-interativos.
+
+---
+
+### Sessão — Integração de jornada nas 4 telas (Prompt B · 2026-04-23)
+
+#### (a) Arquivos criados
+- `mobile2/utils/ambition.ts` — 5 helpers sobre o sistema de ambições/marcos:
+  - `getAmbition(id)` → objeto completo da ambição
+  - `getMilestonesState(baselineMs, currentBestMs, ambitionId)` → array de `MilestoneState` com status `batido_no_baseline | batido_no_progresso | pendente`. "Batido" significa RT atual ≤ ms do marco (mais rápido que o threshold).
+  - `getNextMilestone(baselineMs, currentBestMs, ambitionId)` → primeiro marco ainda pendente
+  - `calculateDeltaToNextMilestone(currentBestMs, ambitionId, baselineMs)` → ms que o usuário precisa melhorar para atingir o próximo marco (positivo = melhoria necessária)
+  - `getMetaBenchmark(ambitionId)` → nome do card em Ciencia.tsx correspondente à ambição (`f1 → 'Piloto de F1 de ponta'`, etc.)
+- `mobile2/components/JourneyMap.tsx` — componente visual reutilizável do mapa de marcos. Aceita `baselineMs`, `currentBestMs?`, `compact?`, `showYouAreHere?`. Nós coloridos por status: baseline azul, `batido_no_baseline` cinza opaco, `batido_no_progresso` verde, pendente neutro. Card de rodapé "SEU PRÓXIMO ALVO" com delta. Usado tanto em `TriageJourneyMap` (modo normal, `showYouAreHere=true`) quanto em `Perfil` (modo compacto com `currentBestMs` real).
+
+#### (b) Arquivos modificados
+- `mobile2/App.tsx` — adicionados: `triageEditMode` state; `openTriageForEdit()` callback repassado ao Perfil; prop `userProfile` passada para Home, Historico, Ciencia e Perfil; lógica de milestone toast em `addSession` (ver seção d); `<Modal>` de toast com overlay semi-transparente e card com emoji 🏆; `editMode` prop repassada ao `TriageModal`.
+- `mobile2/screens/Home.tsx` — prop `userProfile: UserProfile` adicionada; `motivCard` completamente refatorado: fallback F1 hardcoded quando `triageCompleted === false`; texto qualitativo para `brain_health`; delta numérico para ambições com marcos em ms; mensagem "conquistada" quando todos os marcos foram batidos. Ícone do card muda para `ambition.icon`.
+- `mobile2/screens/Historico.tsx` — prop `userProfile: UserProfile` adicionada ao componente e ao `EvoChart`; linha tracejada horizontal cinza `#4a5a7b` (`strokeDasharray="4 3"`) desenhada no Y do próximo marco; escala Y expandida para incluir `nextMilestoneMs` garantindo visibilidade da linha; label `"Próximo: N ms"` na ponta direita; card brain_health acima do gráfico quando ambição é `brain_health`.
+- `mobile2/screens/Ciencia.tsx` — prop `userProfile: UserProfile` adicionada; card "Velocista olímpico" adicionado ao array BENCHMARKS (source: Lipps et al., 2011; range: 170–200 ms); quando `ambitionId` mapeia para um benchmark via `getMetaBenchmark`, o card recebe `borderWidth: 2`, `borderColor` na cor do grupo (`elite_sport = #3b82f6`) e badge `← SUA META` absolutamente posicionado no canto superior direito.
+- `mobile2/screens/Perfil.tsx` — props `userProfile: UserProfile` e `onOpenTriage: () => void` adicionadas; nova seção "MINHA JORNADA" inserida entre card de arquétipo e "PARA VIRAR": quando `triageCompleted === false` exibe CTA card com botão "DEFINIR MINHA META" (também funciona como ponto de entrada permanente após 3 dismissals); quando `triageCompleted === true` exibe header com ícone + nome da ambição + link "trocar meta", linha de resumo baseline/meta/marcos batidos, `<JourneyMap compact />` e card de rodapé com próximo alvo e delta; critério dinâmico "Bater próximo marco: N ms" injetado no render do "PARA VIRAR" (sem modificar `archetypes.ts`).
+- `mobile2/screens/triage/TriageJourneyMap.tsx` — refatorado para thin wrapper: page chrome (header "SUA JORNADA", subtitle, ScrollView, CTA button) ao redor de `<JourneyMap showYouAreHere />`. Toda a lógica de nós foi extraída para `components/JourneyMap.tsx`.
+- `mobile2/screens/triage/TriageModal.tsx` — prop `editMode?: boolean` adicionada; quando `editMode === true`: step inicial é `'ambition'` (não `'intro'`), `ambitionId` pré-preenchido do `userProfile.ambitionId`, `baselineMs` state inicializado com `userProfile.baselineMs`, step `'confirm'` avança diretamente para `'map'` (pulando `'age'` e `'baseline'`), `advanceTo` é no-op em editMode para não sobrescrever estado do perfil, completion salva apenas `ambitionId` novo mantendo `ageRange`, `baselineMs` e `baselineTakenAt` do perfil existente.
+
+#### (c) Decisões de design
+- **`currentBestMs` = `Math.min(...sessions.map(s => s.score))`**: usa o `score` (média do top-5) como métrica primária, não o `bestTime` (melhor tentativa individual). Evita que um tap acidental desbloquei um marco — consistente com o que o usuário vê como sua performance.
+- **Linha de marco no gráfico**: cinza neutro `#4a5a7b` tracejado (`4 3`), não colorido. Não compete visualmente com as linhas de dados por modo (verde/azul/roxo).
+- **`compact` prop em JourneyMap**: um único componente com ajuste de tamanho de nós, espaçamento e fonte via prop, em vez de dois componentes separados. Node size: 22/28 (compact) vs 28/36 (normal).
+- **Critério dinâmico no "PARA VIRAR" injetado no render**: não modifica `archetypes.ts`. O arquivo de arquétipos permanece sem dependência do sistema de ambições. A injeção acontece apenas no render de `Perfil.tsx` quando `triageCompleted === true`.
+- **Toast de marco via `<Modal>` transparente**: overlay com `backgroundColor: 'rgba(0,0,0,0.75)'`, card centralizado, dismiss por toque. Consistente com padrão de Modal já usado no app (TriageModal). Sem `Animated` API para manter zero dependências novas.
+- **Card "Velocista olímpico" adicionado em Ciencia**: era necessário para o mapeamento `sprinter → benchmark`. Source: Lipps et al., 2011 · Sprint start research. Range: 170–200 ms. Nível: ELITE. Cor: `#10b981`.
+
+#### (d) Abordagem do toast de marco batido
+Disparado em `addSession` em `App.tsx`, imediatamente após `setSessions(updated)`. Lógica:
+1. Antes de salvar: `prevBest = Math.min(...sessions.map(s => s.score))` (snapshot do state anterior)
+2. Depois de salvar: `newBest = Math.min(...updated.map(s => s.score))` (novo estado)
+3. Se `newBest < prevBest`: procura nos milestones da ambição atual o primeiro onde `prevBest > m.ms && newBest <= m.ms`
+4. Se encontrado: `setMilestoneBeat(beaten.label)` → exibe toast
+
+A condição é **estruturalmente irrepetível** sem flag persistida: na próxima sessão, `prevBest` já será `≤ m.ms`, então a comparação dupla (`prevBest > m.ms && newBest <= m.ms`) nunca volta a ser verdadeira para o mesmo marco. Zero schema change no `UserProfile`.
+
+#### (e) Bug corrigido durante execução
+**`currentBestMs` possivelmente `undefined` em `JourneyMap.tsx`** (erro TypeScript `TS18048`): a prop `currentBestMs?: number | null` pode ser `undefined` quando não passada. A comparação `currentBestMs >= baselineMs` falha em tipagem. Correção: normalizar para `const best: number | null = currentBestMs ?? null` no início do componente e usar `best` em todas as comparações internas. Identificado e corrigido no `npx tsc --noEmit` final.
+
+#### (f) Pendências e polimentos em aberto
+- **Animação de entrada do toast**: o `<Modal animationType="fade">` é funcional mas sem animação de escala no card interno. Uma entrada com `Animated.spring` melhoraria a percepção de "conquista".
+- **Recalibração de baseline após 30 dias**: `TriageModal` em `editMode` não oferece recalibração mesmo quando `baselineTakenAt` tem mais de 30 dias. Prompt B marcou como "opcional, não MVP" — implementar quando relevante.
+- **Marcos qualitativos (`brain_health`) não computados automaticamente**: `getMilestonesState` sempre retorna `'pendente'` para marcos `type: 'qualitative'`. Avaliar no futuro: computar "Primeira semana completa" via streak de sessões, "Fadiga < 5%" via `avgFatigueSeq`, etc.
+- **`benchmarks_reflexo.docx` ainda não consultado**: valores de `finalMetaMs` e milestones em `ambitions.ts` são placeholders. Validar contra o documento antes de produção.
+- **Tela Perfil não exibe arquétipo específico por ambição**: o próximo arquétipo no "PARA VIRAR" ainda é determinado pela lógica genérica de `archetypes.ts`. Prompt B menciona que para F1 deveria ser "O Piloto", para saúde cerebral algo como "O Consistente" — não implementado.
+- **"Trocar meta" no Perfil não oferece recalibração**: link abre `editMode` que pula baseline. Se o usuário quer refazer o baseline ao trocar meta, isso não está disponível.
+
+#### (g) Convenções estabelecidas (manter em sessões futuras)
+- **`currentBestMs` = `Math.min(...sessions.map(s => s.score))`** — usar sempre `score` (não `bestTime`) como proxy de performance para cálculos de marco e motivação.
+- **`getAmbition()` antes de qualquer operação de marco**: nunca acessar `AMBITIONS` diretamente nas telas — sempre via `utils/ambition.ts`.
+- **Milestones numéricos: beaten = `RT <= milestone.ms`** — menor RT é melhor; "bater" um marco significa atingir ou superar a velocidade alvo.
+- **`delta = currentBestMs - nextMilestone.ms`** — delta positivo = ms que faltam melhorar. Não inverter o sinal (a versão original de `TriageJourneyMap` tinha sinal invertido — foi corrigido no `JourneyMap.tsx`).
+- **Prop `userProfile: UserProfile` obrigatória em todas as 4 telas principais** — Home, Historico, Ciencia, Perfil recebem `userProfile` do App.tsx. Qualquer nova tela principal deve seguir o mesmo padrão.
+- **`editMode` em `TriageModal` não chama `advanceTo`** — em modo edição, o progresso parcial não é salvo no AsyncStorage para não corromper o estado de triagem concluída.
+- **JourneyMap embeddável (não fullscreen)**: o componente é uma `View` pura, sem `ScrollView` próprio. Sempre embuti dentro de um scroll externo. `TriageJourneyMap` é o único que adiciona chrome de página ao redor.
