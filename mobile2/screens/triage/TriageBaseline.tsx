@@ -9,14 +9,13 @@ const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 type Phase =
   | 'intro'
   | 'partida_instr'
-  | 'partida_wait'
+  | 'countdown'
   | 'partida_go'
   | 'trans_alvo'
   | 'alvo_instr'
   | 'alvo_go'
   | 'trans_seq'
   | 'seq_instr'
-  | 'seq_wait'
   | 'seq_go'
   | 'result';
 
@@ -54,9 +53,11 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   const [rts, setRts] = useState<Rts>({ partida: null, alvo: null, seq: null });
   const [alvoTarget, setAlvoTarget] = useState(0);
   const [alvoOrder, setAlvoOrder] = useState([0, 1, 2, 3]);
+  const [countVal, setCountVal] = useState(3);
 
   const signalTime = useRef(0);
   const phaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownNext = useRef<'partida_go' | 'alvo_go' | 'seq_go'>('partida_go');
 
   const clearTimer = () => {
     if (phaseTimer.current) { clearTimeout(phaseTimer.current); phaseTimer.current = null; }
@@ -68,12 +69,22 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   useEffect(() => {
     clearTimer();
 
-    if (phase === 'partida_wait') {
-      const delay = 1500 + Math.random() * 1500;
+    if (phase === 'countdown') {
+      setCountVal(3);
+      // Chained setTimeout: 3 → 2 → 1 → GO → stimulus
       phaseTimer.current = setTimeout(() => {
-        signalTime.current = Date.now();
-        setPhase('partida_go');
-      }, delay);
+        setCountVal(2);
+        phaseTimer.current = setTimeout(() => {
+          setCountVal(1);
+          phaseTimer.current = setTimeout(() => {
+            setCountVal(0); // 0 renders as "GO"
+            phaseTimer.current = setTimeout(() => {
+              signalTime.current = Date.now();
+              setPhase(countdownNext.current);
+            }, 600);
+          }, 1000);
+        }, 1000);
+      }, 1000);
     }
 
     if (phase === 'trans_alvo') {
@@ -86,14 +97,6 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       phaseTimer.current = setTimeout(() => {
         setPhase('seq_instr');
       }, 1600);
-    }
-
-    if (phase === 'seq_wait') {
-      const delay = 800 + Math.random() * 700;
-      phaseTimer.current = setTimeout(() => {
-        signalTime.current = Date.now();
-        setPhase('seq_go');
-      }, delay);
     }
   }, [phase]);
 
@@ -185,7 +188,10 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       icon: '🏎',
       name: 'PARTIDA',
       desc: 'Aperte o mais rápido possível assim que o círculo verde aparecer. Sem pressa, espera aparecer, pois será penalizado em caso de queimar a largada.',
-      onStart: () => setPhase('partida_wait'),
+      onStart: () => {
+        countdownNext.current = 'partida_go';
+        setPhase('countdown');
+      },
     },
     alvo_instr: {
       icon: '🎯',
@@ -196,15 +202,18 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         const order = shuffle([0, 1, 2, 3]);
         setAlvoTarget(target);
         setAlvoOrder(order);
-        signalTime.current = Date.now();
-        setPhase('alvo_go');
+        countdownNext.current = 'alvo_go';
+        setPhase('countdown');
       },
     },
     seq_instr: {
       icon: '🧠',
       name: 'SEQUÊNCIA',
       desc: 'Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho).',
-      onStart: () => setPhase('seq_wait'),
+      onStart: () => {
+        countdownNext.current = 'seq_go';
+        setPhase('countdown');
+      },
     },
   } as const;
 
@@ -227,15 +236,16 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     );
   }
 
-  // ── PARTIDA WAIT ─────────────────────────────────────────────────────────────
-  if (phase === 'partida_wait') {
+  // ── COUNTDOWN ────────────────────────────────────────────────────────────────
+  if (phase === 'countdown') {
+    const isGo = countVal === 0;
     return (
       <View style={styles.root}>
         {renderHeader(5)}
-        <View style={styles.miniGameArea}>
-          <Text style={styles.miniModeLabel}>MODO PARTIDA</Text>
-          <Text style={styles.waitText}>Aguarde...</Text>
-          <Text style={styles.waitDots}>· · ·</Text>
+        <View style={styles.countdownArea}>
+          <Text style={[styles.countdownNum, isGo && styles.countdownGo]}>
+            {isGo ? 'GO' : countVal}
+          </Text>
         </View>
       </View>
     );
@@ -297,20 +307,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     );
   }
 
-  // ── SEQ WAIT + GO ────────────────────────────────────────────────────────────
-  if (phase === 'seq_wait') {
-    return (
-      <View style={styles.root}>
-        {renderHeader(5)}
-        <View style={styles.miniGameArea}>
-          <Text style={styles.miniModeLabel}>MODO SEQUÊNCIA</Text>
-          <Text style={styles.waitText}>Prepare-se...</Text>
-          <Text style={styles.waitDots}>· · ·</Text>
-        </View>
-      </View>
-    );
-  }
-
+  // ── SEQ GO ───────────────────────────────────────────────────────────────────
   if (phase === 'seq_go') {
     return (
       <View style={styles.root}>
@@ -373,10 +370,11 @@ const styles = StyleSheet.create({
   instrName: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: 1.5 },
   instrDesc: { fontSize: 15, color: '#7a8aa0', textAlign: 'center', lineHeight: 24 },
 
-  miniGameArea: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+  countdownArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  countdownNum: { fontSize: 112, fontWeight: '900', color: '#fff', letterSpacing: -4, lineHeight: 116 },
+  countdownGo: { color: '#10b981' },
+
   miniModeLabel: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5 },
-  waitText: { fontSize: 22, fontWeight: '700', color: '#4a5a7b' },
-  waitDots: { fontSize: 32, color: '#1a2540', letterSpacing: 12 },
 
   tapArea: {
     flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20,

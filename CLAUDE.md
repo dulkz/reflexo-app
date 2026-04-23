@@ -158,3 +158,17 @@ Adicionadas 3 fases de instrução (`partida_instr`, `alvo_instr`, `seq_instr`) 
 - **PARTIDA** (🏎): "Aperte o mais rápido possível assim que o círculo verde aparecer. Sem pressa, espera aparecer, pois será penalizado em caso de queimar a largada."
 - **ALVO** (🎯): "Toque no círculo com a cor indicada no topo em cada rodada quando ele aparecer. Ignore as outras cores."
 - **SEQUÊNCIA** (🧠): "Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho)."
+
+---
+
+### Sessão — Countdown 3-2-1-GO unificado antes de cada estímulo (2026-04-23)
+
+#### (a) Arquivo modificado
+- `mobile2/screens/triage/TriageBaseline.tsx`
+
+#### (b) Mudança
+Adicionada fase `countdown` única e reutilizável que exibe 3→2→1→GO antes de cada um dos 3 estímulos do mini-teste. O countdown é acionado pelo botão "COMEÇAR" de cada tela de instrução via `countdownNext` ref, que registra qual fase segue após o GO (`partida_go`, `alvo_go` ou `seq_go`). Implementação via 4 `setTimeout` encadeados (1 s cada + 600 ms no GO), compatível com o `clearTimeout` existente — sem necessidade de `setInterval`. `signalTime.current` é setado ao final do countdown, imediatamente antes de avançar para a fase de execução, garantindo medição de RT precisa e consistente para os 3 modos.
+
+Fases removidas: `partida_wait` e `seq_wait` — eram buffers aleatórios sem contagem visual que existiam apenas para Partida e Sequência; o countdown os substitui com feedback visual consistente para todos os modos.
+
+Setup do Alvo: `setAlvoTarget` e `setAlvoOrder` continuam sendo chamados no `onStart` de `alvo_instr` (antes do countdown iniciar), mas `signalTime` foi desacoplado desse momento e agora é setado no fim do countdown, junto com os outros dois modos.
