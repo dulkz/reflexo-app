@@ -28,7 +28,8 @@ type GameScreen =
   | 'resultado_alvo'
   | 'resultado_sequencia';
 
-const FAB_SIZE = 70;
+const FAB_SIZE      = 70;
+const TAB_BAR_HEIGHT = 80;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
   { key: 'historico', label: 'Histórico', icon: '📈' },
@@ -309,51 +310,58 @@ function AppInner() {
       {/* Tab bar — hidden during active game */}
       {!inGame && (
         <>
-        <View style={styles.tabBarSpacer} />
-        <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
-          {LEFT_TABS.map(t => {
-            const active = activeTab === t.key;
-            return (
-              <TouchableOpacity
-                key={t.key}
-                style={styles.tabBtn}
-                onPress={() => handleTabPress(t.key)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                  <Text style={styles.tabIcon}>{t.icon}</Text>
-                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+          <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
+            {LEFT_TABS.map(t => {
+              const active = activeTab === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  style={styles.tabBtn}
+                  onPress={() => handleTabPress(t.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
+                    <Text style={styles.tabIcon}>{t.icon}</Text>
+                    <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
 
-          {/* FAB — inline center item, rises above bar via marginTop */}
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={() => handleTabPress('jogar')}
-            activeOpacity={0.85}
+            {/* Spacer — keeps 5-column layout while FAB floats above */}
+            <View style={styles.fabSpacer} />
+
+            {RIGHT_TABS.map(t => {
+              const active = activeTab === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  style={styles.tabBtn}
+                  onPress={() => handleTabPress(t.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
+                    <Text style={styles.tabIcon}>{t.icon}</Text>
+                    <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* FAB — position absolute sibling of tabBar, no overflow dependency */}
+          <View
+            style={[styles.fabContainer, { bottom: TAB_BAR_HEIGHT + Math.max(insets.bottom, 4) - FAB_SIZE / 2 }]}
+            pointerEvents="box-none"
           >
-            <Text style={styles.fabIcon}>⚡</Text>
-          </TouchableOpacity>
-
-          {RIGHT_TABS.map(t => {
-            const active = activeTab === t.key;
-            return (
-              <TouchableOpacity
-                key={t.key}
-                style={styles.tabBtn}
-                onPress={() => handleTabPress(t.key)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                  <Text style={styles.tabIcon}>{t.icon}</Text>
-                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => handleTabPress('jogar')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.fabIcon}>⚡</Text>
+            </TouchableOpacity>
+          </View>
         </>
       )}
 
@@ -402,19 +410,15 @@ const styles = StyleSheet.create({
   contentFullscreen: { flex: 1 },
 
   // ── FAB tab bar ──────────────────────────────────────────────────────────────
-  tabBarSpacer: {
-    height: 28,
-    backgroundColor: 'transparent',
-    overflow: 'visible',
-  },
   tabBar: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: '#0d1525',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
-    paddingTop: 0,
+    paddingTop: 10,
   },
+  fabSpacer: { width: FAB_SIZE },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
   tabItemCard: {
     alignItems: 'center',
@@ -435,11 +439,17 @@ const styles = StyleSheet.create({
   tabIcon: { fontSize: 26 },
   tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
   tabLabelActive: { color: '#3b82f6' },
+  fabContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 20,
+  },
   fab: {
     width: FAB_SIZE,
     height: FAB_SIZE,
     borderRadius: FAB_SIZE / 2,
-    marginTop: -38,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#5b4fcf',
