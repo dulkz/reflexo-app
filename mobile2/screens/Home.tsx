@@ -40,7 +40,7 @@ const MODE_INFO = [
     key: 'sequencia' as ModeKey,
     name: 'MODO SEQUÊNCIA',
     icon: '🧠',
-    desc: '20 sinais Go/NoGo · 80% / 20%',
+    desc: '20 sinais Go/NoGo · ~25% aleatório',
     sub: 'Mede fadiga cognitiva e controle inibitório',
   },
 ];

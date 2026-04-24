@@ -16,6 +16,7 @@ export interface SessionRecord {
 }
 
 const KEY = 'reflexo_sessions_v1';
+const ACH_KEY = 'reflexo_achievements_v1';
 
 export async function loadSessions(): Promise<SessionRecord[]> {
   try {
@@ -36,6 +37,23 @@ export async function saveSession(session: SessionRecord): Promise<void> {
 
 export async function clearSessions(): Promise<void> {
   await AsyncStorage.removeItem(KEY);
+}
+
+// ── Achievement unlock dates ──────────────────────────────────────────────────
+
+export async function loadUnlockedAchievements(): Promise<Record<string, string>> {
+  try {
+    const raw = await AsyncStorage.getItem(ACH_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export async function saveUnlockedAchievements(data: Record<string, string>): Promise<void> {
+  try {
+    await AsyncStorage.setItem(ACH_KEY, JSON.stringify(data));
+  } catch {}
 }
 
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {

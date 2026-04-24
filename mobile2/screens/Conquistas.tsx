@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   Platform, StatusBar as RNStatusBar,
@@ -7,9 +7,17 @@ import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats } from '../config/archetypes';
 import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import { loadUnlockedAchievements, saveUnlockedAchievements } from '../utils/storage';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const DAY = 86_400_000;
+
+const MONTH_ABBR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function formatUnlockDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getDate()} ${MONTH_ABBR[d.getMonth()]}`;
+}
 
 function computeStreak(sessions: SessionRecord[]): number {
   if (sessions.length === 0) return 0;
@@ -34,6 +42,24 @@ export default function Conquistas({ sessions, userProfile }: Props) {
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const unlockedCount = useMemo(() => getUnlockedCount(stats), [stats]);
 
+  const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    loadUnlockedAchievements().then(stored => {
+      const now = new Date().toISOString();
+      let changed = false;
+      const updated = { ...stored };
+      for (const a of ACHIEVEMENTS) {
+        if (a.unlocked(stats) && !updated[a.id]) {
+          updated[a.id] = now;
+          changed = true;
+        }
+      }
+      if (changed) saveUnlockedAchievements(updated);
+      setUnlockDates(updated);
+    });
+  }, [stats]);
+
   return (
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -47,6 +73,7 @@ export default function Conquistas({ sessions, userProfile }: Props) {
         <View style={styles.grid}>
           {ACHIEVEMENTS.map(a => {
             const done = a.unlocked(stats);
+            const unlockDate = unlockDates[a.id];
             return (
               <View
                 key={a.id}
@@ -55,6 +82,15 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                 <Text style={[styles.icon, !done && styles.iconLocked]}>{a.icon}</Text>
                 <Text style={[styles.name, !done && styles.nameLocked]}>{a.name}</Text>
                 <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                {done && unlockDate ? (
+                  <Text style={styles.unlockDate}>
+                    Desbloqueada em {formatUnlockDate(unlockDate)}
+                  </Text>
+                ) : !done ? (
+                  <Text style={styles.progressText} numberOfLines={2}>
+                    {a.progress(stats)}
+                  </Text>
+                ) : null}
               </View>
             );
           })}
@@ -90,4 +126,6 @@ const styles = StyleSheet.create({
   name: { fontSize: 13, fontWeight: '800', color: '#fff' },
   nameLocked: { color: '#3a4a6b' },
   desc: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
+  progressText: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
+  unlockDate: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
 });
