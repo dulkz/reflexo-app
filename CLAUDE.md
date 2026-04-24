@@ -262,6 +262,68 @@ A condição é **estruturalmente irrepetível** sem flag persistida: na próxim
 
 ---
 
+### Sessão — Badges de usuário e linhas de referência, Parte 1 (4 correções · 2026-04-23)
+
+#### (a) Arquivos modificados
+- `mobile2/screens/Ciencia.tsx`
+- `mobile2/screens/Historico.tsx`
+- `mobile2/screens/triage/TriageBaseline.tsx`
+- `mobile2/App.tsx`
+
+#### (b) Correções aplicadas
+
+**C1 — Badge "VOCÊ ESTÁ AQUI" em Ciencia.tsx (subseção Modo Alvo)**
+Adicionado badge `← VOCÊ ESTÁ AQUI` absolutamente posicionado no card de `CHOICE_BENCHMARKS` correspondente ao melhor RT histórico do usuário no Modo Alvo. Cor do badge = cor do nível choice RT correspondente (mesmo mapeamento de `getChoiceRTLevel` em Resultado.tsx). Se a sessão mais recente cair em faixa diferente do best, exibe linha discreta "Última sessão: X ms · LEVEL" abaixo do badge (`top: 26, right: 8`). Sem badge se não houver sessões Alvo. Props: `sessions: SessionRecord[]` adicionada a `Ciencia`; `App.tsx` atualizado para passar `sessions={sessions}`.
+
+**C2 — Hierarquia visual da seção de benchmarks**
+Subtítulo da subseção Alvo atualizado de `"Choice RT — identificação de cor sob pressão"` para `"O Modo Alvo exige identificar a cor certa antes de reagir — por isso os tempos de referência são maiores."` — linguagem acessível ao usuário não técnico. Estrutura do cabeçalho geral ("Quem reage mais rápido que você.") já estava corretamente acima das duas subseções; nenhuma alteração estrutural necessária.
+
+**C3 — Linha de referência "Elite: 200 ms" em Historico.tsx**
+Adicionada variável `simpleRTRef = 200` ativa nos filtros `partida` e `sequencia`. Linha tracejada `#4a5a7b`, label "Elite: 200 ms" à direita — mesmo padrão visual da linha verde do Alvo. Valor 200 ms = limite superior da faixa F1/Velocista olímpico, o benchmark mais aspiracional do app para simple RT.
+
+**C4 — Fix do loop de 3 sinais em TriageBaseline.tsx**
+Causa raiz identificada: após `handleSeqTap` processar um sinal, a fase `seq_go` permanecia ativa durante os 400 ms do gap inter-sinal. Multi-taps ou double-tap nessa janela passavam pelo guard `phase !== 'seq_go'` e incrementavam `seqSignalIdxRef.current` múltiplas vezes — 3 taps rápidos no primeiro sinal geravam `nextIdx = 3` e iam direto para `result`. Fix: `seqTapHandledRef` (boolean ref) resetado para `false` no início de cada `seq_go` e travado para `true` no primeiro tap válido. Taps subsequentes retornam cedo. Adicionalmente, o check de nogo foi migrado de `seqCurrentSignal` (state, closure) para `seqSignalsRef.current[seqSignalIdxRef.current]` (ref, sempre sincronizado), eliminando risco de stale closure em React Native.
+
+#### (c) Decisões de design
+- **Badge "VOCÊ ESTÁ AQUI" usa cor do nível, não azul fixo**: cor dinâmica (`choiceLevelColor`) conecta o badge à escala choice RT, tornando o posicionamento do usuário autoexplicativo sem precisar ler o label de nível no card.
+- **`lastSessionNote` absolutamente posicionado**: mantém o `benchCard` como `flexDirection: 'row'` sem redesenhar o layout. Nota fica em `top: 26, right: 8` — abaixo do badge (`top: 8`) sem adicionar camadas de wrapper.
+- **`seqCurrentSignal` mantido como state para renderização**: a migração para ref no check lógico de nogo deixa o state apenas para colorir o círculo (`#ef4444` / `#10b981`). Dois papéis distintos, nenhuma duplicação.
+
+---
+
+### Sessão — Badges de usuário e linhas de referência, Parte 2 (3 correções · 2026-04-23)
+
+#### (a) Arquivos modificados
+- `mobile2/screens/Ciencia.tsx`
+- `mobile2/screens/Historico.tsx`
+
+#### (b) Correções aplicadas
+
+**C1a — Contorno do badge ← SUA META restaurado (Ciencia.tsx)**
+`goalBadge` nunca tinha `borderWidth` explícito, ao contrário do `youBadge` criado na sessão anterior (que nasceu com `borderWidth: 1`). Adicionado `borderWidth: 1` ao estilo base de `goalBadge` e `borderColor: goalHighlightColor + '66'` no inline style do card, espelhando exatamente o padrão de `youBadge`. Padding unificado: ambos os badges passaram para `paddingHorizontal: 8, paddingVertical: 4` (era 6/2).
+
+**C1b — Padding do badge ← VOCÊ ESTÁ AQUI (Ciencia.tsx)**
+Badge estava visualmente apertado com `padding 6/2`. Aumentado para `8/4` (idêntico ao ajuste do `goalBadge` acima). Adicionado `numberOfLines={1}` em ambos os textos de badge para garantir quebra zero. `lastSessionNote` ajustado de `top: 26` para `top: 30` para acomodar badge mais alto.
+
+**C2a — Linhas de referência coloridas por modo (Historico.tsx)**
+`simpleRTRef` (Elite 200 ms) agora usa `MODE_COLORS[filter].accent` em vez de cinza fixo `#4a5a7b`:
+- Filtro `partida`: `#3b82f6` (azul)
+- Filtro `sequencia`: `#8b5cf6` (roxo)
+Linha Elite do Alvo (420 ms) corrigida de `#10b981` para `#06b6d4` (ciano = cor do modo Alvo). Implementado via variável `simpleRTColor = MODE_COLORS[filter as ModeKey].accent` — zero cores hardcoded.
+
+**C2b — Label "Próximo:" renomeado (Historico.tsx)**
+`"Próximo: N ms"` → `"🎯 Próxima meta: N ms"` na linha de milestone de jornada dos filtros Partida e Sequência.
+
+**C2c — Linha "Próxima meta" para filtro Alvo (Historico.tsx)**
+Adicionada variável `alvoNextGoalMs`: próximo threshold de choice RT acima do melhor score Alvo do usuário (420 → 500 → 560 → 700 ms). Só é computada quando `triageCompleted && ambitionId && !isBrainHealth` e há sessões Alvo na janela do gráfico. Linha tracejada `#4a5a7b`, label `"🎯 Próxima meta: N ms"`. Todos os thresholds (420–700) estão dentro do range Y fixo do Alvo (300–800), sem risco de a linha sair do gráfico.
+
+#### (c) Decisões de design
+- **`goalBadge` e `youBadge` com estilo base idêntico**: ao unificar padding e borderWidth no StyleSheet, a diferença visual entre os dois badges passa a ser apenas a cor (azul grupo vs cor do nível) — consistência visual automática sem duplicar lógica.
+- **`alvoNextGoalMs` usa thresholds choice RT diretos, não `getNextMilestone()`**: o sistema de ambições é baseado em simple RT (pilotos, boxeadores, etc.) e não tem equivalentes de choice RT. Calcular o próximo limiar diretamente da tabela choice RT é semanticamente correto e evita acoplamento entre sistemas.
+- **Linha `alvoNextGoalMs` em `#4a5a7b` (neutro), não em `#06b6d4` (modo)**: dentro do mesmo gráfico Alvo coexistem duas linhas — Elite 420 ms (`#06b6d4`) e Próxima meta (variável). Usar cores diferentes evita ambiguidade sobre qual linha representa o quê.
+
+---
+
 ### Sessão — Grupo 1: 4 correções pontuais de bugs (2026-04-23)
 
 #### (a) Arquivos modificados

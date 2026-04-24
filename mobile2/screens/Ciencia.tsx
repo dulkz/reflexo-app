@@ -304,8 +304,8 @@ export default function Ciencia({ userProfile, sessions }: Props) {
             >
               {/* SUA META badge */}
               {isGoal && (
-                <View style={[styles.goalBadge, { backgroundColor: goalHighlightColor + '18' }]}>
-                  <Text style={[styles.goalBadgeText, { color: goalHighlightColor }]}>
+                <View style={[styles.goalBadge, { borderColor: goalHighlightColor + '66', backgroundColor: goalHighlightColor + '18' }]}>
+                  <Text style={[styles.goalBadgeText, { color: goalHighlightColor }]} numberOfLines={1}>
                     ← SUA META
                   </Text>
                 </View>
@@ -353,7 +353,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
             >
               {isYouHere && (
                 <View style={[styles.youBadge, { borderColor: youColor + '66', backgroundColor: youColor + '18' }]}>
-                  <Text style={[styles.youBadgeText, { color: youColor }]}>← VOCÊ ESTÁ AQUI</Text>
+                  <Text style={[styles.youBadgeText, { color: youColor }]} numberOfLines={1}>← VOCÊ ESTÁ AQUI</Text>
                 </View>
               )}
               {showLastNote && (
@@ -530,18 +530,19 @@ const styles = StyleSheet.create({
   },
   goalBadge: {
     position: 'absolute', top: 8, right: 8,
-    borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 4, borderWidth: 1,
+    paddingHorizontal: 8, paddingVertical: 4,
   },
   goalBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
 
   youBadge: {
     position: 'absolute', top: 8, right: 8,
     borderRadius: 4, borderWidth: 1,
-    paddingHorizontal: 6, paddingVertical: 2,
+    paddingHorizontal: 8, paddingVertical: 4,
   },
   youBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
   lastSessionNote: {
-    position: 'absolute', top: 26, right: 8,
+    position: 'absolute', top: 30, right: 8,
     fontSize: 8, color: '#4a5a7b', letterSpacing: 0.3,
   },
 

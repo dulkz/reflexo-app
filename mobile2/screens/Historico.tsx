@@ -100,7 +100,7 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
     userProfile.ambitionId &&
     getAmbition(userProfile.ambitionId)?.group === 'brain_health';
 
-  // ── Next milestone line (not used for alvo — choice RT scale is different) ─
+  // ── Next milestone line (non-alvo: ambition-based; alvo: choice RT thresholds) ─
   let nextMilestoneMs: number | null = null;
   if (filter !== 'alvo' && userProfile?.triageCompleted && userProfile.ambitionId && !isBrainHealth) {
     const currentBestMs = Math.min(...allScores);
@@ -112,6 +112,17 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
     if (next && next.type !== 'qualitative' && next.ms !== undefined) {
       nextMilestoneMs = next.ms;
     }
+  }
+
+  // Alvo next goal: next choice RT threshold above user's best alvo score
+  let alvoNextGoalMs: number | null = null;
+  if (filter === 'alvo' && userProfile?.triageCompleted && userProfile.ambitionId && !isBrainHealth) {
+    const bestAlvo = Math.min(...allScores);
+    if (bestAlvo > 700)      alvoNextGoalMs = 700;
+    else if (bestAlvo > 560) alvoNextGoalMs = 560;
+    else if (bestAlvo > 500) alvoNextGoalMs = 500;
+    else if (bestAlvo > 420) alvoNextGoalMs = 420;
+    // ≤420 = ELITE, no next goal
   }
 
   // ── Y scale ────────────────────────────────────────────────────────────────
@@ -128,11 +139,12 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
   }
   const range = maxV - minV || 80;
 
-  // Choice RT reference for alvo (ELITE boundary)
+  // Choice RT ELITE reference for alvo — mode color cyan
   const choiceRTRef: number | null = filter === 'alvo' ? 420 : null;
 
-  // Simple RT elite reference for partida/sequencia (top of F1/sprinter range)
+  // Simple RT ELITE reference for partida/sequencia — mode-specific color
   const simpleRTRef: number | null = (filter === 'partida' || filter === 'sequencia') ? 200 : null;
+  const simpleRTColor = simpleRTRef !== null ? MODE_COLORS[filter as ModeKey].accent : null;
 
   const toY = (v: number) => PAD.t + (1 - (v - minV) / range) * innerH;
 
@@ -209,41 +221,59 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
               x={W - PAD.r - 2} y={toY(nextMilestoneMs) - 3}
               fontSize={7} fill="#4a5a7b" textAnchor="end"
             >
-              {`Próximo: ${nextMilestoneMs} ms`}
+              {`🎯 Próxima meta: ${nextMilestoneMs} ms`}
             </SvgText>
           </React.Fragment>
         )}
 
-        {/* Choice RT ELITE reference line (alvo filter only) */}
+        {/* Alvo next choice-RT goal line */}
+        {alvoNextGoalMs !== null && (
+          <React.Fragment>
+            <Line
+              x1={PAD.l} y1={toY(alvoNextGoalMs)}
+              x2={W - PAD.r} y2={toY(alvoNextGoalMs)}
+              stroke="#4a5a7b" strokeWidth={1}
+              strokeDasharray="4 3"
+            />
+            <SvgText
+              x={W - PAD.r - 2} y={toY(alvoNextGoalMs) - 3}
+              fontSize={7} fill="#4a5a7b" textAnchor="end"
+            >
+              {`🎯 Próxima meta: ${alvoNextGoalMs} ms`}
+            </SvgText>
+          </React.Fragment>
+        )}
+
+        {/* Choice RT ELITE reference line (alvo filter) — mode color cyan */}
         {choiceRTRef !== null && (
           <React.Fragment>
             <Line
               x1={PAD.l} y1={toY(choiceRTRef)}
               x2={W - PAD.r} y2={toY(choiceRTRef)}
-              stroke="#10b981" strokeWidth={1}
+              stroke="#06b6d4" strokeWidth={1}
               strokeDasharray="4 3"
             />
             <SvgText
               x={W - PAD.r - 2} y={toY(choiceRTRef) - 3}
-              fontSize={7} fill="#10b981" textAnchor="end"
+              fontSize={7} fill="#06b6d4" textAnchor="end"
             >
               Elite: 420 ms
             </SvgText>
           </React.Fragment>
         )}
 
-        {/* Simple RT ELITE reference line (partida/sequencia filters) */}
-        {simpleRTRef !== null && (
+        {/* Simple RT ELITE reference line (partida/sequencia) — mode-specific color */}
+        {simpleRTRef !== null && simpleRTColor !== null && (
           <React.Fragment>
             <Line
               x1={PAD.l} y1={toY(simpleRTRef)}
               x2={W - PAD.r} y2={toY(simpleRTRef)}
-              stroke="#4a5a7b" strokeWidth={1}
+              stroke={simpleRTColor} strokeWidth={1}
               strokeDasharray="4 3"
             />
             <SvgText
               x={W - PAD.r - 2} y={toY(simpleRTRef) - 3}
-              fontSize={7} fill="#4a5a7b" textAnchor="end"
+              fontSize={7} fill={simpleRTColor} textAnchor="end"
             >
               Elite: 200 ms
             </SvgText>
