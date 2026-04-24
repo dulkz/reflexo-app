@@ -64,6 +64,15 @@ const MECHS = [
   },
 ];
 
+const SCI_STATS = [
+  { stat: '25%', desc: 'menos diagnósticos de demência em 20 anos com treino de velocidade de processamento', fonte: 'Estudo ACTIVE · NIH', cor: '#10b981' },
+  { stat: '30%', desc: 'melhora na coordenação motora fina após 6 semanas de treino de reação', fonte: 'Willingham et al., 2002', cor: '#3b82f6' },
+  { stat: '40%', desc: 'melhora em atenção sustentada após 8 semanas de prática', fonte: 'Journal of Cognitive Enhancement', cor: '#8b5cf6' },
+  { stat: '300ms', desc: 'limiar onde o cérebro para de pensar e começa a executar automaticamente', fonte: 'Neuroscience of Action', cor: '#f59e0b' },
+  { stat: '10%', desc: 'declínio por década na velocidade de processamento sem treino ativo', fonte: 'Salthouse, 2004', cor: '#ef4444' },
+  { stat: '2×', desc: 'menor risco de acidentes de trânsito em pessoas com reação treinada', fonte: 'AAA Foundation, 2015', cor: '#06b6d4' },
+];
+
 const BENCHMARKS = [
   {
     icon: '🏎',
@@ -343,16 +352,14 @@ export default function Ciencia({ userProfile, sessions }: Props) {
         {/* ══ SEÇÃO 3 — POR QUE TREINAR REAÇÃO ══ */}
         <SectionHeader kicker="POR QUE TREINAR REAÇÃO" />
 
-        <View style={styles.heroStat}>
-          <Text style={styles.heroNum}>25%</Text>
-          <Text style={styles.heroClaim}>
-            menos diagnósticos de demência em 20 anos, entre quem treinou velocidade de processamento.
-          </Text>
-          <View style={styles.heroSourceRow}>
-            <Text style={styles.heroSourceText}>
-              Estudo ACTIVE · 2.802 adultos · NIH · Coe et al., 2026
-            </Text>
-          </View>
+        <View style={styles.sciGrid}>
+          {SCI_STATS.map(s => (
+            <View key={s.stat + s.fonte} style={[styles.sciCard, { borderColor: s.cor + '33' }]}>
+              <Text style={[styles.sciStat, { color: s.cor }]}>{s.stat}</Text>
+              <Text style={styles.sciDesc}>{s.desc}</Text>
+              <Text style={styles.sciSource}>{s.fonte}</Text>
+            </View>
+          ))}
         </View>
 
         {/* ══ SEÇÃO 4 — COMO FUNCIONA ══ */}
@@ -440,27 +447,16 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3, lineHeight: 28,
   },
 
-  heroStat: {
-    backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: 28,
-    alignItems: 'center', marginBottom: 32, gap: 10,
+  sciGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32,
   },
-  heroNum: {
-    fontSize: 80, fontWeight: '900', color: '#10b981',
-    letterSpacing: -3, lineHeight: 84,
+  sciCard: {
+    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
+    padding: 14, width: '48%', minHeight: 140,
   },
-  heroClaim: {
-    fontSize: 15, color: '#c0cfe0', textAlign: 'center',
-    lineHeight: 23, fontWeight: '500',
-  },
-  heroSourceRow: {
-    marginTop: 4,
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)',
-    paddingTop: 12, width: '100%', alignItems: 'center',
-  },
-  heroSourceText: {
-    fontSize: 11, color: '#4a5a7b', textAlign: 'center', letterSpacing: 0.3,
-  },
+  sciStat: { fontSize: 32, fontWeight: '900', letterSpacing: -1 },
+  sciDesc: { fontSize: 11, color: '#7a8aa0', lineHeight: 16, marginTop: 6, flex: 1 },
+  sciSource: { fontSize: 9, color: '#3a4a6b', marginTop: 8 },
 
   editorialBlock: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
