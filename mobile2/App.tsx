@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
@@ -30,6 +30,7 @@ type GameScreen =
   | 'resultado_sequencia';
 
 const FAB_SIZE = 70;
+const WIN_W    = Dimensions.get('window').width;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
   { key: 'historico', label: 'Histórico', icon: '📈' },
@@ -352,7 +353,7 @@ function AppInner() {
       {/* FAB — centerer with left:0/right:0 + alignItems:'center' for pixel-perfect centering */}
       {!inGame && (
         <View
-          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 20, height: FAB_SIZE, zIndex: 3 }]}
+          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 28, left: (WIN_W - FAB_SIZE) / 2, height: FAB_SIZE, zIndex: 3 }]}
           pointerEvents="box-none"
         >
           <TouchableOpacity
@@ -448,12 +449,11 @@ const styles = StyleSheet.create({
   tabIcon: { fontSize: 26 },
   tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
   tabLabelActive: { color: '#3b82f6' },
-  // Centerer: left:0/right:0 + alignItems:'center' centers FAB without width calculation
+  // Centerer: left set inline via WIN_W calc for precise centering; elevation:0 kills Android shadow
   fabCenterer: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
+    elevation: 0,
+    shadowColor: 'transparent',
   },
   fab: {
     width: FAB_SIZE,
@@ -463,6 +463,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.2)',
+    elevation: 0,
   },
   fabIcon: {
     fontSize: 32,
