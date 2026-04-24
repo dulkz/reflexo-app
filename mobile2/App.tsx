@@ -317,9 +317,10 @@ function AppInner() {
                 onPress={() => handleTabPress(t.key)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
-                {active && <View style={styles.tabIndicator} />}
+                <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
+                  <Text style={styles.tabIcon}>{t.icon}</Text>
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -336,9 +337,10 @@ function AppInner() {
                 onPress={() => handleTabPress(t.key)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
-                {active && <View style={styles.tabIndicator} />}
+                <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
+                  <Text style={styles.tabIcon}>{t.icon}</Text>
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -421,16 +423,20 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   fabSpacer: { width: 88 },
-  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 8 },
-  tabIcon: { fontSize: 20 },
-  tabIconActive: {},
-  tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
-  tabLabelActive: { color: '#3b82f6' },
-  tabIndicator: {
-    position: 'absolute', top: 0,
-    width: 24, height: 2,
-    backgroundColor: '#3b82f6', borderRadius: 1,
+  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6 },
+  tabItemCard: {
+    alignItems: 'center', gap: 3,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    paddingVertical: 6, paddingHorizontal: 10,
   },
+  tabItemCardActive: {
+    backgroundColor: 'rgba(59,130,246,0.15)',
+    borderWidth: 1, borderColor: 'rgba(59,130,246,0.3)',
+  },
+  tabIcon: { fontSize: 26 },
+  tabLabel: { fontSize: 11, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
+  tabLabelActive: { color: '#3b82f6' },
   // Notch — absolute in root View; bottom set inline with insets
   fabNotch: {
     position: 'absolute',
@@ -451,6 +457,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.25)',
     shadowColor: '#3b82f6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
