@@ -350,24 +350,22 @@ function AppInner() {
         </View>
       )}
 
-      {/* Notch — centerer wrapper guarantees pixel-perfect horizontal center */}
+      {/* Notch + FAB — single centerer so both share the exact same horizontal axis */}
       {!inGame && (
         <View
-          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 19, height: NOTCH_SIZE, zIndex: 2 }]}
-          pointerEvents="none"
-        >
-          <View style={styles.fabNotch} />
-        </View>
-      )}
-
-      {/* FAB — centerer wrapper, box-none so taps outside the button pass through */}
-      {!inGame && (
-        <View
-          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 28, height: FAB_SIZE, zIndex: 3 }]}
+          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 19, height: NOTCH_SIZE, zIndex: 3 }]}
           pointerEvents="box-none"
         >
+          {/* Notch: normal flex child, centered by parent alignItems:'center' */}
+          <View style={styles.fabNotch} pointerEvents="none" />
+
+          {/* FAB: absolute within same centerer — offset (NOTCH-FAB)/2 = 9px on each side */}
           <TouchableOpacity
-            style={styles.fab}
+            style={[styles.fab, {
+              position: 'absolute',
+              top:  (NOTCH_SIZE - FAB_SIZE) / 2,
+              left: (NOTCH_SIZE - FAB_SIZE) / 2,
+            }]}
             onPress={() => handleTabPress('jogar')}
             activeOpacity={0.85}
           >
