@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Home from './screens/Home';
@@ -57,6 +57,7 @@ function AppInner() {
   const [triageVisible, setTriageVisible] = useState(false);
   const [triageEditMode, setTriageEditMode] = useState(false);
   const [milestoneBeat, setMilestoneBeat] = useState<string | null>(null);
+  const toastAnim = useRef(new Animated.Value(0)).current;
 
   // Partida state
   const [partidaTimes, setPartidaTimes] = useState<number[]>([]);
@@ -70,6 +71,18 @@ function AppInner() {
   const pendingTriage = useRef(false);
   // Prevent re-offering triage if dismissed in this app session
   const dismissedThisSession = useRef(false);
+
+  useEffect(() => {
+    if (milestoneBeat !== null) {
+      toastAnim.setValue(0);
+      Animated.spring(toastAnim, {
+        toValue: 1,
+        tension: 65,
+        friction: 7,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [milestoneBeat]);
 
   useEffect(() => {
     loadSessions().then(setSessions);
@@ -393,12 +406,12 @@ function AppInner() {
           onPress={() => setMilestoneBeat(null)}
           activeOpacity={1}
         >
-          <View style={styles.toastCard}>
+          <Animated.View style={[styles.toastCard, { transform: [{ scale: toastAnim }], opacity: toastAnim }]}>
             <Text style={styles.toastEmoji}>🏆</Text>
             <Text style={styles.toastTitle}>MARCO BATIDO!</Text>
             <Text style={styles.toastLabel}>{milestoneBeat}</Text>
             <Text style={styles.toastSub}>Toque para continuar</Text>
-          </View>
+          </Animated.View>
         </TouchableOpacity>
       </Modal>
     </View>
