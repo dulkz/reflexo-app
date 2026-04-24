@@ -340,7 +340,8 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           <View style={styles.avatarGrid}>
             {AVATARS.map(av => {
               const unlocked = av.isUnlocked(stats, ACHIEVEMENTS);
-              const selected = (userProfile.selectedAvatar ?? 'explorer') === av.id;
+              const selectedId = userProfile.selectedAvatar ?? 'initial';
+              const selected = selectedId === av.id;
               const isInitial = av.id === 'initial';
               const cellContent = !unlocked
                 ? <Text style={styles.avatarCellLock}>🔒</Text>

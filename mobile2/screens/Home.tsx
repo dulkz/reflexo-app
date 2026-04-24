@@ -143,7 +143,7 @@ export default function Home({
         </View>
         <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
           <Text style={styles.avatarLetter}>
-            {userProfile.selectedAvatar && userProfile.selectedAvatar !== 'initial'
+            {(userProfile.selectedAvatar ?? 'initial') !== 'initial'
               ? (AVATARS.find(a => a.id === userProfile.selectedAvatar)?.icon ?? (userProfile.name || 'Atleta')[0].toUpperCase())
               : (userProfile.name || 'Atleta')[0].toUpperCase()}
           </Text>
