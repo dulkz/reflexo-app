@@ -32,12 +32,12 @@ const FAB_SIZE      = 70;
 const TAB_BAR_HEIGHT = 52;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
-  { key: 'historico', label: 'Histórico', icon: '📈' },
-  { key: 'ciencia',   label: 'Ciência',   icon: '🧠' },
+  { key: 'conquistas', label: 'Conquistas', icon: '🏆' },
+  { key: 'ciencia',    label: 'Ciência',    icon: '🧠' },
 ];
 const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'perfil',      label: 'Perfil',   icon: '👤' },
-  { key: 'conquistas',  label: 'Conquistas', icon: '🏆' },
+  { key: 'historico', label: 'Histórico', icon: '📈' },
+  { key: 'perfil',    label: 'Perfil',    icon: '👤' },
 ];
 
 export default function App() {
