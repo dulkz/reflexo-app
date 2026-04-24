@@ -77,7 +77,7 @@ function AppInner() {
   const [triageVisible, setTriageVisible] = useState(false);
   const [triageEditMode, setTriageEditMode] = useState(false);
   const [milestoneBeat, setMilestoneBeat] = useState<string | null>(null);
-  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
+  const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
   const toastAnim = useRef(new Animated.Value(0)).current;
   const achieveAnim = useRef(new Animated.Value(0)).current;
   const pendingMilestoneRef = useRef<string | null>(null);
@@ -103,15 +103,20 @@ function AppInner() {
   }, [milestoneBeat]);
 
   useEffect(() => {
-    if (newAchievement !== null) {
+    if (achievementQueue.length > 0) {
       achieveAnim.setValue(0);
       Animated.spring(achieveAnim, { toValue: 1, tension: 65, friction: 7, useNativeDriver: true }).start();
-    } else if (pendingMilestoneRef.current !== null) {
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [achievementQueue[0]?.id]);
+
+  useEffect(() => {
+    if (achievementQueue.length === 0 && pendingMilestoneRef.current !== null) {
       const label = pendingMilestoneRef.current;
       pendingMilestoneRef.current = null;
       setMilestoneBeat(label);
     }
-  }, [newAchievement]);
+  }, [achievementQueue.length]);
 
   useEffect(() => {
     loadSessions().then(setSessions);
@@ -136,10 +141,9 @@ function AppInner() {
     const newlyUnlocked = ACHIEVEMENTS.filter(
       a => !prevUnlocked.has(a.id) && a.unlocked(updatedStats),
     );
-    const topAchievement = newlyUnlocked.length > 0
-      ? newlyUnlocked.reduce((a, b) =>
-          RARITY_PRIORITY[a.rarity] >= RARITY_PRIORITY[b.rarity] ? a : b)
-      : null;
+    const sortedAchievements = [...newlyUnlocked].sort(
+      (a, b) => RARITY_PRIORITY[b.rarity] - RARITY_PRIORITY[a.rarity],
+    );
 
     // ── Milestone beat detection ──────────────────────────────────────────────
     let beatenLabel: string | null = null;
@@ -159,10 +163,10 @@ function AppInner() {
       }
     }
 
-    // ── Show toasts — achievement first, milestone after ──────────────────────
-    if (topAchievement) {
+    // ── Show toasts — achievements first, milestone after ────────────────────
+    if (sortedAchievements.length > 0) {
       if (beatenLabel) pendingMilestoneRef.current = beatenLabel;
-      setNewAchievement(topAchievement);
+      setAchievementQueue(sortedAchievements);
     } else if (beatenLabel) {
       setMilestoneBeat(beatenLabel);
     }
@@ -445,27 +449,28 @@ function AppInner() {
 
       {/* Achievement unlocked toast */}
       <Modal
-        visible={newAchievement !== null}
+        visible={achievementQueue.length > 0}
         transparent
         animationType="fade"
-        onRequestClose={() => setNewAchievement(null)}
+        onRequestClose={() => setAchievementQueue(prev => prev.slice(1))}
       >
         <TouchableOpacity
           style={styles.toastOverlay}
-          onPress={() => setNewAchievement(null)}
+          onPress={() => setAchievementQueue(prev => prev.slice(1))}
           activeOpacity={1}
         >
-          {newAchievement && (() => {
-            const rcfg = RARITY_CONFIG[newAchievement.rarity];
+          {achievementQueue[0] && (() => {
+            const a = achievementQueue[0];
+            const rcfg = RARITY_CONFIG[a.rarity];
             return (
               <Animated.View style={[styles.toastCard, { borderColor: rcfg.cor + '66', transform: [{ scale: achieveAnim }], opacity: achieveAnim }]}>
                 <Text style={[styles.achieveToastKicker, { color: rcfg.cor }]}>CONQUISTA DESBLOQUEADA!</Text>
                 <View style={[styles.achieveToastBadge, { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor }]}>
                   <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{rcfg.label}</Text>
                 </View>
-                <Text style={styles.toastEmoji}>{newAchievement.icon}</Text>
-                <Text style={[styles.toastTitle, { color: '#fff' }]}>{newAchievement.name}</Text>
-                <Text style={styles.achieveToastDesc}>{newAchievement.description}</Text>
+                <Text style={styles.toastEmoji}>{a.icon}</Text>
+                <Text style={[styles.toastTitle, { color: '#fff' }]}>{a.name}</Text>
+                <Text style={styles.achieveToastDesc}>{a.description}</Text>
                 <Text style={styles.toastSub}>Toque para continuar</Text>
               </Animated.View>
             );
