@@ -8,6 +8,15 @@ import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
+
+const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
+  { id: 'EXPLORADOR',  icon: '🔭', tagline: 'Descobrindo seu perfil' },
+  { id: 'EM_EVOLUCAO', icon: '🌱', tagline: 'Crescendo a cada treino' },
+  { id: 'RESISTENTE',  icon: '🛡️', tagline: 'Consistente sob fadiga' },
+  { id: 'ATIRADOR',    icon: '🎯', tagline: 'Precisão cirúrgica' },
+  { id: 'VELOCISTA',   icon: '⚡',  tagline: 'Velocidade de elite' },
+  { id: 'PILOTO',      icon: '🏎️', tagline: 'Reflexos de elite' },
+];
 import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
 import {
   getAmbition,
@@ -279,6 +288,52 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
           )}
         </View>
 
+        {/* ── ARQUÉTIPOS — cadeia de evolução ── */}
+        {(() => {
+          const currentIdx = ARCHETYPE_CHAIN.findIndex(a => a.id === stats.archetypeId);
+          return (
+            <View style={styles.chainSection}>
+              <Text style={styles.sectionTitle}>EVOLUÇÃO</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chainScroll}
+              >
+                {ARCHETYPE_CHAIN.map((a, i) => {
+                  const isPast    = i < currentIdx;
+                  const isCurrent = i === currentIdx;
+                  const isFuture  = i > currentIdx;
+                  const archDef   = ARCHETYPES[a.id];
+                  return (
+                    <React.Fragment key={a.id}>
+                      <View style={[
+                        styles.chainCard,
+                        isCurrent && styles.chainCardCurrent,
+                        isPast    && styles.chainCardPast,
+                        isFuture  && styles.chainCardFuture,
+                      ]}>
+                        {isPast && <Text style={styles.chainCheck}>✓</Text>}
+                        <Text style={styles.chainIcon}>{a.icon}</Text>
+                        <Text style={[
+                          styles.chainName,
+                          isCurrent && { color: '#fff' },
+                          isPast    && { color: archDef.color },
+                        ]}>
+                          {archDef.name}
+                        </Text>
+                        <Text style={styles.chainTagline} numberOfLines={2}>{a.tagline}</Text>
+                      </View>
+                      {i < ARCHETYPE_CHAIN.length - 1 && (
+                        <Text style={styles.chainArrow}>→</Text>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          );
+        })()}
+
         {/* ── MINHA JORNADA ── */}
         {!userProfile.triageCompleted ? (
           /* CTA for pre-triage users (also accessible after 3 dismissals) */
@@ -445,19 +500,15 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
           {ACHIEVEMENTS.map(a => {
             const done = a.unlocked(stats);
             return (
-              <View
-                key={a.id}
-                style={[styles.achieveCell, !done && styles.achieveCellLocked]}
-              >
-                <Text style={[styles.achieveIcon, !done && styles.achieveIconLocked]}>
-                  {a.icon}
-                </Text>
-                <Text style={[styles.achieveName, !done && styles.achieveNameLocked]}>
-                  {a.name}
-                </Text>
-                <Text style={styles.achieveDesc} numberOfLines={2}>
-                  {a.description}
-                </Text>
+              <View key={a.id} style={styles.achieveCell}>
+                <Text style={styles.achieveIcon}>{a.icon}</Text>
+                <Text style={styles.achieveName}>{a.name}</Text>
+                <Text style={styles.achieveDesc} numberOfLines={2}>{a.description}</Text>
+                <View style={[styles.achieveBar, done && styles.achieveBarDone]}>
+                  <Text style={[styles.achieveBarLabel, done && styles.achieveBarLabelDone]} numberOfLines={1}>
+                    {done ? '✓ Desbloqueada' : a.progress(stats)}
+                  </Text>
+                </View>
               </View>
             );
           })}
@@ -593,6 +644,27 @@ const styles = StyleSheet.create({
   modeExtra: { fontSize: 10, color: '#3a4a6b', marginTop: 1 },
   modeNone: { fontSize: 13, color: '#2d3a55', fontWeight: '700' },
 
+  // ── Archetype chain ───────────────────────────────────────────────────────
+  chainSection: { marginBottom: 12 },
+  chainScroll: { paddingVertical: 4, alignItems: 'center' },
+  chainCard: {
+    width: 90, borderRadius: 12, padding: 10,
+    backgroundColor: '#111a2e',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.07)',
+    alignItems: 'center', gap: 4,
+  },
+  chainCardCurrent: {
+    borderColor: '#5b4fcf',
+    backgroundColor: 'rgba(91,79,207,0.12)',
+  },
+  chainCardPast: { opacity: 0.5 },
+  chainCardFuture: { opacity: 0.3 },
+  chainCheck: { position: 'absolute', top: 6, right: 8, fontSize: 10, color: '#10b981', fontWeight: '800' },
+  chainIcon: { fontSize: 22 },
+  chainName: { fontSize: 9, fontWeight: '800', color: '#4a5a7b', letterSpacing: 0.5, textAlign: 'center' },
+  chainTagline: { fontSize: 9, color: '#3a4a6b', textAlign: 'center', lineHeight: 13 },
+  chainArrow: { fontSize: 14, color: '#2d3a55', alignSelf: 'center', marginHorizontal: 2 },
+
   // ── Achievements ──────────────────────────────────────────────────────────
   achievementsHeader: {
     flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between',
@@ -606,12 +678,17 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
     gap: 4,
   },
-  achieveCellLocked: { opacity: 0.4 },
   achieveIcon: { fontSize: 24 },
-  achieveIconLocked: { opacity: 0.5 },
   achieveName: { fontSize: 13, fontWeight: '800', color: '#fff' },
-  achieveNameLocked: { color: '#3a4a6b' },
   achieveDesc: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
+  achieveBar: {
+    marginTop: 6, borderRadius: 4,
+    backgroundColor: '#2a3a5a',
+    paddingHorizontal: 8, paddingVertical: 4,
+  },
+  achieveBarDone: { backgroundColor: 'rgba(16,185,129,0.15)' },
+  achieveBarLabel: { fontSize: 11, color: '#4a5a7b' },
+  achieveBarLabelDone: { color: '#10b981' },
 
   // ── Empty ─────────────────────────────────────────────────────────────────
   emptyState: { alignItems: 'center', paddingTop: 40, gap: 12 },
