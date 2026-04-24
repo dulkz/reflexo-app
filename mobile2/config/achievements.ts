@@ -17,6 +17,7 @@ export interface Achievement {
   icon: string;
   description: string;
   rarity: RarityKey;
+  secret?: boolean;
   unlocked: (stats: UserStats) => boolean;
   progress: (stats: UserStats) => string;
 }
@@ -134,6 +135,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '🏃',
     description: 'Queimou a largada 3 vezes numa mesma sessão',
     rarity: 'comum',
+    secret: true,
     unlocked: (s) => s.sessions.some(r => r.mode === 'partida' && (r.falseStartCount ?? 0) >= 3),
     progress: (s) => {
       const partidas = s.sessions.filter(r => r.mode === 'partida');
@@ -148,6 +150,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '🐢',
     description: 'Score acima de 900 ms no Modo Partida',
     rarity: 'comum',
+    secret: true,
     unlocked: (s) => s.sessions.some(r => r.mode === 'partida' && r.score >= 900),
     progress: (s) => {
       const partidas = s.sessions.filter(r => r.mode === 'partida');
@@ -162,6 +165,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '🔮',
     description: 'Queimou a largada 5 vezes ou mais numa sessão — você viu o futuro',
     rarity: 'comum',
+    secret: true,
     unlocked: (s) => s.sessions.some(r => r.mode === 'partida' && (r.falseStartCount ?? 0) >= 5),
     progress: (s) => {
       const partidas = s.sessions.filter(r => r.mode === 'partida');
@@ -176,12 +180,89 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '😴',
     description: 'Deixou 3 rodadas expirarem no Modo Alvo numa mesma sessão',
     rarity: 'comum',
+    secret: true,
     unlocked: (s) => s.sessions.some(r => r.mode === 'alvo' && (r.timeouts ?? 0) >= 3),
     progress: (s) => {
       const alvos = s.sessions.filter(r => r.mode === 'alvo');
       if (alvos.length === 0) return 'Nenhuma sessão de Alvo ainda';
       const best = Math.max(...alvos.map(r => r.timeouts ?? 0));
       return `Maior soneca: ${best} rodada${best !== 1 ? 's' : ''}`;
+    },
+  },
+
+  // ── SECRETAS SÉRIAS ──────────────────────────────────────────────────────────
+  {
+    id: 'madrugada',
+    name: 'Insônia Produtiva',
+    icon: '🌙',
+    description: 'Completou uma sessão entre 3h e 5h da manhã',
+    rarity: 'raro',
+    secret: true,
+    unlocked: (s) => s.sessions.some(r => {
+      const h = new Date(r.date).getHours();
+      return h >= 3 && h < 5;
+    }),
+    progress: () => 'Nenhuma sessão nesse horário ainda',
+  },
+  {
+    id: 'hat_trick',
+    name: 'Hat-Trick',
+    icon: '🎯',
+    description: 'Bateu seu recorde pessoal 3 sessões consecutivas de Partida',
+    rarity: 'epico',
+    secret: true,
+    unlocked: (s) => {
+      const partidas = s.sessions
+        .filter(r => r.mode === 'partida')
+        .sort((a, b) => a.date - b.date);
+      if (partidas.length < 3) return false;
+      let streak = 1;
+      for (let i = 1; i < partidas.length; i++) {
+        if (partidas[i].score < partidas[i - 1].score) {
+          streak++;
+          if (streak >= 3) return true;
+        } else {
+          streak = 1;
+        }
+      }
+      return false;
+    },
+    progress: (s) => {
+      const partidas = s.sessions
+        .filter(r => r.mode === 'partida')
+        .sort((a, b) => a.date - b.date);
+      if (partidas.length === 0) return 'Nenhuma sessão de Partida ainda';
+      let streak = 1;
+      for (let i = 1; i < partidas.length; i++) {
+        if (partidas[i].score < partidas[i - 1].score) streak++;
+        else streak = 1;
+      }
+      return `Sequência atual: ${streak} melhora${streak !== 1 ? 's' : ''} consecutiva${streak !== 1 ? 's' : ''}`;
+    },
+  },
+  {
+    id: 'maratona',
+    name: 'Maratonista',
+    icon: '💪',
+    description: 'Completou 10 sessões no mesmo dia',
+    rarity: 'raro',
+    secret: true,
+    unlocked: (s) => {
+      const dayCounts: Record<string, number> = {};
+      for (const r of s.sessions) {
+        const day = new Date(r.date).toDateString();
+        dayCounts[day] = (dayCounts[day] ?? 0) + 1;
+      }
+      return Object.values(dayCounts).some(c => c >= 10);
+    },
+    progress: (s) => {
+      const dayCounts: Record<string, number> = {};
+      for (const r of s.sessions) {
+        const day = new Date(r.date).toDateString();
+        dayCounts[day] = (dayCounts[day] ?? 0) + 1;
+      }
+      const best = s.sessions.length > 0 ? Math.max(...Object.values(dayCounts)) : 0;
+      return `Recorde diário: ${best} sessã${best !== 1 ? 'ões' : 'o'}`;
     },
   },
 

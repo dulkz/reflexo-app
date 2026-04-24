@@ -471,7 +471,9 @@ function AppInner() {
             const rcfg = RARITY_CONFIG[a.rarity];
             return (
               <Animated.View style={[styles.toastCard, { borderColor: rcfg.cor + '66', transform: [{ scale: achieveAnim }], opacity: achieveAnim }]}>
-                <Text style={[styles.achieveToastKicker, { color: rcfg.cor }]}>CONQUISTA DESBLOQUEADA!</Text>
+                <Text style={[styles.achieveToastKicker, { color: a.secret ? '#f59e0b' : rcfg.cor }]}>
+                  {a.secret ? '🔒 SEGREDO REVELADO!' : 'CONQUISTA DESBLOQUEADA!'}
+                </Text>
                 <View style={[styles.achieveToastBadge, { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor }]}>
                   <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{rcfg.label}</Text>
                 </View>

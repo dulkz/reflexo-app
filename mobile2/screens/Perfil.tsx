@@ -189,6 +189,11 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const archetype = useMemo(() => getArchetypeFromStats(stats), [stats]);
   const unlockedCount = useMemo(() => getUnlockedCount(stats), [stats]);
+  // Excludes secret+locked from total so secret achievements aren't revealed in the counter
+  const visibleAchievementTotal = useMemo(
+    () => ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats)).length,
+    [stats],
+  );
 
   const evidenceChips = useMemo(() => archetype.evidence(stats), [archetype, stats]);
 
@@ -259,7 +264,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   );
 
   const nextAchievementInfo = useMemo(() => {
-    const locked = ACHIEVEMENTS.filter(a => !a.unlocked(stats));
+    const locked = ACHIEVEMENTS.filter(a => !a.unlocked(stats) && !a.secret);
     if (locked.length === 0) return null;
     let best: { a: typeof locked[0]; pct: number } | null = null;
     for (const a of locked) {
@@ -661,13 +666,13 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         <TouchableOpacity style={styles.achieveSummaryCard} onPress={onGoToConquistas} activeOpacity={0.8}>
           <View style={styles.achieveSummaryRow}>
             <Text style={styles.achieveSummaryCount}>
-              {unlockedCount}/{ACHIEVEMENTS.length} desbloqueadas
+              {unlockedCount}/{visibleAchievementTotal} desbloqueadas
             </Text>
             <Text style={styles.achieveSummaryLink}>Ver todas →</Text>
           </View>
           <View style={styles.achieveProgressTrack}>
             <View style={[styles.achieveProgressFill, { flex: unlockedCount }]} />
-            <View style={{ flex: Math.max(0, ACHIEVEMENTS.length - unlockedCount) }} />
+            <View style={{ flex: Math.max(0, visibleAchievementTotal - unlockedCount) }} />
           </View>
         </TouchableOpacity>
 

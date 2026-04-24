@@ -15,6 +15,7 @@ const DAY = 86_400_000;
 const MONTH_ABBR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 const RARITY_ORDER: RarityKey[] = ['lendario', 'epico', 'raro', 'dificil', 'medio', 'comum'];
+const SECRET_COLOR = '#4a5a7b';
 const RARITY_ICONS: Record<RarityKey, string> = {
   lendario: '💎', epico: '🔥', raro: '🌟', dificil: '⚡', medio: '🔷', comum: '⬜',
 };
@@ -95,6 +96,15 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                 {group.map(a => {
                   const done = a.unlocked(stats);
                   const unlockDate = unlockDates[a.id];
+                  const isSecret = !!a.secret && !done;
+                  const badgeColor = isSecret ? SECRET_COLOR : cfg.cor;
+                  const badgeLabel = isSecret ? 'SECRETA' : cfg.label;
+                  const displayIcon = isSecret ? '🔒' : a.icon;
+                  const displayName = isSecret ? '???' : a.name;
+                  const displayDesc = isSecret ? 'Conquista secreta — descubra jogando' : a.description;
+                  const progressText = done
+                    ? `✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`
+                    : isSecret ? '🔒 Bloqueada' : a.progress(stats);
                   return (
                     <View
                       key={a.id}
@@ -102,29 +112,25 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                         styles.cell,
                         {
                           borderWidth: 1.5,
-                          borderColor: done ? cfg.cor : cfg.cor + '99',
+                          borderColor: done ? cfg.cor : isSecret ? SECRET_COLOR + '66' : cfg.cor + '99',
                           opacity: done ? 1 : 0.65,
                         },
                       ]}
                     >
                       <View style={[
                         styles.rarityBadge,
-                        { backgroundColor: cfg.cor + '22', borderColor: cfg.cor },
+                        { backgroundColor: badgeColor + '22', borderColor: badgeColor },
                       ]}>
-                        <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>
-                          {cfg.label}
+                        <Text style={[styles.rarityBadgeText, { color: badgeColor }]}>
+                          {badgeLabel}
                         </Text>
                       </View>
-                      <Text style={styles.icon}>{a.icon}</Text>
-                      <Text style={styles.name}>{a.name}</Text>
-                      <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                      <Text style={styles.icon}>{displayIcon}</Text>
+                      <Text style={styles.name}>{displayName}</Text>
+                      <Text style={styles.desc} numberOfLines={2}>{displayDesc}</Text>
                       <View style={[styles.progressBar, done && styles.progressBarDone]}>
-                        <Text
-                          style={[styles.progressLabel, done && styles.progressLabelDone]}
-                        >
-                          {done
-                            ? `✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`
-                            : a.progress(stats)}
+                        <Text style={[styles.progressLabel, done && styles.progressLabelDone]}>
+                          {progressText}
                         </Text>
                       </View>
                     </View>
