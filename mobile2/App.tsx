@@ -350,27 +350,39 @@ function AppInner() {
         </View>
       )}
 
-      {/* Notch and FAB — absolute in root so overflow never clips them on Android */}
+      {/* Notch — centerer wrapper guarantees pixel-perfect horizontal center */}
       {!inGame && (
-        <>
-          <View style={[styles.fabNotch, { bottom: Math.max(insets.bottom, 4) + 19, left: (SCREEN_W - NOTCH_SIZE) / 2 }]} />
+        <View
+          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 19, height: NOTCH_SIZE, zIndex: 2 }]}
+          pointerEvents="none"
+        >
+          <View style={styles.fabNotch} />
+        </View>
+      )}
+
+      {/* FAB — centerer wrapper, box-none so taps outside the button pass through */}
+      {!inGame && (
+        <View
+          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 28, height: FAB_SIZE, zIndex: 3 }]}
+          pointerEvents="box-none"
+        >
           <TouchableOpacity
-            style={[styles.fab, { bottom: Math.max(insets.bottom, 4) + 28, left: (SCREEN_W - FAB_SIZE) / 2 }]}
+            style={styles.fab}
             onPress={() => handleTabPress('jogar')}
             activeOpacity={0.85}
           >
-            <Svg width={70} height={70} style={StyleSheet.absoluteFillObject}>
+            <Svg width={FAB_SIZE} height={FAB_SIZE} style={StyleSheet.absoluteFillObject}>
               <Defs>
                 <LinearGradient id="fabGrad" x1="0" y1="0" x2="1" y2="0">
                   <Stop offset="0" stopColor="#3b82f6" />
                   <Stop offset="1" stopColor="#8b5cf6" />
                 </LinearGradient>
               </Defs>
-              <Circle cx={35} cy={35} r={35} fill="url(#fabGrad)" />
+              <Circle cx={FAB_SIZE / 2} cy={FAB_SIZE / 2} r={FAB_SIZE / 2} fill="url(#fabGrad)" />
             </Svg>
             <Text style={styles.fabIcon}>⚡</Text>
           </TouchableOpacity>
-        </>
+        </View>
       )}
 
       {/* Triage modal — fullscreen, covers tab bar */}
@@ -427,41 +439,47 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   fabSpacer: { width: NOTCH_SIZE },
-  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6 },
+  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
   tabItemCard: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
     width: 72,
-    height: 52,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    height: 62,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.09)',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   tabItemCardActive: {
     backgroundColor: 'rgba(59,130,246,0.15)',
-    borderWidth: 1, borderColor: 'rgba(59,130,246,0.3)',
+    borderColor: 'rgba(59,130,246,0.3)',
   },
   tabIcon: { fontSize: 26 },
   tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
   tabLabelActive: { color: '#3b82f6' },
-  // Notch — absolute in root View; bottom + left set inline
-  fabNotch: {
+  // Centerer: positions notch/FAB via flexbox — no width calc needed
+  fabCenterer: {
     position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  // Notch — child of fabCenterer, no position/zIndex needed
+  fabNotch: {
     width: NOTCH_SIZE,
     height: NOTCH_SIZE,
     borderRadius: NOTCH_SIZE / 2,
     backgroundColor: '#0b1220',
-    zIndex: 2,
   },
-  // FAB — absolute in root View; bottom + left set inline
+  // FAB — child of fabCenterer, no position/zIndex needed
   fab: {
-    position: 'absolute',
     width: FAB_SIZE,
     height: FAB_SIZE,
     borderRadius: FAB_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 3,
     borderWidth: 2.5,
     borderColor: 'rgba(255,255,255,0.25)',
     shadowColor: '#3b82f6',
