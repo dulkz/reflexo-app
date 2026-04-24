@@ -367,6 +367,8 @@ function AppInner() {
             sessions={sessions}
             userProfile={userProfile}
             onOpenTriage={openTriageForEdit}
+            onGoToConquistas={() => handleTabPress('conquistas')}
+            onUpdateProfile={setUserProfile}
           />
         )}
         {activeTab === 'conquistas' && (

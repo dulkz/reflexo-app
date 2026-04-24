@@ -1,6 +1,7 @@
 export type AgeRange = '<25' | '25-40' | '40-55' | '55-70' | '70+';
 
 export interface UserProfile {
+  name: string;
   ambitionId: string | null;
   ageRange: AgeRange | null;
   baselineMs: number | null;
@@ -16,6 +17,7 @@ export interface UserProfile {
 
 export function defaultUserProfile(): UserProfile {
   return {
+    name: '',
     ambitionId: null,
     ageRange: null,
     baselineMs: null,

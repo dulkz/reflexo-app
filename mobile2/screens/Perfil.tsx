@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView,
+  View, Text, StyleSheet, ScrollView, Modal, TextInput,
   Platform, StatusBar as RNStatusBar, TouchableOpacity,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
@@ -18,7 +18,8 @@ const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
   { id: 'VELOCISTA',   icon: '⚡',  tagline: 'Velocidade de elite' },
   { id: 'PILOTO',      icon: '🏎️', tagline: 'Reflexos de elite' },
 ];
-import { ACHIEVEMENTS, getUnlockedCount, RARITY_CONFIG } from '../config/achievements';
+import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import { saveUserProfile } from '../utils/userProfile';
 import {
   getAmbition,
   getNextMilestone,
@@ -37,11 +38,13 @@ interface Props {
   sessions: SessionRecord[];
   userProfile: UserProfile;
   onOpenTriage: (editMode: boolean) => void;
+  onGoToConquistas: () => void;
+  onUpdateProfile: (p: UserProfile) => void;
 }
 
 // ── Gradient avatar ──────────────────────────────────────────────────────────
 
-function GradientAvatar({ size = 72 }: { size?: number }) {
+function GradientAvatar({ size = 72, letter = 'A' }: { size?: number; letter?: string }) {
   const r = size / 2;
   const fs = Math.round(r * 0.55);
   return (
@@ -60,7 +63,7 @@ function GradientAvatar({ size = 72 }: { size?: number }) {
         fontWeight="800"
         fill="#fff"
       >
-        B
+        {letter}
       </SvgText>
     </Svg>
   );
@@ -179,7 +182,9 @@ const chart = StyleSheet.create({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
+export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConquistas, onUpdateProfile }: Props) {
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const archetype = useMemo(() => getArchetypeFromStats(stats), [stats]);
@@ -294,9 +299,17 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
 
         {/* ── Identity block ── */}
         <View style={styles.identityBlock}>
-          <GradientAvatar size={72} />
+          <GradientAvatar size={72} letter={(userProfile.name || 'Usuário')[0].toUpperCase()} />
           <View style={{ flex: 1, gap: 4 }}>
-            <Text style={styles.identityName}>Bruno</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={styles.identityName}>{userProfile.name || 'Usuário'}</Text>
+              <TouchableOpacity
+                onPress={() => { setNameInput(userProfile.name || ''); setEditingName(true); }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.editNameBtn}>✏️</Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.identitySub}>
               {joinedLabel
                 ? `Jogando desde ${joinedLabel} · ${sessions.length} sessão${sessions.length !== 1 ? 'ões' : ''}`
@@ -642,49 +655,20 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
           </>
         )}
 
-        {/* ── Achievements ── */}
-        <View style={styles.achievementsHeader}>
-          <Text style={styles.sectionTitle}>CONQUISTAS</Text>
-          <Text style={styles.achieveCount}>
-            {unlockedCount}/{ACHIEVEMENTS.length} desbloqueadas
-          </Text>
-        </View>
-        <View style={styles.achieveGrid}>
-          {ACHIEVEMENTS.map(a => {
-            const done = a.unlocked(stats);
-            const rcfg = RARITY_CONFIG[a.rarity];
-            return (
-              <View
-                key={a.id}
-                style={[
-                  styles.achieveCell,
-                  {
-                    borderWidth: 1.5,
-                    borderColor: done ? rcfg.cor : rcfg.cor + '99',
-                    opacity: done ? 1 : 0.65,
-                  },
-                ]}
-              >
-                <View style={[
-                  styles.achieveRarityBadge,
-                  { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor },
-                ]}>
-                  <Text style={[styles.achieveRarityText, { color: rcfg.cor }]}>
-                    {rcfg.label}
-                  </Text>
-                </View>
-                <Text style={styles.achieveIcon}>{a.icon}</Text>
-                <Text style={styles.achieveName}>{a.name}</Text>
-                <Text style={styles.achieveDesc} numberOfLines={2}>{a.description}</Text>
-                <View style={[styles.achieveBar, done && styles.achieveBarDone]}>
-                  <Text style={[styles.achieveBarLabel, done && styles.achieveBarLabelDone]}>
-                    {done ? '✓ Desbloqueada' : a.progress(stats)}
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
-        </View>
+        {/* ── Achievements summary ── */}
+        <Text style={styles.sectionTitle}>CONQUISTAS</Text>
+        <TouchableOpacity style={styles.achieveSummaryCard} onPress={onGoToConquistas} activeOpacity={0.8}>
+          <View style={styles.achieveSummaryRow}>
+            <Text style={styles.achieveSummaryCount}>
+              {unlockedCount}/{ACHIEVEMENTS.length} desbloqueadas
+            </Text>
+            <Text style={styles.achieveSummaryLink}>Ver todas →</Text>
+          </View>
+          <View style={styles.achieveProgressTrack}>
+            <View style={[styles.achieveProgressFill, { flex: unlockedCount }]} />
+            <View style={{ flex: Math.max(0, ACHIEVEMENTS.length - unlockedCount) }} />
+          </View>
+        </TouchableOpacity>
 
         {sessions.length === 0 && (
           <View style={styles.emptyState}>
@@ -697,6 +681,50 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
 
         <View style={{ height: 24 }} />
       </ScrollView>
+
+      {/* Name edit modal */}
+      <Modal
+        visible={editingName}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditingName(false)}
+      >
+        <View style={styles.nameModalOverlay}>
+          <View style={styles.nameModalCard}>
+            <Text style={styles.nameModalTitle}>EDITAR NOME</Text>
+            <TextInput
+              style={styles.nameModalInput}
+              value={nameInput}
+              onChangeText={setNameInput}
+              placeholder="Seu nome"
+              placeholderTextColor="#4a5a7b"
+              maxLength={30}
+              autoFocus
+            />
+            <View style={styles.nameModalBtns}>
+              <TouchableOpacity
+                style={styles.nameModalCancel}
+                onPress={() => setEditingName(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.nameModalCancelText}>CANCELAR</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.nameModalSave}
+                onPress={async () => {
+                  const updated = { ...userProfile, name: nameInput.trim() };
+                  await saveUserProfile(updated);
+                  onUpdateProfile(updated);
+                  setEditingName(false);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.nameModalSaveText}>SALVAR</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -873,36 +901,50 @@ const styles = StyleSheet.create({
   chainTagline: { fontSize: 9, color: '#3a4a6b', textAlign: 'center', lineHeight: 13 },
   chainArrow: { fontSize: 14, color: '#2d3a55', alignSelf: 'center', marginHorizontal: 2 },
 
-  // ── Achievements ──────────────────────────────────────────────────────────
-  achievementsHeader: {
-    flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between',
-    marginTop: 20,
+  // ── Achievements summary ──────────────────────────────────────────────────
+  achieveSummaryCard: {
+    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
+    borderColor: 'rgba(91,79,207,0.2)', padding: 16, marginBottom: 20,
   },
-  achieveCount: { fontSize: 11, color: '#3a4a6b', marginBottom: 10 },
-  achieveGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  achieveCell: {
-    width: '48%', backgroundColor: '#111a2e',
-    borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
-    gap: 4,
+  achieveSummaryRow: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', marginBottom: 12,
   },
-  achieveRarityBadge: {
-    position: 'absolute', top: 8, right: 8,
-    borderWidth: 1, borderRadius: 4,
-    paddingHorizontal: 4, paddingVertical: 2,
+  achieveSummaryCount: { fontSize: 14, fontWeight: '700', color: '#c0cfe0' },
+  achieveSummaryLink: { fontSize: 13, color: '#3b82f6', fontWeight: '600' },
+  achieveProgressTrack: {
+    flexDirection: 'row', height: 6, borderRadius: 3,
+    backgroundColor: '#1e2d45', overflow: 'hidden',
   },
-  achieveRarityText: { fontSize: 9, fontWeight: '700' },
-  achieveIcon: { fontSize: 24 },
-  achieveName: { fontSize: 13, fontWeight: '800', color: '#fff' },
-  achieveDesc: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
-  achieveBar: {
-    marginTop: 6, borderRadius: 4,
-    backgroundColor: '#2a3a5a',
-    paddingHorizontal: 8, paddingVertical: 4,
+  achieveProgressFill: { borderRadius: 3, backgroundColor: '#5b4fcf' },
+
+  // ── Name edit modal ───────────────────────────────────────────────────────
+  editNameBtn: { fontSize: 14 },
+  nameModalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center', justifyContent: 'center', padding: 32,
   },
-  achieveBarDone: { backgroundColor: 'rgba(16,185,129,0.15)' },
-  achieveBarLabel: { fontSize: 11, color: '#4a5a7b' },
-  achieveBarLabelDone: { color: '#10b981' },
+  nameModalCard: {
+    backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
+    borderColor: 'rgba(59,130,246,0.2)', padding: 24, width: '100%', gap: 16,
+  },
+  nameModalTitle: { fontSize: 11, fontWeight: '800', color: '#3a4a6b', letterSpacing: 2 },
+  nameModalInput: {
+    backgroundColor: '#0d1525', borderRadius: 10, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 14, paddingVertical: 12,
+    fontSize: 16, color: '#fff', fontWeight: '600',
+  },
+  nameModalBtns: { flexDirection: 'row', gap: 10 },
+  nameModalCancel: {
+    flex: 1, borderRadius: 10, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)', paddingVertical: 12, alignItems: 'center',
+  },
+  nameModalCancelText: { fontSize: 13, fontWeight: '700', color: '#4a5a7b', letterSpacing: 1 },
+  nameModalSave: {
+    flex: 2, borderRadius: 10, backgroundColor: '#3b82f6',
+    paddingVertical: 12, alignItems: 'center',
+  },
+  nameModalSaveText: { fontSize: 13, fontWeight: '800', color: '#fff', letterSpacing: 1 },
 
   // ── Empty ─────────────────────────────────────────────────────────────────
   emptyState: { alignItems: 'center', paddingTop: 40, gap: 12 },

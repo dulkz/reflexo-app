@@ -138,10 +138,10 @@ export default function Home({
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <View style={styles.headerLeft}>
           <Text style={styles.reflexoSmall}>REFLEXO</Text>
-          <Text style={styles.greeting}>Olá, Bruno</Text>
+          <Text style={styles.greeting}>Olá, {userProfile.name || 'Atleta'}</Text>
         </View>
         <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
-          <Text style={styles.avatarLetter}>B</Text>
+          <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>
         </TouchableOpacity>
       </View>
 
