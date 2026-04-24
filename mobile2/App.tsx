@@ -308,6 +308,8 @@ function AppInner() {
 
       {/* Tab bar — hidden during active game */}
       {!inGame && (
+        <>
+        <View style={styles.tabBarSpacer} />
         <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
           {LEFT_TABS.map(t => {
             const active = activeTab === t.key;
@@ -352,6 +354,7 @@ function AppInner() {
             );
           })}
         </View>
+        </>
       )}
 
       {/* Triage modal — fullscreen, covers tab bar */}
@@ -394,19 +397,23 @@ function AppInner() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0b1220', overflow: 'visible' },
+  root: { flex: 1, backgroundColor: '#0b1220' },
   content: { flex: 1 },
   contentFullscreen: { flex: 1 },
 
   // ── FAB tab bar ──────────────────────────────────────────────────────────────
+  tabBarSpacer: {
+    height: 28,
+    backgroundColor: 'transparent',
+    overflow: 'visible',
+  },
   tabBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     backgroundColor: '#0d1525',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
-    paddingTop: 10,
-    overflow: 'visible',
+    paddingTop: 0,
   },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
   tabItemCard: {
@@ -432,7 +439,7 @@ const styles = StyleSheet.create({
     width: FAB_SIZE,
     height: FAB_SIZE,
     borderRadius: FAB_SIZE / 2,
-    marginTop: -28,
+    marginTop: -38,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#5b4fcf',
