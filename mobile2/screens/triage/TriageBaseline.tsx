@@ -83,6 +83,8 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   const seqSignalIdxRef = useRef(0);
   const seqGoRtsRef = useRef<number[]>([]);
   const [seqCurrentSignal, setSeqCurrentSignal] = useState<'go' | 'nogo'>('go');
+  // Prevents multi-tap within a single signal's 400ms inter-signal gap
+  const seqTapHandledRef = useRef(false);
 
   const clearTimer = () => {
     if (phaseTimer.current) { clearTimeout(phaseTimer.current); phaseTimer.current = null; }
@@ -139,6 +141,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     if (phase === 'seq_go') {
       // signalTime set here (post-render) for accuracy, same pattern as ModoAlvo
       signalTime.current = Date.now();
+      seqTapHandledRef.current = false; // reset lock for each new signal
       // 1400ms timeout: Go=miss (no RT), NoGo=correct_inhibit — advance either way
       phaseTimer.current = setTimeout(() => {
         const nextIdx = seqSignalIdxRef.current + 1;
@@ -195,9 +198,11 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
   const handleSeqTap = useCallback(() => {
     if (phase !== 'seq_go') return;
-    // M4: NoGo signal — ignore tap, let the 1400ms timeout fire naturally
-    if (seqCurrentSignal === 'nogo') return;
+    if (seqTapHandledRef.current) return; // prevent double-tap in inter-signal gap
+    // Use ref directly to avoid stale-closure risk with seqCurrentSignal state
+    if (seqSignalsRef.current[seqSignalIdxRef.current] === 'nogo') return;
 
+    seqTapHandledRef.current = true;
     clearTimer();
     const rt = Date.now() - signalTime.current;
     seqGoRtsRef.current.push(rt);
@@ -212,7 +217,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     } else {
       phaseTimer.current = setTimeout(() => setPhase('seq_jitter'), 400);
     }
-  }, [phase, seqCurrentSignal]);
+  }, [phase]);
 
   // Compute baseline once in result phase
   const baseline = (phase === 'result' && rts.partida !== null && rts.alvo !== null && rts.seq !== null)

@@ -5,6 +5,7 @@ import {
   StyleProp, TextStyle,
 } from 'react-native';
 import { UserProfile } from '../types/user';
+import { SessionRecord } from '../utils/storage';
 import { getMetaBenchmark } from '../utils/ambition';
 import { GROUP_COLOR } from '../config/ambitions';
 
@@ -160,19 +161,45 @@ const SOURCES = [
   'Donders, F.C. (1969). On the speed of mental processes. Acta Psychologica. (Mental Chronometry)',
 ];
 
+// ── Choice RT level helpers (mirrors Resultado.tsx thresholds) ────────────────
+
+function choiceLevelLabel(ms: number): string {
+  if (ms <= 420) return 'ELITE';
+  if (ms <= 500) return 'MUITO BOM';
+  if (ms <= 560) return 'BOM';
+  if (ms <= 700) return 'ABAIXO';
+  return 'DEVAGAR';
+}
+
+function choiceLevelColor(ms: number): string {
+  if (ms <= 420) return '#10b981';
+  if (ms <= 500) return '#3b82f6';
+  if (ms <= 560) return '#06b6d4';
+  if (ms <= 700) return '#f59e0b';
+  return '#ef4444';
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 interface Props {
   userProfile: UserProfile;
+  sessions: SessionRecord[];
 }
 
-export default function Ciencia({ userProfile }: Props) {
+export default function Ciencia({ userProfile, sessions }: Props) {
   const goalBenchmarkName = userProfile.triageCompleted && userProfile.ambitionId
     ? getMetaBenchmark(userProfile.ambitionId)
     : null;
 
   // Highlight color: use the elite_sport group color (these are always elite_sport ambitions)
   const goalHighlightColor = GROUP_COLOR['elite_sport'];
+
+  // Alvo RT user data for "VOCÊ ESTÁ AQUI" badge
+  const alvoSessions = sessions.filter(s => s.mode === 'alvo');
+  const bestAlvoRt = alvoSessions.length > 0
+    ? Math.min(...alvoSessions.map(s => s.score))
+    : null;
+  const lastAlvoRt = alvoSessions.length > 0 ? alvoSessions[0].score : null;
 
   return (
     <View style={styles.root}>
@@ -306,26 +333,48 @@ export default function Ciencia({ userProfile }: Props) {
 
         {/* ══ SEÇÃO 5b — MODO ALVO CHOICE RT ══ */}
         <Text style={styles.benchGroupLabel}>MODO ALVO — ESCALA DE REFERÊNCIA</Text>
-        <Text style={styles.benchGroupSub}>Choice RT — identificação de cor sob pressão</Text>
+        <Text style={styles.benchGroupSub}>
+          O Modo Alvo exige identificar a cor certa antes de reagir — por isso os tempos de referência são maiores.
+        </Text>
 
-        {CHOICE_BENCHMARKS.map(b => (
-          <View
-            key={b.name}
-            style={[styles.benchCard, { borderColor: b.color + '2a' }]}
-          >
-            <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
-              <Text style={styles.benchIconText}>{b.icon}</Text>
+        {CHOICE_BENCHMARKS.map(b => {
+          const isYouHere = bestAlvoRt !== null && b.level === choiceLevelLabel(bestAlvoRt);
+          const showLastNote = isYouHere && lastAlvoRt !== null &&
+            choiceLevelLabel(lastAlvoRt) !== choiceLevelLabel(bestAlvoRt!);
+          const youColor = bestAlvoRt !== null ? choiceLevelColor(bestAlvoRt) : b.color;
+          return (
+            <View
+              key={b.name}
+              style={[
+                styles.benchCard,
+                { borderColor: isYouHere ? youColor + 'aa' : b.color + '2a' },
+                isYouHere && { borderWidth: 2 },
+              ]}
+            >
+              {isYouHere && (
+                <View style={[styles.youBadge, { borderColor: youColor + '66', backgroundColor: youColor + '18' }]}>
+                  <Text style={[styles.youBadgeText, { color: youColor }]}>← VOCÊ ESTÁ AQUI</Text>
+                </View>
+              )}
+              {showLastNote && (
+                <Text style={styles.lastSessionNote}>
+                  {`Última sessão: ${lastAlvoRt} ms · ${choiceLevelLabel(lastAlvoRt!)}`}
+                </Text>
+              )}
+              <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
+                <Text style={styles.benchIconText}>{b.icon}</Text>
+              </View>
+              <View style={styles.benchInfo}>
+                <Text style={styles.benchName}>{b.name}</Text>
+                <Text style={styles.benchSource}>{b.source}</Text>
+              </View>
+              <View style={styles.benchRight}>
+                <Text style={[styles.benchRange, { color: b.color }]}>{b.range}</Text>
+                <Text style={[styles.benchLevel, { color: b.color }]}>{b.level}</Text>
+              </View>
             </View>
-            <View style={styles.benchInfo}>
-              <Text style={styles.benchName}>{b.name}</Text>
-              <Text style={styles.benchSource}>{b.source}</Text>
-            </View>
-            <View style={styles.benchRight}>
-              <Text style={[styles.benchRange, { color: b.color }]}>{b.range}</Text>
-              <Text style={[styles.benchLevel, { color: b.color }]}>{b.level}</Text>
-            </View>
-          </View>
-        ))}
+          );
+        })}
 
         {/* ══ FECHAMENTO EDITORIAL ══ */}
         <View style={styles.closingCard}>
@@ -484,6 +533,17 @@ const styles = StyleSheet.create({
     borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
   },
   goalBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
+
+  youBadge: {
+    position: 'absolute', top: 8, right: 8,
+    borderRadius: 4, borderWidth: 1,
+    paddingHorizontal: 6, paddingVertical: 2,
+  },
+  youBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
+  lastSessionNote: {
+    position: 'absolute', top: 26, right: 8,
+    fontSize: 8, color: '#4a5a7b', letterSpacing: 0.3,
+  },
 
   benchIconBox: {
     width: 44, height: 44, borderRadius: 10,

@@ -131,6 +131,9 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
   // Choice RT reference for alvo (ELITE boundary)
   const choiceRTRef: number | null = filter === 'alvo' ? 420 : null;
 
+  // Simple RT elite reference for partida/sequencia (top of F1/sprinter range)
+  const simpleRTRef: number | null = (filter === 'partida' || filter === 'sequencia') ? 200 : null;
+
   const toY = (v: number) => PAD.t + (1 - (v - minV) / range) * innerH;
 
   // X: time-based when sessions span ≥ 1 day, else index-based
@@ -225,6 +228,24 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
               fontSize={7} fill="#10b981" textAnchor="end"
             >
               Elite: 420 ms
+            </SvgText>
+          </React.Fragment>
+        )}
+
+        {/* Simple RT ELITE reference line (partida/sequencia filters) */}
+        {simpleRTRef !== null && (
+          <React.Fragment>
+            <Line
+              x1={PAD.l} y1={toY(simpleRTRef)}
+              x2={W - PAD.r} y2={toY(simpleRTRef)}
+              stroke="#4a5a7b" strokeWidth={1}
+              strokeDasharray="4 3"
+            />
+            <SvgText
+              x={W - PAD.r - 2} y={toY(simpleRTRef) - 3}
+              fontSize={7} fill="#4a5a7b" textAnchor="end"
+            >
+              Elite: 200 ms
             </SvgText>
           </React.Fragment>
         )}
