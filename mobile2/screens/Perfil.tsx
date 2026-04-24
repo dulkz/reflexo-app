@@ -236,7 +236,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
 
   const milestonesState = useMemo(() => {
     if (!ambition) return [];
-    return getMilestonesState(baselineMs, currentBestMs, ambition.id);
+    return getMilestonesState(baselineMs, currentBestMs, ambition.id, sessions);
   }, [ambition, baselineMs, currentBestMs]);
 
   const beatenCount = useMemo(
@@ -245,7 +245,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   );
 
   const nextMilestone = useMemo(
-    () => ambition ? getNextMilestone(baselineMs, currentBestMs, ambition.id) : null,
+    () => ambition ? getNextMilestone(baselineMs, currentBestMs, ambition.id, sessions) : null,
     [ambition, baselineMs, currentBestMs],
   );
 
@@ -543,6 +543,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                   ambitionId={ambition.id}
                   baselineMs={baselineMs}
                   currentBestMs={currentBestMs}
+                  sessions={sessions}
                   showYouAreHere
                 />
               </View>

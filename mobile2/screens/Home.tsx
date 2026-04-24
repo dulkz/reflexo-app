@@ -83,7 +83,7 @@ export default function Home({
 
     // Brain-health: qualitative milestones
     if (ambition.group === 'brain_health') {
-      const nextM = getNextMilestone(baselineMs, currentBestMs, ambition.id);
+      const nextM = getNextMilestone(baselineMs, currentBestMs, ambition.id, sessions);
       return {
         icon: ambition.icon,
         type: 'qualitative' as const,
@@ -94,7 +94,7 @@ export default function Home({
     }
 
     // Numeric milestones
-    const states = getMilestonesState(baselineMs, currentBestMs, ambition.id);
+    const states = getMilestonesState(baselineMs, currentBestMs, ambition.id, sessions);
     const allBeaten = states.every(s => s.status !== 'pendente');
 
     if (allBeaten) {
@@ -107,8 +107,8 @@ export default function Home({
       };
     }
 
-    const delta = calculateDeltaToNextMilestone(currentBestMs, ambition.id, baselineMs);
-    const nextM = getNextMilestone(baselineMs, currentBestMs, ambition.id);
+    const delta = calculateDeltaToNextMilestone(currentBestMs, ambition.id, baselineMs, sessions);
+    const nextM = getNextMilestone(baselineMs, currentBestMs, ambition.id, sessions);
 
     return {
       icon: ambition.icon,

@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { getAmbition, getMilestonesState, MilestoneState } from '../utils/ambition';
+import { SessionRecord } from '../utils/storage';
 
 interface Props {
   ambitionId: string;
   baselineMs: number;
   currentBestMs?: number | null;
   compact?: boolean;
+  sessions?: SessionRecord[];
   // When true, shows "Você está aqui" pill at the baseline node (for triage flow where no
   // real-session progress exists yet). When false/omitted with currentBestMs, shows
   // "Sua melhor: N ms" pill at the first pending milestone instead.
@@ -18,6 +20,7 @@ export default function JourneyMap({
   baselineMs,
   currentBestMs,
   compact = false,
+  sessions,
   showYouAreHere,
 }: Props) {
   const ambition = getAmbition(ambitionId);
@@ -26,7 +29,7 @@ export default function JourneyMap({
   // Normalize optional prop to null so comparisons are safe throughout
   const best: number | null = currentBestMs ?? null;
 
-  const states: MilestoneState[] = getMilestonesState(baselineMs, best, ambitionId);
+  const states: MilestoneState[] = getMilestonesState(baselineMs, best, ambitionId, sessions);
 
   const nextState = states.find(s => s.status === 'pendente');
   const nextMilestone = nextState?.milestone ?? null;
