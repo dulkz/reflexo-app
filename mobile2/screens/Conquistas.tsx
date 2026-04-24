@@ -75,22 +75,20 @@ export default function Conquistas({ sessions, userProfile }: Props) {
             const done = a.unlocked(stats);
             const unlockDate = unlockDates[a.id];
             return (
-              <View
-                key={a.id}
-                style={[styles.cell, !done && styles.cellLocked]}
-              >
-                <Text style={[styles.icon, !done && styles.iconLocked]}>{a.icon}</Text>
-                <Text style={[styles.name, !done && styles.nameLocked]}>{a.name}</Text>
+              <View key={a.id} style={styles.cell}>
+                <Text style={styles.icon}>{a.icon}</Text>
+                <Text style={styles.name}>{a.name}</Text>
                 <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
-                {done && unlockDate ? (
-                  <Text style={styles.unlockDate}>
-                    Desbloqueada em {formatUnlockDate(unlockDate)}
+                <View style={[styles.progressBar, done && styles.progressBarDone]}>
+                  <Text
+                    style={[styles.progressLabel, done && styles.progressLabelDone]}
+                    numberOfLines={1}
+                  >
+                    {done
+                      ? `✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`
+                      : a.progress(stats)}
                   </Text>
-                ) : !done ? (
-                  <Text style={styles.progressText} numberOfLines={2}>
-                    {a.progress(stats)}
-                  </Text>
-                ) : null}
+                </View>
               </View>
             );
           })}
@@ -120,12 +118,15 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
     gap: 4,
   },
-  cellLocked: { opacity: 0.4 },
   icon: { fontSize: 24 },
-  iconLocked: { opacity: 0.5 },
   name: { fontSize: 13, fontWeight: '800', color: '#fff' },
-  nameLocked: { color: '#3a4a6b' },
   desc: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
-  progressText: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
-  unlockDate: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
+  progressBar: {
+    marginTop: 6, borderRadius: 4,
+    backgroundColor: '#2a3a5a',
+    paddingHorizontal: 8, paddingVertical: 4,
+  },
+  progressBarDone: { backgroundColor: 'rgba(16,185,129,0.15)' },
+  progressLabel: { fontSize: 11, color: '#4a5a7b' },
+  progressLabelDone: { color: '#10b981' },
 });

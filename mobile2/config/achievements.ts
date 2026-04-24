@@ -93,7 +93,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'madrugador',
     name: 'Madrugador',
-    icon: '🌅',
+    icon: '⏰',
     description: '10 sessões antes das 8h',
     unlocked: (s) => {
       const earlyCount = s.sessions.filter(r => new Date(r.date).getHours() < 8).length;
