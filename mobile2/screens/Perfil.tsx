@@ -808,7 +808,7 @@ const styles = StyleSheet.create({
   // ── MEU AVATAR ────────────────────────────────────────────────────────────
   avatarSection: { marginBottom: 20 },
   avatarGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: 16,
+    flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start',
   },
   avatarItemWrap: { alignItems: 'center', gap: 4 },
   avatarCell: {
