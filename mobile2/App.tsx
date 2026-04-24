@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 import Home from './screens/Home';
 import ModoPartida from './screens/ModoPartida';
 import ModoAlvo, { RoundResult } from './screens/ModoAlvo';
@@ -10,6 +11,7 @@ import Resultado from './screens/Resultado';
 import Ciencia from './screens/Ciencia';
 import Perfil from './screens/Perfil';
 import Historico from './screens/Historico';
+import Conquistas from './screens/Conquistas';
 import TriageModal from './screens/triage/TriageModal';
 import { ModeKey } from './utils/levels';
 import { SessionRecord, loadSessions, saveSession, getBestByMode } from './utils/storage';
@@ -17,7 +19,7 @@ import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
 
-type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil';
+type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'conquistas';
 type GameScreen =
   | 'home'
   | 'partida'
@@ -27,11 +29,13 @@ type GameScreen =
   | 'resultado_alvo'
   | 'resultado_sequencia';
 
-const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'jogar',    label: 'Jogar',    icon: '⚡' },
-  { key: 'historico',label: 'Histórico',icon: '📈' },
-  { key: 'ciencia',  label: 'Ciência',  icon: '🧠' },
-  { key: 'perfil',   label: 'Perfil',   icon: '👤' },
+const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
+  { key: 'historico', label: 'Histórico', icon: '📈' },
+  { key: 'ciencia',   label: 'Ciência',   icon: '🧠' },
+];
+const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
+  { key: 'perfil',      label: 'Perfil',      icon: '👤' },
+  { key: 'conquistas',  label: 'Conquistas',  icon: '🏆' },
 ];
 
 export default function App() {
@@ -286,36 +290,82 @@ function AppInner() {
 
       {/* Screen content */}
       <View style={[styles.content, inGame && styles.contentFullscreen]}>
-        {activeTab === 'jogar'    && renderGame()}
-        {activeTab === 'historico'&& <Historico sessions={sessions} userProfile={userProfile} />}
-        {activeTab === 'ciencia'  && <Ciencia userProfile={userProfile} sessions={sessions} />}
-        {activeTab === 'perfil'   && (
+        {activeTab === 'jogar'      && renderGame()}
+        {activeTab === 'historico'  && <Historico sessions={sessions} userProfile={userProfile} />}
+        {activeTab === 'ciencia'    && <Ciencia userProfile={userProfile} sessions={sessions} />}
+        {activeTab === 'perfil'     && (
           <Perfil
             sessions={sessions}
             userProfile={userProfile}
             onOpenTriage={openTriageForEdit}
           />
         )}
+        {activeTab === 'conquistas' && (
+          <Conquistas sessions={sessions} userProfile={userProfile} />
+        )}
       </View>
 
       {/* Tab bar — hidden during active game */}
       {!inGame && (
-        <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
-          {TABS.map(t => {
-            const active = activeTab === t.key;
-            return (
-              <TouchableOpacity
-                key={t.key}
-                style={styles.tabBtn}
-                onPress={() => handleTabPress(t.key)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
-                {active && <View style={styles.tabIndicator} />}
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.fabBarWrapper}>
+          {/* Bar row: 2 left tabs + center spacer + 2 right tabs */}
+          <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
+            {LEFT_TABS.map(t => {
+              const active = activeTab === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  style={styles.tabBtn}
+                  onPress={() => handleTabPress(t.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+                  {active && <View style={styles.tabIndicator} />}
+                </TouchableOpacity>
+              );
+            })}
+
+            {/* Center spacer — seats the FAB */}
+            <View style={styles.fabSpacer} />
+
+            {RIGHT_TABS.map(t => {
+              const active = activeTab === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  style={styles.tabBtn}
+                  onPress={() => handleTabPress(t.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+                  {active && <View style={styles.tabIndicator} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Notch — fake cutout using app background color */}
+          <View style={styles.fabNotch} />
+
+          {/* FAB — floats above the bar */}
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={() => handleTabPress('jogar')}
+            activeOpacity={0.85}
+          >
+            <Svg width={60} height={60} style={StyleSheet.absoluteFillObject}>
+              <Defs>
+                <LinearGradient id="fabGrad" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor="#3b82f6" />
+                  <Stop offset="1" stopColor="#8b5cf6" />
+                </LinearGradient>
+              </Defs>
+              <Circle cx={30} cy={30} r={30} fill="url(#fabGrad)" />
+            </Svg>
+            <Text style={styles.fabIcon}>⚡</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -363,13 +413,19 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   contentFullscreen: { flex: 1 },
 
+  // ── FAB tab bar ──────────────────────────────────────────────────────────────
+  fabBarWrapper: {
+    position: 'relative',
+    overflow: 'visible',
+  },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: '#0d1525',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
-    paddingTop: 4,
+    paddingTop: 10,
   },
+  fabSpacer: { width: 80 },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 8 },
   tabIcon: { fontSize: 20 },
   tabIconActive: {},
@@ -379,6 +435,39 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 0,
     width: 24, height: 2,
     backgroundColor: '#3b82f6', borderRadius: 1,
+  },
+  // Fake cutout: same color as app root, sits at top-center of bar
+  fabNotch: {
+    position: 'absolute',
+    top: -20,
+    alignSelf: 'center',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#0b1220',
+    zIndex: 1,
+  },
+  // FAB floats 22px above the bar top
+  fab: {
+    position: 'absolute',
+    top: -22,
+    alignSelf: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  fabIcon: {
+    fontSize: 28,
+    color: '#fff',
+    zIndex: 1,
   },
 
   // ── Milestone toast ──────────────────────────────────────────────────────────
