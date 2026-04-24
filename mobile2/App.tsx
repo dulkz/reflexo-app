@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 import Home from './screens/Home';
 import ModoPartida from './screens/ModoPartida';
 import ModoAlvo, { RoundResult } from './screens/ModoAlvo';
@@ -30,7 +29,6 @@ type GameScreen =
   | 'resultado_sequencia';
 
 const FAB_SIZE = 70;
-const WIN_W    = Dimensions.get('window').width;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
   { key: 'historico', label: 'Histórico', icon: '📈' },
@@ -328,8 +326,14 @@ function AppInner() {
             );
           })}
 
-          {/* Center spacer — seats the FAB */}
-          <View style={styles.fabSpacer} />
+          {/* FAB — inline center item, rises above bar via marginTop */}
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={() => handleTabPress('jogar')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.fabIcon}>⚡</Text>
+          </TouchableOpacity>
 
           {RIGHT_TABS.map(t => {
             const active = activeTab === t.key;
@@ -347,31 +351,6 @@ function AppInner() {
               </TouchableOpacity>
             );
           })}
-        </View>
-      )}
-
-      {/* FAB — centerer with left:0/right:0 + alignItems:'center' for pixel-perfect centering */}
-      {!inGame && (
-        <View
-          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 28, left: (WIN_W - FAB_SIZE) / 2, height: FAB_SIZE, zIndex: 3 }]}
-          pointerEvents="box-none"
-        >
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={() => handleTabPress('jogar')}
-            activeOpacity={0.85}
-          >
-            <Svg width={FAB_SIZE} height={FAB_SIZE} style={StyleSheet.absoluteFillObject}>
-              <Defs>
-                <LinearGradient id="fabGrad" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor="#3b82f6" />
-                  <Stop offset="1" stopColor="#8b5cf6" />
-                </LinearGradient>
-              </Defs>
-              <Circle cx={FAB_SIZE / 2} cy={FAB_SIZE / 2} r={FAB_SIZE / 2} fill="url(#fabGrad)" />
-            </Svg>
-            <Text style={styles.fabIcon}>⚡</Text>
-          </TouchableOpacity>
         </View>
       )}
 
@@ -422,13 +401,12 @@ const styles = StyleSheet.create({
   // ── FAB tab bar ──────────────────────────────────────────────────────────────
   tabBar: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     backgroundColor: '#0d1525',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
     paddingTop: 10,
   },
-  fabSpacer: { width: FAB_SIZE + 10 },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
   tabItemCard: {
     alignItems: 'center',
@@ -449,26 +427,22 @@ const styles = StyleSheet.create({
   tabIcon: { fontSize: 26 },
   tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
   tabLabelActive: { color: '#3b82f6' },
-  // Centerer: left set inline via WIN_W calc for precise centering; elevation:0 kills Android shadow
-  fabCenterer: {
-    position: 'absolute',
-    elevation: 0,
-    shadowColor: 'transparent',
-  },
   fab: {
     width: FAB_SIZE,
     height: FAB_SIZE,
     borderRadius: FAB_SIZE / 2,
+    marginTop: -28,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#5b4fcf',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.25)',
     elevation: 0,
+    shadowColor: 'transparent',
   },
   fabIcon: {
     fontSize: 32,
     color: '#fff',
-    zIndex: 1,
   },
 
   // ── Milestone toast ──────────────────────────────────────────────────────────
