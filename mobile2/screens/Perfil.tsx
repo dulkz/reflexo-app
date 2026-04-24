@@ -340,7 +340,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           <View style={styles.avatarGrid}>
             {AVATARS.map(av => {
               const unlocked = av.isUnlocked(stats, ACHIEVEMENTS);
-              const selected = (userProfile.selectedAvatar ?? 'initial') === av.id;
+              const selected = (userProfile.selectedAvatar ?? 'explorer') === av.id;
               const isInitial = av.id === 'initial';
               const cellContent = !unlocked
                 ? <Text style={styles.avatarCellLock}>🔒</Text>
@@ -808,8 +808,7 @@ const styles = StyleSheet.create({
   // ── MEU AVATAR ────────────────────────────────────────────────────────────
   avatarSection: { marginBottom: 20 },
   avatarGrid: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    justifyContent: 'space-between', gap: 12,
+    flexDirection: 'row', flexWrap: 'wrap', gap: 16,
   },
   avatarItemWrap: { alignItems: 'center', gap: 4 },
   avatarCell: {
