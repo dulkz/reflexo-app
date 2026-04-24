@@ -22,6 +22,7 @@ interface Props {
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 export default function ModoPartida({ onComplete, onBack }: Props) {
+  const [started, setStarted] = useState(false);
   const [gameState, setGameState] = useState<GameState>('ready');
   const [round, setRound] = useState(1);
   const [times, setTimes] = useState<number[]>([]);
@@ -203,6 +204,36 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
 
   const touchActive = gameState === 'waiting' || gameState === 'signal';
 
+  if (!started) {
+    return (
+      <View style={[styles.screen, { backgroundColor: '#0b1220' }]}>
+        <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
+          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+            <Text style={styles.backText}>← Voltar</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.introContainer}>
+          <Text style={styles.introTitle}>MODO PARTIDA</Text>
+          <Text style={styles.introSub}>7 tentativas · reação simples</Text>
+          <View style={styles.introInstrBox}>
+            <Text style={styles.introInstrLine}>① Aguarde a tela escura</Text>
+            <Text style={styles.introInstrLine}>② Toque assim que o círculo verde aparecer</Text>
+            <Text style={[styles.introInstrLine, { color: '#f59e0b' }]}>
+              ③ Tocar antes = falsa largada (+300 ms)
+            </Text>
+          </View>
+          <View style={styles.introDemoWrap}>
+            <View style={styles.introDemoCircle} />
+            <Text style={styles.introDemoLabel}>TOQUE AQUI</Text>
+          </View>
+          <TouchableOpacity style={styles.introStartBtn} onPress={() => setStarted(true)} activeOpacity={0.8}>
+            <Text style={styles.introStartBtnText}>INICIAR</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       {gameState === 'ready' && (
@@ -325,4 +356,42 @@ const styles = StyleSheet.create({
     letterSpacing: 2, textAlign: 'center', lineHeight: 46,
   },
   penaltyBig: { fontSize: 28, fontWeight: '700', color: '#FF7777', marginTop: 16 },
+
+  // ── Intro screen ─────────────────────────────────────────────────────────────
+  introContainer: {
+    flex: 1, paddingHorizontal: 24, paddingBottom: 40,
+    justifyContent: 'center', gap: 20,
+  },
+  introTitle: {
+    fontSize: 32, fontWeight: '900', color: '#3b82f6',
+    letterSpacing: 2, textAlign: 'center',
+  },
+  introSub: {
+    fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginTop: -12,
+  },
+  introInstrBox: {
+    backgroundColor: '#111a2e', borderRadius: 12, padding: 18,
+    borderWidth: 1, borderColor: 'rgba(59,130,246,0.15)', gap: 10,
+  },
+  introInstrLine: { fontSize: 14, color: '#c0cfe0', lineHeight: 20 },
+  introDemoWrap: { alignItems: 'center', gap: 12, paddingVertical: 8 },
+  introDemoCircle: {
+    width: 120, height: 120, borderRadius: 60,
+    backgroundColor: '#00FF44',
+    shadowColor: '#00FF44',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  introDemoLabel: {
+    fontSize: 13, fontWeight: '800', color: '#00C840', letterSpacing: 2,
+  },
+  introStartBtn: {
+    backgroundColor: '#3b82f6', borderRadius: 16,
+    paddingVertical: 18, alignItems: 'center',
+  },
+  introStartBtnText: {
+    fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 2,
+  },
 });
