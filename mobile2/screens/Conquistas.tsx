@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { SessionRecord } from '../utils/storage';
@@ -62,6 +62,7 @@ export default function Conquistas({ sessions, userProfile }: Props) {
     [stats],
   );
 
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -124,11 +125,32 @@ export default function Conquistas({ sessions, userProfile }: Props) {
           const group = GROUPED[r].filter(a => !a.unlocked(stats));
           if (group.length === 0) return null;
           const cfg = RARITY_CONFIG[r];
+          const totalInRarity = GROUPED[r].length;
+          const unlockedInRarity = totalInRarity - group.length;
+          const isExpanded = expanded[r] === true;
           return (
             <View key={r}>
-              <Text style={[styles.rarityHeader, { color: cfg.cor }]}>
-                {RARITY_ICONS[r]} {cfg.label}
-              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.accordionHeader,
+                  { backgroundColor: cfg.cor + (isExpanded ? '26' : '14') },
+                ]}
+                onPress={() => setExpanded(prev => ({ ...prev, [r]: !prev[r] }))}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.accordionLabel, { color: cfg.cor }]}>
+                  {RARITY_ICONS[r]} {cfg.label}
+                </Text>
+                <View style={styles.accordionRight}>
+                  <Text style={[styles.accordionCount, { color: cfg.cor }]}>
+                    {unlockedInRarity}/{totalInRarity}
+                  </Text>
+                  <Text style={[styles.accordionArrow, { color: cfg.cor }]}>
+                    {isExpanded ? '▼' : '▶'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              {isExpanded && (
               <View style={styles.grid}>
                 {group.map(a => {
                   const isSecret = !!a.secret;
@@ -170,6 +192,7 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                   );
                 })}
               </View>
+              )}
             </View>
           );
         })}
@@ -195,6 +218,15 @@ const styles = StyleSheet.create({
     fontSize: 11, fontWeight: '800', letterSpacing: 1.5,
     marginTop: 20, marginBottom: 8,
   },
+
+  accordionHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderRadius: 10, padding: 12, marginBottom: 8, marginTop: 8,
+  },
+  accordionLabel: { fontSize: 12, fontWeight: '800', letterSpacing: 1.5 },
+  accordionRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  accordionCount: { fontSize: 11, fontWeight: '700' },
+  accordionArrow: { fontSize: 11, fontWeight: '700' },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   cell: {
