@@ -175,7 +175,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   RESISTENTE: {
     id: 'RESISTENTE',
     name: 'O RESISTENTE',
-    icon: '🧱',
+    icon: '🛡️',
     color: '#06b6d4',
     description: 'Mantém consistência sob fadiga — uma habilidade rara que separa atletas de amadores.',
     evidence: (s) => {
