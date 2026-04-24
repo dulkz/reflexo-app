@@ -9,6 +9,12 @@ const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 const GROUPS: AmbitionGroup[] = ['elite_sport', 'populational', 'brain_health'];
 
+const GROUP_SUBTITLES: Record<AmbitionGroup, string> = {
+  elite_sport:   'Compare seu reflexo com atletas profissionais medidos em laboratório.',
+  populational:  'Compare-se com a população geral — de todas as idades e perfis.',
+  brain_health:  'Sem competição. Foco em consistência e longevidade cognitiva.',
+};
+
 interface Props {
   initialAmbitionId: string | null;
   onNext: (ambitionId: string) => void;
@@ -50,6 +56,7 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
           return (
             <View key={group} style={styles.section}>
               <Text style={[styles.groupLabel, { color }]}>{GROUP_LABELS[group]}</Text>
+              <Text style={styles.groupSubtitle}>{GROUP_SUBTITLES[group]}</Text>
               {items.map(a => {
                 const isSelected = selected === a.id;
                 return (
@@ -114,7 +121,10 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20 },
   section: { marginBottom: 20 },
   groupLabel: {
-    fontSize: 10, fontWeight: '700', letterSpacing: 2.5, marginBottom: 10,
+    fontSize: 10, fontWeight: '700', letterSpacing: 2.5, marginBottom: 4,
+  },
+  groupSubtitle: {
+    fontSize: 12, color: '#4a5a7b', lineHeight: 18, marginBottom: 10,
   },
 
   card: {
