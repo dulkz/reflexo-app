@@ -127,8 +127,9 @@ function AppInner() {
     const prevBest = sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : null;
 
     // ── Pre-session achievement snapshot ──────────────────────────────────────
-    const prevStreak = computeStreakFromSessions(sessions);
-    const prevStats = buildUserStats(sessions, prevStreak);
+    const prevValid = sessions.filter(s => !s.invalidForAchievements);
+    const prevStreak = computeStreakFromSessions(prevValid);
+    const prevStats = buildUserStats(prevValid, prevStreak);
     const prevUnlocked = new Set(ACHIEVEMENTS.filter(a => a.unlocked(prevStats)).map(a => a.id));
 
     await saveSession(session);
@@ -136,8 +137,9 @@ function AppInner() {
     setSessions(updated);
 
     // ── Achievement detection ─────────────────────────────────────────────────
-    const updatedStreak = computeStreakFromSessions(updated);
-    const updatedStats = buildUserStats(updated, updatedStreak);
+    const updatedValid = updated.filter(s => !s.invalidForAchievements);
+    const updatedStreak = computeStreakFromSessions(updatedValid);
+    const updatedStats = buildUserStats(updatedValid, updatedStreak);
     const newlyUnlocked = ACHIEVEMENTS.filter(
       a => !prevUnlocked.has(a.id) && a.unlocked(updatedStats),
     );
@@ -202,7 +204,7 @@ function AppInner() {
 
   // ── Game handlers ───────────────────────────────────────────────────────────
 
-  const handlePartidaComplete = useCallback(async (times: number[]) => {
+  const handlePartidaComplete = useCallback(async (times: number[], falseStartCount: number) => {
     setPartidaTimes(times);
     const sorted = [...times].sort((a, b) => a - b);
     const score = Math.round(sorted.slice(0, 5).reduce((s, x) => s + x, 0) / 5);
@@ -215,6 +217,7 @@ function AppInner() {
       rounds: times.length,
       times,
       date: Date.now(),
+      ...(falseStartCount >= 3 ? { invalidForAchievements: true } : {}),
     });
     setGameScreen('resultado_partida');
   }, [addSession]);

@@ -6,7 +6,7 @@ import {
 import { getLevelInfo } from '../utils/levels';
 
 const TOTAL_ROUNDS = 7;
-const FALSE_START = 300;
+const FALSE_START = 500;
 const MIN_DELAY = 1000;
 const MAX_DELAY = 4000;
 
@@ -15,7 +15,7 @@ type GameState = 'ready' | 'waiting' | 'signal' | 'done';
 interface LastResult { time: number; isFalseStart: boolean }
 
 interface Props {
-  onComplete: (times: number[]) => void;
+  onComplete: (times: number[], falseStartCount: number) => void;
   onBack: () => void;
 }
 
@@ -32,6 +32,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
   const delayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const responded = useRef(false);
+  const falseStartCount = useRef(0);
 
   const circleScale = useRef(new Animated.Value(0)).current;
   const circleOpacity = useRef(new Animated.Value(0)).current;
@@ -53,6 +54,8 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
     responded.current = true;
     if (delayTimer.current) clearTimeout(delayTimer.current);
 
+    if (isFalseStart) falseStartCount.current += 1;
+
     const result: LastResult = { time, isFalseStart };
     setLastResult(result);
     const newTimes = [...times, time];
@@ -63,7 +66,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
     advanceTimer.current = setTimeout(() => {
       const next = round + 1;
       if (next > TOTAL_ROUNDS) {
-        onComplete(newTimes);
+        onComplete(newTimes, falseStartCount.current);
       } else {
         setRound(next);
         setGameState('ready');
@@ -132,7 +135,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
             {lastResult.isFalseStart ? (
               <>
                 <Text style={styles.falseTag}>FALSA LARGADA</Text>
-                <Text style={styles.penaltyNote}>+300 ms aplicados</Text>
+                <Text style={styles.penaltyNote}>500 ms fixo</Text>
               </>
             ) : (
               <>
@@ -150,7 +153,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
             <Text style={styles.instrHint}>
               Aguarde a tela escura — toque assim que o círculo verde aparecer
             </Text>
-            <Text style={styles.instrWarn}>Tocar antes = falsa largada (+300 ms)</Text>
+            <Text style={styles.instrWarn}>Tocar antes = falsa largada (500 ms fixo)</Text>
           </View>
         )}
 
@@ -185,7 +188,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
         {isFalseStart ? (
           <>
             <Text style={styles.falseStartBig}>FALSA{'\n'}LARGADA</Text>
-            <Text style={styles.penaltyBig}>+300 ms</Text>
+            <Text style={styles.penaltyBig}>500 ms fixo</Text>
           </>
         ) : (
           <>
@@ -219,7 +222,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
             <Text style={styles.introInstrLine}>① Aguarde a tela escura</Text>
             <Text style={styles.introInstrLine}>② Toque assim que o círculo verde aparecer</Text>
             <Text style={[styles.introInstrLine, { color: '#f59e0b' }]}>
-              ③ Tocar antes = falsa largada (+300 ms)
+              ③ Tocar antes = falsa largada (500 ms fixo)
             </Text>
           </View>
           <View style={styles.introDemoWrap}>

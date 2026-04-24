@@ -10,6 +10,7 @@ export interface SessionRecord {
   fatigueIndex?: number; // %, sequencia only
   noGoErrors?: number;   // commission count (tap on NoGo), sequencia only
   noGoAccuracy?: number; // % of NoGo correctly inhibited (0-100 int), sequencia only
+  invalidForAchievements?: boolean; // true when session had 3+ false starts
   rounds: number;
   times: number[];
   date: number;          // Date.now()
