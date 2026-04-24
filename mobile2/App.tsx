@@ -10,6 +10,7 @@ import Resultado from './screens/Resultado';
 import Ciencia from './screens/Ciencia';
 import Perfil from './screens/Perfil';
 import Historico from './screens/Historico';
+import Conquistas from './screens/Conquistas';
 import TriageModal from './screens/triage/TriageModal';
 import { ModeKey } from './utils/levels';
 import { SessionRecord, loadSessions, saveSession, getBestByMode } from './utils/storage';
@@ -17,7 +18,7 @@ import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
 
-type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil';
+type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'conquistas';
 type GameScreen =
   | 'home'
   | 'partida'
@@ -27,11 +28,16 @@ type GameScreen =
   | 'resultado_alvo'
   | 'resultado_sequencia';
 
-const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'jogar',    label: 'Jogar',    icon: '⚡' },
-  { key: 'historico',label: 'Histórico',icon: '📈' },
-  { key: 'ciencia',  label: 'Ciência',  icon: '🧠' },
-  { key: 'perfil',   label: 'Perfil',   icon: '👤' },
+const FAB_SIZE      = 70;
+const TAB_BAR_HEIGHT = 52;
+
+const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
+  { key: 'conquistas', label: 'Conquistas', icon: '🏆' },
+  { key: 'ciencia',    label: 'Ciência',    icon: '🧠' },
+];
+const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
+  { key: 'historico', label: 'Histórico', icon: '📈' },
+  { key: 'perfil',    label: 'Perfil',    icon: '👤' },
 ];
 
 export default function App() {
@@ -286,37 +292,77 @@ function AppInner() {
 
       {/* Screen content */}
       <View style={[styles.content, inGame && styles.contentFullscreen]}>
-        {activeTab === 'jogar'    && renderGame()}
-        {activeTab === 'historico'&& <Historico sessions={sessions} userProfile={userProfile} />}
-        {activeTab === 'ciencia'  && <Ciencia userProfile={userProfile} sessions={sessions} />}
-        {activeTab === 'perfil'   && (
+        {activeTab === 'jogar'      && renderGame()}
+        {activeTab === 'historico'  && <Historico sessions={sessions} userProfile={userProfile} />}
+        {activeTab === 'ciencia'    && <Ciencia userProfile={userProfile} sessions={sessions} />}
+        {activeTab === 'perfil'     && (
           <Perfil
             sessions={sessions}
             userProfile={userProfile}
             onOpenTriage={openTriageForEdit}
           />
         )}
+        {activeTab === 'conquistas' && (
+          <Conquistas sessions={sessions} userProfile={userProfile} />
+        )}
       </View>
 
       {/* Tab bar — hidden during active game */}
       {!inGame && (
-        <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
-          {TABS.map(t => {
-            const active = activeTab === t.key;
-            return (
-              <TouchableOpacity
-                key={t.key}
-                style={styles.tabBtn}
-                onPress={() => handleTabPress(t.key)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
-                {active && <View style={styles.tabIndicator} />}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <>
+          <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
+            {LEFT_TABS.map(t => {
+              const active = activeTab === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  style={styles.tabBtn}
+                  onPress={() => handleTabPress(t.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
+                    <Text style={styles.tabIcon}>{t.icon}</Text>
+                    <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+
+            {/* Spacer — keeps 5-column layout while FAB floats above */}
+            <View style={styles.fabSpacer} />
+
+            {RIGHT_TABS.map(t => {
+              const active = activeTab === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  style={styles.tabBtn}
+                  onPress={() => handleTabPress(t.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
+                    <Text style={styles.tabIcon}>{t.icon}</Text>
+                    <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* FAB — position absolute sibling of tabBar, no overflow dependency */}
+          <View
+            style={[styles.fabContainer, { bottom: TAB_BAR_HEIGHT + Math.max(insets.bottom, 4) - FAB_SIZE / 2 }]}
+            pointerEvents="box-none"
+          >
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => handleTabPress('jogar')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.fabIcon}>⚡</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
 
       {/* Triage modal — fullscreen, covers tab bar */}
@@ -363,22 +409,58 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   contentFullscreen: { flex: 1 },
 
+  // ── FAB tab bar ──────────────────────────────────────────────────────────────
   tabBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#0d1525',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
-    paddingTop: 4,
+    paddingTop: 6,
   },
-  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 8 },
-  tabIcon: { fontSize: 20 },
-  tabIconActive: {},
-  tabLabel: { fontSize: 10, fontWeight: '600', color: '#3a4a6b', letterSpacing: 0.5 },
-  tabLabelActive: { color: '#fff' },
-  tabIndicator: {
-    position: 'absolute', top: 0,
-    width: 24, height: 2,
-    backgroundColor: '#3b82f6', borderRadius: 1,
+  fabSpacer: { flex: 1 },
+  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 2 },
+  tabItemCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    width: 72,
+    height: 54,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.09)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  tabItemCardActive: {
+    backgroundColor: 'rgba(59,130,246,0.15)',
+    borderColor: 'rgba(59,130,246,0.3)',
+  },
+  tabIcon: { fontSize: 26 },
+  tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
+  tabLabelActive: { color: '#3b82f6' },
+  fabContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  fab: {
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#5b4fcf',
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+    elevation: 0,
+    shadowColor: 'transparent',
+  },
+  fabIcon: {
+    fontSize: 32,
+    color: '#fff',
   },
 
   // ── Milestone toast ──────────────────────────────────────────────────────────
