@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
@@ -29,13 +29,17 @@ type GameScreen =
   | 'resultado_alvo'
   | 'resultado_sequencia';
 
+const SCREEN_W  = Dimensions.get('window').width;
+const FAB_SIZE   = 70;
+const NOTCH_SIZE = 88;
+
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
   { key: 'historico', label: 'Histórico', icon: '📈' },
   { key: 'ciencia',   label: 'Ciência',   icon: '🧠' },
 ];
 const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'perfil',      label: 'Perfil',      icon: '👤' },
-  { key: 'conquistas',  label: 'Conquistas',  icon: '🏆' },
+  { key: 'perfil',      label: 'Perfil',   icon: '👤' },
+  { key: 'conquistas',  label: 'Troféus',  icon: '🏆' },
 ];
 
 export default function App() {
@@ -319,7 +323,7 @@ function AppInner() {
               >
                 <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
                   <Text style={styles.tabIcon}>{t.icon}</Text>
-                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
                 </View>
               </TouchableOpacity>
             );
@@ -339,7 +343,7 @@ function AppInner() {
               >
                 <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
                   <Text style={styles.tabIcon}>{t.icon}</Text>
-                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
                 </View>
               </TouchableOpacity>
             );
@@ -350,9 +354,9 @@ function AppInner() {
       {/* Notch and FAB — absolute in root so overflow never clips them on Android */}
       {!inGame && (
         <>
-          <View style={[styles.fabNotch, { bottom: Math.max(insets.bottom, 4) + 19 }]} />
+          <View style={[styles.fabNotch, { bottom: Math.max(insets.bottom, 4) + 19, left: (SCREEN_W - NOTCH_SIZE) / 2 }]} />
           <TouchableOpacity
-            style={[styles.fab, { bottom: Math.max(insets.bottom, 4) + 28 }]}
+            style={[styles.fab, { bottom: Math.max(insets.bottom, 4) + 28, left: (SCREEN_W - FAB_SIZE) / 2 }]}
             onPress={() => handleTabPress('jogar')}
             activeOpacity={0.85}
           >
@@ -417,43 +421,45 @@ const styles = StyleSheet.create({
   // ── FAB tab bar ──────────────────────────────────────────────────────────────
   tabBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#0d1525',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
     paddingTop: 10,
   },
-  fabSpacer: { width: 88 },
+  fabSpacer: { width: NOTCH_SIZE },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6 },
   tabItemCard: {
-    alignItems: 'center', gap: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    width: 72,
+    height: 52,
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
-    paddingVertical: 6, paddingHorizontal: 10,
   },
   tabItemCardActive: {
     backgroundColor: 'rgba(59,130,246,0.15)',
     borderWidth: 1, borderColor: 'rgba(59,130,246,0.3)',
   },
   tabIcon: { fontSize: 26 },
-  tabLabel: { fontSize: 11, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
+  tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
   tabLabelActive: { color: '#3b82f6' },
-  // Notch — absolute in root View; bottom set inline with insets
+  // Notch — absolute in root View; bottom + left set inline
   fabNotch: {
     position: 'absolute',
-    alignSelf: 'center',
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: NOTCH_SIZE,
+    height: NOTCH_SIZE,
+    borderRadius: NOTCH_SIZE / 2,
     backgroundColor: '#0b1220',
     zIndex: 2,
   },
-  // FAB — absolute in root View; bottom set inline with insets
+  // FAB — absolute in root View; bottom + left set inline
   fab: {
     position: 'absolute',
-    alignSelf: 'center',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
