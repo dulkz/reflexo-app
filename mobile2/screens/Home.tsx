@@ -6,6 +6,7 @@ import {
 import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
+import { AVATARS } from '../config/avatars';
 import {
   getAmbition, getNextMilestone, calculateDeltaToNextMilestone, getMilestonesState,
 } from '../utils/ambition';
@@ -141,7 +142,11 @@ export default function Home({
           <Text style={styles.greeting}>Olá, {userProfile.name || 'Atleta'}</Text>
         </View>
         <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
-          <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>
+          <Text style={styles.avatarLetter}>
+            {userProfile.selectedAvatar && userProfile.selectedAvatar !== 'initial'
+              ? (AVATARS.find(a => a.id === userProfile.selectedAvatar)?.icon ?? (userProfile.name || 'Atleta')[0].toUpperCase())
+              : (userProfile.name || 'Atleta')[0].toUpperCase()}
+          </Text>
         </TouchableOpacity>
       </View>
 

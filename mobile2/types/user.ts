@@ -13,6 +13,7 @@ export interface UserProfile {
   triageTempAgeRange: AgeRange | null;
   // skip tracking: stop auto-offering after 3 dismissals
   triageSkipCount: number;
+  selectedAvatar?: string;
 }
 
 export function defaultUserProfile(): UserProfile {

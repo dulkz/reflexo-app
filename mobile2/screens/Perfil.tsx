@@ -19,6 +19,7 @@ const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
   { id: 'PILOTO',      icon: '🏎️', tagline: 'Reflexos de elite' },
 ];
 import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import { AVATARS } from '../config/avatars';
 import { saveUserProfile } from '../utils/userProfile';
 import {
   getAmbition,
@@ -304,7 +305,17 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
 
         {/* ── Identity block ── */}
         <View style={styles.identityBlock}>
-          <GradientAvatar size={72} letter={(userProfile.name || 'Usuário')[0].toUpperCase()} />
+          {userProfile.selectedAvatar && userProfile.selectedAvatar !== 'initial'
+            ? (
+              <View style={styles.emojiAvatarLarge}>
+                <Text style={styles.emojiAvatarLargeText}>
+                  {AVATARS.find(a => a.id === userProfile.selectedAvatar)?.icon ?? (userProfile.name || 'U')[0].toUpperCase()}
+                </Text>
+              </View>
+            ) : (
+              <GradientAvatar size={72} letter={(userProfile.name || 'Usuário')[0].toUpperCase()} />
+            )
+          }
           <View style={{ flex: 1, gap: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={styles.identityName}>{userProfile.name || 'Usuário'}</Text>
@@ -320,6 +331,53 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 ? `Jogando desde ${joinedLabel} · ${sessions.length} sessão${sessions.length !== 1 ? 'ões' : ''}`
                 : 'Sem sessões ainda'}
             </Text>
+          </View>
+        </View>
+
+        {/* ── MEU AVATAR ── */}
+        <View style={styles.avatarSection}>
+          <Text style={styles.sectionTitle}>MEU AVATAR</Text>
+          <View style={styles.avatarGrid}>
+            {AVATARS.map(av => {
+              const unlocked = av.isUnlocked(stats, ACHIEVEMENTS);
+              const selected = (userProfile.selectedAvatar ?? 'initial') === av.id;
+              const isInitial = av.id === 'initial';
+              return (
+                <TouchableOpacity
+                  key={av.id}
+                  style={[
+                    styles.avatarCell,
+                    { borderColor: selected ? '#5b4fcf' : '#2a3a5a' },
+                    !unlocked && styles.avatarCellLocked,
+                  ]}
+                  onPress={unlocked ? async () => {
+                    const updated = { ...userProfile, selectedAvatar: av.id };
+                    await saveUserProfile(updated);
+                    onUpdateProfile(updated);
+                  } : undefined}
+                  disabled={!unlocked}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.avatarCellIconWrap}>
+                    {isInitial ? (
+                      <View style={styles.avatarCellLetterBg}>
+                        <Text style={styles.avatarCellLetter}>
+                          {(userProfile.name || 'U')[0].toUpperCase()}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.avatarCellEmoji}>{av.icon}</Text>
+                    )}
+                    {!unlocked && (
+                      <View style={styles.avatarCellLockOverlay}>
+                        <Text style={{ fontSize: 11 }}>🔒</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.avatarCellName} numberOfLines={1}>{av.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -746,6 +804,37 @@ const styles = StyleSheet.create({
   },
   identityName: { fontSize: 26, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
   identitySub: { fontSize: 12, color: '#4a5a7b' },
+  emojiAvatarLarge: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: '#1a2540',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: 'rgba(91,79,207,0.4)',
+  },
+  emojiAvatarLargeText: { fontSize: 34 },
+
+  // ── MEU AVATAR ────────────────────────────────────────────────────────────
+  avatarSection: { marginBottom: 20 },
+  avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  avatarCell: {
+    width: '23%',
+    backgroundColor: '#111a2e', borderRadius: 12,
+    borderWidth: 1.5, padding: 8,
+    alignItems: 'center', gap: 6,
+  },
+  avatarCellLocked: { opacity: 0.3 },
+  avatarCellIconWrap: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
+  avatarCellLetterBg: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#1A6DB5',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatarCellLetter: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  avatarCellEmoji: { fontSize: 32, lineHeight: 40 },
+  avatarCellLockOverlay: {
+    position: 'absolute', top: 0, right: -4,
+    backgroundColor: '#0b1220', borderRadius: 8, padding: 2,
+  },
+  avatarCellName: { fontSize: 9, fontWeight: '700', color: '#4a5a7b', letterSpacing: 0.3, textAlign: 'center' },
 
   // ── Archetype card ────────────────────────────────────────────────────────
   archetypeCard: {
