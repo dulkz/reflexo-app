@@ -31,6 +31,8 @@ export interface SeqSummary {
   accuracy: number;
   fatigueIndex: number;
   score: number;
+  noGoErrors: number;   // = commissions (taps during NoGo signals)
+  noGoAccuracy: number; // % of NoGo correctly inhibited, 0-100 int
 }
 
 interface Props {
@@ -105,7 +107,13 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     const penaltyMs = misses * 200 + commissions * 150;
     const score = Math.round(avgRt + penaltyMs / allTrials.length);
 
-    return { trials: allTrials, hits, misses, commissions, correctInhibits, avgRt, accuracy, fatigueIndex, score };
+    const totalNoGo = allTrials.filter(t => t.signalType === 'nogo').length;
+    const noGoErrors = commissions;
+    const noGoAccuracy = totalNoGo > 0
+      ? Math.round(((totalNoGo - commissions) / totalNoGo) * 100)
+      : 100;
+
+    return { trials: allTrials, hits, misses, commissions, correctInhibits, avgRt, accuracy, fatigueIndex, score, noGoErrors, noGoAccuracy };
   }, []);
 
   const scheduleNext = useCallback((currentIdx: number, currentTrials: TrialResult[]) => {

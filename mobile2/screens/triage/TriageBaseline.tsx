@@ -52,6 +52,10 @@ function shuffle(arr: number[]): number[] {
   return a;
 }
 
+function generateSeqSignals(): ('go' | 'nogo')[] {
+  return Array.from({ length: 3 }, () => Math.random() < 0.25 ? 'nogo' : 'go');
+}
+
 function computeBaseline(rts: Rts): number {
   const all = [rts.partida!, rts.alvo!, rts.seq!];
   const sorted = [...all].sort((a, b) => a - b); // ascending
@@ -73,6 +77,12 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   const signalTime = useRef(0);
   const phaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownNext = useRef<'partida_jitter' | 'alvo_jitter' | 'seq_jitter'>('partida_jitter');
+
+  // Seq 3-signal state
+  const seqSignalsRef = useRef<('go' | 'nogo')[]>([]);
+  const seqSignalIdxRef = useRef(0);
+  const seqGoRtsRef = useRef<number[]>([]);
+  const [seqCurrentSignal, setSeqCurrentSignal] = useState<'go' | 'nogo'>('go');
 
   const clearTimer = () => {
     if (phaseTimer.current) { clearTimeout(phaseTimer.current); phaseTimer.current = null; }
@@ -121,9 +131,29 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     if (phase === 'seq_jitter') {
       const interval = SEQ_JITTER_MIN + Math.random() * (SEQ_JITTER_MAX - SEQ_JITTER_MIN);
       phaseTimer.current = setTimeout(() => {
-        signalTime.current = Date.now();
+        setSeqCurrentSignal(seqSignalsRef.current[seqSignalIdxRef.current]);
         setPhase('seq_go');
       }, interval);
+    }
+
+    if (phase === 'seq_go') {
+      // signalTime set here (post-render) for accuracy, same pattern as ModoAlvo
+      signalTime.current = Date.now();
+      // 1400ms timeout: Go=miss (no RT), NoGo=correct_inhibit — advance either way
+      phaseTimer.current = setTimeout(() => {
+        const nextIdx = seqSignalIdxRef.current + 1;
+        seqSignalIdxRef.current = nextIdx;
+        if (nextIdx >= 3) {
+          const goRts = seqGoRtsRef.current;
+          const seqRt = goRts.length > 0
+            ? Math.round(goRts.reduce((a, b) => a + b, 0) / goRts.length)
+            : 600; // fallback: all 3 signals were NoGo (very unlikely)
+          setRts(prev => ({ ...prev, seq: seqRt }));
+          setPhase('result');
+        } else {
+          phaseTimer.current = setTimeout(() => setPhase('seq_jitter'), 400);
+        }
+      }, 1400);
     }
 
     if (phase === 'trans_alvo') {
@@ -165,10 +195,24 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
   const handleSeqTap = useCallback(() => {
     if (phase !== 'seq_go') return;
+    // M4: NoGo signal — ignore tap, let the 1400ms timeout fire naturally
+    if (seqCurrentSignal === 'nogo') return;
+
+    clearTimer();
     const rt = Date.now() - signalTime.current;
-    setRts(prev => ({ ...prev, seq: rt }));
-    setPhase('result');
-  }, [phase]);
+    seqGoRtsRef.current.push(rt);
+    const nextIdx = seqSignalIdxRef.current + 1;
+    seqSignalIdxRef.current = nextIdx;
+
+    if (nextIdx >= 3) {
+      const goRts = seqGoRtsRef.current;
+      const seqRt = Math.round(goRts.reduce((a, b) => a + b, 0) / goRts.length);
+      setRts(prev => ({ ...prev, seq: seqRt }));
+      setPhase('result');
+    } else {
+      phaseTimer.current = setTimeout(() => setPhase('seq_jitter'), 400);
+    }
+  }, [phase, seqCurrentSignal]);
 
   // Compute baseline once in result phase
   const baseline = (phase === 'result' && rts.partida !== null && rts.alvo !== null && rts.seq !== null)
@@ -257,8 +301,11 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     seq_instr: {
       icon: '🧠',
       name: 'SEQUÊNCIA',
-      desc: 'Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho).',
+      desc: 'Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho). Serão 3 sinais.',
       onStart: () => {
+        seqSignalsRef.current = generateSeqSignals();
+        seqSignalIdxRef.current = 0;
+        seqGoRtsRef.current = [];
         countdownNext.current = 'seq_jitter';
         setPhase('countdown');
       },
@@ -329,6 +376,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         {renderHeader(5)}
         <View style={styles.jitterArea}>
           <Text style={styles.jitterLabel}>SEQUÊNCIA</Text>
+          <Text style={styles.seqCounter}>{seqSignalIdxRef.current + 1} / 3</Text>
         </View>
       </View>
     );
@@ -392,11 +440,18 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
   // ── SEQ GO ───────────────────────────────────────────────────────────────────
   if (phase === 'seq_go') {
+    const isNogo = seqCurrentSignal === 'nogo';
+    const circleColor = isNogo ? '#ef4444' : '#10b981';
     return (
       <View style={styles.root}>
         {renderHeader(5)}
         <Pressable style={styles.tapArea} onPressIn={handleSeqTap}>
-          <View style={styles.greenCircle} />
+          <Text style={styles.seqCounter}>{seqSignalIdxRef.current + 1} / 3</Text>
+          <View style={[styles.seqSignalCircle, {
+            backgroundColor: circleColor,
+            shadowColor: circleColor,
+          }]} />
+          {!isNogo && <Text style={styles.tapHint}>TOQUE AGORA!</Text>}
         </Pressable>
       </View>
     );
@@ -476,6 +531,15 @@ const styles = StyleSheet.create({
     width: 160, height: 160, borderRadius: 80, backgroundColor: '#10b981',
     shadowColor: '#10b981', shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8, shadowRadius: 24, elevation: 20,
+  },
+  seqSignalCircle: {
+    width: 160, height: 160, borderRadius: 80,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8, shadowRadius: 24, elevation: 20,
+  },
+  seqCounter: {
+    fontSize: 13, fontWeight: '700', color: '#4a5a7b',
+    letterSpacing: 1.5, marginBottom: 20,
   },
   tapHint: { fontSize: 13, fontWeight: '800', color: '#10b981', letterSpacing: 2.5 },
 

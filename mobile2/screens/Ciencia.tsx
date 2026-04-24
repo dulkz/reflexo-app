@@ -106,6 +106,49 @@ const BENCHMARKS = [
   },
 ];
 
+const CHOICE_BENCHMARKS = [
+  {
+    icon: '🎯',
+    name: 'Atleta de esporte de raquete',
+    source: 'Balakrishnan et al., 2014 · PMC',
+    range: '380–420 ms',
+    level: 'ELITE',
+    color: '#10b981',
+  },
+  {
+    icon: '💪',
+    name: 'Adulto jovem saudável (25–40)',
+    source: 'PMC, 2014 · Mental Chronometry',
+    range: '420–500 ms',
+    level: 'MUITO BOM',
+    color: '#3b82f6',
+  },
+  {
+    icon: '👤',
+    name: 'Adulto médio (40–55)',
+    source: 'Donders RT paradigm · Wikipedia',
+    range: '480–560 ms',
+    level: 'BOM',
+    color: '#06b6d4',
+  },
+  {
+    icon: '🔶',
+    name: 'Sob fadiga ou distração',
+    source: 'Mental Chronometry literature',
+    range: '550–700 ms',
+    level: 'ABAIXO',
+    color: '#f59e0b',
+  },
+  {
+    icon: '🧓',
+    name: 'Idosos (65+)',
+    source: 'Mental Chronometry, Wikipedia',
+    range: '600–800 ms',
+    level: 'DEVAGAR',
+    color: '#ef4444',
+  },
+];
+
 const SOURCES = [
   'Coe et al. (2026). Advanced Cognitive Training for Independent and Vital Elderly (ACTIVE). Alzheimer\'s & Dementia. NIH.',
   'NIH Toolbox (2024). Pattern Comparison Processing Speed Test.',
@@ -113,6 +156,8 @@ const SOURCES = [
   'Buszard, T. et al. (2019). Working memory and attention in tennis. J Sports Sciences.',
   'Der, G. & Deary, I.J. (2006). Age and sex differences in reaction time in adulthood. Intelligence.',
   'Lipps, D.B. et al. (2011). Considerations for developing a sprint start. J Sports Sciences.',
+  'Balakrishnan, R. (2014). Choice reaction time and cognitive performance in athletes. PMC.',
+  'Donders, F.C. (1969). On the speed of mental processes. Acta Psychologica. (Mental Chronometry)',
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -217,6 +262,8 @@ export default function Ciencia({ userProfile }: Props) {
           headline="Quem reage mais rápido que você."
         />
 
+        <Text style={styles.benchGroupLabel}>PARTIDA E SEQUÊNCIA — ESCALA DE REFERÊNCIA</Text>
+
         {BENCHMARKS.map(b => {
           const isGoal = goalBenchmarkName !== null && b.name === goalBenchmarkName;
           return (
@@ -256,6 +303,29 @@ export default function Ciencia({ userProfile }: Props) {
             </View>
           );
         })}
+
+        {/* ══ SEÇÃO 5b — MODO ALVO CHOICE RT ══ */}
+        <Text style={styles.benchGroupLabel}>MODO ALVO — ESCALA DE REFERÊNCIA</Text>
+        <Text style={styles.benchGroupSub}>Choice RT — identificação de cor sob pressão</Text>
+
+        {CHOICE_BENCHMARKS.map(b => (
+          <View
+            key={b.name}
+            style={[styles.benchCard, { borderColor: b.color + '2a' }]}
+          >
+            <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
+              <Text style={styles.benchIconText}>{b.icon}</Text>
+            </View>
+            <View style={styles.benchInfo}>
+              <Text style={styles.benchName}>{b.name}</Text>
+              <Text style={styles.benchSource}>{b.source}</Text>
+            </View>
+            <View style={styles.benchRight}>
+              <Text style={[styles.benchRange, { color: b.color }]}>{b.range}</Text>
+              <Text style={[styles.benchLevel, { color: b.color }]}>{b.level}</Text>
+            </View>
+          </View>
+        ))}
 
         {/* ══ FECHAMENTO EDITORIAL ══ */}
         <View style={styles.closingCard}>
@@ -392,6 +462,14 @@ const styles = StyleSheet.create({
     lineHeight: 20, marginTop: 4,
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)',
     paddingTop: 16,
+  },
+
+  benchGroupLabel: {
+    fontSize: 9, fontWeight: '800', color: '#3a4a6b',
+    letterSpacing: 2, marginBottom: 8, marginTop: 4,
+  },
+  benchGroupSub: {
+    fontSize: 12, color: '#4a5a7b', marginBottom: 10, lineHeight: 18,
   },
 
   benchCard: {

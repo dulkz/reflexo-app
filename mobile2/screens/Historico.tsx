@@ -73,30 +73,36 @@ const MODE_ICONS: Record<ModeKey, string> = {
 
 interface EvoProps {
   sessions: SessionRecord[];
+  filter: FilterKey;
   userProfile?: UserProfile;
 }
 
-function EvoChart({ sessions, userProfile }: EvoProps) {
+function EvoChart({ sessions, filter, userProfile }: EvoProps) {
   const W = 320;
   const H = 140;
   const PAD = { t: 20, r: 8, b: 28, l: 40 };
   const innerW = W - PAD.l - PAD.r;
   const innerH = H - PAD.t - PAD.b;
 
-  const last20 = sessions.slice(0, 20).reverse(); // oldest → newest
+  // Filter sessions for chart based on active filter
+  const chartSessions = filter === 'all'
+    ? sessions
+    : sessions.filter(s => s.mode === (filter as ModeKey));
+
+  const last20 = chartSessions.slice(0, 20).reverse(); // oldest → newest
   if (last20.length < 1) return null;
 
   const allScores = last20.map(s => s.score);
   const rawMin = Math.min(...allScores);
   const rawMax = Math.max(...allScores);
 
-  // ── Next milestone line ───────────────────────────────────────────────────
-  let nextMilestoneMs: number | null = null;
   const isBrainHealth = userProfile?.triageCompleted &&
     userProfile.ambitionId &&
     getAmbition(userProfile.ambitionId)?.group === 'brain_health';
 
-  if (userProfile?.triageCompleted && userProfile.ambitionId && !isBrainHealth) {
+  // ── Next milestone line (not used for alvo — choice RT scale is different) ─
+  let nextMilestoneMs: number | null = null;
+  if (filter !== 'alvo' && userProfile?.triageCompleted && userProfile.ambitionId && !isBrainHealth) {
     const currentBestMs = Math.min(...allScores);
     const next = getNextMilestone(
       userProfile.baselineMs ?? null,
@@ -108,13 +114,22 @@ function EvoChart({ sessions, userProfile }: EvoProps) {
     }
   }
 
-  // Dynamic Y scale — include milestone so the dashed line is always visible
-  const effectiveMin = nextMilestoneMs !== null
-    ? Math.min(rawMin, nextMilestoneMs)
-    : rawMin;
-  const minV = Math.floor((effectiveMin - 20) / 20) * 20;
-  const maxV = Math.ceil((rawMax + 20) / 20) * 20;
+  // ── Y scale ────────────────────────────────────────────────────────────────
+  let minV: number, maxV: number;
+  if (filter === 'alvo') {
+    minV = 300; maxV = 800;
+  } else if (filter === 'partida' || filter === 'sequencia') {
+    minV = 150; maxV = 500;
+  } else {
+    // 'all': dynamic — include milestone so dashed line stays visible
+    const effectiveMin = nextMilestoneMs !== null ? Math.min(rawMin, nextMilestoneMs) : rawMin;
+    minV = Math.floor((effectiveMin - 20) / 20) * 20;
+    maxV = Math.ceil((rawMax + 20) / 20) * 20;
+  }
   const range = maxV - minV || 80;
+
+  // Choice RT reference for alvo (ELITE boundary)
+  const choiceRTRef: number | null = filter === 'alvo' ? 420 : null;
 
   const toY = (v: number) => PAD.t + (1 - (v - minV) / range) * innerH;
 
@@ -178,8 +193,8 @@ function EvoChart({ sessions, userProfile }: EvoProps) {
             fill="#2d3a55" textAnchor={t.anchor}>{t.label}</SvgText>
         ))}
 
-        {/* Milestone dashed line */}
-        {nextMilestoneMs !== null && (
+        {/* Journey milestone dashed line (non-alvo, only if within Y range) */}
+        {nextMilestoneMs !== null && nextMilestoneMs >= minV && nextMilestoneMs <= maxV && (
           <React.Fragment>
             <Line
               x1={PAD.l} y1={toY(nextMilestoneMs)}
@@ -196,8 +211,26 @@ function EvoChart({ sessions, userProfile }: EvoProps) {
           </React.Fragment>
         )}
 
-        {/* Series per mode */}
-        {modes.map(mode => {
+        {/* Choice RT ELITE reference line (alvo filter only) */}
+        {choiceRTRef !== null && (
+          <React.Fragment>
+            <Line
+              x1={PAD.l} y1={toY(choiceRTRef)}
+              x2={W - PAD.r} y2={toY(choiceRTRef)}
+              stroke="#10b981" strokeWidth={1}
+              strokeDasharray="4 3"
+            />
+            <SvgText
+              x={W - PAD.r - 2} y={toY(choiceRTRef) - 3}
+              fontSize={7} fill="#10b981" textAnchor="end"
+            >
+              Elite: 420 ms
+            </SvgText>
+          </React.Fragment>
+        )}
+
+        {/* Series — only modes matching the active filter */}
+        {(filter === 'all' ? modes : [filter as ModeKey]).map(mode => {
           const mc = MODE_COLORS[mode];
           const modePts = last20
             .map((s, i) => s.mode === mode
@@ -223,14 +256,22 @@ function EvoChart({ sessions, userProfile }: EvoProps) {
         })}
       </Svg>
 
-      <View style={chart.legend}>
-        {modes.map(m => (
-          <View key={m} style={chart.legendItem}>
-            <View style={[chart.legendDot, { backgroundColor: MODE_COLORS[m].accent }]} />
-            <Text style={chart.legendLabel}>{MODE_LABELS[m]}</Text>
-          </View>
-        ))}
-      </View>
+      {filter === 'all' && (
+        <View style={chart.legend}>
+          {modes.map(m => (
+            <View key={m} style={chart.legendItem}>
+              <View style={[chart.legendDot, { backgroundColor: MODE_COLORS[m].accent }]} />
+              <Text style={chart.legendLabel}>{MODE_LABELS[m]}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {filter === 'all' && (
+        <Text style={chart.allModeNote}>
+          O Modo Alvo usa escala diferente — selecione-o para ver sua evolução isolada.
+        </Text>
+      )}
     </View>
   );
 }
@@ -250,6 +291,10 @@ const chart = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendLabel: { fontSize: 10, color: '#4a5a7b' },
+  allModeNote: {
+    fontSize: 10, color: '#3a4a6b', textAlign: 'center',
+    marginTop: 6, lineHeight: 14, paddingHorizontal: 4,
+  },
 });
 
 // ── Historico ─────────────────────────────────────────────────────────────────
@@ -390,7 +435,7 @@ export default function Historico({ sessions, userProfile }: Props) {
         {sessions.length >= 1 && (
           <>
             <Text style={styles.sectionTitle}>EVOLUÇÃO</Text>
-            <EvoChart sessions={sessions} userProfile={userProfile} />
+            <EvoChart sessions={sessions} filter={filter} userProfile={userProfile} />
           </>
         )}
 

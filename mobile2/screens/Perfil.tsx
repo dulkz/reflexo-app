@@ -409,6 +409,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
                     {m.key === 'alvo' && m.bestAcc !== null && (
                       <Text style={styles.modeExtra}>{Math.round(m.bestAcc * 100)}% acc</Text>
                     )}
+                    {m.key === 'alvo' && (
+                      <Text style={styles.modeExtra}>Choice RT · escala diferente</Text>
+                    )}
                     {m.key === 'sequencia' && m.lastFatigue !== null && m.lastFatigue !== undefined && (
                       <Text style={styles.modeExtra}>{m.lastFatigue.toFixed(1)}% fadiga</Text>
                     )}

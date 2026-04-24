@@ -8,6 +8,8 @@ export interface SessionRecord {
   bestTime: number;      // single best RT in ms
   accuracy?: number;     // 0-1, for alvo and sequencia
   fatigueIndex?: number; // %, sequencia only
+  noGoErrors?: number;   // commission count (tap on NoGo), sequencia only
+  noGoAccuracy?: number; // % of NoGo correctly inhibited (0-100 int), sequencia only
   rounds: number;
   times: number[];
   date: number;          // Date.now()

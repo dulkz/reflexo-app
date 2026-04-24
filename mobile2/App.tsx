@@ -174,6 +174,8 @@ function AppInner() {
       bestTime: Math.min(...summary.trials.filter(t => t.rt !== null).map(t => t.rt!), 999),
       accuracy: summary.accuracy,
       fatigueIndex: summary.fatigueIndex,
+      noGoErrors: summary.noGoErrors,
+      noGoAccuracy: summary.noGoAccuracy,
       rounds: summary.trials.length,
       times: summary.trials.map(t => t.rt ?? 0),
       date: Date.now(),

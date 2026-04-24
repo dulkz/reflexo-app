@@ -24,6 +24,103 @@ const SCALE_STOPS = [
 const SCALE_MIN = 100;
 const SCALE_MAX = 500;
 
+// ── Choice RT (Modo Alvo) ─────────────────────────────────────────────────────
+
+interface ChoiceLevel { color: string; bg: string; label: string; desc: string }
+
+function getChoiceRTLevel(ms: number): ChoiceLevel {
+  if (ms <= 420) return { color: '#10b981', bg: 'rgba(16,185,129,0.12)', label: 'ELITE',        desc: 'Nível de atleta de esporte de raquete' };
+  if (ms <= 500) return { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', label: 'MUITO BOM',    desc: 'Adulto jovem saudável (25–40 anos)' };
+  if (ms <= 560) return { color: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  label: 'BOM',          desc: 'Adulto médio (40–55 anos)' };
+  if (ms <= 700) return { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', label: 'ABAIXO',       desc: 'Sob fadiga ou distração' };
+  return             { color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   label: 'DEVAGAR',      desc: 'Referência de linha de base baixa' };
+}
+
+const CHOICE_SCALE_STOPS = [
+  { ms: 420, color: '#10b981' },
+  { ms: 500, color: '#3b82f6' },
+  { ms: 560, color: '#06b6d4' },
+  { ms: 700, color: '#f59e0b' },
+  { ms: 800, color: '#ef4444' },
+];
+const CHOICE_SCALE_MIN = 280;
+const CHOICE_SCALE_MAX = 800;
+
+const CHOICE_LEVELS = [
+  { label: 'ELITE',     maxMs: 420,      color: '#10b981', bg: 'rgba(16,185,129,0.12)', desc: 'Atleta de esporte de raquete · 380–420 ms' },
+  { label: 'MUITO BOM', maxMs: 500,      color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', desc: 'Adulto jovem saudável 25–40 · 420–500 ms' },
+  { label: 'BOM',       maxMs: 560,      color: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  desc: 'Adulto médio 40–55 · 480–560 ms' },
+  { label: 'ABAIXO',    maxMs: 700,      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', desc: 'Sob fadiga ou distração · 550–700 ms' },
+  { label: 'DEVAGAR',   maxMs: Infinity, color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  desc: 'Idosos 65+ · 600–800 ms' },
+];
+
+function ChoiceScaleBar({ score }: { score: number }) {
+  const pct = Math.min(1, Math.max(0, (score - CHOICE_SCALE_MIN) / (CHOICE_SCALE_MAX - CHOICE_SCALE_MIN)));
+  const level = getChoiceRTLevel(score);
+  return (
+    <View style={sb.wrapper}>
+      <View style={sb.track}>
+        {CHOICE_SCALE_STOPS.map((stop, i) => {
+          const prevMs = i === 0 ? CHOICE_SCALE_MIN : CHOICE_SCALE_STOPS[i - 1].ms;
+          const w = ((stop.ms - prevMs) / (CHOICE_SCALE_MAX - CHOICE_SCALE_MIN)) * 100;
+          return (
+            <View key={stop.ms} style={[sb.segment, { width: `${w}%`, backgroundColor: stop.color + '44' }]} />
+          );
+        })}
+        <View style={[sb.marker, { left: `${pct * 100}%` }]}>
+          <Text style={[sb.markerLabel, { color: level.color }]}>VOCÊ</Text>
+          <View style={[sb.markerLine, { backgroundColor: level.color }]} />
+        </View>
+      </View>
+      <View style={sb.labels}>
+        <Text style={sb.labelText}>{'<420'}</Text>
+        <Text style={sb.labelText}>560</Text>
+        <Text style={sb.labelText}>{'800+'}</Text>
+      </View>
+    </View>
+  );
+}
+
+function ChoiceScaleReference({ score }: { score: number }) {
+  return (
+    <View style={styles.scaleBox}>
+      <Text style={styles.sectionTitle}>ESCALA CHOICE RT — MODO ALVO</Text>
+      {CHOICE_LEVELS.map((lvl, i) => {
+        const isUser = score <= lvl.maxMs && (i === 0 || score > CHOICE_LEVELS[i - 1].maxMs);
+        return (
+          <View
+            key={lvl.label}
+            style={[
+              styles.scaleRow,
+              isUser && {
+                backgroundColor: lvl.bg,
+                borderRadius: 10, borderWidth: 1.5,
+                borderColor: lvl.color + '66',
+                paddingHorizontal: 8, paddingVertical: 8, marginVertical: 2,
+              },
+            ]}
+          >
+            <View style={[styles.scaleBar, { backgroundColor: isUser ? lvl.color : '#1a2540', height: isUser ? 36 : 32 }]} />
+            <View style={{ flex: 1 }}>
+              <View style={styles.scaleLabelRow}>
+                <Text style={[styles.scaleLabel, isUser && { color: lvl.color, fontWeight: '900', fontSize: 12 }]}>
+                  {lvl.label}
+                </Text>
+                {isUser && (
+                  <View style={[styles.youBadge, { backgroundColor: lvl.color + '33', borderColor: lvl.color + '88' }]}>
+                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>◄ VOCÊ</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{lvl.desc}</Text>
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 function ScaleBar({ score }: { score: number }) {
   const pct = Math.min(1, Math.max(0, (score - SCALE_MIN) / (SCALE_MAX - SCALE_MIN)));
   const level = getLevelInfo(score);
@@ -221,12 +318,20 @@ interface AlvoProps {
 }
 
 function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
-  const level = getLevelInfo(score);
+  const level = getChoiceRTLevel(score);
   const mc = MODE_COLORS.alvo;
   const correct = alvoResults.filter(r => r.correct).length;
   const accuracy = Math.round((correct / alvoResults.length) * 100);
   const avgRt = Math.round(alvoResults.reduce((s, r) => s + r.rt, 0) / alvoResults.length);
   const best = Math.min(...alvoResults.map(r => r.rt));
+
+  const choiceBenchMsg = score <= 420
+    ? 'Você está no nível de atletas de esporte de raquete!'
+    : score <= 500
+    ? `${score - 420} ms do nível de atleta de raquete (ELITE)`
+    : score <= 560
+    ? `${score - 500} ms do nível de adulto jovem saudável`
+    : `Continue treinando — próximo nível: ${score <= 700 ? 'BOM (até 560 ms)' : 'ABAIXO (até 700 ms)'}`;
 
   return (
     <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]} showsVerticalScrollIndicator={false}>
@@ -234,10 +339,21 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
         <Text style={styles.heroLabel}>MODO ALVO</Text>
         <Text style={[styles.heroScore, { color: level.color }]}>{score}</Text>
         <Text style={styles.heroMs}>ms (penalizado)</Text>
-        <LevelBadge level={level} />
+        <View style={[styles.choiceBadge, { backgroundColor: level.bg, borderColor: level.color + '66' }]}>
+          <Text style={[styles.choiceBadgeText, { color: level.color }]}>{level.label}</Text>
+        </View>
+        <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
 
-      <ScaleBar score={score} />
+      <ChoiceScaleBar score={score} />
+
+      <View style={[styles.benchCard, { borderColor: mc.accent + '44' }]}>
+        <Text style={styles.benchIcon}>🎯</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.benchTitle}>{choiceBenchMsg}</Text>
+          <Text style={styles.benchSub}>Choice RT · Identificação de cor sob pressão</Text>
+        </View>
+      </View>
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
@@ -245,11 +361,11 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
           <Text style={styles.statLbl}>ACURÁCIA</Text>
         </View>
         <View style={[styles.stat, styles.statMid]}>
-          <Text style={[styles.statVal, { color: getLevelInfo(avgRt).color }]}>{avgRt} ms</Text>
+          <Text style={[styles.statVal, { color: getChoiceRTLevel(avgRt).color }]}>{avgRt} ms</Text>
           <Text style={styles.statLbl}>MÉDIA RT</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={[styles.statVal, { color: getLevelInfo(best).color }]}>{best} ms</Text>
+          <Text style={[styles.statVal, { color: getChoiceRTLevel(best).color }]}>{best} ms</Text>
           <Text style={styles.statLbl}>MELHOR</Text>
         </View>
       </View>
@@ -259,7 +375,7 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
         <View key={i} style={styles.row}>
           <Text style={styles.rowIdx}>{i + 1}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.rowTime, { color: r.correct ? getLevelInfo(r.rt).color : '#ef4444' }]}>
+            <Text style={[styles.rowTime, { color: r.correct ? getChoiceRTLevel(r.rt).color : '#ef4444' }]}>
               {r.rt} ms {!r.correct && `(+150 → ${r.penalizedRt} ms)`}
             </Text>
           </View>
@@ -269,7 +385,7 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
         </View>
       ))}
 
-      <ScaleReference score={score} />
+      <ChoiceScaleReference score={score} />
 
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
         <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
@@ -290,7 +406,7 @@ interface SeqProps {
 }
 
 function SeqResult({ summary, onPlayAgain, onHome }: SeqProps) {
-  const { avgRt, accuracy, fatigueIndex, score, hits, misses, commissions, correctInhibits } = summary;
+  const { avgRt, accuracy, fatigueIndex, score, hits, misses, commissions, correctInhibits, noGoErrors, noGoAccuracy } = summary;
   const level = getLevelInfo(avgRt);
   const mc = MODE_COLORS.sequencia;
   const accPct = Math.round(accuracy * 100);
@@ -313,6 +429,11 @@ function SeqResult({ summary, onPlayAgain, onHome }: SeqProps) {
         <Text style={[styles.heroScore, { color: level.color }]}>{avgRt}</Text>
         <Text style={styles.heroMs}>ms médio (Go)</Text>
         <LevelBadge level={level} />
+        <View style={styles.inhibRow}>
+          <Text style={styles.inhibText}>
+            🧠 Controle inibitório: {noGoAccuracy}% · {noGoErrors} {noGoErrors === 1 ? 'erro' : 'erros'}
+          </Text>
+        </View>
       </View>
 
       <ScaleBar score={avgRt} />
@@ -426,6 +547,20 @@ const styles = StyleSheet.create({
   heroScore: { fontSize: 88, fontWeight: '900', letterSpacing: -3, lineHeight: 92 },
   heroMs: { fontSize: 16, fontWeight: '600', color: '#4a5a7b', letterSpacing: 1.5, marginBottom: 10 },
   levelDesc: { fontSize: 12, color: '#4a5a7b', textAlign: 'center', marginTop: 4 },
+
+  inhibRow: {
+    marginTop: 10,
+    backgroundColor: 'rgba(139,92,246,0.12)',
+    borderRadius: 20, borderWidth: 1, borderColor: 'rgba(139,92,246,0.3)',
+    paddingHorizontal: 14, paddingVertical: 6,
+  },
+  inhibText: { fontSize: 12, fontWeight: '700', color: '#8b5cf6', letterSpacing: 0.3 },
+
+  choiceBadge: {
+    borderRadius: 10, borderWidth: 1,
+    paddingHorizontal: 14, paddingVertical: 5, marginTop: 6,
+  },
+  choiceBadgeText: { fontSize: 13, fontWeight: '900', letterSpacing: 1.5 },
 
   benchCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
