@@ -677,7 +677,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
                 <Text style={styles.achieveName}>{a.name}</Text>
                 <Text style={styles.achieveDesc} numberOfLines={2}>{a.description}</Text>
                 <View style={[styles.achieveBar, done && styles.achieveBarDone]}>
-                  <Text style={[styles.achieveBarLabel, done && styles.achieveBarLabelDone]} numberOfLines={1}>
+                  <Text style={[styles.achieveBarLabel, done && styles.achieveBarLabelDone]}>
                     {done ? '✓ Desbloqueada' : a.progress(stats)}
                   </Text>
                 </View>

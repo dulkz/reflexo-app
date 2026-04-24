@@ -17,6 +17,26 @@ import { SessionRecord, loadSessions, saveSession, getBestByMode } from './utils
 import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
+import { ACHIEVEMENTS, Achievement, RARITY_CONFIG, RarityKey } from './config/achievements';
+import { buildUserStats } from './config/archetypes';
+
+const RARITY_PRIORITY: Record<RarityKey, number> = {
+  lendario: 6, epico: 5, raro: 4, dificil: 3, medio: 2, comum: 1,
+};
+
+function computeStreakFromSessions(sessions: SessionRecord[]): number {
+  if (sessions.length === 0) return 0;
+  const DAY = 86_400_000;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let s = 0;
+  for (let i = 0; i < sessions.length; i++) {
+    const d = new Date(sessions[i].date); d.setHours(0, 0, 0, 0);
+    const diff = Math.round((today.getTime() - d.getTime()) / DAY);
+    if (diff === s) s++;
+    else if (diff > s) break;
+  }
+  return s;
+}
 
 type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'conquistas';
 type GameScreen =
@@ -57,7 +77,10 @@ function AppInner() {
   const [triageVisible, setTriageVisible] = useState(false);
   const [triageEditMode, setTriageEditMode] = useState(false);
   const [milestoneBeat, setMilestoneBeat] = useState<string | null>(null);
+  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const toastAnim = useRef(new Animated.Value(0)).current;
+  const achieveAnim = useRef(new Animated.Value(0)).current;
+  const pendingMilestoneRef = useRef<string | null>(null);
 
   // Partida state
   const [partidaTimes, setPartidaTimes] = useState<number[]>([]);
@@ -75,14 +98,20 @@ function AppInner() {
   useEffect(() => {
     if (milestoneBeat !== null) {
       toastAnim.setValue(0);
-      Animated.spring(toastAnim, {
-        toValue: 1,
-        tension: 65,
-        friction: 7,
-        useNativeDriver: true,
-      }).start();
+      Animated.spring(toastAnim, { toValue: 1, tension: 65, friction: 7, useNativeDriver: true }).start();
     }
   }, [milestoneBeat]);
+
+  useEffect(() => {
+    if (newAchievement !== null) {
+      achieveAnim.setValue(0);
+      Animated.spring(achieveAnim, { toValue: 1, tension: 65, friction: 7, useNativeDriver: true }).start();
+    } else if (pendingMilestoneRef.current !== null) {
+      const label = pendingMilestoneRef.current;
+      pendingMilestoneRef.current = null;
+      setMilestoneBeat(label);
+    }
+  }, [newAchievement]);
 
   useEffect(() => {
     loadSessions().then(setSessions);
@@ -90,20 +119,32 @@ function AppInner() {
   }, []);
 
   const addSession = useCallback(async (session: SessionRecord) => {
-    // Capture pre-session best for milestone comparison
-    const prevBest = sessions.length > 0
-      ? Math.min(...sessions.map(s => s.score))
-      : null;
+    const prevBest = sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : null;
+
+    // ── Pre-session achievement snapshot ──────────────────────────────────────
+    const prevStreak = computeStreakFromSessions(sessions);
+    const prevStats = buildUserStats(sessions, prevStreak);
+    const prevUnlocked = new Set(ACHIEVEMENTS.filter(a => a.unlocked(prevStats)).map(a => a.id));
 
     await saveSession(session);
     const updated = await loadSessions();
     setSessions(updated);
 
+    // ── Achievement detection ─────────────────────────────────────────────────
+    const updatedStreak = computeStreakFromSessions(updated);
+    const updatedStats = buildUserStats(updated, updatedStreak);
+    const newlyUnlocked = ACHIEVEMENTS.filter(
+      a => !prevUnlocked.has(a.id) && a.unlocked(updatedStats),
+    );
+    const topAchievement = newlyUnlocked.length > 0
+      ? newlyUnlocked.reduce((a, b) =>
+          RARITY_PRIORITY[a.rarity] >= RARITY_PRIORITY[b.rarity] ? a : b)
+      : null;
+
     // ── Milestone beat detection ──────────────────────────────────────────────
+    let beatenLabel: string | null = null;
     if (userProfile.triageCompleted && userProfile.ambitionId) {
-      const newBest = updated.length > 0
-        ? Math.min(...updated.map(s => s.score))
-        : null;
+      const newBest = updated.length > 0 ? Math.min(...updated.map(s => s.score)) : null;
       if (prevBest !== null && newBest !== null && newBest < prevBest) {
         const ambitionData = getAmbition(userProfile.ambitionId);
         if (ambitionData) {
@@ -113,9 +154,17 @@ function AppInner() {
             prevBest > m.ms &&
             newBest <= m.ms,
           );
-          if (beaten) setMilestoneBeat(beaten.label);
+          if (beaten) beatenLabel = beaten.label;
         }
       }
+    }
+
+    // ── Show toasts — achievement first, milestone after ──────────────────────
+    if (topAchievement) {
+      if (beatenLabel) pendingMilestoneRef.current = beatenLabel;
+      setNewAchievement(topAchievement);
+    } else if (beatenLabel) {
+      setMilestoneBeat(beatenLabel);
     }
 
     // ── Triage trigger after first session ────────────────────────────────────
@@ -394,6 +443,36 @@ function AppInner() {
         />
       </Modal>
 
+      {/* Achievement unlocked toast */}
+      <Modal
+        visible={newAchievement !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNewAchievement(null)}
+      >
+        <TouchableOpacity
+          style={styles.toastOverlay}
+          onPress={() => setNewAchievement(null)}
+          activeOpacity={1}
+        >
+          {newAchievement && (() => {
+            const rcfg = RARITY_CONFIG[newAchievement.rarity];
+            return (
+              <Animated.View style={[styles.toastCard, { borderColor: rcfg.cor + '66', transform: [{ scale: achieveAnim }], opacity: achieveAnim }]}>
+                <Text style={[styles.achieveToastKicker, { color: rcfg.cor }]}>CONQUISTA DESBLOQUEADA!</Text>
+                <View style={[styles.achieveToastBadge, { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor }]}>
+                  <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{rcfg.label}</Text>
+                </View>
+                <Text style={styles.toastEmoji}>{newAchievement.icon}</Text>
+                <Text style={[styles.toastTitle, { color: '#fff' }]}>{newAchievement.name}</Text>
+                <Text style={styles.achieveToastDesc}>{newAchievement.description}</Text>
+                <Text style={styles.toastSub}>Toque para continuar</Text>
+              </Animated.View>
+            );
+          })()}
+        </TouchableOpacity>
+      </Modal>
+
       {/* Milestone beat toast */}
       <Modal
         visible={milestoneBeat !== null}
@@ -498,4 +577,17 @@ const styles = StyleSheet.create({
     textAlign: 'center', lineHeight: 22,
   },
   toastSub: { fontSize: 11, color: '#3a4a6b', marginTop: 8, letterSpacing: 1 },
+
+  // ── Achievement toast ────────────────────────────────────────────────────────
+  achieveToastKicker: {
+    fontSize: 10, fontWeight: '800', letterSpacing: 2, marginBottom: 4,
+  },
+  achieveToastBadge: {
+    borderWidth: 1, borderRadius: 6,
+    paddingHorizontal: 10, paddingVertical: 4, marginBottom: 4,
+  },
+  achieveToastBadgeText: { fontSize: 11, fontWeight: '800', letterSpacing: 1 },
+  achieveToastDesc: {
+    fontSize: 13, color: '#7a8aa0', textAlign: 'center', lineHeight: 19,
+  },
 });

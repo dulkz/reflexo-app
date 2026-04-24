@@ -28,7 +28,7 @@ const GROUPED = (() => {
 
 function formatUnlockDate(iso: string): string {
   const d = new Date(iso);
-  return `${d.getDate()} ${MONTH_ABBR[d.getMonth()]}`;
+  return `${d.getDate()} ${MONTH_ABBR[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function computeStreak(sessions: SessionRecord[]): number {
@@ -121,7 +121,6 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                       <View style={[styles.progressBar, done && styles.progressBarDone]}>
                         <Text
                           style={[styles.progressLabel, done && styles.progressLabelDone]}
-                          numberOfLines={1}
                         >
                           {done
                             ? `✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`
