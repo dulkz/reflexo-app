@@ -302,27 +302,20 @@ export default function Ciencia({ userProfile, sessions }: Props) {
                 isGoal && { borderWidth: 2 },
               ]}
             >
-              {/* SUA META badge */}
-              {isGoal && (
-                <View style={[styles.goalBadge, { borderColor: goalHighlightColor + '66', backgroundColor: goalHighlightColor + '18' }]}>
-                  <Text style={[styles.goalBadgeText, { color: goalHighlightColor }]} numberOfLines={1}>
-                    ← SUA META
-                  </Text>
-                </View>
-              )}
-
-              {/* Icon */}
               <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
                 <Text style={styles.benchIconText}>{b.icon}</Text>
               </View>
 
-              {/* Name + source */}
               <View style={styles.benchInfo}>
+                {isGoal && (
+                  <Text style={[styles.inlineBadge, { color: goalHighlightColor }]} numberOfLines={1}>
+                    ← sua meta
+                  </Text>
+                )}
                 <Text style={styles.benchName}>{b.name}</Text>
                 <Text style={styles.benchSource}>{b.source}</Text>
               </View>
 
-              {/* Range + level */}
               <View style={styles.benchRight}>
                 <Text style={[styles.benchRange, { color: b.color }]}>{b.range}</Text>
                 <Text style={[styles.benchLevel, { color: b.color }]}>{b.level}</Text>
@@ -351,22 +344,22 @@ export default function Ciencia({ userProfile, sessions }: Props) {
                 isYouHere && { borderWidth: 2 },
               ]}
             >
-              {isYouHere && (
-                <View style={[styles.youBadge, { borderColor: youColor + '66', backgroundColor: youColor + '18' }]}>
-                  <Text style={[styles.youBadgeText, { color: youColor }]} numberOfLines={1}>← VOCÊ ESTÁ AQUI</Text>
-                </View>
-              )}
-              {showLastNote && (
-                <Text style={styles.lastSessionNote}>
-                  {`Última sessão: ${lastAlvoRt} ms · ${choiceLevelLabel(lastAlvoRt!)}`}
-                </Text>
-              )}
               <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
                 <Text style={styles.benchIconText}>{b.icon}</Text>
               </View>
               <View style={styles.benchInfo}>
+                {isYouHere && (
+                  <Text style={[styles.inlineBadge, { color: youColor }]} numberOfLines={1}>
+                    ← você está aqui
+                  </Text>
+                )}
                 <Text style={styles.benchName}>{b.name}</Text>
                 <Text style={styles.benchSource}>{b.source}</Text>
+                {showLastNote && (
+                  <Text style={styles.lastSessionNote}>
+                    {`Última sessão: ${lastAlvoRt} ms · ${choiceLevelLabel(lastAlvoRt!)}`}
+                  </Text>
+                )}
               </View>
               <View style={styles.benchRight}>
                 <Text style={[styles.benchRange, { color: b.color }]}>{b.range}</Text>
@@ -525,25 +518,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     flexDirection: 'row', alignItems: 'center',
     gap: 12, padding: 14, marginBottom: 10,
-    // needed for absolute badge positioning
-    position: 'relative',
   },
-  goalBadge: {
-    position: 'absolute', top: 8, right: 8,
-    borderRadius: 4, borderWidth: 1,
-    paddingHorizontal: 8, paddingVertical: 4,
-  },
-  goalBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
 
-  youBadge: {
-    position: 'absolute', top: 8, right: 8,
-    borderRadius: 4, borderWidth: 1,
-    paddingHorizontal: 8, paddingVertical: 4,
+  inlineBadge: {
+    fontSize: 11, fontWeight: '700',
+    textAlign: 'right', letterSpacing: 0.2, marginBottom: 1,
   },
-  youBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
   lastSessionNote: {
-    position: 'absolute', top: 30, right: 8,
-    fontSize: 8, color: '#4a5a7b', letterSpacing: 0.3,
+    fontSize: 10, color: '#4a5a7b', letterSpacing: 0.2, marginTop: 1,
   },
 
   benchIconBox: {
