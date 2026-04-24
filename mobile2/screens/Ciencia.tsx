@@ -7,7 +7,7 @@ import {
 import { UserProfile } from '../types/user';
 import { SessionRecord } from '../utils/storage';
 import { getMetaBenchmark } from '../utils/ambition';
-import { GROUP_COLOR } from '../config/ambitions';
+import { GROUP_COLOR, getAmbitionById } from '../config/ambitions';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -201,6 +201,20 @@ export default function Ciencia({ userProfile, sessions }: Props) {
     : null;
   const lastAlvoRt = alvoSessions.length > 0 ? alvoSessions[0].score : null;
 
+  // Personalized recommendation
+  const ambition = userProfile.triageCompleted && userProfile.ambitionId
+    ? getAmbitionById(userProfile.ambitionId)
+    : null;
+  const isPersonalized = ambition != null;
+
+  type RecConfig = { times: number; mins: number; tagline: string };
+  const rec: RecConfig = (() => {
+    if (!ambition) return { times: 3, mins: 3, tagline: 'É o que basta para manter o circuito ativo. Acima disso, ganho marginal. Abaixo, some rápido.' };
+    if (ambition.group === 'elite_sport') return { times: 5, mins: 5, tagline: 'você está competindo, consistência é tudo' };
+    if (ambition.group === 'brain_health') return { times: 3, mins: 3, tagline: 'o suficiente para manter o circuito ativo por décadas' };
+    return { times: 4, mins: 4, tagline: 'reação é habilidade, habilidade é treino' };
+  })();
+
   return (
     <View style={styles.root}>
       <ScrollView
@@ -209,81 +223,38 @@ export default function Ciencia({ userProfile, sessions }: Props) {
       >
         <Text style={styles.pageTitle}>CIÊNCIA</Text>
 
-        {/* ══ SEÇÃO 1 — POR QUE TREINAR REAÇÃO ══ */}
-        <SectionHeader kicker="POR QUE TREINAR REAÇÃO" />
-
-        <View style={styles.heroStat}>
-          <Text style={styles.heroNum}>25%</Text>
-          <Text style={styles.heroClaim}>
-            menos diagnósticos de demência em 20 anos, entre quem treinou velocidade de processamento.
-          </Text>
-          <View style={styles.heroSourceRow}>
-            <Text style={styles.heroSourceText}>
-              Estudo ACTIVE · 2.802 adultos · NIH · Coe et al., 2026
-            </Text>
-          </View>
-        </View>
-
-        {/* ══ SEÇÃO 2 — COMO FUNCIONA ══ */}
+        {/* ══ SEÇÃO 1 — SUA RECOMENDAÇÃO / A DOSE CERTA ══ */}
         <SectionHeader
-          kicker="COMO FUNCIONA"
-          headline="Treinar reação é treinar o cérebro."
-        />
-
-        <View style={styles.editorialBlock}>
-          <RichText style={styles.editorialPara}>
-            {'Quando você vê um sinal e responde em menos de **300 ms**, seu cérebro não está pensando — está **executando**. É um **reflexo cognitivo**: percepção visual, decisão e comando motor disparados em paralelo.'}
-          </RichText>
-          <RichText style={[styles.editorialPara, styles.editorialParaLast]}>
-            {'Esse **circuito é treinável**. E o efeito colateral bonito é que o mesmo sistema que acelera seu jogo mantém seu cérebro **ágil por décadas**.'}
-          </RichText>
-        </View>
-
-        {/* ══ SEÇÃO 3 — 3 MECANISMOS NEURAIS ══ */}
-        <SectionHeader kicker="3 MECANISMOS NEURAIS" />
-
-        {MECHS.map(m => (
-          <View key={m.num} style={[styles.mechCard, { borderColor: m.color + '33' }]}>
-            <View style={[styles.mechNum, { backgroundColor: m.color + '22' }]}>
-              <Text style={[styles.mechNumText, { color: m.color }]}>{m.num}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={styles.mechHeaderRow}>
-                <Text style={styles.mechIcon}>{m.icon}</Text>
-                <Text style={[styles.mechTitle, { color: m.color }]}>{m.title}</Text>
-              </View>
-              <Text style={styles.mechDesc}>{m.desc}</Text>
-            </View>
-          </View>
-        ))}
-
-        {/* ══ SEÇÃO 4 — A DOSE CERTA ══ */}
-        <SectionHeader
-          kicker="A DOSE CERTA"
+          kicker={isPersonalized ? 'SUA RECOMENDAÇÃO' : 'A DOSE CERTA'}
           headline="Pouco, mas todo dia."
         />
 
         <View style={styles.freqCard}>
-          <View style={styles.freqBadge}>
-            <Text style={styles.freqBadgeText}>RECOMENDAÇÃO</Text>
-          </View>
+          {isPersonalized ? (
+            <View style={styles.freqAmbitionRow}>
+              <Text style={styles.freqAmbitionIcon}>{ambition!.icon}</Text>
+              <Text style={styles.freqAmbitionName}>{ambition!.name}</Text>
+            </View>
+          ) : (
+            <View style={styles.freqBadge}>
+              <Text style={styles.freqBadgeText}>RECOMENDAÇÃO</Text>
+            </View>
+          )}
           <View style={styles.freqMain}>
             <View style={styles.freqCol}>
-              <Text style={styles.freqBig}>3</Text>
+              <Text style={styles.freqBig}>{rec.times}</Text>
               <Text style={styles.freqColLabel}>VEZES{'\n'}SEMANA</Text>
             </View>
             <Text style={styles.freqTimes}>×</Text>
             <View style={styles.freqCol}>
-              <Text style={styles.freqBig}>3</Text>
+              <Text style={styles.freqBig}>{rec.mins}</Text>
               <Text style={styles.freqColLabel}>MINUTOS</Text>
             </View>
           </View>
-          <Text style={styles.freqRationale}>
-            É o que basta para manter o circuito ativo. Acima disso, ganho marginal. Abaixo, some rápido.
-          </Text>
+          <Text style={styles.freqRationale}>{rec.tagline}</Text>
         </View>
 
-        {/* ══ SEÇÃO 5 — PARA COLOCAR EM PERSPECTIVA ══ */}
+        {/* ══ SEÇÃO 2 — QUEM REAGE MAIS RÁPIDO ══ */}
         <SectionHeader
           kicker="PARA COLOCAR EM PERSPECTIVA"
           headline="Quem reage mais rápido que você."
@@ -368,6 +339,54 @@ export default function Ciencia({ userProfile, sessions }: Props) {
             </View>
           );
         })}
+
+        {/* ══ SEÇÃO 3 — POR QUE TREINAR REAÇÃO ══ */}
+        <SectionHeader kicker="POR QUE TREINAR REAÇÃO" />
+
+        <View style={styles.heroStat}>
+          <Text style={styles.heroNum}>25%</Text>
+          <Text style={styles.heroClaim}>
+            menos diagnósticos de demência em 20 anos, entre quem treinou velocidade de processamento.
+          </Text>
+          <View style={styles.heroSourceRow}>
+            <Text style={styles.heroSourceText}>
+              Estudo ACTIVE · 2.802 adultos · NIH · Coe et al., 2026
+            </Text>
+          </View>
+        </View>
+
+        {/* ══ SEÇÃO 4 — COMO FUNCIONA ══ */}
+        <SectionHeader
+          kicker="COMO FUNCIONA"
+          headline="Treinar reação é treinar o cérebro."
+        />
+
+        <View style={styles.editorialBlock}>
+          <RichText style={styles.editorialPara}>
+            {'Quando você vê um sinal e responde em menos de **300 ms**, seu cérebro não está pensando — está **executando**. É um **reflexo cognitivo**: percepção visual, decisão e comando motor disparados em paralelo.'}
+          </RichText>
+          <RichText style={[styles.editorialPara, styles.editorialParaLast]}>
+            {'Esse **circuito é treinável**. E o efeito colateral bonito é que o mesmo sistema que acelera seu jogo mantém seu cérebro **ágil por décadas**.'}
+          </RichText>
+        </View>
+
+        {/* ══ SEÇÃO 5 — 3 MECANISMOS NEURAIS ══ */}
+        <SectionHeader kicker="3 MECANISMOS NEURAIS" />
+
+        {MECHS.map(m => (
+          <View key={m.num} style={[styles.mechCard, { borderColor: m.color + '33' }]}>
+            <View style={[styles.mechNum, { backgroundColor: m.color + '22' }]}>
+              <Text style={[styles.mechNumText, { color: m.color }]}>{m.num}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.mechHeaderRow}>
+                <Text style={styles.mechIcon}>{m.icon}</Text>
+                <Text style={[styles.mechTitle, { color: m.color }]}>{m.title}</Text>
+              </View>
+              <Text style={styles.mechDesc}>{m.desc}</Text>
+            </View>
+          </View>
+        ))}
 
         {/* ══ FECHAMENTO EDITORIAL ══ */}
         <View style={styles.closingCard}>
@@ -482,6 +501,14 @@ const styles = StyleSheet.create({
   freqBadgeText: {
     fontSize: 10, fontWeight: '800', color: '#10b981', letterSpacing: 2,
   },
+  freqAmbitionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20,
+  },
+  freqAmbitionIcon: { fontSize: 20 },
+  freqAmbitionName: {
+    fontSize: 13, fontWeight: '800', color: '#c0cfe0', letterSpacing: 0.5,
+  },
+
   freqMain: {
     flexDirection: 'row', alignItems: 'center',
     gap: 20, marginBottom: 20,
