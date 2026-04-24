@@ -1,29 +1,44 @@
 import { UserStats } from './archetypes';
 
+export type RarityKey = 'comum' | 'medio' | 'dificil' | 'raro' | 'epico' | 'lendario';
+
+export const RARITY_CONFIG: Record<RarityKey, { cor: string; label: string }> = {
+  comum:    { cor: '#6b7280', label: 'COMUM' },
+  medio:    { cor: '#3b82f6', label: 'MÉDIO' },
+  dificil:  { cor: '#8b5cf6', label: 'DIFÍCIL' },
+  raro:     { cor: '#10b981', label: 'RARO' },
+  epico:    { cor: '#ef4444', label: 'ÉPICO' },
+  lendario: { cor: '#f59e0b', label: 'LENDÁRIO' },
+};
+
 export interface Achievement {
   id: string;
   name: string;
   icon: string;
   description: string;
+  rarity: RarityKey;
   unlocked: (stats: UserStats) => boolean;
   progress: (stats: UserStats) => string;
 }
 
 const ARCHETYPE_NAMES: Record<string, string> = {
-  EXPLORADOR: 'Explorador',
+  EXPLORADOR:  'Explorador',
   EM_EVOLUCAO: 'Em Evolução',
-  RESISTENTE: 'Resistente',
-  ATIRADOR: 'Atirador',
-  VELOCISTA: 'Velocista',
-  PILOTO: 'Piloto',
+  RESISTENTE:  'Resistente',
+  ATIRADOR:    'Atirador',
+  VELOCISTA:   'Velocista',
+  PILOTO:      'Piloto',
 };
 
 export const ACHIEVEMENTS: Achievement[] = [
+
+  // ── EXISTENTES ───────────────────────────────────────────────────────────────
   {
     id: 'sniper',
     name: 'Sniper',
     icon: '🎯',
     description: '100% de precisão numa sessão de Alvo',
+    rarity: 'dificil',
     unlocked: (s) => s.sessions.some(r => r.mode === 'alvo' && r.accuracy === 1),
     progress: (s) => {
       const best = s.bestAccByMode.alvo;
@@ -37,6 +52,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Rotina',
     icon: '🔥',
     description: '7 dias seguidos de treino',
+    rarity: 'medio',
     unlocked: (s) => s.streak >= 7,
     progress: (s) => `${s.streak} / 7 dias consecutivos`,
   },
@@ -45,6 +61,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Abaixo de 250',
     icon: '⚡',
     description: 'Score < 250 ms no Modo Partida',
+    rarity: 'medio',
     unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida < 250,
     progress: (s) => s.bestScoreByMode.partida !== null
       ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
@@ -55,6 +72,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Nível F1',
     icon: '🏎',
     description: 'Score < 200 ms no Modo Partida — zona dos pilotos de elite',
+    rarity: 'raro',
     unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida < 200,
     progress: (s) => s.bestScoreByMode.partida !== null
       ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
@@ -65,6 +83,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Sem Fadiga',
     icon: '🧠',
     description: 'Fadiga < 5% em 5 sessões de Sequência',
+    rarity: 'dificil',
     unlocked: (s) => s.seqSessionCount >= 5 && s.avgFatigueSeq !== null && s.avgFatigueSeq < 5,
     progress: (s) => {
       const count = s.seqSessionCount;
@@ -79,6 +98,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'O Piloto',
     icon: '🏁',
     description: 'Alcançar o arquétipo PILOTO',
+    rarity: 'epico',
     unlocked: (s) => s.archetypeId === 'PILOTO',
     progress: (s) => `Arquétipo atual: ${ARCHETYPE_NAMES[s.archetypeId] ?? s.archetypeId}`,
   },
@@ -87,6 +107,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Veterano',
     icon: '🎖',
     description: '50 sessões completadas',
+    rarity: 'medio',
     unlocked: (s) => s.totalSessions >= 50,
     progress: (s) => `${s.totalSessions} / 50 sessões`,
   },
@@ -95,6 +116,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Madrugador',
     icon: '⏰',
     description: '10 sessões antes das 8h',
+    rarity: 'raro',
     unlocked: (s) => {
       const earlyCount = s.sessions.filter(r => new Date(r.date).getHours() < 8).length;
       return earlyCount >= 10;
@@ -103,6 +125,261 @@ export const ACHIEVEMENTS: Achievement[] = [
       const earlyCount = s.sessions.filter(r => new Date(r.date).getHours() < 8).length;
       return `${earlyCount} / 10 sessões antes das 8h`;
     },
+  },
+
+  // ── NOVAS — COMUM ─────────────────────────────────────────────────────────────
+  {
+    id: 'primeira_sessao',
+    name: 'Primeira Reação',
+    icon: '🎯',
+    description: 'Complete sua primeira sessão',
+    rarity: 'comum',
+    unlocked: (s) => s.totalSessions >= 1,
+    progress: (s) => `${Math.min(s.totalSessions, 1)}/1 sessões`,
+  },
+  {
+    id: 'tres_modos',
+    name: 'Triatleta',
+    icon: '🧪',
+    description: 'Jogue os 3 modos ao menos uma vez',
+    rarity: 'comum',
+    unlocked: (s) =>
+      s.bestScoreByMode.partida !== null &&
+      s.bestScoreByMode.alvo !== null &&
+      s.bestScoreByMode.sequencia !== null,
+    progress: (s) => {
+      const count = (['partida', 'alvo', 'sequencia'] as const)
+        .filter(m => s.bestScoreByMode[m] !== null).length;
+      return `${count}/3 modos`;
+    },
+  },
+  {
+    id: 'sub300',
+    name: 'Abaixo de 300ms',
+    icon: '⚡',
+    description: 'Score < 300ms no Modo Partida',
+    rarity: 'comum',
+    unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida <= 300,
+    progress: (s) => s.bestScoreByMode.partida !== null
+      ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
+      : 'Sem sessão de Partida ainda',
+  },
+  {
+    id: 'cinco_sessoes',
+    name: 'Aquecendo',
+    icon: '📅',
+    description: '5 sessões completadas',
+    rarity: 'comum',
+    unlocked: (s) => s.totalSessions >= 5,
+    progress: (s) => `${Math.min(s.totalSessions, 5)}/5 sessões`,
+  },
+
+  // ── NOVAS — MÉDIO ─────────────────────────────────────────────────────────────
+  {
+    id: 'dez_alvo',
+    name: 'Atirador Frequente',
+    icon: '🎯',
+    description: '10 sessões no Modo Alvo',
+    rarity: 'medio',
+    unlocked: (s) => s.alvoSessionCount >= 10,
+    progress: (s) => `${s.alvoSessionCount}/10 sessões no Alvo`,
+  },
+  {
+    id: 'sub280',
+    name: 'Abaixo de 280ms',
+    icon: '💨',
+    description: 'Score < 280ms no Modo Partida',
+    rarity: 'medio',
+    unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida <= 280,
+    progress: (s) => s.bestScoreByMode.partida !== null
+      ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
+      : 'Sem sessão de Partida ainda',
+  },
+  {
+    id: 'streak5',
+    name: 'Semana de Fogo',
+    icon: '🔥',
+    description: '5 dias seguidos de treino',
+    rarity: 'medio',
+    unlocked: (s) => s.streak >= 5,
+    progress: (s) => `${s.streak}/5 dias`,
+  },
+
+  // ── NOVAS — DIFÍCIL ───────────────────────────────────────────────────────────
+  {
+    id: 'sub240',
+    name: 'Abaixo de 240ms',
+    icon: '⚡',
+    description: 'Score < 240ms no Modo Partida',
+    rarity: 'dificil',
+    unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida <= 240,
+    progress: (s) => s.bestScoreByMode.partida !== null
+      ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
+      : 'Sem sessão de Partida ainda',
+  },
+  {
+    id: 'precisao90',
+    name: 'Olho de Águia',
+    icon: '🎯',
+    description: '90% de precisão em 3 sessões de Alvo',
+    rarity: 'dificil',
+    unlocked: (s) => {
+      const accs = s.sessions
+        .filter(r => r.mode === 'alvo' && r.accuracy !== undefined)
+        .map(r => r.accuracy!)
+        .sort((a, b) => b - a)
+        .slice(0, 3);
+      return accs.length >= 3 && (accs[0] + accs[1] + accs[2]) / 3 >= 0.9;
+    },
+    progress: (s) => {
+      const accs = s.sessions
+        .filter(r => r.mode === 'alvo' && r.accuracy !== undefined)
+        .map(r => r.accuracy!);
+      if (accs.length === 0) return 'Sem sessões de Alvo ainda';
+      return `Melhor precisão: ${Math.round(Math.max(...accs) * 100)}%`;
+    },
+  },
+  {
+    id: 'seq10',
+    name: 'Mestre da Sequência',
+    icon: '🧠',
+    description: '10 sessões no Modo Sequência',
+    rarity: 'dificil',
+    unlocked: (s) => s.seqSessionCount >= 10,
+    progress: (s) => `${s.seqSessionCount}/10 sessões de Sequência`,
+  },
+  {
+    id: 'streak14',
+    name: '2 Semanas Seguidas',
+    icon: '📆',
+    description: '14 dias seguidos',
+    rarity: 'dificil',
+    unlocked: (s) => s.streak >= 14,
+    progress: (s) => `${s.streak}/14 dias`,
+  },
+
+  // ── NOVAS — RARO ─────────────────────────────────────────────────────────────
+  {
+    id: 'sub210',
+    name: 'Zona de Elite',
+    icon: '🚀',
+    description: 'Score < 210ms',
+    rarity: 'raro',
+    unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida <= 210,
+    progress: (s) => s.bestScoreByMode.partida !== null
+      ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
+      : 'Sem sessão de Partida ainda',
+  },
+  {
+    id: 'cem_sessoes',
+    name: 'Centenário',
+    icon: '💯',
+    description: '100 sessões completadas',
+    rarity: 'raro',
+    unlocked: (s) => s.totalSessions >= 100,
+    progress: (s) => `${s.totalSessions}/100 sessões`,
+  },
+  {
+    id: 'streak30',
+    name: 'Mês Inteiro',
+    icon: '🗓️',
+    description: '30 dias seguidos',
+    rarity: 'raro',
+    unlocked: (s) => s.streak >= 30,
+    progress: (s) => `${s.streak}/30 dias`,
+  },
+  {
+    id: 'arquetipo_velocista',
+    name: 'O Velocista',
+    icon: '⚡',
+    description: 'Alcançar o arquétipo VELOCISTA',
+    rarity: 'raro',
+    unlocked: (s) => s.archetypeId === 'VELOCISTA' || s.archetypeId === 'PILOTO',
+    progress: (s) => `Arquétipo atual: ${ARCHETYPE_NAMES[s.archetypeId] ?? s.archetypeId}`,
+  },
+
+  // ── NOVAS — ÉPICO ─────────────────────────────────────────────────────────────
+  {
+    id: 'sub180',
+    name: 'Reflexo Humano Limite',
+    icon: '🏁',
+    description: 'Score < 180ms',
+    rarity: 'epico',
+    unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida <= 180,
+    progress: (s) => s.bestScoreByMode.partida !== null
+      ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
+      : 'Sem sessão de Partida ainda',
+  },
+  {
+    id: 'sniper3x',
+    name: 'Sniper em Série',
+    icon: '🎯',
+    description: '100% precisão no Alvo em 3 sessões',
+    rarity: 'epico',
+    unlocked: (s) =>
+      s.sessions.filter(r => r.mode === 'alvo' && r.accuracy === 1).length >= 3,
+    progress: (s) => {
+      const cnt = s.sessions.filter(r => r.mode === 'alvo' && r.accuracy === 1).length;
+      return `${cnt}/3 sessões perfeitas`;
+    },
+  },
+  {
+    id: 'duzentas_sessoes',
+    name: 'Dedicação Total',
+    icon: '🏆',
+    description: '200 sessões completadas',
+    rarity: 'epico',
+    unlocked: (s) => s.totalSessions >= 200,
+    progress: (s) => `${s.totalSessions}/200 sessões`,
+  },
+  {
+    id: 'streak60',
+    name: '2 Meses Seguidos',
+    icon: '🔥',
+    description: '60 dias seguidos',
+    rarity: 'epico',
+    unlocked: (s) => s.streak >= 60,
+    progress: (s) => `${s.streak}/60 dias`,
+  },
+
+  // ── NOVAS — LENDÁRIO ──────────────────────────────────────────────────────────
+  {
+    id: 'sub160',
+    name: 'Além do Humano',
+    icon: '👁️',
+    description: 'Score < 160ms',
+    rarity: 'lendario',
+    unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida <= 160,
+    progress: (s) => s.bestScoreByMode.partida !== null
+      ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
+      : 'Sem sessão de Partida ainda',
+  },
+  {
+    id: 'quinhentas_sessoes',
+    name: 'Lenda Viva',
+    icon: '🌟',
+    description: '500 sessões completadas',
+    rarity: 'lendario',
+    unlocked: (s) => s.totalSessions >= 500,
+    progress: (s) => `${s.totalSessions}/500 sessões`,
+  },
+  {
+    id: 'todos_arquetipos',
+    name: 'A Jornada Completa',
+    icon: '🏎️',
+    description: 'Alcançar o arquétipo PILOTO',
+    rarity: 'lendario',
+    unlocked: (s) => s.archetypeId === 'PILOTO',
+    progress: (s) => `Arquétipo atual: ${ARCHETYPE_NAMES[s.archetypeId] ?? s.archetypeId}`,
+  },
+  {
+    id: 'streak100',
+    name: '100 Dias',
+    icon: '💎',
+    description: '100 dias seguidos',
+    rarity: 'lendario',
+    unlocked: (s) => s.streak >= 100,
+    progress: (s) => `${s.streak}/100 dias`,
   },
 ];
 

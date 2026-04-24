@@ -6,13 +6,25 @@ import {
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats } from '../config/archetypes';
-import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import { ACHIEVEMENTS, getUnlockedCount, RARITY_CONFIG, RarityKey } from '../config/achievements';
 import { loadUnlockedAchievements, saveUnlockedAchievements } from '../utils/storage';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const DAY = 86_400_000;
 
 const MONTH_ABBR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+const RARITY_ORDER: RarityKey[] = ['lendario', 'epico', 'raro', 'dificil', 'medio', 'comum'];
+const RARITY_ICONS: Record<RarityKey, string> = {
+  lendario: '💎', epico: '🔥', raro: '🌟', dificil: '⚡', medio: '🔷', comum: '⬜',
+};
+
+const GROUPED = (() => {
+  const map = {} as Record<RarityKey, typeof ACHIEVEMENTS>;
+  for (const r of RARITY_ORDER) map[r] = [];
+  for (const a of ACHIEVEMENTS) map[a.rarity].push(a);
+  return map;
+})();
 
 function formatUnlockDate(iso: string): string {
   const d = new Date(iso);
@@ -70,29 +82,59 @@ export default function Conquistas({ sessions, userProfile }: Props) {
           </Text>
         </View>
 
-        <View style={styles.grid}>
-          {ACHIEVEMENTS.map(a => {
-            const done = a.unlocked(stats);
-            const unlockDate = unlockDates[a.id];
-            return (
-              <View key={a.id} style={styles.cell}>
-                <Text style={styles.icon}>{a.icon}</Text>
-                <Text style={styles.name}>{a.name}</Text>
-                <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
-                <View style={[styles.progressBar, done && styles.progressBarDone]}>
-                  <Text
-                    style={[styles.progressLabel, done && styles.progressLabelDone]}
-                    numberOfLines={1}
-                  >
-                    {done
-                      ? `✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`
-                      : a.progress(stats)}
-                  </Text>
-                </View>
+        {RARITY_ORDER.map(r => {
+          const group = GROUPED[r];
+          if (group.length === 0) return null;
+          const cfg = RARITY_CONFIG[r];
+          return (
+            <View key={r}>
+              <Text style={[styles.rarityHeader, { color: cfg.cor }]}>
+                {RARITY_ICONS[r]} {cfg.label}
+              </Text>
+              <View style={styles.grid}>
+                {group.map(a => {
+                  const done = a.unlocked(stats);
+                  const unlockDate = unlockDates[a.id];
+                  return (
+                    <View
+                      key={a.id}
+                      style={[
+                        styles.cell,
+                        {
+                          borderWidth: 1.5,
+                          borderColor: done ? cfg.cor : cfg.cor + '99',
+                          opacity: done ? 1 : 0.65,
+                        },
+                      ]}
+                    >
+                      <View style={[
+                        styles.rarityBadge,
+                        { backgroundColor: cfg.cor + '22', borderColor: cfg.cor },
+                      ]}>
+                        <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>
+                          {cfg.label}
+                        </Text>
+                      </View>
+                      <Text style={styles.icon}>{a.icon}</Text>
+                      <Text style={styles.name}>{a.name}</Text>
+                      <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                      <View style={[styles.progressBar, done && styles.progressBarDone]}>
+                        <Text
+                          style={[styles.progressLabel, done && styles.progressLabelDone]}
+                          numberOfLines={1}
+                        >
+                          {done
+                            ? `✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`
+                            : a.progress(stats)}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
-            );
-          })}
-        </View>
+            </View>
+          );
+        })}
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -111,13 +153,23 @@ const styles = StyleSheet.create({
   kicker: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2 },
   count: { fontSize: 11, color: '#3a4a6b' },
 
+  rarityHeader: {
+    fontSize: 11, fontWeight: '800', letterSpacing: 1.5,
+    marginTop: 20, marginBottom: 8,
+  },
+
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   cell: {
     width: '48%', backgroundColor: '#111a2e',
     borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
     gap: 4,
   },
+  rarityBadge: {
+    position: 'absolute', top: 8, right: 8,
+    borderWidth: 1, borderRadius: 4,
+    paddingHorizontal: 4, paddingVertical: 2,
+  },
+  rarityBadgeText: { fontSize: 9, fontWeight: '700' },
   icon: { fontSize: 24 },
   name: { fontSize: 13, fontWeight: '800', color: '#fff' },
   desc: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },

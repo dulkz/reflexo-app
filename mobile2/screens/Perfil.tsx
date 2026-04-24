@@ -17,7 +17,7 @@ const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
   { id: 'VELOCISTA',   icon: '⚡',  tagline: 'Velocidade de elite' },
   { id: 'PILOTO',      icon: '🏎️', tagline: 'Reflexos de elite' },
 ];
-import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import { ACHIEVEMENTS, getUnlockedCount, RARITY_CONFIG } from '../config/achievements';
 import {
   getAmbition,
   getNextMilestone,
@@ -499,8 +499,27 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
         <View style={styles.achieveGrid}>
           {ACHIEVEMENTS.map(a => {
             const done = a.unlocked(stats);
+            const rcfg = RARITY_CONFIG[a.rarity];
             return (
-              <View key={a.id} style={styles.achieveCell}>
+              <View
+                key={a.id}
+                style={[
+                  styles.achieveCell,
+                  {
+                    borderWidth: 1.5,
+                    borderColor: done ? rcfg.cor : rcfg.cor + '99',
+                    opacity: done ? 1 : 0.65,
+                  },
+                ]}
+              >
+                <View style={[
+                  styles.achieveRarityBadge,
+                  { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor },
+                ]}>
+                  <Text style={[styles.achieveRarityText, { color: rcfg.cor }]}>
+                    {rcfg.label}
+                  </Text>
+                </View>
                 <Text style={styles.achieveIcon}>{a.icon}</Text>
                 <Text style={styles.achieveName}>{a.name}</Text>
                 <Text style={styles.achieveDesc} numberOfLines={2}>{a.description}</Text>
@@ -678,6 +697,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
     gap: 4,
   },
+  achieveRarityBadge: {
+    position: 'absolute', top: 8, right: 8,
+    borderWidth: 1, borderRadius: 4,
+    paddingHorizontal: 4, paddingVertical: 2,
+  },
+  achieveRarityText: { fontSize: 9, fontWeight: '700' },
   achieveIcon: { fontSize: 24 },
   achieveName: { fontSize: 13, fontWeight: '800', color: '#fff' },
   achieveDesc: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
