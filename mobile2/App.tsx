@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
@@ -29,7 +29,6 @@ type GameScreen =
   | 'resultado_alvo'
   | 'resultado_sequencia';
 
-const SCREEN_W  = Dimensions.get('window').width;
 const FAB_SIZE   = 70;
 const NOTCH_SIZE = 88;
 
@@ -39,7 +38,7 @@ const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
 ];
 const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'perfil',      label: 'Perfil',   icon: '👤' },
-  { key: 'conquistas',  label: 'Troféus',  icon: '🏆' },
+  { key: 'conquistas',  label: 'Conquistas', icon: '🏆' },
 ];
 
 export default function App() {
