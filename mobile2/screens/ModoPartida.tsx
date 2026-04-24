@@ -226,7 +226,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
             <View style={styles.introDemoCircle} />
             <Text style={styles.introDemoLabel}>TOQUE AQUI</Text>
           </View>
-          <TouchableOpacity style={styles.introStartBtn} onPress={() => setStarted(true)} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.introStartBtn} onPress={() => { setStarted(true); startRound(); }} activeOpacity={0.8}>
             <Text style={styles.introStartBtnText}>INICIAR</Text>
           </TouchableOpacity>
         </View>
