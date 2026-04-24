@@ -307,66 +307,65 @@ function AppInner() {
 
       {/* Tab bar — hidden during active game */}
       {!inGame && (
-        <View style={styles.fabBarWrapper}>
-          {/* Bar row: 2 left tabs + center spacer + 2 right tabs */}
-          <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
-            {LEFT_TABS.map(t => {
-              const active = activeTab === t.key;
-              return (
-                <TouchableOpacity
-                  key={t.key}
-                  style={styles.tabBtn}
-                  onPress={() => handleTabPress(t.key)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
-                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
-                  {active && <View style={styles.tabIndicator} />}
-                </TouchableOpacity>
-              );
-            })}
+        <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
+          {LEFT_TABS.map(t => {
+            const active = activeTab === t.key;
+            return (
+              <TouchableOpacity
+                key={t.key}
+                style={styles.tabBtn}
+                onPress={() => handleTabPress(t.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
+                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+                {active && <View style={styles.tabIndicator} />}
+              </TouchableOpacity>
+            );
+          })}
 
-            {/* Center spacer — seats the FAB */}
-            <View style={styles.fabSpacer} />
+          {/* Center spacer — seats the FAB */}
+          <View style={styles.fabSpacer} />
 
-            {RIGHT_TABS.map(t => {
-              const active = activeTab === t.key;
-              return (
-                <TouchableOpacity
-                  key={t.key}
-                  style={styles.tabBtn}
-                  onPress={() => handleTabPress(t.key)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
-                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
-                  {active && <View style={styles.tabIndicator} />}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          {RIGHT_TABS.map(t => {
+            const active = activeTab === t.key;
+            return (
+              <TouchableOpacity
+                key={t.key}
+                style={styles.tabBtn}
+                onPress={() => handleTabPress(t.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{t.icon}</Text>
+                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+                {active && <View style={styles.tabIndicator} />}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
 
-          {/* Notch — fake cutout using app background color */}
-          <View style={styles.fabNotch} />
-
-          {/* FAB — floats above the bar */}
+      {/* Notch and FAB — absolute in root so overflow never clips them on Android */}
+      {!inGame && (
+        <>
+          <View style={[styles.fabNotch, { bottom: Math.max(insets.bottom, 4) + 19 }]} />
           <TouchableOpacity
-            style={styles.fab}
+            style={[styles.fab, { bottom: Math.max(insets.bottom, 4) + 28 }]}
             onPress={() => handleTabPress('jogar')}
             activeOpacity={0.85}
           >
-            <Svg width={60} height={60} style={StyleSheet.absoluteFillObject}>
+            <Svg width={70} height={70} style={StyleSheet.absoluteFillObject}>
               <Defs>
                 <LinearGradient id="fabGrad" x1="0" y1="0" x2="1" y2="0">
                   <Stop offset="0" stopColor="#3b82f6" />
                   <Stop offset="1" stopColor="#8b5cf6" />
                 </LinearGradient>
               </Defs>
-              <Circle cx={30} cy={30} r={30} fill="url(#fabGrad)" />
+              <Circle cx={35} cy={35} r={35} fill="url(#fabGrad)" />
             </Svg>
             <Text style={styles.fabIcon}>⚡</Text>
           </TouchableOpacity>
-        </View>
+        </>
       )}
 
       {/* Triage modal — fullscreen, covers tab bar */}
@@ -414,10 +413,6 @@ const styles = StyleSheet.create({
   contentFullscreen: { flex: 1 },
 
   // ── FAB tab bar ──────────────────────────────────────────────────────────────
-  fabBarWrapper: {
-    position: 'relative',
-    overflow: 'visible',
-  },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: '#0d1525',
@@ -425,39 +420,37 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.06)',
     paddingTop: 10,
   },
-  fabSpacer: { width: 80 },
+  fabSpacer: { width: 88 },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 8 },
   tabIcon: { fontSize: 20 },
   tabIconActive: {},
-  tabLabel: { fontSize: 10, fontWeight: '600', color: '#3a4a6b', letterSpacing: 0.5 },
-  tabLabelActive: { color: '#fff' },
+  tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
+  tabLabelActive: { color: '#3b82f6' },
   tabIndicator: {
     position: 'absolute', top: 0,
     width: 24, height: 2,
     backgroundColor: '#3b82f6', borderRadius: 1,
   },
-  // Fake cutout: same color as app root, sits at top-center of bar
+  // Notch — absolute in root View; bottom set inline with insets
   fabNotch: {
     position: 'absolute',
-    top: -20,
     alignSelf: 'center',
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: '#0b1220',
-    zIndex: 1,
+    zIndex: 2,
   },
-  // FAB floats 22px above the bar top
+  // FAB — absolute in root View; bottom set inline with insets
   fab: {
     position: 'absolute',
-    top: -22,
     alignSelf: 'center',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2,
+    zIndex: 3,
     shadowColor: '#3b82f6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
@@ -465,7 +458,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   fabIcon: {
-    fontSize: 28,
+    fontSize: 32,
     color: '#fff',
     zIndex: 1,
   },
