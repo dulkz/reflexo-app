@@ -19,6 +19,7 @@ interface Props {
   sessions: SessionRecord[];
   bestByMode: Record<ModeKey, number | null>;
   userProfile: UserProfile;
+  onGoToPerfil: () => void;
 }
 
 const MODE_INFO = [
@@ -47,7 +48,7 @@ const MODE_INFO = [
 
 export default function Home({
   onStartPartida, onStartAlvo, onStartSequencia,
-  sessions, bestByMode, userProfile,
+  sessions, bestByMode, userProfile, onGoToPerfil,
 }: Props) {
   // Best score (average top-5) across all sessions — used for milestone comparison
   const currentBestMs = useMemo(
@@ -133,9 +134,9 @@ export default function Home({
           <Text style={styles.reflexoSmall}>REFLEXO</Text>
           <Text style={styles.greeting}>Olá, Bruno</Text>
         </View>
-        <View style={styles.avatar}>
+        <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
           <Text style={styles.avatarLetter}>B</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* ── Scrollable content ── */}

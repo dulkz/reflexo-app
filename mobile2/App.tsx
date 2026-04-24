@@ -229,6 +229,7 @@ function AppInner() {
             sessions={sessions}
             bestByMode={bestByMode}
             userProfile={userProfile}
+            onGoToPerfil={() => handleTabPress('perfil')}
           />
         );
       case 'partida':
