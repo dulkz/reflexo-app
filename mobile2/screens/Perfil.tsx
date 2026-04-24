@@ -523,14 +523,14 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
               }
             </Text>
 
-            {/* Compact journey map */}
+            {/* Journey map — full size with current progress */}
             {baselineMs !== null && (
               <View style={styles.journeyMapWrap}>
                 <JourneyMap
                   ambitionId={ambition.id}
                   baselineMs={baselineMs}
                   currentBestMs={currentBestMs}
-                  compact
+                  showYouAreHere
                 />
               </View>
             )}
