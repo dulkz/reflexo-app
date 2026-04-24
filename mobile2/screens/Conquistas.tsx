@@ -55,6 +55,13 @@ export default function Conquistas({ sessions, userProfile }: Props) {
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const unlockedCount = useMemo(() => getUnlockedCount(stats), [stats]);
 
+  const unlockedSorted = useMemo(
+    () => ACHIEVEMENTS
+      .filter(a => a.unlocked(stats))
+      .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity)),
+    [stats],
+  );
+
   const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -83,8 +90,38 @@ export default function Conquistas({ sessions, userProfile }: Props) {
           </Text>
         </View>
 
+        {unlockedSorted.length > 0 && (
+          <View>
+            <Text style={[styles.rarityHeader, { color: '#f59e0b' }]}>🏆 DESBLOQUEADAS</Text>
+            <View style={styles.grid}>
+              {unlockedSorted.map(a => {
+                const cfg = RARITY_CONFIG[a.rarity];
+                const unlockDate = unlockDates[a.id];
+                return (
+                  <View
+                    key={a.id}
+                    style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor }]}
+                  >
+                    <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
+                      <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
+                    </View>
+                    <Text style={styles.icon}>{a.icon}</Text>
+                    <Text style={styles.name}>{a.name}</Text>
+                    <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                    <View style={[styles.progressBar, styles.progressBarDone]}>
+                      <Text style={[styles.progressLabel, styles.progressLabelDone]}>
+                        {`✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {RARITY_ORDER.map(r => {
-          const group = GROUPED[r];
+          const group = GROUPED[r].filter(a => !a.unlocked(stats));
           if (group.length === 0) return null;
           const cfg = RARITY_CONFIG[r];
           return (
@@ -94,17 +131,13 @@ export default function Conquistas({ sessions, userProfile }: Props) {
               </Text>
               <View style={styles.grid}>
                 {group.map(a => {
-                  const done = a.unlocked(stats);
-                  const unlockDate = unlockDates[a.id];
-                  const isSecret = !!a.secret && !done;
+                  const isSecret = !!a.secret;
                   const badgeColor = isSecret ? SECRET_COLOR : cfg.cor;
                   const badgeLabel = isSecret ? 'SECRETA' : cfg.label;
                   const displayIcon = isSecret ? '🔒' : a.icon;
                   const displayName = isSecret ? '???' : a.name;
                   const displayDesc = isSecret ? 'Conquista secreta — descubra jogando' : a.description;
-                  const progressText = done
-                    ? `✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`
-                    : isSecret ? '🔒 Bloqueada' : a.progress(stats);
+                  const progressText = isSecret ? '🔒 Bloqueada' : a.progress(stats);
                   return (
                     <View
                       key={a.id}
@@ -112,8 +145,8 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                         styles.cell,
                         {
                           borderWidth: 1.5,
-                          borderColor: done ? cfg.cor : isSecret ? SECRET_COLOR + '66' : cfg.cor + '99',
-                          opacity: done ? 1 : 0.65,
+                          borderColor: isSecret ? SECRET_COLOR + '66' : cfg.cor + '99',
+                          opacity: 0.65,
                         },
                       ]}
                     >
@@ -128,8 +161,8 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                       <Text style={styles.icon}>{displayIcon}</Text>
                       <Text style={styles.name}>{displayName}</Text>
                       <Text style={styles.desc} numberOfLines={2}>{displayDesc}</Text>
-                      <View style={[styles.progressBar, done && styles.progressBarDone]}>
-                        <Text style={[styles.progressLabel, done && styles.progressLabelDone]}>
+                      <View style={styles.progressBar}>
+                        <Text style={styles.progressLabel}>
                           {progressText}
                         </Text>
                       </View>

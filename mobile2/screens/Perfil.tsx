@@ -212,7 +212,10 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
       const lastFatigue = mSessions.length > 0 && mSessions[0].fatigueIndex !== undefined
         ? mSessions[0].fatigueIndex
         : null;
-      return { key: k, count: mSessions.length, best, bestAcc, lastFatigue };
+      const bestAlvoRt = k === 'alvo' && mSessions.length > 0
+        ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
+        : null;
+      return { key: k, count: mSessions.length, best, bestAcc, lastFatigue, bestAlvoRt };
     });
   }, [sessions, stats]);
 
@@ -328,7 +331,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             </View>
             <Text style={styles.identitySub}>
               {joinedLabel
-                ? `Jogando desde ${joinedLabel} · ${sessions.length} sessão${sessions.length !== 1 ? 'ões' : ''}`
+                ? `Jogando desde ${joinedLabel} · ${sessions.length !== 1 ? 'sessões' : 'sessão'}`
                 : 'Sem sessões ainda'}
             </Text>
           </View>
@@ -665,7 +668,8 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {modeBreakdown.map(m => {
           const mc = MODE_COLORS[m.key];
           const meta = MODE_META[m.key];
-          const lvl = m.best !== null ? getLevelInfo(m.best) : null;
+          const displayScore = m.key === 'alvo' && m.bestAlvoRt !== null ? m.bestAlvoRt : m.best;
+          const lvl = displayScore !== null ? getLevelInfo(displayScore) : null;
 
           return (
             <View key={m.key} style={styles.modeCard}>
@@ -677,19 +681,19 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 <Text style={styles.modeSub}>{meta.sub}</Text>
               </View>
               <View style={styles.modeRight}>
-                {m.best !== null && lvl ? (
+                {displayScore !== null && lvl ? (
                   <>
-                    <Text style={[styles.modeScore, { color: lvl.color }]}>{m.best} ms</Text>
+                    <Text style={[styles.modeScore, { color: lvl.color }]}>{displayScore} ms</Text>
                     <View style={[styles.modeLevelPill, { backgroundColor: lvl.bg }]}>
                       <Text style={[styles.modeLevelText, { color: lvl.color }]}>
                         {lvl.label.split(' ')[0]}
                       </Text>
                     </View>
+                    {m.key === 'alvo' && (
+                      <Text style={styles.modeExtra}>Melhor RT</Text>
+                    )}
                     {m.key === 'alvo' && m.bestAcc !== null && (
                       <Text style={styles.modeExtra}>{Math.round(m.bestAcc * 100)}% acc</Text>
-                    )}
-                    {m.key === 'alvo' && (
-                      <Text style={styles.modeExtra}>Choice RT · escala diferente</Text>
                     )}
                     {m.key === 'sequencia' && m.lastFatigue !== null && m.lastFatigue !== undefined && (
                       <Text style={styles.modeExtra}>{m.lastFatigue.toFixed(1)}% fadiga</Text>

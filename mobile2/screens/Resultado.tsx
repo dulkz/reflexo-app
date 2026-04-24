@@ -324,6 +324,9 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
   const accuracy = Math.round((correct / alvoResults.length) * 100);
   const avgRt = Math.round(alvoResults.reduce((s, r) => s + r.rt, 0) / alvoResults.length);
   const best = Math.min(...alvoResults.map(r => r.rt));
+  const worstRt = Math.max(...alvoResults.map(r => r.rt));
+  const variation = worstRt - best;
+  const consistencyTarget = best + 100;
 
   const choiceBenchMsg = score <= 420
     ? 'Você está no nível de atletas de esporte de raquete!'
@@ -346,6 +349,21 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
       </View>
 
       <ChoiceScaleBar score={score} />
+
+      {variation > 200 && (
+        <View style={styles.consistencyCard}>
+          <Text style={styles.consistencyTitle}>Sua consistência é o próximo nível</Text>
+          <Text style={styles.consistencyLine}>
+            {`Melhor rodada: ${best}ms · Pior rodada: ${worstRt}ms · Variação: ${variation}ms`}
+          </Text>
+          <Text style={styles.consistencyLine}>
+            Seu cérebro já sabe reagir rápido — agora treine fazer isso sempre
+          </Text>
+          <Text style={styles.consistencyMeta}>
+            {`Tente manter todas as rodadas abaixo de ${consistencyTarget}ms`}
+          </Text>
+        </View>
+      )}
 
       <View style={[styles.benchCard, { borderColor: mc.accent + '44' }]}>
         <Text style={styles.benchIcon}>🎯</Text>
@@ -617,6 +635,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 2,
   },
   youBadgeText: { fontSize: 9, fontWeight: '900', letterSpacing: 1.5 },
+
+  consistencyCard: {
+    backgroundColor: '#0d1f35', borderRadius: 14, borderWidth: 1,
+    borderColor: '#06b6d450', padding: 16, marginBottom: 20, gap: 8,
+  },
+  consistencyTitle: { fontSize: 14, fontWeight: '800', color: '#fff' },
+  consistencyLine: { fontSize: 12, color: '#4a5a7b', lineHeight: 18 },
+  consistencyMeta: { fontSize: 12, fontWeight: '700', color: '#06b6d4' },
 
   fatigueCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
