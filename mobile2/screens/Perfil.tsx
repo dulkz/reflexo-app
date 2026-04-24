@@ -36,7 +36,7 @@ const PT_MONTHS_LONG = ['janeiro','fevereiro','março','abril','maio','junho','j
 interface Props {
   sessions: SessionRecord[];
   userProfile: UserProfile;
-  onOpenTriage: () => void;
+  onOpenTriage: (editMode: boolean) => void;
 }
 
 // ── Gradient avatar ──────────────────────────────────────────────────────────
@@ -495,7 +495,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
             <Text style={styles.journeyCTADesc}>
               Escolha uma ambição e veja sua jornada personalizada em todas as telas.
             </Text>
-            <TouchableOpacity style={styles.journeyCTABtn} onPress={onOpenTriage} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.journeyCTABtn} onPress={() => onOpenTriage(false)} activeOpacity={0.8}>
               <Text style={styles.journeyCTABtnText}>DEFINIR MINHA META</Text>
             </TouchableOpacity>
           </View>
@@ -510,7 +510,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
               <Text style={[styles.journeyAmbitionName, { color: ambitionGroupColor }]}>
                 {ambition.name}
               </Text>
-              <TouchableOpacity onPress={onOpenTriage} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <TouchableOpacity onPress={() => onOpenTriage(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Text style={styles.journeyChangeLink}>trocar meta</Text>
               </TouchableOpacity>
             </View>

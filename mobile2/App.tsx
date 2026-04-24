@@ -126,9 +126,9 @@ function AppInner() {
     }
   }, []);
 
-  // Open triage in edit mode (from Perfil "trocar meta" link)
-  const openTriageForEdit = useCallback(() => {
-    setTriageEditMode(true);
+  // Open triage — editMode=true for "trocar meta", false for first-time "Definir Minha Meta"
+  const openTriageForEdit = useCallback((editMode: boolean) => {
+    setTriageEditMode(editMode);
     setTriageVisible(true);
   }, []);
 
