@@ -342,40 +342,33 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
               const unlocked = av.isUnlocked(stats, ACHIEVEMENTS);
               const selected = (userProfile.selectedAvatar ?? 'initial') === av.id;
               const isInitial = av.id === 'initial';
+              const cellContent = !unlocked
+                ? <Text style={styles.avatarCellLock}>🔒</Text>
+                : isInitial
+                  ? <Text style={styles.avatarCellLetter}>{(userProfile.name || 'U')[0].toUpperCase()}</Text>
+                  : <Text style={styles.avatarCellEmoji}>{av.icon}</Text>;
               return (
-                <TouchableOpacity
-                  key={av.id}
-                  style={[
-                    styles.avatarCell,
-                    { borderColor: selected ? '#5b4fcf' : '#2a3a5a' },
-                    !unlocked && styles.avatarCellLocked,
-                  ]}
-                  onPress={unlocked ? async () => {
-                    const updated = { ...userProfile, selectedAvatar: av.id };
-                    await saveUserProfile(updated);
-                    onUpdateProfile(updated);
-                  } : undefined}
-                  disabled={!unlocked}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.avatarCellIconWrap}>
-                    {isInitial ? (
-                      <View style={styles.avatarCellLetterBg}>
-                        <Text style={styles.avatarCellLetter}>
-                          {(userProfile.name || 'U')[0].toUpperCase()}
-                        </Text>
-                      </View>
-                    ) : (
-                      <Text style={styles.avatarCellEmoji}>{av.icon}</Text>
-                    )}
-                    {!unlocked && (
-                      <View style={styles.avatarCellLockOverlay}>
-                        <Text style={{ fontSize: 11 }}>🔒</Text>
-                      </View>
-                    )}
-                  </View>
+                <View key={av.id} style={styles.avatarItemWrap}>
+                  <TouchableOpacity
+                    style={[
+                      styles.avatarCell,
+                      selected
+                        ? { borderWidth: 2, borderColor: '#5b4fcf', backgroundColor: 'rgba(91,79,207,0.15)' }
+                        : { borderWidth: 1, borderColor: '#2a3a5a', backgroundColor: '#111a2e' },
+                      !unlocked && styles.avatarCellLocked,
+                    ]}
+                    onPress={unlocked ? async () => {
+                      const updated = { ...userProfile, selectedAvatar: av.id };
+                      await saveUserProfile(updated);
+                      onUpdateProfile(updated);
+                    } : undefined}
+                    disabled={!unlocked}
+                    activeOpacity={0.7}
+                  >
+                    {cellContent}
+                  </TouchableOpacity>
                   <Text style={styles.avatarCellName} numberOfLines={1}>{av.name}</Text>
-                </TouchableOpacity>
+                </View>
               );
             })}
           </View>
@@ -814,27 +807,20 @@ const styles = StyleSheet.create({
 
   // ── MEU AVATAR ────────────────────────────────────────────────────────────
   avatarSection: { marginBottom: 20 },
-  avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  avatarCell: {
-    width: '23%',
-    backgroundColor: '#111a2e', borderRadius: 12,
-    borderWidth: 1.5, padding: 8,
-    alignItems: 'center', gap: 6,
+  avatarGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    justifyContent: 'space-between', gap: 12,
   },
-  avatarCellLocked: { opacity: 0.3 },
-  avatarCellIconWrap: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
-  avatarCellLetterBg: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#1A6DB5',
+  avatarItemWrap: { alignItems: 'center', gap: 4 },
+  avatarCell: {
+    width: 64, height: 64, borderRadius: 32,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarCellLetter: { fontSize: 18, fontWeight: '800', color: '#fff' },
-  avatarCellEmoji: { fontSize: 32, lineHeight: 40 },
-  avatarCellLockOverlay: {
-    position: 'absolute', top: 0, right: -4,
-    backgroundColor: '#0b1220', borderRadius: 8, padding: 2,
-  },
-  avatarCellName: { fontSize: 9, fontWeight: '700', color: '#4a5a7b', letterSpacing: 0.3, textAlign: 'center' },
+  avatarCellLocked: { opacity: 0.3 },
+  avatarCellLetter: { fontSize: 22, fontWeight: '800', color: '#fff' },
+  avatarCellEmoji: { fontSize: 28 },
+  avatarCellLock: { fontSize: 20 },
+  avatarCellName: { width: 64, fontSize: 9, fontWeight: '700', color: '#4a5a7b', textAlign: 'center' },
 
   // ── Archetype card ────────────────────────────────────────────────────────
   archetypeCard: {
