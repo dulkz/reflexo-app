@@ -29,7 +29,7 @@ type GameScreen =
   | 'resultado_sequencia';
 
 const FAB_SIZE      = 70;
-const TAB_BAR_HEIGHT = 80;
+const TAB_BAR_HEIGHT = 60;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
   { key: 'historico', label: 'Histórico', icon: '📈' },
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.06)',
     paddingTop: 10,
   },
-  fabSpacer: { width: FAB_SIZE },
+  fabSpacer: { flex: 1 },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
   tabItemCard: {
     alignItems: 'center',
