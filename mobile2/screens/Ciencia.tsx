@@ -65,7 +65,7 @@ const MECHS = [
 ];
 
 const SCI_STATS = [
-  { stat: '25%', desc: 'menos diagnósticos de demência em 20 anos com treino de velocidade de processamento', fonte: 'Estudo ACTIVE · NIH', cor: '#10b981' },
+  { stat: '25%', desc: 'de redução no risco de demência com treino cognitivo', fonte: 'Estudo ACTIVE · NIH', cor: '#10b981' },
   { stat: '30%', desc: 'melhora na coordenação motora fina após 6 semanas de treino de reação', fonte: 'Willingham et al., 2002', cor: '#3b82f6' },
   { stat: '40%', desc: 'melhora em atenção sustentada após 8 semanas de prática', fonte: 'Journal of Cognitive Enhancement', cor: '#8b5cf6' },
   { stat: '300ms', desc: 'limiar onde o cérebro para de pensar e começa a executar automaticamente', fonte: 'Neuroscience of Action', cor: '#f59e0b' },
