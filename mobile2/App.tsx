@@ -29,7 +29,7 @@ type GameScreen =
   | 'resultado_sequencia';
 
 const FAB_SIZE      = 70;
-const TAB_BAR_HEIGHT = 60;
+const TAB_BAR_HEIGHT = 52;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
   { key: 'historico', label: 'Histórico', icon: '📈' },
