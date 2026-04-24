@@ -8,6 +8,7 @@ import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
+import { computeWeeklyMissions } from '../utils/missions';
 
 const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
   { id: 'EXPLORADOR',  icon: '🔭', tagline: 'Descobrindo seu perfil' },
@@ -246,6 +247,44 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
   const isBrainHealth = ambition?.group === 'brain_health';
   const ambitionGroupColor = ambition ? GROUP_COLOR[ambition.group] : '#3b82f6';
 
+  // ── Objectives data ───────────────────────────────────────────────────────────
+  const weeklyMissions = useMemo(
+    () => computeWeeklyMissions(sessions, userProfile),
+    [sessions, userProfile],
+  );
+
+  const nextAchievementInfo = useMemo(() => {
+    const locked = ACHIEVEMENTS.filter(a => !a.unlocked(stats));
+    if (locked.length === 0) return null;
+    let best: { a: typeof locked[0]; pct: number } | null = null;
+    for (const a of locked) {
+      const match = a.progress(stats).match(/(\d+)\s*\/\s*(\d+)/);
+      if (!match) continue;
+      const cur = parseInt(match[1], 10);
+      const tar = parseInt(match[2], 10);
+      if (tar === 0) continue;
+      const pct = Math.min(cur / tar, 1);
+      if (pct > 0 && (best === null || pct > best.pct)) best = { a, pct };
+    }
+    return best;
+  }, [stats]);
+
+  const milestonePct = useMemo(() => {
+    if (!ambition || !nextMilestone || isBrainHealth) return 0;
+    if (nextMilestone.type === 'qualitative' || !nextMilestone.ms) return 0;
+    if (baselineMs === null || currentBestMs === null) return 0;
+    const range = baselineMs - nextMilestone.ms;
+    if (range <= 0) return 1;
+    return Math.max(0, Math.min(1, (baselineMs - currentBestMs) / range));
+  }, [ambition, nextMilestone, isBrainHealth, baselineMs, currentBestMs]);
+
+  const archetypePct = useMemo(() => {
+    const total = archetype.targetCriteria.length;
+    if (total === 0) return 1;
+    const done = archetype.targetCriteria.filter(c => c.done(stats)).length;
+    return done / total;
+  }, [archetype, stats]);
+
   return (
     <View style={styles.root}>
       <ScrollView
@@ -333,6 +372,120 @@ export default function Perfil({ sessions, userProfile, onOpenTriage }: Props) {
             </View>
           );
         })()}
+
+        {/* ── OBJETIVOS DA SEMANA ── */}
+        <View style={styles.objectivesSection}>
+          <Text style={styles.sectionTitle}>OBJETIVOS DA SEMANA</Text>
+          {weeklyMissions.map(m => (
+            <View key={m.id} style={styles.objCard}>
+              <View style={styles.objCardTop}>
+                <Text style={styles.objIcon}>{m.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.objLabel, m.done && styles.objLabelDone]} numberOfLines={1}>
+                    {m.label}
+                  </Text>
+                  <Text style={styles.objProgress}>
+                    {m.done ? '✓ Concluída' : `${m.current} / ${m.target}`}
+                  </Text>
+                </View>
+                {m.done && <Text style={styles.objCheck}>✓</Text>}
+              </View>
+              <View style={styles.objTrack}>
+                <View style={[
+                  styles.objFill,
+                  {
+                    flex: m.current,
+                    backgroundColor: m.done ? '#10b981' : '#5b4fcf',
+                  },
+                ]} />
+                <View style={{ flex: Math.max(0, m.target - m.current) }} />
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* ── METAS DE LONGO PRAZO ── */}
+        <View style={styles.ltSection}>
+          <Text style={styles.sectionTitle}>METAS DE LONGO PRAZO</Text>
+
+          {/* Próximo marco de velocidade */}
+          {ambition && nextMilestone && !isBrainHealth &&
+           nextMilestone.type !== 'qualitative' && nextMilestone.ms !== undefined &&
+           currentBestMs !== null && (
+            <View style={styles.ltCard}>
+              <View style={styles.ltCardTop}>
+                <Text style={styles.ltIcon}>🚀</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.ltKicker}>PRÓXIMO MARCO</Text>
+                  <Text style={styles.ltTitle}>{nextMilestone.label}</Text>
+                  <Text style={styles.ltSub}>
+                    {`${ambition.name} · meta ${nextMilestone.ms} ms`}
+                    {currentBestMs <= nextMilestone.ms
+                      ? ' · ✓ Já atingido!'
+                      : ` · faltam ${currentBestMs - nextMilestone.ms} ms`}
+                  </Text>
+                </View>
+                <Text style={styles.ltPct}>{Math.round(milestonePct * 100)}%</Text>
+              </View>
+              <View style={styles.ltTrack}>
+                <View style={[styles.ltFill, {
+                  flex: Math.round(milestonePct * 100),
+                  backgroundColor: ambitionGroupColor,
+                }]} />
+                <View style={{ flex: Math.max(0, 100 - Math.round(milestonePct * 100)) }} />
+              </View>
+            </View>
+          )}
+
+          {/* Próxima conquista mais próxima */}
+          {nextAchievementInfo && (
+            <View style={styles.ltCard}>
+              <View style={styles.ltCardTop}>
+                <Text style={styles.ltIcon}>{nextAchievementInfo.a.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.ltKicker}>PRÓXIMA CONQUISTA</Text>
+                  <Text style={styles.ltTitle}>{nextAchievementInfo.a.name}</Text>
+                  <Text style={styles.ltSub}>{nextAchievementInfo.a.progress(stats)}</Text>
+                </View>
+                <Text style={styles.ltPct}>{Math.round(nextAchievementInfo.pct * 100)}%</Text>
+              </View>
+              <View style={styles.ltTrack}>
+                <View style={[styles.ltFill, {
+                  flex: Math.round(nextAchievementInfo.pct * 100),
+                  backgroundColor: '#8b5cf6',
+                }]} />
+                <View style={{ flex: Math.max(0, 100 - Math.round(nextAchievementInfo.pct * 100)) }} />
+              </View>
+            </View>
+          )}
+
+          {/* Próximo arquétipo */}
+          {nextDef && archetype.targetCriteria.length > 0 && (
+            <View style={styles.ltCard}>
+              <View style={styles.ltCardTop}>
+                <Text style={styles.ltIcon}>{nextDef.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.ltKicker}>PRÓXIMO ARQUÉTIPO</Text>
+                  <Text style={[styles.ltTitle, { color: nextDef.color }]}>{nextDef.name}</Text>
+                  <Text style={styles.ltSub}>
+                    {archetype.targetCriteria.filter(c => c.done(stats)).length}
+                    {'/'}
+                    {archetype.targetCriteria.length}
+                    {' critérios concluídos'}
+                  </Text>
+                </View>
+                <Text style={styles.ltPct}>{Math.round(archetypePct * 100)}%</Text>
+              </View>
+              <View style={styles.ltTrack}>
+                <View style={[styles.ltFill, {
+                  flex: Math.round(archetypePct * 100),
+                  backgroundColor: nextDef.color,
+                }]} />
+                <View style={{ flex: Math.max(0, 100 - Math.round(archetypePct * 100)) }} />
+              </View>
+            </View>
+          )}
+        </View>
 
         {/* ── MINHA JORNADA ── */}
         {!userProfile.triageCompleted ? (
@@ -578,6 +731,42 @@ const styles = StyleSheet.create({
   },
   chipDot: { width: 6, height: 6, borderRadius: 3 },
   chipText: { fontSize: 11, fontWeight: '600' },
+
+  // ── OBJETIVOS DA SEMANA ───────────────────────────────────────────────────
+  objectivesSection: { marginBottom: 12 },
+  objCard: {
+    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
+    borderColor: 'rgba(91,79,207,0.2)', padding: 14, marginBottom: 8,
+  },
+  objCardTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  objIcon: { fontSize: 20, width: 26 },
+  objLabel: { fontSize: 13, fontWeight: '700', color: '#c0cfe0', marginBottom: 2 },
+  objLabelDone: { color: '#10b981' },
+  objProgress: { fontSize: 11, color: '#4a5a7b' },
+  objCheck: { fontSize: 14, color: '#10b981', fontWeight: '800', width: 20, textAlign: 'right' },
+  objTrack: {
+    flexDirection: 'row', height: 4, borderRadius: 2,
+    backgroundColor: '#1e2d45', overflow: 'hidden',
+  },
+  objFill: { borderRadius: 2 },
+
+  // ── METAS DE LONGO PRAZO ─────────────────────────────────────────────────
+  ltSection: { marginBottom: 12 },
+  ltCard: {
+    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)', padding: 14, marginBottom: 8,
+  },
+  ltCardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  ltIcon: { fontSize: 22, width: 28 },
+  ltKicker: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2, marginBottom: 3 },
+  ltTitle: { fontSize: 14, fontWeight: '800', color: '#fff', marginBottom: 3 },
+  ltSub: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
+  ltPct: { fontSize: 13, fontWeight: '800', color: '#fff', minWidth: 36, textAlign: 'right' },
+  ltTrack: {
+    flexDirection: 'row', height: 5, borderRadius: 3,
+    backgroundColor: '#1e2d45', overflow: 'hidden',
+  },
+  ltFill: { borderRadius: 3 },
 
   // ── MINHA JORNADA — CTA (pre-triage) ─────────────────────────────────────
   journeyCTA: {

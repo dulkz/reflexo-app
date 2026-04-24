@@ -9,6 +9,7 @@ import { UserProfile } from '../types/user';
 import {
   getAmbition, getNextMilestone, calculateDeltaToNextMilestone, getMilestonesState,
 } from '../utils/ambition';
+import { computeWeeklyMissions, WeeklyMission } from '../utils/missions';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -119,6 +120,11 @@ export default function Home({
     };
   }, [userProfile, currentBestMs]);
 
+  const weeklyMissions = useMemo(
+    () => computeWeeklyMissions(sessions, userProfile),
+    [sessions, userProfile],
+  );
+
   const handlers: Record<ModeKey, () => void> = {
     partida: onStartPartida,
     alvo: onStartAlvo,
@@ -144,6 +150,66 @@ export default function Home({
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        {/* ── Weekly missions card ── */}
+        {(() => {
+          const doneCount = weeklyMissions.filter(m => m.done).length;
+          return (
+            <TouchableOpacity
+              style={styles.missionCard}
+              onPress={onGoToPerfil}
+              activeOpacity={0.8}
+            >
+              <View style={styles.missionHeader}>
+                <Text style={styles.missionHeaderText}>MISSÃO DA SEMANA</Text>
+                <Text style={styles.missionCount}>
+                  {'📋 '}
+                  <Text style={{ color: doneCount === 3 ? '#10b981' : '#5b4fcf' }}>
+                    {doneCount}/3
+                  </Text>
+                  {' completas'}
+                </Text>
+              </View>
+              <View style={styles.missionProgressTrack}>
+                <View style={[
+                  styles.missionProgressFill,
+                  {
+                    flex: doneCount,
+                    backgroundColor: doneCount === 3 ? '#10b981' : '#5b4fcf',
+                  },
+                ]} />
+                <View style={{ flex: Math.max(0, 3 - doneCount) }} />
+              </View>
+              {weeklyMissions.map(m => (
+                <View key={m.id} style={styles.missionRow}>
+                  <Text style={styles.missionRowIcon}>{m.icon}</Text>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={[
+                      styles.missionRowLabel,
+                      m.done && { color: '#10b981' },
+                    ]} numberOfLines={1}>
+                      {m.label}
+                    </Text>
+                    <View style={styles.missionMiniTrack}>
+                      <View style={[
+                        styles.missionMiniFill,
+                        {
+                          flex: m.current,
+                          backgroundColor: m.done ? '#10b981' : '#5b4fcf',
+                        },
+                      ]} />
+                      <View style={{ flex: Math.max(0, m.target - m.current) }} />
+                    </View>
+                  </View>
+                  {m.done
+                    ? <Text style={styles.missionRowCheck}>✓</Text>
+                    : <Text style={styles.missionRowProgress}>{m.current}/{m.target}</Text>
+                  }
+                </View>
+              ))}
+            </TouchableOpacity>
+          );
+        })()}
+
         <Text style={styles.sectionTitle}>MODOS DE JOGO</Text>
 
         {MODE_INFO.map(m => {
@@ -311,6 +377,35 @@ const styles = StyleSheet.create({
 
   scroll: { paddingHorizontal: 20, paddingBottom: 8 },
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 12 },
+
+  // ── Weekly missions card ──────────────────────────────────────────────────
+  missionCard: {
+    backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
+    borderColor: 'rgba(91,79,207,0.3)', padding: 14, marginBottom: 16,
+  },
+  missionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 8,
+  },
+  missionHeaderText: { fontSize: 10, fontWeight: '800', color: '#3a4a6b', letterSpacing: 2 },
+  missionCount: { fontSize: 11, color: '#4a5a7b' },
+  missionProgressTrack: {
+    flexDirection: 'row', height: 4, borderRadius: 2,
+    backgroundColor: '#1e2d45', marginBottom: 12, overflow: 'hidden',
+  },
+  missionProgressFill: { borderRadius: 2 },
+  missionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10,
+  },
+  missionRowIcon: { fontSize: 16, width: 22 },
+  missionRowLabel: { fontSize: 12, color: '#7a8aa0', fontWeight: '600' },
+  missionRowCheck: { fontSize: 13, color: '#10b981', fontWeight: '800', width: 22, textAlign: 'right' },
+  missionRowProgress: { fontSize: 11, color: '#4a5a7b', width: 28, textAlign: 'right' },
+  missionMiniTrack: {
+    flexDirection: 'row', height: 3, borderRadius: 2,
+    backgroundColor: '#1e2d45', overflow: 'hidden',
+  },
+  missionMiniFill: { borderRadius: 2 },
 
   modeCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
