@@ -127,6 +127,64 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
   },
 
+  // ── HUMORÍSTICAS ─────────────────────────────────────────────────────────────
+  {
+    id: 'o_apressado',
+    name: 'O Apressado',
+    icon: '🏃',
+    description: 'Queimou a largada 3 vezes numa mesma sessão',
+    rarity: 'comum',
+    unlocked: (s) => s.sessions.some(r => r.mode === 'partida' && (r.falseStartCount ?? 0) >= 3),
+    progress: (s) => {
+      const partidas = s.sessions.filter(r => r.mode === 'partida');
+      if (partidas.length === 0) return 'Nenhuma sessão de Partida ainda';
+      const best = Math.max(...partidas.map(r => r.falseStartCount ?? 0));
+      return `Melhor: ${best} falsa${best !== 1 ? 's' : ''} largada${best !== 1 ? 's' : ''}`;
+    },
+  },
+  {
+    id: 'a_tartaruga',
+    name: 'A Tartaruga',
+    icon: '🐢',
+    description: 'Score acima de 900 ms no Modo Partida',
+    rarity: 'comum',
+    unlocked: (s) => s.sessions.some(r => r.mode === 'partida' && r.score >= 900),
+    progress: (s) => {
+      const partidas = s.sessions.filter(r => r.mode === 'partida');
+      if (partidas.length === 0) return 'Nenhuma sessão de Partida ainda';
+      const worst = Math.max(...partidas.map(r => r.score));
+      return `Seu melhor (pior?): ${worst} ms`;
+    },
+  },
+  {
+    id: 'mae_dina',
+    name: 'Mãe Diná',
+    icon: '🔮',
+    description: 'Queimou a largada 5 vezes ou mais numa sessão — você viu o futuro',
+    rarity: 'comum',
+    unlocked: (s) => s.sessions.some(r => r.mode === 'partida' && (r.falseStartCount ?? 0) >= 5),
+    progress: (s) => {
+      const partidas = s.sessions.filter(r => r.mode === 'partida');
+      if (partidas.length === 0) return 'Nenhuma sessão de Partida ainda';
+      const best = Math.max(...partidas.map(r => r.falseStartCount ?? 0));
+      return `Recorde de previsões: ${best}`;
+    },
+  },
+  {
+    id: 'o_dorminhoco',
+    name: 'O Dorminhoco',
+    icon: '😴',
+    description: 'Deixou 3 rodadas expirarem no Modo Alvo numa mesma sessão',
+    rarity: 'comum',
+    unlocked: (s) => s.sessions.some(r => r.mode === 'alvo' && (r.timeouts ?? 0) >= 3),
+    progress: (s) => {
+      const alvos = s.sessions.filter(r => r.mode === 'alvo');
+      if (alvos.length === 0) return 'Nenhuma sessão de Alvo ainda';
+      const best = Math.max(...alvos.map(r => r.timeouts ?? 0));
+      return `Maior soneca: ${best} rodada${best !== 1 ? 's' : ''}`;
+    },
+  },
+
   // ── NOVAS — COMUM ─────────────────────────────────────────────────────────────
   {
     id: 'primeira_sessao',

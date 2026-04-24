@@ -10,6 +10,7 @@ const ERROR_PENALTY = 150;
 const READY_DELAY = 700;
 const INITIAL_WAIT_MIN = 1000;
 const INITIAL_WAIT_MAX = 3000;
+const CHALLENGE_TIMEOUT = 2000;
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -25,7 +26,7 @@ type AlvoState = 'intro' | 'initial_wait' | 'ready' | 'challenge' | 'correct' | 
 interface RoundResult { rt: number; correct: boolean; penalizedRt: number; targetIdx: number }
 
 interface Props {
-  onComplete: (results: RoundResult[], score: number) => void;
+  onComplete: (results: RoundResult[], score: number, timeoutCount: number) => void;
   onBack: () => void;
 }
 
@@ -51,6 +52,10 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const readyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialWaitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const challengeTimeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutCount = useRef(0);
+  // Holds latest handler so the timeout closure always sees fresh state
+  const handleTimeoutRef = useRef<() => void>(() => {});
 
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
@@ -59,13 +64,44 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     if (readyTimer.current) clearTimeout(readyTimer.current);
     if (initialWaitTimer.current) clearTimeout(initialWaitTimer.current);
+    if (challengeTimeoutTimer.current) clearTimeout(challengeTimeoutTimer.current);
   }, []);
+
+  // Always up-to-date timeout handler — refs avoid stale closure on results/round.
+  handleTimeoutRef.current = () => {
+    if (responded.current) return;
+    responded.current = true;
+    if (challengeTimeoutTimer.current) clearTimeout(challengeTimeoutTimer.current);
+    timeoutCount.current += 1;
+    const result: RoundResult = { rt: CHALLENGE_TIMEOUT, correct: false, penalizedRt: CHALLENGE_TIMEOUT, targetIdx };
+    setLastResult(result);
+    const newResults = [...results, result];
+    setResults(newResults);
+    setGameState('wrong');
+    const next = round + 1;
+    advanceTimer.current = setTimeout(() => {
+      if (next > TOTAL_ROUNDS) {
+        const score = Math.round(newResults.reduce((s, r) => s + r.penalizedRt, 0) / newResults.length);
+        onComplete(newResults, score, timeoutCount.current);
+      } else {
+        setRound(next);
+        startRound();
+      }
+    }, 1400);
+  };
 
   // Timer starts after 'challenge' render commit — circles are on screen before counting begins.
   useEffect(() => {
     if (gameState === 'challenge') {
       signalTime.current = Date.now();
+      challengeTimeoutTimer.current = setTimeout(() => {
+        handleTimeoutRef.current();
+      }, CHALLENGE_TIMEOUT);
+      return () => {
+        if (challengeTimeoutTimer.current) clearTimeout(challengeTimeoutTimer.current);
+      };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState]);
 
   const flash = useCallback((red: boolean) => {
@@ -97,6 +133,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
   const handleCirclePress = useCallback((pressedColorIdx: number) => {
     if (responded.current || gameState !== 'challenge') return;
     responded.current = true;
+    if (challengeTimeoutTimer.current) clearTimeout(challengeTimeoutTimer.current);
     const rt = Date.now() - signalTime.current;
     const correct = pressedColorIdx === targetIdx;
     const penalizedRt = correct ? rt : rt + ERROR_PENALTY;
@@ -112,7 +149,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
       const next = round + 1;
       if (next > TOTAL_ROUNDS) {
         const score = Math.round(newResults.reduce((s, r) => s + r.penalizedRt, 0) / newResults.length);
-        onComplete(newResults, score);
+        onComplete(newResults, score, timeoutCount.current);
       } else {
         setRound(next);
         startRound();

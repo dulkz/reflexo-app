@@ -11,6 +11,8 @@ export interface SessionRecord {
   noGoErrors?: number;   // commission count (tap on NoGo), sequencia only
   noGoAccuracy?: number; // % of NoGo correctly inhibited (0-100 int), sequencia only
   invalidForAchievements?: boolean; // true when session had 3+ false starts
+  falseStartCount?: number;         // total false starts in a partida session
+  timeouts?: number;                // rounds that expired without a tap in alvo
   rounds: number;
   times: number[];
   date: number;          // Date.now()

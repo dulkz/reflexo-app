@@ -217,12 +217,13 @@ function AppInner() {
       rounds: times.length,
       times,
       date: Date.now(),
+      falseStartCount,
       ...(falseStartCount >= 3 ? { invalidForAchievements: true } : {}),
     });
     setGameScreen('resultado_partida');
   }, [addSession]);
 
-  const handleAlvoComplete = useCallback(async (results: RoundResult[], score: number) => {
+  const handleAlvoComplete = useCallback(async (results: RoundResult[], score: number, alvoTimeouts: number) => {
     setAlvoResults(results);
     setAlvoScore(score);
     const bestTime = Math.min(...results.map(r => r.rt));
@@ -236,6 +237,7 @@ function AppInner() {
       rounds: results.length,
       times: results.map(r => r.penalizedRt),
       date: Date.now(),
+      ...(alvoTimeouts > 0 ? { timeouts: alvoTimeouts } : {}),
     });
     setGameScreen('resultado_alvo');
   }, [addSession]);
