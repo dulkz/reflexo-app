@@ -394,7 +394,7 @@ function AppInner() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0b1220' },
+  root: { flex: 1, backgroundColor: '#0b1220', overflow: 'visible' },
   content: { flex: 1 },
   contentFullscreen: { flex: 1 },
 
@@ -406,6 +406,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
     paddingTop: 10,
+    overflow: 'visible',
   },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
   tabItemCard: {
@@ -435,8 +436,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#5b4fcf',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.3)',
     elevation: 0,
     shadowColor: 'transparent',
   },
