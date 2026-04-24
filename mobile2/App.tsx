@@ -29,8 +29,7 @@ type GameScreen =
   | 'resultado_alvo'
   | 'resultado_sequencia';
 
-const FAB_SIZE   = 70;
-const NOTCH_SIZE = 88;
+const FAB_SIZE = 70;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
   { key: 'historico', label: 'Histórico', icon: '📈' },
@@ -350,22 +349,14 @@ function AppInner() {
         </View>
       )}
 
-      {/* Notch + FAB — single centerer so both share the exact same horizontal axis */}
+      {/* FAB — centerer with left:0/right:0 + alignItems:'center' for pixel-perfect centering */}
       {!inGame && (
         <View
-          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 19, height: NOTCH_SIZE, zIndex: 3 }]}
+          style={[styles.fabCenterer, { bottom: Math.max(insets.bottom, 4) + 20, height: FAB_SIZE, zIndex: 3 }]}
           pointerEvents="box-none"
         >
-          {/* Notch: normal flex child, centered by parent alignItems:'center' */}
-          <View style={styles.fabNotch} pointerEvents="none" />
-
-          {/* FAB: absolute within same centerer — offset (NOTCH-FAB)/2 = 9px on each side */}
           <TouchableOpacity
-            style={[styles.fab, {
-              position: 'absolute',
-              top:  (NOTCH_SIZE - FAB_SIZE) / 2,
-              left: (NOTCH_SIZE - FAB_SIZE) / 2,
-            }]}
+            style={styles.fab}
             onPress={() => handleTabPress('jogar')}
             activeOpacity={0.85}
           >
@@ -436,7 +427,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.06)',
     paddingTop: 10,
   },
-  fabSpacer: { width: NOTCH_SIZE },
+  fabSpacer: { width: FAB_SIZE + 10 },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
   tabItemCard: {
     alignItems: 'center',
@@ -457,21 +448,13 @@ const styles = StyleSheet.create({
   tabIcon: { fontSize: 26 },
   tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
   tabLabelActive: { color: '#3b82f6' },
-  // Centerer: positions notch/FAB via flexbox — no width calc needed
+  // Centerer: left:0/right:0 + alignItems:'center' centers FAB without width calculation
   fabCenterer: {
     position: 'absolute',
     left: 0,
     right: 0,
     alignItems: 'center',
   },
-  // Notch — child of fabCenterer, no position/zIndex needed
-  fabNotch: {
-    width: NOTCH_SIZE,
-    height: NOTCH_SIZE,
-    borderRadius: NOTCH_SIZE / 2,
-    backgroundColor: '#0b1220',
-  },
-  // FAB — child of fabCenterer, no position/zIndex needed
   fab: {
     width: FAB_SIZE,
     height: FAB_SIZE,
