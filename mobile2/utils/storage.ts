@@ -8,8 +8,9 @@ export interface SessionRecord {
   bestTime: number;      // single best RT in ms
   accuracy?: number;     // 0-1, for alvo and sequencia
   fatigueIndex?: number; // %, sequencia only
-  noGoErrors?: number;   // commission count (tap on NoGo), sequencia only
-  noGoAccuracy?: number; // % of NoGo correctly inhibited (0-100 int), sequencia only
+  noGoErrors?: number;    // commission count (tap on NoGo), sequencia only
+  noGoAccuracy?: number;  // % of NoGo correctly inhibited (0-100 int), sequencia only
+  earlyTapCount?: number; // taps during inter state (anticipations), sequencia only
   invalidForAchievements?: boolean; // true when session had 3+ false starts
   falseStartCount?: number;         // total false starts in a partida session
   timeouts?: number;                // rounds that expired without a tap in alvo

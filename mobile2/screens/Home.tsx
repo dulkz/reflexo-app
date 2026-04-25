@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect, RefObject } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Platform, StatusBar as RNStatusBar,
+  Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
 import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
@@ -11,6 +11,7 @@ import {
   getAmbition, getNextMilestone, calculateDeltaToNextMilestone, getMilestonesState,
 } from '../utils/ambition';
 import { computeWeeklyMissions, WeeklyMission } from '../utils/missions';
+import { calculateStreak, streakColor } from '../utils/streak';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -22,6 +23,7 @@ interface Props {
   bestByMode: Record<ModeKey, number | null>;
   userProfile: UserProfile;
   onGoToPerfil: () => void;
+  scrollRef?: RefObject<ScrollView | null>;
 }
 
 const MODE_INFO = [
@@ -50,7 +52,7 @@ const MODE_INFO = [
 
 export default function Home({
   onStartPartida, onStartAlvo, onStartSequencia,
-  sessions, bestByMode, userProfile, onGoToPerfil,
+  sessions, bestByMode, userProfile, onGoToPerfil, scrollRef,
 }: Props) {
   // Best score (average top-5) across all sessions — used for milestone comparison
   const currentBestMs = useMemo(
@@ -126,6 +128,24 @@ export default function Home({
     [sessions, userProfile],
   );
 
+  const streak = useMemo(() => calculateStreak(sessions), [sessions]);
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (streak.current >= 1 && !streak.playedToday) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 0.5, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1.0, duration: 600, useNativeDriver: true }),
+        ]),
+      );
+      loop.start();
+      return () => loop.stop();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [streak.current, streak.playedToday]);
+
   const handlers: Record<ModeKey, () => void> = {
     partida: onStartPartida,
     alvo: onStartAlvo,
@@ -152,9 +172,30 @@ export default function Home({
 
       {/* ── Scrollable content ── */}
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        {/* ── Streak block ── */}
+        {streak.current >= 1 && (
+          <View style={styles.streakCard}>
+            <Text style={styles.streakFire}>🔥</Text>
+            <Text style={[styles.streakNumber, { color: streakColor(streak.current) }]}>
+              {streak.current}
+            </Text>
+            <Text style={styles.streakLabel}>dias seguidos</Text>
+            {streak.playedToday ? (
+              <View style={styles.streakBadgeDone}>
+                <Text style={styles.streakBadgeDoneText}>✓ hoje</Text>
+              </View>
+            ) : (
+              <Animated.View style={[styles.streakBadgePulse, { opacity: pulseAnim }]}>
+                <Text style={styles.streakBadgePulseText}>⚡ jogue hoje</Text>
+              </Animated.View>
+            )}
+          </View>
+        )}
+
         {/* ── Weekly missions card ── */}
         {(() => {
           const doneCount = weeklyMissions.filter(m => m.done).length;
@@ -382,6 +423,25 @@ const styles = StyleSheet.create({
 
   scroll: { paddingHorizontal: 20, paddingBottom: 8 },
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 12 },
+
+  // ── Streak card ──────────────────────────────────────────────────────────
+  streakCard: {
+    backgroundColor: '#111a2e', borderRadius: 12, padding: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12,
+  },
+  streakFire: { fontSize: 22 },
+  streakNumber: { fontSize: 32, fontWeight: '900', letterSpacing: -1 },
+  streakLabel: { fontSize: 12, color: '#4a5a7b', fontWeight: '600', flex: 1 },
+  streakBadgeDone: {
+    backgroundColor: 'rgba(16,185,129,0.15)', borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  streakBadgeDoneText: { fontSize: 11, color: '#10b981', fontWeight: '700' },
+  streakBadgePulse: {
+    backgroundColor: 'rgba(245,158,11,0.15)', borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  streakBadgePulseText: { fontSize: 11, color: '#f59e0b', fontWeight: '700' },
 
   // ── Weekly missions card ──────────────────────────────────────────────────
   missionCard: {

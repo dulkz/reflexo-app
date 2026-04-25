@@ -4,6 +4,7 @@ import {
   Animated, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { getLevelInfo } from '../utils/levels';
+import { playSfx } from '../utils/sfx';
 
 const TOTAL_ROUNDS = 10;
 const ERROR_PENALTY = 150;
@@ -141,6 +142,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
     setLastResult(result);
     const newResults = [...results, result];
     setResults(newResults);
+    if (correct) playSfx('hit');
     flash(!correct);
     setGameState(correct ? 'correct' : 'wrong');
 

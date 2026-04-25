@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Home from './screens/Home';
+import Splash from './screens/Splash';
 import ModoPartida from './screens/ModoPartida';
 import ModoAlvo, { RoundResult } from './screens/ModoAlvo';
 import ModoSequencia, { SeqSummary } from './screens/ModoSequencia';
@@ -17,6 +18,7 @@ import { SessionRecord, loadSessions, saveSession, getBestByMode } from './utils
 import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
+import { preloadSounds, playSfx } from './utils/sfx';
 import { ACHIEVEMENTS, Achievement, RARITY_CONFIG, RarityKey } from './config/achievements';
 import { buildUserStats } from './config/archetypes';
 
@@ -95,6 +97,15 @@ function AppInner() {
   // Prevent re-offering triage if dismissed in this app session
   const dismissedThisSession = useRef(false);
 
+  // Splash screen — shown once per app open
+  const [splashVisible, setSplashVisible] = useState(true);
+  const splashOpacity = useRef(new Animated.Value(1)).current;
+  const dataReadyRef  = useRef(false);
+  const animDoneRef   = useRef(false);
+
+  // Scroll-to-top ref passed to Home so handleTriageComplete can reset scroll
+  const homeScrollRef = useRef<ScrollView>(null);
+
   useEffect(() => {
     if (milestoneBeat !== null) {
       toastAnim.setValue(0);
@@ -118,10 +129,22 @@ function AppInner() {
     }
   }, [achievementQueue.length]);
 
+  const tryExitSplash = useCallback(() => {
+    if (!dataReadyRef.current || !animDoneRef.current) return;
+    Animated.timing(splashOpacity, { toValue: 0, duration: 300, useNativeDriver: true })
+      .start(() => setSplashVisible(false));
+  }, []); // splashOpacity is a stable Animated.Value ref
+
   useEffect(() => {
-    loadSessions().then(setSessions);
-    loadUserProfile().then(setUserProfile);
-  }, []);
+    Promise.all([
+      loadSessions().then(setSessions),
+      loadUserProfile().then(setUserProfile),
+      preloadSounds(),
+    ]).then(() => {
+      dataReadyRef.current = true;
+      tryExitSplash();
+    });
+  }, [tryExitSplash]);
 
   const addSession = useCallback(async (session: SessionRecord) => {
     const prevBest = sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : null;
@@ -168,8 +191,10 @@ function AppInner() {
     // ── Show toasts — achievements first, milestone after ────────────────────
     if (sortedAchievements.length > 0) {
       if (beatenLabel) pendingMilestoneRef.current = beatenLabel;
+      playSfx('milestone');
       setAchievementQueue(sortedAchievements);
     } else if (beatenLabel) {
+      playSfx('milestone');
       setMilestoneBeat(beatenLabel);
     }
 
@@ -244,19 +269,23 @@ function AppInner() {
 
   const handleSeqComplete = useCallback(async (summary: SeqSummary) => {
     setSeqSummary(summary);
-    await addSession({
-      id: Date.now().toString(),
-      mode: 'sequencia',
-      score: summary.score,
-      bestTime: Math.min(...summary.trials.filter(t => t.rt !== null).map(t => t.rt!), 999),
-      accuracy: summary.accuracy,
-      fatigueIndex: summary.fatigueIndex,
-      noGoErrors: summary.noGoErrors,
-      noGoAccuracy: summary.noGoAccuracy,
-      rounds: summary.trials.length,
-      times: summary.trials.map(t => t.rt ?? 0),
-      date: Date.now(),
-    });
+    if (!summary.suspiciousSpam) {
+      const earlyTapCount = summary.earlyTapCount ?? 0;
+      await addSession({
+        id: Date.now().toString(),
+        mode: 'sequencia',
+        score: summary.score + earlyTapCount * 150,
+        bestTime: Math.min(...summary.trials.filter(t => t.rt !== null).map(t => t.rt!), 999),
+        accuracy: summary.accuracy,
+        fatigueIndex: summary.fatigueIndex,
+        noGoErrors: summary.noGoErrors,
+        noGoAccuracy: summary.noGoAccuracy,
+        earlyTapCount: earlyTapCount > 0 ? earlyTapCount : undefined,
+        rounds: summary.trials.length,
+        times: summary.trials.map(t => t.rt ?? 0),
+        date: Date.now(),
+      });
+    }
     setGameScreen('resultado_sequencia');
   }, [addSession]);
 
@@ -273,6 +302,9 @@ function AppInner() {
     setUserProfile(updated);
     setTriageVisible(false);
     setTriageEditMode(false);
+    setActiveTab('jogar');
+    setGameScreen('home');
+    homeScrollRef.current?.scrollTo({ y: 0, animated: false });
   }, []);
 
   const handleTriageDismiss = useCallback(async () => {
@@ -301,6 +333,7 @@ function AppInner() {
             bestByMode={bestByMode}
             userProfile={userProfile}
             onGoToPerfil={() => handleTabPress('perfil')}
+            scrollRef={homeScrollRef}
           />
         );
       case 'partida':
@@ -331,6 +364,8 @@ function AppInner() {
             times={partidaTimes}
             onPlayAgain={() => setGameScreen('partida')}
             onHome={goHome}
+            sessions={sessions}
+            userProfile={userProfile}
           />
         );
       case 'resultado_alvo':
@@ -341,6 +376,8 @@ function AppInner() {
             alvoScore={alvoScore}
             onPlayAgain={() => setGameScreen('alvo')}
             onHome={goHome}
+            sessions={sessions}
+            userProfile={userProfile}
           />
         );
       case 'resultado_sequencia':
@@ -350,6 +387,8 @@ function AppInner() {
             seqSummary={seqSummary}
             onPlayAgain={() => setGameScreen('sequencia')}
             onHome={goHome}
+            sessions={sessions}
+            userProfile={userProfile}
           />
         ) : null;
     }
@@ -486,6 +525,18 @@ function AppInner() {
           })()}
         </TouchableOpacity>
       </Modal>
+
+      {/* Splash — absoluteFill overlay, shown once on app open */}
+      {splashVisible && (
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: splashOpacity, zIndex: 200 }]}>
+          <Splash
+            onAnimationComplete={() => {
+              animDoneRef.current = true;
+              tryExitSplash();
+            }}
+          />
+        </Animated.View>
+      )}
 
       {/* Milestone beat toast */}
       <Modal

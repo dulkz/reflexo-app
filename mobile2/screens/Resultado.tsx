@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
@@ -7,6 +7,10 @@ import { getLevelInfo, computeScore, LEVELS, MODE_COLORS, ModeKey } from '../uti
 import LevelBadge from '../components/LevelBadge';
 import { RoundResult } from './ModoAlvo';
 import { SeqSummary } from './ModoSequencia';
+import { SessionRecord } from '../utils/storage';
+import { UserProfile } from '../types/user';
+import { getNextMilestone, calculateDeltaToNextMilestone } from '../utils/ambition';
+import { playSfx } from '../utils/sfx';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const FALSE_START = 300;
@@ -214,15 +218,98 @@ function ScaleReference({ score }: { score: number }) {
   );
 }
 
+// ── Journey progress card ─────────────────────────────────────────────────────
+
+interface JourneyCardProps {
+  sessions: SessionRecord[];
+  userProfile: UserProfile;
+  currentSessionScore: number;
+}
+
+function JourneyProgressCard({ sessions, userProfile, currentSessionScore }: JourneyCardProps) {
+  if (!userProfile.triageCompleted || !userProfile.ambitionId) return null;
+
+  const currentBestMs = sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : currentSessionScore;
+  const isNewRecord = currentSessionScore <= currentBestMs;
+
+  useEffect(() => {
+    if (isNewRecord) playSfx('record');
+  // fires once on mount — card only mounts once per game session
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const nextMilestone = getNextMilestone(
+    userProfile.baselineMs,
+    currentBestMs,
+    userProfile.ambitionId,
+    sessions,
+  );
+
+  const delta = calculateDeltaToNextMilestone(
+    currentBestMs,
+    userProfile.ambitionId,
+    userProfile.baselineMs,
+    sessions,
+  );
+
+  const allBeaten = nextMilestone === null;
+
+  const baseline = userProfile.baselineMs ?? currentBestMs;
+  const targetMs =
+    !allBeaten && nextMilestone && nextMilestone.type !== 'qualitative' && nextMilestone.ms !== undefined
+      ? nextMilestone.ms
+      : null;
+
+  let fillPct = 0;
+  if (allBeaten) {
+    fillPct = 1;
+  } else if (targetMs !== null && baseline > targetMs) {
+    fillPct = Math.min(1, Math.max(0, (baseline - currentBestMs) / (baseline - targetMs)));
+  }
+
+  const fillWidth = `${Math.round(fillPct * 100)}%` as `${number}%`;
+
+  return (
+    <View style={jc.wrapper}>
+      <View style={jc.separator} />
+      <View style={jc.card}>
+        <Text style={jc.label}>SUA JORNADA</Text>
+        <Text style={jc.bestRow}>
+          {'🏆 Seu melhor: '}<Text style={jc.bestMs}>{currentBestMs} ms</Text>
+        </Text>
+        {isNewRecord && (
+          <View style={jc.recordBadge}>
+            <Text style={jc.recordText}>🎉 NOVO RECORDE!</Text>
+          </View>
+        )}
+        {allBeaten ? (
+          <Text style={jc.completeText}>🏁 Jornada completa!</Text>
+        ) : (
+          <Text style={jc.nextMeta}>
+            {nextMilestone && nextMilestone.type !== 'qualitative' && nextMilestone.ms !== undefined
+              ? `Próxima meta: ${nextMilestone.ms} ms${delta !== null ? ` — faltam ${delta} ms` : ''}`
+              : nextMilestone?.label ?? ''}
+          </Text>
+        )}
+        <View style={jc.barTrack}>
+          <View style={[jc.barFill, { width: fillWidth }]} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 // ── Partida result ────────────────────────────────────────────────────────────
 
 interface PartidaProps {
   times: number[];
   onPlayAgain: () => void;
   onHome: () => void;
+  sessions: SessionRecord[];
+  userProfile: UserProfile;
 }
 
-function PartidaResult({ times, onPlayAgain, onHome }: PartidaProps) {
+function PartidaResult({ times, onPlayAgain, onHome, sessions, userProfile }: PartidaProps) {
   const { score, bestTime, worst2Indices } = useMemo(() => computeScore(times), [times]);
   const level = getLevelInfo(score);
   const mc = MODE_COLORS.partida;
@@ -297,6 +384,8 @@ function PartidaResult({ times, onPlayAgain, onHome }: PartidaProps) {
 
       <ScaleReference score={score} />
 
+      <JourneyProgressCard sessions={sessions} userProfile={userProfile} currentSessionScore={score} />
+
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
         <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
       </TouchableOpacity>
@@ -315,9 +404,11 @@ interface AlvoProps {
   score: number;
   onPlayAgain: () => void;
   onHome: () => void;
+  sessions: SessionRecord[];
+  userProfile: UserProfile;
 }
 
-function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
+function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userProfile }: AlvoProps) {
   const level = getChoiceRTLevel(score);
   const mc = MODE_COLORS.alvo;
   const correct = alvoResults.filter(r => r.correct).length;
@@ -405,6 +496,8 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome }: AlvoProps) {
 
       <ChoiceScaleReference score={score} />
 
+      <JourneyProgressCard sessions={sessions} userProfile={userProfile} currentSessionScore={score} />
+
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
         <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
       </TouchableOpacity>
@@ -421,9 +514,11 @@ interface SeqProps {
   summary: SeqSummary;
   onPlayAgain: () => void;
   onHome: () => void;
+  sessions: SessionRecord[];
+  userProfile: UserProfile;
 }
 
-function SeqResult({ summary, onPlayAgain, onHome }: SeqProps) {
+function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqProps) {
   const { avgRt, accuracy, fatigueIndex, score, hits, misses, commissions, correctInhibits, noGoErrors, noGoAccuracy } = summary;
   const level = getLevelInfo(avgRt);
   const mc = MODE_COLORS.sequencia;
@@ -442,6 +537,13 @@ function SeqResult({ summary, onPlayAgain, onHome }: SeqProps) {
 
   return (
     <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]} showsVerticalScrollIndicator={false}>
+      {summary.suspiciousSpam && (
+        <View style={styles.spamBanner}>
+          <Text style={styles.spamBannerText}>
+            ⚠️ Detectamos toques muito rápidos nessa sessão — resultado não salvo.
+          </Text>
+        </View>
+      )}
       <View style={styles.hero}>
         <Text style={styles.heroLabel}>MODO SEQUÊNCIA</Text>
         <Text style={[styles.heroScore, { color: level.color }]}>{avgRt}</Text>
@@ -452,6 +554,11 @@ function SeqResult({ summary, onPlayAgain, onHome }: SeqProps) {
             🧠 Controle inibitório: {noGoAccuracy}% · {noGoErrors} {noGoErrors === 1 ? 'erro' : 'erros'}
           </Text>
         </View>
+        {(summary.earlyTapCount ?? 0) > 0 && (
+          <Text style={styles.earlyTapLine}>
+            ❌ Antecipações: {summary.earlyTapCount} × +150ms
+          </Text>
+        )}
       </View>
 
       <ScaleBar score={avgRt} />
@@ -518,6 +625,8 @@ function SeqResult({ summary, onPlayAgain, onHome }: SeqProps) {
 
       <ScaleReference score={avgRt} />
 
+      <JourneyProgressCard sessions={sessions} userProfile={userProfile} currentSessionScore={summary.score} />
+
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
         <Text style={[styles.btnPrimaryText, { color: '#fff' }]}>JOGAR NOVAMENTE</Text>
       </TouchableOpacity>
@@ -538,19 +647,21 @@ interface Props {
   seqSummary?: SeqSummary;
   onPlayAgain: () => void;
   onHome: () => void;
+  sessions: SessionRecord[];
+  userProfile: UserProfile;
 }
 
-export default function Resultado({ mode, times, alvoResults, alvoScore, seqSummary, onPlayAgain, onHome }: Props) {
+export default function Resultado({ mode, times, alvoResults, alvoScore, seqSummary, onPlayAgain, onHome, sessions, userProfile }: Props) {
   return (
     <View style={styles.root}>
       {mode === 'partida' && times && (
-        <PartidaResult times={times} onPlayAgain={onPlayAgain} onHome={onHome} />
+        <PartidaResult times={times} onPlayAgain={onPlayAgain} onHome={onHome} sessions={sessions} userProfile={userProfile} />
       )}
       {mode === 'alvo' && alvoResults && alvoScore !== undefined && (
-        <AlvoResult alvoResults={alvoResults} score={alvoScore} onPlayAgain={onPlayAgain} onHome={onHome} />
+        <AlvoResult alvoResults={alvoResults} score={alvoScore} onPlayAgain={onPlayAgain} onHome={onHome} sessions={sessions} userProfile={userProfile} />
       )}
       {mode === 'sequencia' && seqSummary && (
-        <SeqResult summary={seqSummary} onPlayAgain={onPlayAgain} onHome={onHome} />
+        <SeqResult summary={seqSummary} onPlayAgain={onPlayAgain} onHome={onHome} sessions={sessions} userProfile={userProfile} />
       )}
     </View>
   );
@@ -573,6 +684,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 6,
   },
   inhibText: { fontSize: 12, fontWeight: '700', color: '#8b5cf6', letterSpacing: 0.3 },
+  earlyTapLine: { fontSize: 11, color: '#4a5a7b', marginTop: 6, textAlign: 'center' },
 
   choiceBadge: {
     borderRadius: 10, borderWidth: 1,
@@ -675,4 +787,32 @@ const styles = StyleSheet.create({
   },
   btnSecondaryText: { fontSize: 13, fontWeight: '700', color: '#4a5a7b', letterSpacing: 1.5 },
   methodNote: { fontSize: 11, color: '#2d3a55', textAlign: 'center', lineHeight: 16 },
+
+  spamBanner: {
+    backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 10, borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.35)', padding: 14, marginBottom: 16,
+  },
+  spamBannerText: { fontSize: 13, fontWeight: '700', color: '#ef4444', lineHeight: 20 },
+});
+
+const jc = StyleSheet.create({
+  wrapper: { marginTop: 20 },
+  separator: { height: 1, backgroundColor: '#1a2a4a', marginBottom: 12 },
+  card: { backgroundColor: '#111a2e', borderRadius: 12, padding: 16 },
+  label: { fontSize: 10, fontWeight: '700', color: '#4a5a7b', letterSpacing: 2, marginBottom: 8 },
+  bestRow: { fontSize: 14, color: '#8a9ab8', marginBottom: 4 },
+  bestMs: { fontSize: 14, fontWeight: '800', color: '#fff' },
+  recordBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#f59e0b', borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8,
+  },
+  recordText: { fontSize: 12, fontWeight: '800', color: '#0b1220' },
+  completeText: { fontSize: 13, fontWeight: '700', color: '#f59e0b', marginBottom: 10 },
+  nextMeta: { fontSize: 12, color: '#4a5a7b', marginBottom: 10 },
+  barTrack: {
+    height: 6, borderRadius: 3,
+    backgroundColor: '#1a2540', overflow: 'hidden', marginTop: 4,
+  },
+  barFill: { height: 6, borderRadius: 3, backgroundColor: '#3b82f6' },
 });

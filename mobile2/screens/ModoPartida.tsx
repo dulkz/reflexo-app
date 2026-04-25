@@ -4,6 +4,7 @@ import {
   TouchableOpacity, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { getLevelInfo } from '../utils/levels';
+import { playSfx } from '../utils/sfx';
 
 const TOTAL_ROUNDS = 7;
 const FALSE_START = 500;
@@ -96,6 +97,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
     if (gameState === 'waiting') {
       recordResult(FALSE_START, true);
     } else if (gameState === 'signal') {
+      playSfx('hit');
       recordResult(Date.now() - signalTime.current, false);
     }
   }, [gameState, recordResult]);

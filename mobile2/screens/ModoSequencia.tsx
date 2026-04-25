@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { playSfx } from '../utils/sfx';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable,
   Animated, Platform, StatusBar as RNStatusBar,
@@ -33,6 +34,8 @@ export interface SeqSummary {
   score: number;
   noGoErrors: number;   // = commissions (taps during NoGo signals)
   noGoAccuracy: number; // % of NoGo correctly inhibited, 0-100 int
+  suspiciousSpam?: boolean; // >3 raw taps in any 500ms window — session invalid
+  earlyTapCount?: number;   // taps during inter state (anticipations)
 }
 
 interface Props {
@@ -65,6 +68,19 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   const signalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const interTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Anti-spam: cooldown between taps + rolling window counter
+  const lastTapRef = useRef<number>(0);
+  const spamWindowStartRef = useRef<number>(0);
+  const spamCountRef = useRef<number>(0);
+  const suspiciousSpamRef = useRef(false);
+
+  // Anticipation (early tap during inter)
+  const earlyTapRef = useRef<number>(0);
+  const penaltyVisibleRef = useRef<boolean>(false);
+  const pausedForPenaltyRef = useRef<boolean>(false);
+  const pendingScheduleRef = useRef<{ idx: number; trials: TrialResult[] } | null>(null);
+  const [showPenaltyOverlay, setShowPenaltyOverlay] = useState(false);
 
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
@@ -119,9 +135,10 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   const scheduleNext = useCallback((currentIdx: number, currentTrials: TrialResult[]) => {
     if (currentIdx >= TOTAL_SIGNALS) {
       const summary = computeSummary(currentTrials);
-      onComplete(summary);
+      onComplete({ ...summary, suspiciousSpam: suspiciousSpamRef.current, earlyTapCount: earlyTapRef.current });
       return;
     }
+    pendingScheduleRef.current = { idx: currentIdx, trials: currentTrials };
     const interval = MIN_INTERVAL + Math.random() * (MAX_INTERVAL - MIN_INTERVAL);
     setLastResponse(null);
     setGameState('inter');
@@ -151,6 +168,41 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   }, [computeSummary, onComplete, flash, circleScale]);
 
   const handleTap = useCallback(() => {
+    const now = Date.now();
+
+    // Rolling 500ms window spam detection — only during signal/feedback, not inter
+    // (anticipations during inter are a separate penalized mechanic, not spam)
+    if (gameState !== 'inter') {
+      if (now - spamWindowStartRef.current > 500) {
+        spamWindowStartRef.current = now;
+        spamCountRef.current = 1;
+      } else {
+        spamCountRef.current += 1;
+        if (spamCountRef.current > 3) suspiciousSpamRef.current = true;
+      }
+    }
+
+    // 150ms cooldown — blocks mechanical spam while well below human RT floor (~160ms)
+    if (now - lastTapRef.current < 150) return;
+    lastTapRef.current = now;
+
+    // Early tap during inter (anticipation): cancel scheduled signal, show overlay, resume after
+    if (gameState === 'inter' && !penaltyVisibleRef.current) {
+      if (interTimer.current) { clearTimeout(interTimer.current); interTimer.current = null; }
+      earlyTapRef.current += 1;
+      penaltyVisibleRef.current = true;
+      pausedForPenaltyRef.current = true;
+      setShowPenaltyOverlay(true);
+      setTimeout(() => {
+        setShowPenaltyOverlay(false);
+        penaltyVisibleRef.current = false;
+        pausedForPenaltyRef.current = false;
+        const pending = pendingScheduleRef.current;
+        if (pending) scheduleNext(pending.idx, pending.trials);
+      }, 600);
+      return;
+    }
+
     if (responded.current || gameState !== 'signal') return;
     responded.current = true;
     if (signalTimer.current) clearTimeout(signalTimer.current);
@@ -162,6 +214,8 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     const newTrials = [...trials, result];
     setTrials(newTrials);
     setLastResponse(responseType);
+    if (responseType === 'hit') playSfx('hit');
+    else if (responseType === 'commission') playSfx('miss');
     flash(responseType === 'commission');
     setGameState('feedback');
     setTimeout(() => scheduleNext(signalIdx + 1, newTrials), 400);
@@ -172,6 +226,16 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     setTrials([]);
     setSignalIdx(0);
     setCountdown(3);
+    // Reset anti-spam and anticipation state for new game
+    lastTapRef.current = 0;
+    spamWindowStartRef.current = 0;
+    spamCountRef.current = 0;
+    suspiciousSpamRef.current = false;
+    earlyTapRef.current = 0;
+    penaltyVisibleRef.current = false;
+    pausedForPenaltyRef.current = false;
+    pendingScheduleRef.current = null;
+    setShowPenaltyOverlay(false);
     setGameState('countdown');
     let count = 3;
     countdownTimer.current = setInterval(() => {
@@ -240,22 +304,20 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       </View>
       <Text style={styles.progressText}>{trials.length} / {TOTAL_SIGNALS}</Text>
 
-      {/* Main area */}
-      <View style={styles.centeredFull}>
+      {/* Main area — full area is tappable to detect anticipations during inter */}
+      <Pressable style={styles.centeredFull} onPressIn={handleTap}>
         {gameState === 'inter' && (
           <Text style={styles.interDots}>· · ·</Text>
         )}
 
         {gameState === 'signal' && (
-          <Pressable onPressIn={handleTap} style={styles.touchableArea}>
-            <Animated.View style={[
-              styles.signalCircle,
-              {
-                backgroundColor: currentSignalType === 'go' ? '#10b981' : '#ef4444',
-                transform: [{ scale: circleScale }],
-              },
-            ]} />
-          </Pressable>
+          <Animated.View style={[
+            styles.signalCircle,
+            {
+              backgroundColor: currentSignalType === 'go' ? '#10b981' : '#ef4444',
+              transform: [{ scale: circleScale }],
+            },
+          ]} />
         )}
 
         {gameState === 'feedback' && lastResponse && (
@@ -266,13 +328,22 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
             {lastResponse === 'correct_inhibit' && <Text style={[styles.feedbackBig, { color: '#8b5cf6' }]}>✓ INIBIU</Text>}
           </View>
         )}
-      </View>
+      </Pressable>
 
       {/* Instruction reminder */}
       {gameState === 'inter' && (
         <View style={styles.bottomHint}>
           <Text style={[styles.hintLine, { color: '#10b981' }]}>VERDE → toque</Text>
           <Text style={[styles.hintLine, { color: '#ef4444' }]}>VERMELHO → não toque</Text>
+        </View>
+      )}
+
+      {/* Anticipation penalty overlay */}
+      {showPenaltyOverlay && (
+        <View style={[StyleSheet.absoluteFill, styles.penaltyOverlay]} pointerEvents="none">
+          <Text style={styles.penaltyIcon}>❌</Text>
+          <Text style={styles.penaltyTitle}>Antecipou!</Text>
+          <Text style={styles.penaltyMs}>+150ms</Text>
         </View>
       )}
 
@@ -305,7 +376,6 @@ const styles = StyleSheet.create({
 
   interDots: { fontSize: 36, color: '#1a2540', letterSpacing: 16 },
 
-  touchableArea: { padding: 20 },
   signalCircle: {
     width: 180, height: 180, borderRadius: 90,
     elevation: 20,
@@ -338,4 +408,12 @@ const styles = StyleSheet.create({
 
   countdownNum: { fontSize: 120, fontWeight: '900', color: '#8b5cf6', lineHeight: 120 },
   countdownLabel: { fontSize: 14, fontWeight: '700', color: '#4a5a7b', letterSpacing: 3 },
+
+  penaltyOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center',
+    zIndex: 100,
+  },
+  penaltyIcon: { fontSize: 48, marginBottom: 8 },
+  penaltyTitle: { fontSize: 28, fontWeight: '900', color: '#ef4444', letterSpacing: 1 },
+  penaltyMs: { fontSize: 20, fontWeight: '800', color: '#f59e0b', marginTop: 6 },
 });
