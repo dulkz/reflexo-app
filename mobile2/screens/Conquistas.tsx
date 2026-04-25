@@ -62,6 +62,15 @@ export default function Conquistas({ sessions, userProfile }: Props) {
     [stats],
   );
 
+  const lockedSecrets = useMemo(
+    () => ACHIEVEMENTS.filter(a => !!a.secret && !a.unlocked(stats)),
+    [stats],
+  );
+  const discoveredSecretsCount = useMemo(
+    () => ACHIEVEMENTS.filter(a => !!a.secret && a.unlocked(stats)).length,
+    [stats],
+  );
+
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
 
@@ -122,7 +131,7 @@ export default function Conquistas({ sessions, userProfile }: Props) {
         )}
 
         {RARITY_ORDER.map(r => {
-          const group = GROUPED[r].filter(a => !a.unlocked(stats));
+          const group = GROUPED[r].filter(a => !a.unlocked(stats) && !a.secret);
           if (group.length === 0) return null;
           const cfg = RARITY_CONFIG[r];
           const totalInRarity = GROUPED[r].length;
@@ -197,6 +206,64 @@ export default function Conquistas({ sessions, userProfile }: Props) {
           );
         })}
 
+        {/* ══ SEÇÃO SECRETAS ══ */}
+        {(() => {
+          const isExpanded = expanded['secret'] === true;
+          return (
+            <View>
+              <TouchableOpacity
+                style={[
+                  styles.accordionHeader,
+                  { backgroundColor: SECRET_COLOR + (isExpanded ? '26' : '14') },
+                ]}
+                onPress={() => setExpanded(prev => ({ ...prev, secret: !prev['secret'] }))}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.accordionLabel, { color: SECRET_COLOR }]}>
+                  🔒 SECRETAS
+                </Text>
+                <View style={styles.accordionRight}>
+                  <Text style={[styles.accordionCount, { color: SECRET_COLOR }]}>
+                    {`${discoveredSecretsCount} descoberta${discoveredSecretsCount !== 1 ? 's' : ''} / ? existem`}
+                  </Text>
+                  <Text style={[styles.accordionArrow, { color: SECRET_COLOR }]}>
+                    {isExpanded ? '▼' : '▶'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              {isExpanded && (
+                lockedSecrets.length === 0
+                  ? (
+                    <View style={styles.secretHint}>
+                      <Text style={styles.secretHintText}>
+                        Jogue e descubra — algumas conquistas só aparecem quando você menos espera
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.grid}>
+                      {lockedSecrets.map(a => (
+                        <View
+                          key={a.id}
+                          style={[styles.cell, { borderWidth: 1.5, borderColor: SECRET_COLOR + '66', opacity: 0.65 }]}
+                        >
+                          <View style={[styles.rarityBadge, { backgroundColor: SECRET_COLOR + '22', borderColor: SECRET_COLOR }]}>
+                            <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>SECRETA</Text>
+                          </View>
+                          <Text style={styles.icon}>🔒</Text>
+                          <Text style={styles.name}>???</Text>
+                          <Text style={styles.desc} numberOfLines={2}>Conquista secreta — descubra jogando</Text>
+                          <View style={styles.progressBar}>
+                            <Text style={styles.progressLabel}>🔒 Bloqueada</Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )
+              )}
+            </View>
+          );
+        })()}
+
         <View style={{ height: 24 }} />
       </ScrollView>
     </View>
@@ -251,4 +318,10 @@ const styles = StyleSheet.create({
   progressBarDone: { backgroundColor: 'rgba(16,185,129,0.15)' },
   progressLabel: { fontSize: 11, color: '#4a5a7b' },
   progressLabelDone: { color: '#10b981' },
+
+  secretHint: {
+    backgroundColor: '#111a2e', borderRadius: 10, borderWidth: 1,
+    borderColor: SECRET_COLOR + '33', padding: 16, marginBottom: 8,
+  },
+  secretHintText: { fontSize: 13, color: SECRET_COLOR, textAlign: 'center', lineHeight: 20 },
 });
