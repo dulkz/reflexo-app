@@ -60,6 +60,30 @@ export async function saveUnlockedAchievements(data: Record<string, string>): Pr
   } catch {}
 }
 
+// ── Weekly mission slots ──────────────────────────────────────────────────────
+
+const WEEKLY_SLOTS_KEY = 'reflexo_weekly_missions_v1';
+
+export interface WeeklySlots {
+  weekStart: number;
+  slotIds: string[];
+}
+
+export async function loadWeeklySlots(): Promise<WeeklySlots | null> {
+  try {
+    const raw = await AsyncStorage.getItem(WEEKLY_SLOTS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveWeeklySlots(slots: WeeklySlots): Promise<void> {
+  try {
+    await AsyncStorage.setItem(WEEKLY_SLOTS_KEY, JSON.stringify(slots));
+  } catch {}
+}
+
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {
   const best: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null };
   for (const s of sessions) {

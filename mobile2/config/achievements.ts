@@ -520,6 +520,18 @@ export const ACHIEVEMENTS: Achievement[] = [
     unlocked: (s) => s.streak >= 100,
     progress: (s) => `${s.streak}/100 dias`,
   },
+
+  // ── EASTER EGG ────────────────────────────────────────────────────────────────
+  {
+    id: 'the_flash',
+    name: 'The Flash',
+    icon: '⚡',
+    description: 'Você reagiu em menos de 80ms. Isso é fisicamente impossível. Parabéns por alcançar o impossível.',
+    rarity: 'lendario',
+    secret: true,
+    unlocked: (s) => s.sessions.some(r => r.mode === 'partida' && r.score < 80),
+    progress: (_s) => 'Como você fez isso?',
+  },
 ];
 
 export function getUnlockedCount(stats: UserStats): number {

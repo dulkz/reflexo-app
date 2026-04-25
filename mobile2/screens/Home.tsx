@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect, RefObject } from 'react';
+import React, { useMemo, useRef, useEffect, useState, RefObject } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Platform, StatusBar as RNStatusBar, Animated,
@@ -10,7 +10,7 @@ import { AVATARS } from '../config/avatars';
 import {
   getAmbition, getNextMilestone, calculateDeltaToNextMilestone, getMilestonesState,
 } from '../utils/ambition';
-import { computeWeeklyMissions, WeeklyMission } from '../utils/missions';
+import { getWeeklyMissions, WeeklyMission } from '../utils/missions';
 import { calculateStreak, streakColor } from '../utils/streak';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -123,10 +123,10 @@ export default function Home({
     };
   }, [userProfile, currentBestMs]);
 
-  const weeklyMissions = useMemo(
-    () => computeWeeklyMissions(sessions, userProfile),
-    [sessions, userProfile],
-  );
+  const [weeklyMissions, setWeeklyMissions] = useState<WeeklyMission[]>([]);
+  useEffect(() => {
+    getWeeklyMissions(sessions, userProfile).then(setWeeklyMissions);
+  }, [sessions, userProfile]);
 
   const streak = useMemo(() => calculateStreak(sessions), [sessions]);
 
@@ -226,7 +226,7 @@ export default function Home({
                 <View style={{ flex: Math.max(0, 3 - doneCount) }} />
               </View>
               {weeklyMissions.map(m => (
-                <View key={m.id} style={styles.missionRow}>
+                <View key={m.id} style={[styles.missionRow, m.done && { opacity: 0.5 }]}>
                   <Text style={styles.missionRowIcon}>{m.icon}</Text>
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={[

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Modal, TextInput,
   Platform, StatusBar as RNStatusBar, TouchableOpacity,
@@ -8,7 +8,7 @@ import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
-import { computeWeeklyMissions } from '../utils/missions';
+import { getWeeklyMissions, WeeklyMission } from '../utils/missions';
 
 const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
   { id: 'EXPLORADOR',  icon: '🔭', tagline: 'Descobrindo seu perfil' },
@@ -262,10 +262,10 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   const ambitionGroupColor = ambition ? GROUP_COLOR[ambition.group] : '#3b82f6';
 
   // ── Objectives data ───────────────────────────────────────────────────────────
-  const weeklyMissions = useMemo(
-    () => computeWeeklyMissions(sessions, userProfile),
-    [sessions, userProfile],
-  );
+  const [weeklyMissions, setWeeklyMissions] = useState<WeeklyMission[]>([]);
+  useEffect(() => {
+    getWeeklyMissions(sessions, userProfile).then(setWeeklyMissions);
+  }, [sessions, userProfile]);
 
   const nextAchievementInfo = useMemo(() => {
     const locked = ACHIEVEMENTS.filter(a => !a.unlocked(stats) && !a.secret);
