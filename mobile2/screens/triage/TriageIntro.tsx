@@ -43,7 +43,7 @@ export default function TriageIntro({ onNext, onDismiss }: Props) {
 
         <Text style={styles.title}>{'Bora traçar\nsua rota?'}</Text>
         <Text style={styles.subtitle}>
-          Você jogou sua primeira rodada. Agora a gente calibra o app pra você — em menos de 1 minuto.
+          Pilotos de F1 reagem em 150ms. Atletas olímpicos em 160ms. Onde você está? Vamos descobrir agora.
         </Text>
       </View>
 
