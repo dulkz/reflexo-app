@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Pressable,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -68,6 +69,8 @@ interface Props {
 }
 
 export default function TriageBaseline({ onNext, onBack }: Props) {
+  const insets = useSafeAreaInsets();
+  const footerPadding = Math.max(insets.bottom, 16);
   const [phase, setPhase] = useState<Phase>('intro');
   const [rts, setRts] = useState<Rts>({ partida: null, alvo: null, seq: null });
   const [alvoTarget, setAlvoTarget] = useState(0);
@@ -270,7 +273,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
             </View>
           ))}
         </View>
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingBottom: footerPadding }]}>
           <TouchableOpacity style={styles.btnPrimary} onPress={() => setPhase('partida_instr')} activeOpacity={0.8}>
             <Text style={styles.btnPrimaryText}>COMEÇAR</Text>
           </TouchableOpacity>
@@ -319,16 +322,60 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
   if (phase === 'partida_instr' || phase === 'alvo_instr' || phase === 'seq_instr') {
     const instr = INSTR_DATA[phase];
+    const modeColor = phase === 'partida_instr' ? '#3b82f6'
+      : phase === 'alvo_instr' ? '#06b6d4'
+      : '#8b5cf6';
+    const modeBg = phase === 'partida_instr' ? 'rgba(59,130,246,0.2)'
+      : phase === 'alvo_instr' ? 'rgba(6,182,212,0.2)'
+      : 'rgba(139,92,246,0.2)';
+    const sciText = phase === 'partida_instr'
+      ? 'Pilotos de F1 reagem em 150ms — seu cérebro pode chegar lá'
+      : phase === 'alvo_instr'
+      ? 'Choice RT mede decisão sob pressão — usado em diagnósticos de atenção'
+      : 'O paradigma Go/NoGo é padrão clínico — usado em diagnóstico de TDAH e controle inibitório';
     return (
       <View style={styles.root}>
         {renderHeader(5)}
         <View style={styles.instrBody}>
-          <Text style={styles.instrIcon}>{instr.icon}</Text>
-          <Text style={styles.instrName}>{instr.name}</Text>
-          <Text style={styles.instrDesc}>{instr.desc}</Text>
+          <View style={[styles.instrIconCircle, { backgroundColor: modeBg }]}>
+            <Text style={styles.instrIconLarge}>{instr.icon}</Text>
+          </View>
+          <Text style={[styles.instrName, { color: modeColor }]}>{instr.name}</Text>
+          <View style={[styles.instrSciCard, { borderColor: modeColor + '44' }]}>
+            <Text style={styles.instrSciText}>{sciText}</Text>
+          </View>
+          {phase === 'partida_instr' && (
+            <View style={styles.instrDemo}>
+              <View style={styles.instrDemoCircleGreen} />
+              <Text style={[styles.instrDemoLabel, { color: '#10b981' }]}>TOQUE AQUI</Text>
+            </View>
+          )}
+          {phase === 'alvo_instr' && (
+            <View style={styles.instrDemoRow}>
+              {['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'].map(c => (
+                <View key={c} style={[styles.instrDemoSmallCircle, { backgroundColor: c }]} />
+              ))}
+            </View>
+          )}
+          {phase === 'seq_instr' && (
+            <View style={styles.instrDemoRow}>
+              <View style={styles.instrDemoGoItem}>
+                <View style={[styles.instrDemoSmallCircle, { backgroundColor: '#10b981' }]} />
+                <Text style={[styles.instrDemoLabel, { color: '#10b981' }]}>GO</Text>
+              </View>
+              <View style={styles.instrDemoGoItem}>
+                <View style={[styles.instrDemoSmallCircle, { backgroundColor: '#ef4444' }]} />
+                <Text style={[styles.instrDemoLabel, { color: '#ef4444' }]}>NO-GO</Text>
+              </View>
+            </View>
+          )}
         </View>
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.btnPrimary} onPress={instr.onStart} activeOpacity={0.8}>
+        <View style={[styles.footer, { paddingBottom: footerPadding }]}>
+          <TouchableOpacity
+            style={[styles.btnPrimary, { backgroundColor: modeColor }]}
+            onPress={instr.onStart}
+            activeOpacity={0.8}
+          >
             <Text style={styles.btnPrimaryText}>COMEÇAR</Text>
           </TouchableOpacity>
         </View>
@@ -472,7 +519,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         <Text style={styles.resultUnit}>ms</Text>
         <Text style={styles.resultSub}>Ponto de partida registrado. Agora vem a parte boa — sua jornada.</Text>
       </View>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: footerPadding }]}>
         <TouchableOpacity
           style={styles.btnPrimary}
           onPress={() => baseline !== null && onNext(baseline)}
@@ -515,10 +562,21 @@ const styles = StyleSheet.create({
   modeCardMetric: { fontSize: 9, fontWeight: '700', color: '#4a5a7b', letterSpacing: 1.5 },
   modeCardRange: { fontSize: 11, color: '#3a4a6b', fontWeight: '600', marginTop: 2 },
 
-  instrBody: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 16 },
-  instrIcon: { fontSize: 72 },
-  instrName: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: 1.5 },
-  instrDesc: { fontSize: 15, color: '#7a8aa0', textAlign: 'center', lineHeight: 24 },
+  instrBody: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, gap: 14 },
+  instrIconCircle: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' },
+  instrIconLarge: { fontSize: 64 },
+  instrName: { fontSize: 28, fontWeight: '900', letterSpacing: 1.5 },
+  instrSciCard: {
+    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
+    padding: 14, width: '100%',
+  },
+  instrSciText: { fontSize: 14, color: '#7a8aa0', textAlign: 'center', lineHeight: 22 },
+  instrDemo: { alignItems: 'center', gap: 10, marginTop: 4 },
+  instrDemoCircleGreen: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#10b981' },
+  instrDemoLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 2 },
+  instrDemoRow: { flexDirection: 'row', gap: 20, alignItems: 'center', marginTop: 4 },
+  instrDemoSmallCircle: { width: 44, height: 44, borderRadius: 22 },
+  instrDemoGoItem: { alignItems: 'center', gap: 6 },
 
   countdownArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   countdownNum: { fontSize: 112, fontWeight: '900', color: '#fff', letterSpacing: -4, lineHeight: 116 },

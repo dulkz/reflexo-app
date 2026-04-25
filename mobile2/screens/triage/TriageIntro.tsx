@@ -25,7 +25,22 @@ export default function TriageIntro({ onNext, onDismiss }: Props) {
 
       {/* Content */}
       <View style={styles.body}>
-        <Text style={styles.illustration}>🗺️</Text>
+        <View style={styles.iconCircle}>
+          <Text style={styles.iconText}>⚡</Text>
+        </View>
+
+        <View style={styles.chipsRow}>
+          <View style={styles.chipSport}>
+            <Text style={styles.chipTextSport}>⚡ 150ms F1</Text>
+          </View>
+          <View style={styles.chipBrain}>
+            <Text style={styles.chipTextBrain}>🧠 +40% atenção</Text>
+          </View>
+          <View style={styles.chipFit}>
+            <Text style={styles.chipTextFit}>💪 Treinável</Text>
+          </View>
+        </View>
+
         <Text style={styles.title}>{'Bora traçar\nsua rota?'}</Text>
         <Text style={styles.subtitle}>
           Você jogou sua primeira rodada. Agora a gente calibra o app pra você — em menos de 1 minuto.
@@ -53,11 +68,38 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#1a2540' },
   dotActive: { backgroundColor: '#3b82f6', width: 20 },
 
-  body: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  illustration: { fontSize: 80, marginBottom: 32 },
+  body: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 20 },
+
+  iconCircle: {
+    width: 120, height: 120, borderRadius: 60,
+    backgroundColor: 'rgba(91,79,207,0.2)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  iconText: { fontSize: 72 },
+
+  chipsRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' },
+  chipSport: {
+    backgroundColor: 'rgba(91,79,207,0.15)', borderWidth: 1,
+    borderColor: 'rgba(91,79,207,0.5)', borderRadius: 20,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  chipTextSport: { fontSize: 11, fontWeight: '700', color: '#8b5cf6' },
+  chipBrain: {
+    backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.5)', borderRadius: 20,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  chipTextBrain: { fontSize: 11, fontWeight: '700', color: '#10b981' },
+  chipFit: {
+    backgroundColor: 'rgba(59,130,246,0.15)', borderWidth: 1,
+    borderColor: 'rgba(59,130,246,0.5)', borderRadius: 20,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  chipTextFit: { fontSize: 11, fontWeight: '700', color: '#3b82f6' },
+
   title: {
-    fontSize: 38, fontWeight: '900', color: '#fff',
-    textAlign: 'center', letterSpacing: -1, lineHeight: 44, marginBottom: 20,
+    fontSize: 32, fontWeight: '900', color: '#fff',
+    textAlign: 'center', letterSpacing: -1, lineHeight: 38,
   },
   subtitle: {
     fontSize: 16, color: '#4a5a7b', textAlign: 'center', lineHeight: 24,
@@ -65,7 +107,7 @@ const styles = StyleSheet.create({
 
   footer: { paddingHorizontal: 24, paddingBottom: 40, gap: 12 },
   btnPrimary: {
-    backgroundColor: '#3b82f6', borderRadius: 14,
+    backgroundColor: '#5b4fcf', borderRadius: 14,
     paddingVertical: 18, alignItems: 'center',
   },
   btnPrimaryText: { fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 2 },
