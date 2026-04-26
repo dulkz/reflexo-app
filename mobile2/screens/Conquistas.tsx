@@ -27,6 +27,8 @@ const GROUPED = (() => {
   return map;
 })();
 
+const SECRET_TOTAL = ACHIEVEMENTS.filter(a => !!a.secret).length;
+
 function formatUnlockDate(iso: string): string {
   const d = new Date(iso);
   return `${d.getDate()} ${MONTH_ABBR[d.getMonth()]} ${d.getFullYear()}`;
@@ -208,7 +210,7 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                 </Text>
                 <View style={styles.accordionRight}>
                   <Text style={[styles.accordionCount, { color: SECRET_COLOR }]}>
-                    {`${discoveredSecretsCount} descoberta${discoveredSecretsCount !== 1 ? 's' : ''} / ? existem`}
+                    {`${discoveredSecretsCount} descoberta${discoveredSecretsCount !== 1 ? 's' : ''} / ${SECRET_TOTAL} existem`}
                   </Text>
                   <Text style={[styles.accordionArrow, { color: SECRET_COLOR }]}>
                     {isExpanded ? '▼' : '▶'}
