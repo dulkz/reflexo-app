@@ -70,6 +70,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
 
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
+  const missPenaltyOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
@@ -173,9 +174,13 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
       playSfx('miss');
       setGameState('miss');
       flash(true);
+      missPenaltyOpacity.setValue(0);
+      Animated.timing(missPenaltyOpacity, {
+        toValue: 1, duration: 100, useNativeDriver: true,
+      }).start();
       advance(newResults, FEEDBACK_DELAY_MISS);
     }
-  }, [gameState, activeIdx, results, flash, advance]);
+  }, [gameState, activeIdx, results, flash, advance, missPenaltyOpacity]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -311,6 +316,16 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
           { backgroundColor: flashIsRed.current ? '#ef4444' : '#10b981', opacity: flashOpacity },
         ]}
       />
+
+      {/* Miss penalty overlay — only on wrong-circle taps, not on timeouts */}
+      {gameState === 'miss' && (
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.penaltyOverlay, { opacity: missPenaltyOpacity }]}
+        >
+          <Text style={styles.penaltyText}>+{MISS_PENALTY}ms</Text>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -351,6 +366,21 @@ const styles = StyleSheet.create({
 
   crossContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   crossInner: { width: CONTAINER, height: CONTAINER, position: 'relative' },
+
+  penaltyOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  penaltyText: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#ef4444',
+    letterSpacing: -0.5,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+  },
   circleBase: {
     position: 'absolute',
     width: CIRCLE_SIZE,
