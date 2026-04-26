@@ -49,6 +49,7 @@ function formatShortDate(ts: number): string {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 type FilterKey = 'all' | ModeKey;
+type PeriodKey = '7d' | '30d' | 'all';
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all',       label: 'Todos' },
@@ -56,6 +57,14 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'alvo',      label: 'Alvo' },
   { key: 'sequencia', label: 'Sequência' },
 ];
+
+const PERIODS: { key: PeriodKey; label: string }[] = [
+  { key: '7d',  label: '7 dias' },
+  { key: '30d', label: '30 dias' },
+  { key: 'all', label: 'Tudo' },
+];
+
+const DAYS_OF_WEEK = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 const MODE_LABELS: Record<ModeKey, string> = {
   partida: 'Partida',
@@ -74,27 +83,45 @@ const MODE_ICONS: Record<ModeKey, string> = {
 interface EvoProps {
   sessions: SessionRecord[];
   filter: FilterKey;
+  period: PeriodKey;
   userProfile?: UserProfile;
 }
 
-function EvoChart({ sessions, filter, userProfile }: EvoProps) {
+function EvoChart({ sessions, filter, period, userProfile }: EvoProps) {
   const W = 320;
   const H = 140;
   const PAD = { t: 20, r: 8, b: 28, l: 40 };
   const innerW = W - PAD.l - PAD.r;
   const innerH = H - PAD.t - PAD.b;
 
-  // Filter sessions for chart based on active filter
-  const chartSessions = filter === 'all'
+  // Mode filter
+  const modeFiltered = filter === 'all'
     ? sessions
     : sessions.filter(s => s.mode === (filter as ModeKey));
 
-  const last20 = chartSessions.slice(0, 20).reverse(); // oldest → newest
-  if (last20.length < 1) return null;
+  // Period window (fixed for 7d/30d, null for 'all')
+  const todayStart = dayStart(Date.now());
+  const windowStart = period === '7d'  ? todayStart - 6 * DAY
+                    : period === '30d' ? todayStart - 29 * DAY
+                    : null;
+  const windowEnd = todayStart + DAY;
 
-  const allScores = last20.map(s => s.score);
-  const rawMin = Math.min(...allScores);
-  const rawMax = Math.max(...allScores);
+  const periodFiltered = windowStart === null
+    ? modeFiltered
+    : modeFiltered.filter(s => s.date >= windowStart);
+
+  // Chronological order (oldest → newest); cap only 'all' at 20 to avoid clutter
+  const sessionsToPlot = period === 'all'
+    ? periodFiltered.slice(0, 20).reverse()
+    : periodFiltered.slice().reverse();
+
+  // 'all' with no data → hide chart entirely; 7d/30d → render empty axis
+  if (sessionsToPlot.length < 1 && period === 'all') return null;
+
+  const allScores = sessionsToPlot.map(s => s.score);
+  const hasData = allScores.length > 0;
+  const rawMin = hasData ? Math.min(...allScores) : 0;
+  const rawMax = hasData ? Math.max(...allScores) : 0;
 
   const isBrainHealth = userProfile?.triageCompleted &&
     userProfile.ambitionId &&
@@ -102,7 +129,8 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
 
   // ── Next milestone line (non-alvo: ambition-based; alvo: choice RT thresholds) ─
   let nextMilestoneMs: number | null = null;
-  if (filter !== 'alvo' && userProfile?.triageCompleted && userProfile.ambitionId && !isBrainHealth) {
+  if (hasData && filter !== 'alvo' && userProfile?.triageCompleted &&
+      userProfile.ambitionId && !isBrainHealth) {
     const currentBestMs = Math.min(...allScores);
     const next = getNextMilestone(
       userProfile.baselineMs ?? null,
@@ -116,7 +144,8 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
 
   // Alvo next goal: next choice RT threshold above user's best alvo score
   let alvoNextGoalMs: number | null = null;
-  if (filter === 'alvo' && userProfile?.triageCompleted && userProfile.ambitionId && !isBrainHealth) {
+  if (hasData && filter === 'alvo' && userProfile?.triageCompleted &&
+      userProfile.ambitionId && !isBrainHealth) {
     const bestAlvo = Math.min(...allScores);
     if (bestAlvo > 700)      alvoNextGoalMs = 700;
     else if (bestAlvo > 560) alvoNextGoalMs = 560;
@@ -131,11 +160,13 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
     minV = 300; maxV = 800;
   } else if (filter === 'partida' || filter === 'sequencia') {
     minV = 150; maxV = 500;
-  } else {
-    // 'all': dynamic — include milestone so dashed line stays visible
+  } else if (hasData) {
+    // 'all' with data: dynamic — include milestone so dashed line stays visible
     const effectiveMin = nextMilestoneMs !== null ? Math.min(rawMin, nextMilestoneMs) : rawMin;
     minV = Math.floor((effectiveMin - 20) / 20) * 20;
     maxV = Math.ceil((rawMax + 20) / 20) * 20;
+  } else {
+    minV = 150; maxV = 500;
   }
   const range = maxV - minV || 80;
 
@@ -148,20 +179,55 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
 
   const toY = (v: number) => PAD.t + (1 - (v - minV) / range) * innerH;
 
-  // X: time-based when sessions span ≥ 1 day, else index-based
-  const tMin = last20[0].date;
-  const tNow = Date.now();
-  const timeSpan = tNow - tMin;
-  const useTimeBased = timeSpan >= DAY && last20.length > 1;
+  // X axis: fixed window for 7d/30d, dynamic for 'all'
+  const useFixedWindow = period === '7d' || period === '30d';
+  let tMin: number, tMax: number, useTimeBased: boolean;
+  if (useFixedWindow) {
+    tMin = windowStart!;
+    tMax = windowEnd;
+    useTimeBased = true;
+  } else if (hasData) {
+    tMin = sessionsToPlot[0].date;
+    tMax = Date.now();
+    useTimeBased = (tMax - tMin) >= DAY && sessionsToPlot.length > 1;
+  } else {
+    tMin = Date.now();
+    tMax = Date.now();
+    useTimeBased = false;
+  }
 
   const toX = (date: number, idx: number): number => {
-    if (last20.length <= 1) return PAD.l + innerW / 2;
-    if (useTimeBased) return PAD.l + Math.max(0, Math.min(1, (date - tMin) / timeSpan)) * innerW;
-    return PAD.l + (idx / (last20.length - 1)) * innerW;
+    if (useTimeBased) {
+      const span = tMax - tMin || 1;
+      return PAD.l + Math.max(0, Math.min(1, (date - tMin) / span)) * innerW;
+    }
+    if (sessionsToPlot.length <= 1) return PAD.l + innerW / 2;
+    return PAD.l + (idx / (sessionsToPlot.length - 1)) * innerW;
   };
 
   const xTicks: { x: number; label: string; anchor: 'start' | 'middle' | 'end' }[] = [];
-  if (useTimeBased) {
+  if (period === '7d') {
+    const span = tMax - tMin;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(todayStart - (6 - i) * DAY);
+      const center = d.getTime() + DAY / 2;
+      const x = PAD.l + ((center - tMin) / span) * innerW;
+      xTicks.push({ x, label: DAYS_OF_WEEK[d.getDay()], anchor: 'middle' });
+    }
+  } else if (period === '30d') {
+    const span = tMax - tMin;
+    for (let daysAgo = 28; daysAgo >= 0; daysAgo -= 7) {
+      const dayMs = todayStart - daysAgo * DAY;
+      const center = dayMs + DAY / 2;
+      const x = PAD.l + ((center - tMin) / span) * innerW;
+      const label = daysAgo === 0 ? 'hoje' : formatShortDate(dayMs);
+      const anchor: 'start' | 'middle' | 'end' =
+        daysAgo === 0 ? 'end' : daysAgo === 28 ? 'start' : 'middle';
+      xTicks.push({ x, label, anchor });
+    }
+  } else if (useTimeBased) {
+    const tNow = Date.now();
+    const timeSpan = tMax - tMin;
     xTicks.push({ x: PAD.l + innerW, label: 'hoje', anchor: 'end' });
     const x7 = PAD.l + ((tNow - 7 * DAY - tMin) / timeSpan) * innerW;
     if (x7 > PAD.l + 8 && x7 < PAD.l + innerW - 20)
@@ -283,7 +349,7 @@ function EvoChart({ sessions, filter, userProfile }: EvoProps) {
         {/* Series — only modes matching the active filter */}
         {(filter === 'all' ? modes : [filter as ModeKey]).map(mode => {
           const mc = MODE_COLORS[mode];
-          const modePts = last20
+          const modePts = sessionsToPlot
             .map((s, i) => s.mode === mode
               ? { x: toX(s.date, i), y: toY(s.score) }
               : null)
@@ -357,6 +423,7 @@ interface Props {
 
 export default function Historico({ sessions, userProfile }: Props) {
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [period, setPeriod] = useState<PeriodKey>('7d');
 
   const modeCounts = useMemo((): Record<FilterKey, number> => {
     const c: Record<FilterKey, number> = { all: sessions.length, partida: 0, alvo: 0, sequencia: 0 };
@@ -486,7 +553,24 @@ export default function Historico({ sessions, userProfile }: Props) {
         {sessions.length >= 1 && (
           <>
             <Text style={styles.sectionTitle}>EVOLUÇÃO</Text>
-            <EvoChart sessions={sessions} filter={filter} userProfile={userProfile} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.periodRow}>
+              {PERIODS.map(p => {
+                const active = period === p.key;
+                return (
+                  <TouchableOpacity
+                    key={p.key}
+                    style={[styles.pill, active && styles.pillActivePeriod]}
+                    onPress={() => setPeriod(p.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.pillText, active && styles.pillTextActivePeriod]}>
+                      {p.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <EvoChart sessions={sessions} filter={filter} period={period} userProfile={userProfile} />
           </>
         )}
 
@@ -592,6 +676,7 @@ const styles = StyleSheet.create({
   sumLbl: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 1.5, marginTop: 4 },
 
   filterRow: { marginBottom: 16 },
+  periodRow: { marginBottom: 10 },
   pill: {
     borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     paddingHorizontal: 14, paddingVertical: 7, marginRight: 8,
@@ -599,6 +684,8 @@ const styles = StyleSheet.create({
   },
   pillText: { fontSize: 13, fontWeight: '600', color: '#4a5a7b' },
   pillCount: { fontSize: 11, fontWeight: '500', color: '#2d3a55' },
+  pillActivePeriod: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  pillTextActivePeriod: { color: '#fff' },
 
   sessionCard: {
     flexDirection: 'row',
