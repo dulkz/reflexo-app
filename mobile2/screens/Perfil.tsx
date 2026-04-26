@@ -212,7 +212,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   }, [archetype.nextId]);
 
   const modeBreakdown = useMemo(() => {
-    const keys: ModeKey[] = ['partida', 'alvo', 'sequencia'];
+    const keys: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
     return keys.map(k => {
       const mSessions = sessions.filter(s => s.mode === k);
       const best = stats.bestScoreByMode[k];
@@ -223,7 +223,10 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
       const bestAlvoRt = k === 'alvo' && mSessions.length > 0
         ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
         : null;
-      return { key: k, count: mSessions.length, best, bestAcc, lastFatigue, bestAlvoRt };
+      const bestRadarRt = k === 'radar' && mSessions.length > 0
+        ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
+        : null;
+      return { key: k, count: mSessions.length, best, bestAcc, lastFatigue, bestAlvoRt, bestRadarRt };
     });
   }, [sessions, stats]);
 
@@ -796,7 +799,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {modeBreakdown.map(m => {
           const mc = MODE_COLORS[m.key];
           const meta = MODE_META[m.key];
-          const displayScore = m.key === 'alvo' && m.bestAlvoRt !== null ? m.bestAlvoRt : m.best;
+          const displayScore = m.key === 'alvo' && m.bestAlvoRt !== null ? m.bestAlvoRt
+                             : m.key === 'radar' && m.bestRadarRt !== null ? m.bestRadarRt
+                             : m.best;
           const lvl = displayScore !== null ? getLevelInfo(displayScore) : null;
 
           return (
@@ -825,6 +830,12 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                     )}
                     {m.key === 'sequencia' && m.lastFatigue !== null && m.lastFatigue !== undefined && (
                       <Text style={styles.modeExtra}>{m.lastFatigue.toFixed(1)}% fadiga</Text>
+                    )}
+                    {m.key === 'radar' && (
+                      <Text style={[styles.modeExtra, { color: mc.accent }]}>Melhor Tempo Reflexo</Text>
+                    )}
+                    {m.key === 'radar' && m.bestAcc !== null && (
+                      <Text style={[styles.modeExtra, { color: mc.accent }]}>Precisão: {Math.round(m.bestAcc * 100)}%</Text>
                     )}
                   </>
                 ) : (
