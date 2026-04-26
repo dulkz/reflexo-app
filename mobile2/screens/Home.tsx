@@ -11,6 +11,7 @@ import {
   getAmbition, getNextMilestone, calculateDeltaToNextMilestone, getMilestonesState,
 } from '../utils/ambition';
 import { getWeeklyMissions, WeeklyMission } from '../utils/missions';
+import { getDailyMissions, DailyMission } from '../utils/dailyMissions';
 import { calculateStreak, streakColor } from '../utils/streak';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -128,6 +129,11 @@ export default function Home({
     getWeeklyMissions(sessions, userProfile).then(setWeeklyMissions);
   }, [sessions, userProfile]);
 
+  const [dailyMissions, setDailyMissions] = useState<DailyMission[]>([]);
+  useEffect(() => {
+    getDailyMissions(sessions, userProfile).then(setDailyMissions);
+  }, [sessions, userProfile]);
+
   const streak = useMemo(() => calculateStreak(sessions), [sessions]);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -195,6 +201,59 @@ export default function Home({
             )}
           </View>
         )}
+
+        {/* ── Daily objectives card ── */}
+        {dailyMissions.length > 0 && (() => {
+          const doneDailyCount = dailyMissions.filter(m => m.done).length;
+          const allDone = doneDailyCount === dailyMissions.length;
+          return (
+            <View style={styles.dailyCard}>
+              <View style={styles.missionHeader}>
+                <Text style={styles.missionHeaderText}>OBJETIVO DO DIA</Text>
+                <Text style={styles.missionCount}>
+                  {'🎯 '}
+                  <Text style={{ color: allDone ? '#10b981' : '#06b6d4' }}>
+                    {doneDailyCount}/{dailyMissions.length}
+                  </Text>
+                  {' completos'}
+                </Text>
+              </View>
+              <View style={styles.missionProgressTrack}>
+                <View style={[
+                  styles.missionProgressFill,
+                  { flex: doneDailyCount, backgroundColor: allDone ? '#10b981' : '#06b6d4' },
+                ]} />
+                <View style={{ flex: Math.max(0, dailyMissions.length - doneDailyCount) }} />
+              </View>
+              {dailyMissions.map(m => (
+                <View key={m.id} style={[styles.missionRow, m.done && { opacity: 0.5 }]}>
+                  <Text style={styles.missionRowIcon}>{m.icon}</Text>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={[
+                      styles.missionRowLabel,
+                      m.done && { color: '#10b981' },
+                    ]} numberOfLines={1}>
+                      {m.label}
+                    </Text>
+                    {m.target > 1 && (
+                      <View style={styles.missionMiniTrack}>
+                        <View style={[
+                          styles.missionMiniFill,
+                          { flex: m.current, backgroundColor: m.done ? '#10b981' : '#06b6d4' },
+                        ]} />
+                        <View style={{ flex: Math.max(0, m.target - m.current) }} />
+                      </View>
+                    )}
+                  </View>
+                  {m.done
+                    ? <Text style={styles.missionRowCheck}>✓</Text>
+                    : <Text style={styles.missionRowProgress}>{m.current}/{m.target}</Text>
+                  }
+                </View>
+              ))}
+            </View>
+          );
+        })()}
 
         {/* ── Weekly missions card ── */}
         {(() => {
@@ -442,6 +501,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4,
   },
   streakBadgePulseText: { fontSize: 11, color: '#f59e0b', fontWeight: '700' },
+
+  // ── Daily objectives card ─────────────────────────────────────────────────
+  dailyCard: {
+    backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
+    borderColor: 'rgba(6,182,212,0.3)', padding: 14, marginBottom: 10,
+  },
 
   // ── Weekly missions card ──────────────────────────────────────────────────
   missionCard: {

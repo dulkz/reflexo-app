@@ -66,10 +66,13 @@ export default function Conquistas({ sessions, userProfile }: Props) {
     () => ACHIEVEMENTS.filter(a => !!a.secret && !a.unlocked(stats)),
     [stats],
   );
-  const discoveredSecretsCount = useMemo(
-    () => ACHIEVEMENTS.filter(a => !!a.secret && a.unlocked(stats)).length,
+  const discoveredSecrets = useMemo(
+    () => ACHIEVEMENTS
+      .filter(a => !!a.secret && a.unlocked(stats))
+      .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity)),
     [stats],
   );
+  const discoveredSecretsCount = discoveredSecrets.length;
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
@@ -131,11 +134,13 @@ export default function Conquistas({ sessions, userProfile }: Props) {
         )}
 
         {RARITY_ORDER.map(r => {
-          const group = GROUPED[r].filter(a => !a.unlocked(stats) && !a.secret);
-          if (group.length === 0) return null;
+          // Count only non-secret achievements for display — secrets live in their own section
+          const nonSecretAll  = GROUPED[r].filter(a => !a.secret);
+          if (nonSecretAll.length === 0) return null;
+          const group = nonSecretAll.filter(a => !a.unlocked(stats));
           const cfg = RARITY_CONFIG[r];
-          const totalInRarity = GROUPED[r].length;
-          const unlockedInRarity = totalInRarity - group.length;
+          const unlockedCount = nonSecretAll.length - group.length;
+          const allDone = group.length === 0;
           const isExpanded = expanded[r] === true;
           return (
             <View key={r}>
@@ -144,62 +149,41 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                   styles.accordionHeader,
                   { backgroundColor: cfg.cor + (isExpanded ? '26' : '14') },
                 ]}
-                onPress={() => setExpanded(prev => ({ ...prev, [r]: !prev[r] }))}
-                activeOpacity={0.8}
+                onPress={() => !allDone && setExpanded(prev => ({ ...prev, [r]: !prev[r] }))}
+                activeOpacity={allDone ? 1 : 0.8}
               >
-                <Text style={[styles.accordionLabel, { color: cfg.cor }]}>
+                <Text style={[styles.accordionLabel, { color: allDone ? cfg.cor + '99' : cfg.cor }]}>
                   {RARITY_ICONS[r]} {cfg.label}
                 </Text>
                 <View style={styles.accordionRight}>
-                  <Text style={[styles.accordionCount, { color: cfg.cor }]}>
-                    {unlockedInRarity}/{totalInRarity}
+                  <Text style={[styles.accordionCount, { color: allDone ? cfg.cor + '99' : cfg.cor }]}>
+                    {allDone ? '✓ Todas conquistadas' : `${unlockedCount}/${nonSecretAll.length}`}
                   </Text>
-                  <Text style={[styles.accordionArrow, { color: cfg.cor }]}>
-                    {isExpanded ? '▼' : '▶'}
-                  </Text>
+                  {!allDone && (
+                    <Text style={[styles.accordionArrow, { color: cfg.cor }]}>
+                      {isExpanded ? '▼' : '▶'}
+                    </Text>
+                  )}
                 </View>
               </TouchableOpacity>
-              {isExpanded && (
+              {isExpanded && !allDone && (
               <View style={styles.grid}>
-                {group.map(a => {
-                  const isSecret = !!a.secret;
-                  const badgeColor = isSecret ? SECRET_COLOR : cfg.cor;
-                  const badgeLabel = isSecret ? 'SECRETA' : cfg.label;
-                  const displayIcon = isSecret ? '🔒' : a.icon;
-                  const displayName = isSecret ? '???' : a.name;
-                  const displayDesc = isSecret ? 'Conquista secreta — descubra jogando' : a.description;
-                  const progressText = isSecret ? '🔒 Bloqueada' : a.progress(stats);
-                  return (
-                    <View
-                      key={a.id}
-                      style={[
-                        styles.cell,
-                        {
-                          borderWidth: 1.5,
-                          borderColor: isSecret ? SECRET_COLOR + '66' : cfg.cor + '99',
-                          opacity: 0.65,
-                        },
-                      ]}
-                    >
-                      <View style={[
-                        styles.rarityBadge,
-                        { backgroundColor: badgeColor + '22', borderColor: badgeColor },
-                      ]}>
-                        <Text style={[styles.rarityBadgeText, { color: badgeColor }]}>
-                          {badgeLabel}
-                        </Text>
-                      </View>
-                      <Text style={styles.icon}>{displayIcon}</Text>
-                      <Text style={styles.name}>{displayName}</Text>
-                      <Text style={styles.desc} numberOfLines={2}>{displayDesc}</Text>
-                      <View style={styles.progressBar}>
-                        <Text style={styles.progressLabel}>
-                          {progressText}
-                        </Text>
-                      </View>
+                {group.map(a => (
+                  <View
+                    key={a.id}
+                    style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor + '99', opacity: 0.65 }]}
+                  >
+                    <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
+                      <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
                     </View>
-                  );
-                })}
+                    <Text style={styles.icon}>{a.icon}</Text>
+                    <Text style={styles.name}>{a.name}</Text>
+                    <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                    <View style={styles.progressBar}>
+                      <Text style={styles.progressLabel}>{a.progress(stats)}</Text>
+                    </View>
+                  </View>
+                ))}
               </View>
               )}
             </View>
@@ -232,14 +216,39 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                 </View>
               </TouchableOpacity>
               {isExpanded && (
-                lockedSecrets.length === 0
-                  ? (
-                    <View style={styles.secretHint}>
-                      <Text style={styles.secretHintText}>
-                        Jogue e descubra — algumas conquistas só aparecem quando você menos espera
-                      </Text>
+                <View>
+                  {/* Descobertas — mostrar com nome e descrição reais */}
+                  {discoveredSecrets.length > 0 && (
+                    <View>
+                      <Text style={styles.discoveredLabel}>✓ DESCOBERTAS</Text>
+                      <View style={styles.grid}>
+                        {discoveredSecrets.map(a => {
+                          const cfg = RARITY_CONFIG[a.rarity];
+                          const unlockDate = unlockDates[a.id];
+                          return (
+                            <View
+                              key={a.id}
+                              style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor }]}
+                            >
+                              <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
+                                <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
+                              </View>
+                              <Text style={styles.icon}>{a.icon}</Text>
+                              <Text style={styles.name}>{a.name}</Text>
+                              <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                              <View style={[styles.progressBar, styles.progressBarDone]}>
+                                <Text style={[styles.progressLabel, styles.progressLabelDone]}>
+                                  {`✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`}
+                                </Text>
+                              </View>
+                            </View>
+                          );
+                        })}
+                      </View>
                     </View>
-                  ) : (
+                  )}
+                  {/* Bloqueadas — ainda anônimas */}
+                  {lockedSecrets.length > 0 ? (
                     <View style={styles.grid}>
                       {lockedSecrets.map(a => (
                         <View
@@ -258,7 +267,14 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                         </View>
                       ))}
                     </View>
-                  )
+                  ) : discoveredSecrets.length === 0 ? (
+                    <View style={styles.secretHint}>
+                      <Text style={styles.secretHintText}>
+                        Jogue e descubra — algumas conquistas só aparecem quando você menos espera
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
               )}
             </View>
           );
@@ -319,6 +335,10 @@ const styles = StyleSheet.create({
   progressLabel: { fontSize: 11, color: '#4a5a7b' },
   progressLabelDone: { color: '#10b981' },
 
+  discoveredLabel: {
+    fontSize: 10, fontWeight: '800', color: '#10b981', letterSpacing: 2,
+    marginTop: 4, marginBottom: 8,
+  },
   secretHint: {
     backgroundColor: '#111a2e', borderRadius: 10, borderWidth: 1,
     borderColor: SECRET_COLOR + '33', padding: 16, marginBottom: 8,

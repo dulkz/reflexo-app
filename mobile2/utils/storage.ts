@@ -84,6 +84,30 @@ export async function saveWeeklySlots(slots: WeeklySlots): Promise<void> {
   } catch {}
 }
 
+// ── Daily mission slots ───────────────────────────────────────────────────────
+
+const DAILY_SLOTS_KEY = 'reflexo_daily_missions_v1';
+
+export interface DailySlots {
+  dayStart: number;
+  slotIds: string[];
+}
+
+export async function loadDailySlots(): Promise<DailySlots | null> {
+  try {
+    const raw = await AsyncStorage.getItem(DAILY_SLOTS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveDailySlots(slots: DailySlots): Promise<void> {
+  try {
+    await AsyncStorage.setItem(DAILY_SLOTS_KEY, JSON.stringify(slots));
+  } catch {}
+}
+
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {
   const best: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null };
   for (const s of sessions) {

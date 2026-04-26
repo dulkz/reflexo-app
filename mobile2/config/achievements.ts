@@ -62,7 +62,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Abaixo de 250',
     icon: '⚡',
     description: 'Score < 250 ms no Modo Partida',
-    rarity: 'medio',
+    rarity: 'dificil',
     unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida < 250,
     progress: (s) => s.bestScoreByMode.partida !== null
       ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
@@ -73,7 +73,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Nível F1',
     icon: '🏎',
     description: 'Score < 200 ms no Modo Partida — zona dos pilotos de elite',
-    rarity: 'raro',
+    rarity: 'epico',
     unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida < 200,
     progress: (s) => s.bestScoreByMode.partida !== null
       ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
@@ -403,7 +403,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Zona de Elite',
     icon: '🚀',
     description: 'Score < 210ms',
-    rarity: 'raro',
+    rarity: 'epico',
     unlocked: (s) => s.bestScoreByMode.partida !== null && s.bestScoreByMode.partida <= 210,
     progress: (s) => s.bestScoreByMode.partida !== null
       ? `Seu melhor: ${s.bestScoreByMode.partida} ms`
@@ -454,7 +454,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Sniper em Série',
     icon: '🎯',
     description: '100% precisão no Alvo em 3 sessões',
-    rarity: 'epico',
+    rarity: 'raro',
     unlocked: (s) =>
       s.sessions.filter(r => r.mode === 'alvo' && r.accuracy === 1).length >= 3,
     progress: (s) => {
@@ -503,13 +503,17 @@ export const ACHIEVEMENTS: Achievement[] = [
     progress: (s) => `${s.totalSessions}/500 sessões`,
   },
   {
-    id: 'todos_arquetipos',
-    name: 'A Jornada Completa',
-    icon: '🏎️',
-    description: 'Alcançar o arquétipo PILOTO',
+    id: 'the_goat',
+    name: 'The GOAT',
+    icon: '🐐',
+    description: 'Complete todas as conquistas não-secretas do app.',
     rarity: 'lendario',
-    unlocked: (s) => s.archetypeId === 'PILOTO',
-    progress: (s) => `Arquétipo atual: ${ARCHETYPE_NAMES[s.archetypeId] ?? s.archetypeId}`,
+    unlocked: (s) => ACHIEVEMENTS.filter(a => !a.secret && a.id !== 'the_goat').every(a => a.unlocked(s)),
+    progress: (s) => {
+      const nonSecret = ACHIEVEMENTS.filter(a => !a.secret && a.id !== 'the_goat');
+      const done = nonSecret.filter(a => a.unlocked(s)).length;
+      return `${done}/${nonSecret.length} conquistas não-secretas`;
+    },
   },
   {
     id: 'streak100',

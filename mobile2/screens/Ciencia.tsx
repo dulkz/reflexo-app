@@ -260,6 +260,18 @@ export default function Ciencia({ userProfile, sessions }: Props) {
               <Text style={styles.freqColLabel}>MINUTOS</Text>
             </View>
           </View>
+          <Text style={styles.freqContext}>
+            {`= ${rec.times * rec.mins} minutos semanais · menos de ${Math.ceil(rec.times * rec.mins / 7)} min por dia`}
+          </Text>
+          <View style={styles.freqBullets}>
+            {[
+              '⚡ Melhora RT em 10–15% em 4 semanas',
+              '🧠 Ativa neuroplasticidade por repetição',
+              '🎯 Consistência supera intensidade',
+            ].map(b => (
+              <Text key={b} style={styles.freqBullet}>{b}</Text>
+            ))}
+          </View>
           <Text style={styles.freqRationale}>{rec.tagline}</Text>
         </View>
 
@@ -484,7 +496,7 @@ const styles = StyleSheet.create({
 
   freqCard: {
     backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: 24,
+    borderColor: 'rgba(255,255,255,0.06)', padding: 28,
     alignItems: 'center', marginBottom: 32, gap: 0,
   },
   freqBadge: {
@@ -522,11 +534,21 @@ const styles = StyleSheet.create({
     fontSize: 28, fontWeight: '300', color: '#3a4a6b',
     marginBottom: 20,
   },
+  freqContext: {
+    fontSize: 11, color: '#3a4a6b', letterSpacing: 0.3,
+    textAlign: 'center', marginBottom: 16,
+  },
+  freqBullets: {
+    alignSelf: 'stretch', marginBottom: 16, gap: 8,
+  },
+  freqBullet: {
+    fontSize: 12, color: '#4a5a7b', lineHeight: 18,
+  },
   freqRationale: {
     fontSize: 13, color: '#4a5a7b', textAlign: 'center',
     lineHeight: 20, marginTop: 4,
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)',
-    paddingTop: 16,
+    paddingTop: 16, alignSelf: 'stretch',
   },
 
   benchGroupLabel: {

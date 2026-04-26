@@ -76,6 +76,9 @@ export default function JourneyMap({
               <Text style={s.youHereText}>Você está aqui</Text>
             </View>
           )}
+          {best !== null && best !== baselineMs && (
+            <Text style={s.baselineBest}>Seu melhor atual: {best} ms</Text>
+          )}
         </View>
       </View>
 
@@ -141,6 +144,9 @@ export default function JourneyMap({
                 <View style={[s.youHerePill, { marginTop: 4 }]}>
                   <Text style={s.youHereText}>Sua melhor: {best} ms</Text>
                 </View>
+              )}
+              {isNext && deltaToNext !== null && deltaToNext > 0 && (
+                <Text style={s.deltaText}>faltam {deltaToNext} ms</Text>
               )}
             </View>
           </View>
@@ -230,4 +236,13 @@ const s = StyleSheet.create({
   nextCardLabel:    { fontSize: 14, fontWeight: '700', color: '#fff', lineHeight: 20, marginBottom: 4 },
   nextCardLabelSm:  { fontSize: 12, marginBottom: 2 },
   nextCardDelta:    { fontSize: 13, fontWeight: '700', color: '#3b82f6' },
+
+  baselineBest: {
+    fontSize: 11, fontWeight: '700', color: '#10b981',
+    marginTop: 4,
+  },
+  deltaText: {
+    fontSize: 11, fontWeight: '700', color: '#3b82f6',
+    marginTop: 2,
+  },
 });

@@ -85,6 +85,61 @@ function ChoiceScaleBar({ score }: { score: number }) {
   );
 }
 
+// ── Seq RT scale reference ────────────────────────────────────────────────────
+
+const SEQ_LEVELS = [
+  { label: 'ELITE',     maxMs: 250,      color: '#10b981', bg: 'rgba(16,185,129,0.12)', desc: 'Jogador de esporte coletivo de alto nível' },
+  { label: 'MUITO BOM', maxMs: 320,      color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', desc: 'Adulto jovem treinado' },
+  { label: 'BOM',       maxMs: 380,      color: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  desc: 'Adulto saudável 30–50 anos' },
+  { label: 'MÉDIO',     maxMs: 450,      color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', desc: 'Nível médio da população geral' },
+  { label: 'ABAIXO',    maxMs: 550,      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', desc: 'Sob fadiga ou distração leve' },
+  { label: 'DEVAGAR',   maxMs: Infinity, color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  desc: 'Sob alta carga cognitiva ou fadiga' },
+];
+
+function SeqScaleReference({ score }: { score: number }) {
+  return (
+    <View style={styles.scaleBox}>
+      <Text style={styles.sectionTitle}>ESCALA DE REFERÊNCIA — SEQUÊNCIA</Text>
+      {SEQ_LEVELS.map((lvl, i) => {
+        const isUser = score < lvl.maxMs && (i === 0 || score >= SEQ_LEVELS[i - 1].maxMs);
+        const rangeStr = i === 0 ? '< 250 ms'
+          : lvl.maxMs === Infinity ? '> 550 ms'
+          : `${SEQ_LEVELS[i - 1].maxMs}–${lvl.maxMs} ms`;
+        return (
+          <View
+            key={lvl.label}
+            style={[
+              styles.scaleRow,
+              isUser && {
+                backgroundColor: lvl.bg,
+                borderRadius: 10, borderWidth: 1.5,
+                borderColor: lvl.color + '66',
+                paddingHorizontal: 8, paddingVertical: 8, marginVertical: 2,
+              },
+            ]}
+          >
+            <View style={[styles.scaleBar, { backgroundColor: isUser ? lvl.color : '#1a2540', height: isUser ? 36 : 32 }]} />
+            <View style={{ flex: 1 }}>
+              <View style={styles.scaleLabelRow}>
+                <Text style={[styles.scaleLabel, isUser && { color: lvl.color, fontWeight: '900', fontSize: 12 }]}>
+                  {lvl.label}
+                </Text>
+                {isUser && (
+                  <View style={[styles.youBadge, { backgroundColor: lvl.color + '33', borderColor: lvl.color + '88' }]}>
+                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>◄ VOCÊ</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{lvl.desc}</Text>
+            </View>
+            <Text style={[styles.scaleRange, isUser && { color: lvl.color, fontWeight: '800' }]}>{rangeStr}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 function ChoiceScaleReference({ score }: { score: number }) {
   return (
     <View style={styles.scaleBox}>
@@ -229,7 +284,10 @@ interface JourneyCardProps {
 function JourneyProgressCard({ sessions, userProfile, currentSessionScore }: JourneyCardProps) {
   if (!userProfile.triageCompleted || !userProfile.ambitionId) return null;
 
-  const currentBestMs = sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : currentSessionScore;
+  const partidaSessions = sessions.filter(s => s.mode === 'partida');
+  const currentBestMs = partidaSessions.length > 0
+    ? Math.min(...partidaSessions.map(s => s.score))
+    : currentSessionScore;
   const isNewRecord = currentSessionScore <= currentBestMs;
 
   useEffect(() => {
@@ -496,8 +554,6 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
 
       <ChoiceScaleReference score={score} />
 
-      <JourneyProgressCard sessions={sessions} userProfile={userProfile} currentSessionScore={score} />
-
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
         <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
       </TouchableOpacity>
@@ -588,7 +644,7 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
         </View>
         <View style={styles.stat}>
           <Text style={[styles.statVal, { color: commissions === 0 ? '#10b981' : '#ef4444' }]}>{commissions}</Text>
-          <Text style={styles.statLbl}>COMISSÕES</Text>
+          <Text style={styles.statLbl}>ERROS INIBIÇÃO</Text>
         </View>
       </View>
 
@@ -596,7 +652,7 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
         {[
           { label: '✓ Hits (Go correto)', val: hits, color: '#10b981' },
           { label: '✗ Misses (Go ignorado)', val: misses, color: '#ef4444' },
-          { label: '⚡ Comissões (NoGo tocado)', val: commissions, color: '#f59e0b' },
+          { label: '⚡ Erros de inibição (NoGo tocado)', val: commissions, color: '#f59e0b' },
           { label: '🧠 Inibições corretas', val: correctInhibits, color: '#8b5cf6' },
         ].map(r => (
           <View key={r.label} style={styles.seqSumRow}>
@@ -623,9 +679,7 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
         </View>
       </ScrollView>
 
-      <ScaleReference score={avgRt} />
-
-      <JourneyProgressCard sessions={sessions} userProfile={userProfile} currentSessionScore={summary.score} />
+      <SeqScaleReference score={avgRt} />
 
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
         <Text style={[styles.btnPrimaryText, { color: '#fff' }]}>JOGAR NOVAMENTE</Text>
