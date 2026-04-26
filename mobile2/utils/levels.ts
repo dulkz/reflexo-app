@@ -6,6 +6,8 @@ export interface LevelInfo {
 }
 
 export const LEVELS: Array<LevelInfo & { maxMs: number }> = [
+  { maxMs: 50,       label: 'IMPOSSÍVEL',    color: '#ff0080', bg: 'rgba(255,0,128,0.15)',   desc: 'Abaixo de qualquer limite fisiológico humano' },
+  { maxMs: 100,      label: 'SUPER-HUMANO',  color: '#00f5ff', bg: 'rgba(0,245,255,0.15)',   desc: 'Abaixo do limite de reação visual humana' },
   { maxMs: 150,      label: 'ELITE EXTREMO', color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)',  desc: 'Velocistas olímpicos em partida auditiva' },
   { maxMs: 200,      label: 'ELITE',          color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Pilotos de F1 de ponta · Top 5% da população' },
   { maxMs: 250,      label: 'MUITO BOM',      color: '#3b82f6', bg: 'rgba(59,130,246,0.15)', desc: 'Atletas profissionais · Tenistas ATP' },

@@ -232,8 +232,8 @@ function ScaleReference({ score }: { score: number }) {
       <Text style={styles.sectionTitle}>ESCALA DE REFERÊNCIA</Text>
       {LEVELS.map((lvl, i) => {
         const isUser = score < lvl.maxMs && (i === 0 || score >= LEVELS[i - 1].maxMs);
-        const rangeStr = i === 0 ? '< 150 ms'
-          : lvl.maxMs === Infinity ? '> 400 ms'
+        const rangeStr = i === 0 ? `< ${lvl.maxMs} ms`
+          : lvl.maxMs === Infinity ? `> ${LEVELS[i - 1].maxMs} ms`
           : `${LEVELS[i - 1].maxMs}–${lvl.maxMs} ms`;
         return (
           <View

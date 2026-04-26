@@ -40,13 +40,13 @@ export const AMBITIONS: Ambition[] = [
     icon: '🥊',
     name: 'Boxeador olímpico',
     description: 'Desenvolver a velocidade de reação de um boxeador de alto rendimento.',
-    finalMetaMs: 230,
+    finalMetaMs: 250, // Seleção Brasileira: 240–260 ms (Loturco et al., 2015)
     milestones: [
       { ms: 380, label: 'Acima da média populacional' },
       { ms: 320, label: 'Adulto jovem saudável' },
-      { ms: 280, label: 'Acima da média de esportistas' },
-      { ms: 250, label: 'Zona de ringue amador' },
-      { ms: 230, label: 'Boxeador olímpico — meta final 🥊' },
+      { ms: 290, label: 'Acima da média de esportistas' },
+      { ms: 270, label: 'Zona de ringue amador' },
+      { ms: 250, label: 'Boxeador olímpico — meta final 🥊' },
     ],
   },
   {
@@ -70,13 +70,13 @@ export const AMBITIONS: Ambition[] = [
     icon: '⚡',
     name: 'Velocista olímpico',
     description: 'Treinar a velocidade de reação de largada dos melhores velocistas do mundo.',
-    finalMetaMs: 180,
+    finalMetaMs: 160, // referência auditiva — visual seria ~200 ms (PLoS ONE 2018: 120–160 ms ao tiro de partida)
     milestones: [
       { ms: 340, label: 'Acima da média populacional' },
-      { ms: 290, label: 'Adulto jovem saudável' },
-      { ms: 250, label: 'Atleta treinado' },
-      { ms: 210, label: 'Elite internacional' },
-      { ms: 180, label: 'Velocista olímpico — meta final ⚡' },
+      { ms: 280, label: 'Adulto jovem saudável' },
+      { ms: 230, label: 'Atleta treinado' },
+      { ms: 190, label: 'Elite internacional' },
+      { ms: 160, label: 'Velocista olímpico — meta final ⚡' },
     ],
   },
 
@@ -87,13 +87,13 @@ export const AMBITIONS: Ambition[] = [
     icon: '🎯',
     name: 'Top 50% de todas as idades',
     description: 'Superar a maioria das pessoas da sua faixa etária em velocidade de reação.',
-    finalMetaMs: 310,
+    finalMetaMs: 280, // adulto jovem saudável: 250–300 ms (Wikipedia Mental Chronometry)
     milestones: [
       { ms: 400, label: 'Saindo da cauda lenta' },
-      { ms: 360, label: 'Acima de sob fadiga/distração' },
-      { ms: 330, label: 'Na média populacional' },
-      { ms: 320, label: 'Quase lá' },
-      { ms: 310, label: 'Top 50% — meta final 🎯' },
+      { ms: 350, label: 'Acima de sob fadiga/distração' },
+      { ms: 320, label: 'Na média populacional' },
+      { ms: 300, label: 'Quase lá' },
+      { ms: 280, label: 'Top 50% — meta final 🎯' },
     ],
   },
   {
