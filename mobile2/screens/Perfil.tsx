@@ -18,6 +18,13 @@ const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
   { id: 'VELOCISTA',   icon: '⚡',  tagline: 'Velocidade de elite' },
   { id: 'PILOTO',      icon: '🏎️', tagline: 'Reflexos de elite' },
 ];
+
+// Destination archetype by ambition group — the "ceiling" the user is aiming for
+const DEST_BY_GROUP: Record<string, { id: string; label: string }> = {
+  elite_sport:  { id: 'PILOTO',     label: 'O Piloto' },
+  populational: { id: 'VELOCISTA',  label: 'O Velocista' },
+  brain_health: { id: 'RESISTENTE', label: 'O Consistente' },
+};
 import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
 import { AVATARS } from '../config/avatars';
 import { saveUserProfile } from '../utils/userProfile';
@@ -315,6 +322,21 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
     () => currentArchIdx > 0 ? ARCHETYPE_CHAIN.slice(0, currentArchIdx) : [],
     [currentArchIdx],
   );
+
+  const destinationArch = useMemo(
+    () => ambition ? (DEST_BY_GROUP[ambition.group] ?? null) : null,
+    [ambition],
+  );
+
+  const destinationIdx = useMemo(
+    () => destinationArch ? ARCHETYPE_CHAIN.findIndex(a => a.id === destinationArch.id) : -1,
+    [destinationArch],
+  );
+
+  // Hide PARA VIRAR entirely when user has reached or surpassed their ambition destination
+  const reachedDestination = destinationIdx !== -1 && currentArchIdx >= destinationIdx;
+  // Show "Seu destino" footer only when destination is not the immediate next archetype
+  const showDestFooter = destinationArch !== null && !reachedDestination && destinationIdx > currentArchIdx + 1;
 
   const beatenMilestones = useMemo(
     () => milestonesState.filter(s => s.status !== 'pendente'),
@@ -708,7 +730,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         ) : null}
 
         {/* ── PARA VIRAR block ── */}
-        {nextDef && archetype.targetCriteria.length > 0 && (
+        {nextDef && archetype.targetCriteria.length > 0 && !reachedDestination && (
           <View style={styles.paraVirarCard}>
             <View style={styles.paraVirarHeader}>
               <Text style={styles.paraVirarKicker}>PARA VIRAR</Text>
@@ -752,6 +774,16 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                       {` (delta: ${currentBestMs - nextMilestone.ms} ms)`}
                     </Text>
                   )}
+                </Text>
+              </View>
+            )}
+
+            {/* Destination footer — only when destination is further than the immediate next arch */}
+            {showDestFooter && destinationArch && (
+              <View style={styles.destRow}>
+                <Text style={styles.destIcon}>🎯</Text>
+                <Text style={[styles.destLabel, { color: ambitionGroupColor }]}>
+                  Seu destino: {destinationArch.label}
                 </Text>
               </View>
             )}
@@ -1060,6 +1092,14 @@ const styles = StyleSheet.create({
   criterionLabel: { flex: 1, fontSize: 13, color: '#7a8aa0' },
   criterionLabelDone: { color: '#10b981', textDecorationLine: 'line-through' },
   criterionSuffix: { color: '#4a5a7b', fontSize: 12 },
+
+  destRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: 10, paddingTop: 10,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  destIcon: { fontSize: 14 },
+  destLabel: { fontSize: 12, fontWeight: '700' },
 
   // ── Section title ─────────────────────────────────────────────────────────
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 10 },
