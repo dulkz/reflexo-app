@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
 import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
-import { SessionRecord } from '../utils/storage';
+import { SessionRecord, loadUnlockedAchievements } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
 import { getWeeklyMissions, WeeklyMission } from '../utils/missions';
@@ -299,6 +299,42 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
     return done / total;
   }, [archetype, stats]);
 
+  // ── Completed long-term goals ─────────────────────────────────────────────
+  const [completedExpanded, setCompletedExpanded] = useState(false);
+  const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
+  useEffect(() => {
+    loadUnlockedAchievements().then(setUnlockDates);
+  }, []);
+
+  const currentArchIdx = useMemo(
+    () => ARCHETYPE_CHAIN.findIndex(a => a.id === stats.archetypeId),
+    [stats.archetypeId],
+  );
+
+  const pastArchetypes = useMemo(
+    () => currentArchIdx > 0 ? ARCHETYPE_CHAIN.slice(0, currentArchIdx) : [],
+    [currentArchIdx],
+  );
+
+  const beatenMilestones = useMemo(
+    () => milestonesState.filter(s => s.status !== 'pendente'),
+    [milestonesState],
+  );
+
+  const mostRecentUnlockedAch = useMemo(() => {
+    const unlocked = ACHIEVEMENTS.filter(a => !a.secret && a.unlocked(stats));
+    if (unlocked.length === 0) return null;
+    unlocked.sort((a, b) => {
+      const da = unlockDates[a.id] ?? '';
+      const db = unlockDates[b.id] ?? '';
+      return db.localeCompare(da);
+    });
+    return unlocked[0];
+  }, [stats, unlockDates]);
+
+  const completedCount =
+    beatenMilestones.length + (mostRecentUnlockedAch ? 1 : 0) + pastArchetypes.length;
+
   return (
     <View style={styles.root}>
       <ScrollView
@@ -556,6 +592,65 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 }]} />
                 <View style={{ flex: Math.max(0, 100 - Math.round(archetypePct * 100)) }} />
               </View>
+            </View>
+          )}
+
+          {/* ── CONCLUÍDAS subsection ── */}
+          {completedCount > 0 && (
+            <View style={styles.completedSection}>
+              <TouchableOpacity
+                style={styles.completedHeader}
+                onPress={() => setCompletedExpanded(prev => !prev)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.completedHeaderText}>✓ CONCLUÍDAS</Text>
+                <View style={styles.completedHeaderRight}>
+                  <Text style={styles.completedHeaderCount}>
+                    {completedCount} conquistada{completedCount !== 1 ? 's' : ''}
+                  </Text>
+                  <Text style={styles.completedArrow}>
+                    {completedExpanded ? '▼' : '▶'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              {completedExpanded && (
+                <View style={styles.completedList}>
+                  {beatenMilestones.map((ms, i) => (
+                    <View key={`ms_${i}`} style={styles.completedItem}>
+                      <Text style={styles.completedCheck}>✓</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.completedLabel}>{ms.milestone.label}</Text>
+                        {ms.milestone.type !== 'qualitative' && ms.milestone.ms !== undefined && (
+                          <Text style={styles.completedSub}>{ms.milestone.ms} ms atingido</Text>
+                        )}
+                      </View>
+                      <Text style={styles.completedTag}>MARCO</Text>
+                    </View>
+                  ))}
+                  {mostRecentUnlockedAch && (
+                    <View style={styles.completedItem}>
+                      <Text style={styles.completedCheck}>✓</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.completedLabel}>{mostRecentUnlockedAch.name}</Text>
+                        <Text style={styles.completedSub} numberOfLines={1}>
+                          {mostRecentUnlockedAch.description}
+                        </Text>
+                      </View>
+                      <Text style={styles.completedTag}>CONQUISTA</Text>
+                    </View>
+                  )}
+                  {pastArchetypes.map(pa => (
+                    <View key={pa.id} style={styles.completedItem}>
+                      <Text style={styles.completedCheck}>✓</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.completedLabel}>{ARCHETYPES[pa.id].name}</Text>
+                        <Text style={styles.completedSub}>{pa.tagline}</Text>
+                      </View>
+                      <Text style={styles.completedTag}>ARQUÉTIPO</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -880,6 +975,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e2d45', overflow: 'hidden',
   },
   ltFill: { borderRadius: 3 },
+
+  // ── CONCLUÍDAS subsection ─────────────────────────────────────────────────
+  completedSection: {
+    borderTopWidth: 1, borderTopColor: '#1a2a4a',
+    marginTop: 8, paddingTop: 4,
+  },
+  completedHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  completedHeaderText: {
+    fontSize: 10, fontWeight: '800', color: '#10b981', letterSpacing: 2,
+  },
+  completedHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  completedHeaderCount: { fontSize: 10, color: '#4a5a7b' },
+  completedArrow: { fontSize: 10, color: '#3a4a6b' },
+  completedList: { gap: 6, paddingBottom: 4 },
+  completedItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#0d1526', borderRadius: 10, padding: 12,
+  },
+  completedCheck: { fontSize: 14, color: '#10b981', fontWeight: '800', width: 18 },
+  completedLabel: { fontSize: 12, fontWeight: '700', color: '#7a8aa0', marginBottom: 2 },
+  completedSub: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
+  completedTag: { fontSize: 9, fontWeight: '700', color: '#2d3a55', letterSpacing: 1 },
 
   // ── MINHA JORNADA — CTA (pre-triage) ─────────────────────────────────────
   journeyCTA: {
