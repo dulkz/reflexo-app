@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Animated,
+  View, Text, StyleSheet, ScrollView,
   Platform, StatusBar as RNStatusBar,
   StyleProp, TextStyle,
 } from 'react-native';
@@ -12,55 +12,6 @@ import { GROUP_COLOR, getAmbitionById } from '../config/ambitions';
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-// ── Animated session grid ─────────────────────────────────────────────────────
-
-const GRID_COUNT   = 10;  // 2 rows × 5 columns
-const STAGGER_MS   = 150;
-const PULSE_DUR_MS = 400; // half-period (total cycle = 800ms)
-
-function SessionGrid() {
-  const anims = useRef(
-    Array.from({ length: GRID_COUNT }, () => new Animated.Value(1)),
-  ).current;
-
-  useEffect(() => {
-    const animations = anims.map((anim, i) =>
-      Animated.sequence([
-        Animated.delay(i * STAGGER_MS),
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(anim, { toValue: 0.4, duration: PULSE_DUR_MS, useNativeDriver: true }),
-            Animated.timing(anim, { toValue: 1.0, duration: PULSE_DUR_MS, useNativeDriver: true }),
-          ]),
-        ),
-      ]),
-    );
-    animations.forEach(a => a.start());
-    return () => {
-      animations.forEach(a => a.stop());
-      anims.forEach(a => a.stopAnimation());
-    };
-  }, []);
-
-  return (
-    <View style={sg.grid}>
-      {[0, 1].map(row => (
-        <View key={row} style={sg.row}>
-          {anims.slice(row * 5, row * 5 + 5).map((anim, col) => (
-            <Animated.View key={col} style={[sg.square, { opacity: anim }]} />
-          ))}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-const sg = StyleSheet.create({
-  grid:   { gap: 8, marginBottom: 16, alignSelf: 'center' },
-  row:    { flexDirection: 'row', gap: 8 },
-  square: { width: 28, height: 28, borderRadius: 6, backgroundColor: '#3b82f6' },
-});
 
 function RichText({ children, style }: { children: string; style?: StyleProp<TextStyle> }) {
   const parts = children.split(/\*\*(.*?)\*\*/g);
@@ -312,7 +263,6 @@ export default function Ciencia({ userProfile, sessions }: Props) {
           <Text style={styles.freqContext}>
             {`= ${rec.times * rec.mins} minutos semanais · menos de ${Math.ceil(rec.times * rec.mins / 7)} min por dia`}
           </Text>
-          <SessionGrid />
           <View style={styles.freqBullets}>
             {[
               '⚡ Melhora RT em 10–15% em 4 semanas',
@@ -323,6 +273,23 @@ export default function Ciencia({ userProfile, sessions }: Props) {
             ))}
           </View>
           <Text style={styles.freqRationale}>{rec.tagline}</Text>
+        </View>
+
+        {/* ══ FREQUÊNCIA IDEAL DE TREINO ══ */}
+        <View style={styles.freqScheduleCard}>
+          <Text style={styles.freqScheduleHeader}>FREQUÊNCIA IDEAL DE TREINO</Text>
+          <View style={styles.freqScheduleRow}>
+            {(['SEG', 'QUA', 'SEX'] as const).map(day => (
+              <View key={day} style={styles.freqScheduleItem}>
+                <View style={styles.freqScheduleCircle} />
+                <Text style={styles.freqScheduleDay}>{day}</Text>
+                <Text style={styles.freqScheduleMins}>{rec.mins} min</Text>
+              </View>
+            ))}
+          </View>
+          <Text style={styles.freqScheduleNote}>
+            3 sessões curtas/semana superam 1 sessão longa em retenção de ganho motor.
+          </Text>
         </View>
 
         {/* ══ SEÇÃO 2 — QUEM REAGE MAIS RÁPIDO ══ */}
@@ -599,6 +566,38 @@ const styles = StyleSheet.create({
     lineHeight: 20, marginTop: 4,
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)',
     paddingTop: 16, alignSelf: 'stretch',
+  },
+
+  // ── Frequência ideal (SEG/QUA/SEX) ───────────────────────────────────────
+  freqScheduleCard: {
+    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)', padding: 16,
+    alignItems: 'center', marginBottom: 32,
+  },
+  freqScheduleHeader: {
+    fontSize: 9, fontWeight: '800', color: '#4a5a7b',
+    letterSpacing: 2, marginBottom: 16,
+  },
+  freqScheduleRow: {
+    flexDirection: 'row', gap: 32, marginBottom: 16,
+  },
+  freqScheduleItem: {
+    alignItems: 'center', gap: 6,
+  },
+  freqScheduleCircle: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: '#10b981',
+  },
+  freqScheduleDay: {
+    fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 0.5,
+  },
+  freqScheduleMins: {
+    fontSize: 11, color: '#10b981', fontWeight: '600',
+  },
+  freqScheduleNote: {
+    fontSize: 12, color: '#4a5a7b', textAlign: 'center',
+    lineHeight: 18, borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 12, alignSelf: 'stretch',
   },
 
   benchGroupLabel: {
