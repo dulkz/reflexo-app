@@ -491,3 +491,79 @@ Maioria dos usuários joga regularmente — última semana é o range mais relev
 - Validar `benchmarks_reflexo.docx` contra `ambitions.ts` (ainda pendente desde Grupo 2)
 - RT mínimo no Modo Partida (`<100 ms` descartar — falsa largada não detectada)
 - APK v4 quando acumular mais fixes (incluir onboarding + filtro de período)
+
+---
+
+### Modo Radar + Benchmarks calibrados pelo docx (2026-04-26)
+Branch: `feat/proxima-feature`
+
+#### Arquivos criados
+- `mobile2/screens/ModoRadar.tsx` — novo modo de jogo de localização visual
+  - 5 círculos em cruz (1 centro + 4 extremidades), 7 rodadas, timeout `1500 ms`, jitter `1000–3000 ms` entre rodadas
+  - Estado: `intro → initial_wait → ready → signal → hit/miss/timeout → próxima rodada`
+  - Penalidade `+200 ms` por miss (toque no círculo errado) com overlay vermelho animado (opacity 0→1 em 100 ms, desmonta com o estado de miss); **não aparece em timeout**, só em erro ativo
+  - Score final = média dos RTs apenas dos hits + `missCount * 200`
+  - `OFFSET` adaptativo via `Dimensions.get('window').width`: `155 px` se largura ≥ 420, senão `130 px` — container 420×420 ou 370×370 garante encaixe em qualquer dispositivo
+  - `CIRCLE_SIZE = 110 px`, outline 2px `#1a2a4a` em estado neutro, fill `#f59e0b` quando aceso
+  - Cleanup de timers em `useEffect`, `handleTimeoutRef` para evitar stale closures
+  - Header com contador `RODADA X / 7` + botão `DESISTIR` no topo direito
+  - Dots de progresso (verde hit, vermelho miss/timeout)
+
+#### Arquivos modificados
+
+**Calibração com `benchmarks_reflexo.docx`:**
+- `mobile2/config/ambitions.ts` — 3 metas finais corrigidas com dados reais:
+  - `boxer`: 230 → **250 ms** (Seleção Brasileira: 240–260 ms, Loturco et al., 2015) + milestones reescalonados
+  - `sprinter`: 180 → **160 ms** (velocistas olímpicos: 120–160 ms, PLoS ONE 2018) — comentário "referência auditiva — visual seria ~200 ms"
+  - `top50`: 310 → **280 ms** (adulto jovem saudável: 250–300 ms)
+- `mobile2/utils/levels.ts` — 2 novos níveis no topo da escala + entrada `radar` em `MODE_COLORS`:
+  - `IMPOSSÍVEL` (`maxMs: 50`, `#ff0080`) — "Abaixo de qualquer limite fisiológico humano"
+  - `SUPER-HUMANO` (`maxMs: 100`, `#00f5ff`) — "Abaixo do limite de reação visual humana"
+  - `radar: { accent: '#f59e0b', bg: 'rgba(245,158,11,0.12)' }` — `ModeKey` auto-extende
+- `mobile2/screens/Resultado.tsx` — `ScaleReference.rangeStr` agora desidratado (`< ${lvl.maxMs} ms` derivado em vez de hardcode `'< 150 ms'`); `BENCHMARKS` em Ciencia.tsx ganha 2 entradas no topo (`🚫 Limite fisiológico humano` IMPOSSÍVEL · `👁 Antecipação visual de elite` SUPER-HUMANO)
+
+**Integração Radar:**
+- `mobile2/utils/storage.ts` — `SessionRecord` ganha `missCount?: number` (radar only)
+- `mobile2/screens/Resultado.tsx` — novo `RadarResult` component modelado em `PartidaResult` (simple RT + ScaleBar + ScaleReference); stats `ACURÁCIA / MELHOR HIT / ACERTOS X/7`; linha "❌ Erros: N × +200 ms" se houver miss; lista de 7 rodadas com ✓/✗/⏱; aliasa `RoundResult` de ModoRadar como `RadarRound` no import
+- `mobile2/screens/Home.tsx` — card `MODO RADAR` (📡, âmbar, "Localização visual · 7 rodadas") como 4ª entrada do `MODE_INFO`; nova prop `onStartRadar`; `handlers` Record extendido
+- `mobile2/screens/Historico.tsx` — filtro `Radar` nas pílulas; `MODE_LABELS`/`MODE_ICONS` ganham radar (`📡`); plot da série radar no chart "Todos"; Y-scale `150–500` e linha Elite 200 ms também aplicáveis ao filtro radar
+- `mobile2/screens/Perfil.tsx` — `keys` array do `modeBreakdown` inclui `'radar'`; cálculo de `bestRadarRt` (espelha `bestAlvoRt`) usado como `displayScore` para mostrar **melhor reflexo individual sem penalty**; 2 linhas extras "Melhor Tempo Reflexo" + "Precisão: X%" em `mc.accent` (âmbar)
+- `mobile2/config/archetypes.ts` — `bestScore`/`bestAcc` Records ganham `radar: null`; chip do PILOTO usa "Melhor Tempo Reflexo" em vez de "Melhor RT"
+- `mobile2/App.tsx` — `GameScreen` ganha `'radar'` e `'resultado_radar'`; `handleRadarComplete` aplica penalty `+ missCount * 200` antes de salvar `SessionRecord` com `mode: 'radar'`, `accuracy = hits/rounds`, `missCount` se >0
+
+**Renomeação UI "Melhor RT" → "Melhor Tempo Reflexo"** (3 ocorrências, só texto visível):
+- `archetypes.ts:149` chip do arquétipo
+- `Historico.tsx:516` label do summary card (`MELHOR TEMPO REFLEXO` em caps)
+- `Perfil.tsx:821` linha extra do card Alvo
+
+#### Decisões de design
+
+**Penalidade `+200 ms` por miss:**
+Valor ≈ RT médio de uma rodada. Errar equivale a "perder uma rodada inteira" — punitiva sem ser brutal, acumulável, semanticamente clara. Aplicada em `handleRadarComplete` sobre o `score` (média das hits) antes de salvar.
+
+**Overlay `+200ms` só no miss, não no timeout:**
+Timeout é falta de reação (não-evento); miss é erro ativo (toque no círculo errado). O overlay vermelho com texto reforça a *causa* da penalidade — sem texto, o usuário poderia não associar o flash vermelho ao acréscimo de score. Timeout já tem feedback próprio ("⏱ TIMEOUT") sem necessidade de overlay extra.
+
+**`bestRadarRt` no Perfil mostra melhor reflexo individual, não score penalizado:**
+Espelha `bestAlvoRt` — agrega `Math.min(...mSessions.map(s => s.bestTime ?? s.score))` entre sessões. O número grande do card Radar exibe o reflexo mais rápido em qualquer rodada do usuário (sem incluir penalty), label "Melhor Tempo Reflexo" clarifica a semântica. O score penalizado da sessão fica visível no Resultado e no Histórico.
+
+**`OFFSET` adaptativo via `Dimensions`:**
+Threshold `< 420 px` cobre iPhone SE (320 pt), Androids pequenos (~360 pt), e qualquer dispositivo borderline. Container 420 × 420 (com `OFFSET=155`) só é usado em telas largas onde cabe sem clipping. Sem isso, círculos esquerda/direita seriam cortados pelas bordas em telas estreitas.
+
+**Níveis `IMPOSSÍVEL`/`SUPER-HUMANO` baseados no docx:**
+A escala anterior tratava `<150 ms` como "ELITE EXTREMO" único. O docx mostra que `<100 ms` em reação visual é fisicamente impossível — ocorre apenas por antecipação ou erro de medida. Os 2 novos níveis no topo (`<50 IMPOSSÍVEL`, `50–100 SUPER-HUMANO`) calibram a escala com a literatura, e ELITE EXTREMO passa a ocupar `100–150 ms` (sem mudança no `maxMs:150`, o lower bound efetivo desloca-se automaticamente porque `<100` agora cai em SUPER-HUMANO antes).
+
+**`Record<ModeKey, ...>` exaustivo força integração:**
+Adicionar `'radar'` a `MODE_COLORS` propaga `ModeKey = 'partida' | 'alvo' | 'sequencia' | 'radar'` para todo o app. O compilador acusou cada init de Record que faltava entrada — efetivamente um checklist guiado de onde radar precisa ser cidadão de primeira classe (Historico/Perfil/storage/archetypes/Home).
+
+#### Pendências (Etapa 2 do Radar)
+- Conquistas específicas (radar_acertos_perfeitos, radar_velocidade, radar_sniper, etc.)
+- Missões diárias/semanais para Radar
+- Triagem baseline mede também Radar
+- Onboarding atualizado mencionando 4º modo
+
+#### Próximos passos
+- Etapa 2 Radar (conquistas/missões/triagem)
+- Modo Auditivo (futuro)
+- Validar restante do `benchmarks_reflexo.docx` contra benchmarks de Ciencia.tsx (boxer 160–220 vs. real 240–260; sprinter 170–200 vs. real 120–160 auditivo)
+- APK v4 quando consolidar Etapa 2 + onboarding + filtro de período
