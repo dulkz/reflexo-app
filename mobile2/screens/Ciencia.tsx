@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView,
+  View, Text, StyleSheet, ScrollView, Animated,
   Platform, StatusBar as RNStatusBar,
   StyleProp, TextStyle,
 } from 'react-native';
@@ -12,6 +12,55 @@ import { GROUP_COLOR, getAmbitionById } from '../config/ambitions';
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+// ── Animated session grid ─────────────────────────────────────────────────────
+
+const GRID_COUNT   = 10;  // 2 rows × 5 columns
+const STAGGER_MS   = 150;
+const PULSE_DUR_MS = 400; // half-period (total cycle = 800ms)
+
+function SessionGrid() {
+  const anims = useRef(
+    Array.from({ length: GRID_COUNT }, () => new Animated.Value(1)),
+  ).current;
+
+  useEffect(() => {
+    const animations = anims.map((anim, i) =>
+      Animated.sequence([
+        Animated.delay(i * STAGGER_MS),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(anim, { toValue: 0.4, duration: PULSE_DUR_MS, useNativeDriver: true }),
+            Animated.timing(anim, { toValue: 1.0, duration: PULSE_DUR_MS, useNativeDriver: true }),
+          ]),
+        ),
+      ]),
+    );
+    animations.forEach(a => a.start());
+    return () => {
+      animations.forEach(a => a.stop());
+      anims.forEach(a => a.stopAnimation());
+    };
+  }, []);
+
+  return (
+    <View style={sg.grid}>
+      {[0, 1].map(row => (
+        <View key={row} style={sg.row}>
+          {anims.slice(row * 5, row * 5 + 5).map((anim, col) => (
+            <Animated.View key={col} style={[sg.square, { opacity: anim }]} />
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+const sg = StyleSheet.create({
+  grid:   { gap: 8, marginBottom: 16, alignSelf: 'center' },
+  row:    { flexDirection: 'row', gap: 8 },
+  square: { width: 28, height: 28, borderRadius: 6, backgroundColor: '#3b82f6' },
+});
 
 function RichText({ children, style }: { children: string; style?: StyleProp<TextStyle> }) {
   const parts = children.split(/\*\*(.*?)\*\*/g);
@@ -263,6 +312,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
           <Text style={styles.freqContext}>
             {`= ${rec.times * rec.mins} minutos semanais · menos de ${Math.ceil(rec.times * rec.mins / 7)} min por dia`}
           </Text>
+          <SessionGrid />
           <View style={styles.freqBullets}>
             {[
               '⚡ Melhora RT em 10–15% em 4 semanas',
