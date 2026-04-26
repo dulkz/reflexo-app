@@ -818,7 +818,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                       </Text>
                     </View>
                     {m.key === 'alvo' && (
-                      <Text style={styles.modeExtra}>Melhor RT</Text>
+                      <Text style={styles.modeExtra}>Melhor Tempo Reflexo</Text>
                     )}
                     {m.key === 'alvo' && m.bestAcc !== null && (
                       <Text style={styles.modeExtra}>{Math.round(m.bestAcc * 100)}% acc</Text>

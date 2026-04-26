@@ -706,6 +706,7 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
   const mc = MODE_COLORS.radar;
   const hits = radarResults.filter(r => r.hit);
   const timeoutCount = radarResults.filter(r => r.timeout).length;
+  const missCount = radarResults.filter(r => !r.hit && !r.timeout).length;
   const accuracy = Math.round((hits.length / radarResults.length) * 100);
   const bestHit = hits.length > 0 ? Math.min(...hits.map(r => r.rt)) : null;
 
@@ -738,6 +739,11 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
         </View>
       </View>
 
+      {missCount > 0 && (
+        <Text style={styles.earlyTapLine}>
+          ❌ Erros: {missCount} × +200 ms
+        </Text>
+      )}
       {timeoutCount > 0 && (
         <Text style={styles.earlyTapLine}>
           ⏱ {timeoutCount} timeout{timeoutCount > 1 ? 's' : ''} (sem toque a tempo)

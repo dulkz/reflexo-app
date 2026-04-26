@@ -512,7 +512,7 @@ export default function Historico({ sessions, userProfile }: Props) {
             ) : (
               <Text style={[styles.sumVal, { color: '#4a5a7b' }]}>—</Text>
             )}
-            <Text style={styles.sumLbl}>MELHOR RT</Text>
+            <Text style={styles.sumLbl}>MELHOR TEMPO REFLEXO</Text>
           </View>
 
           <View style={styles.summaryCell}>

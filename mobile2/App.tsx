@@ -304,22 +304,24 @@ function AppInner() {
     setGameScreen('resultado_sequencia');
   }, [addSession]);
 
-  const handleRadarComplete = useCallback(async (results: RadarRound[], score: number, timeoutCount: number) => {
+  const handleRadarComplete = useCallback(async (results: RadarRound[], score: number, timeoutCount: number, missCount: number) => {
+    const penalizedScore = score + missCount * 200;
     setRadarResults(results);
-    setRadarScore(score);
+    setRadarScore(penalizedScore);
     const hits = results.filter(r => r.hit);
-    const bestTime = hits.length > 0 ? Math.min(...hits.map(r => r.rt)) : score;
+    const bestTime = hits.length > 0 ? Math.min(...hits.map(r => r.rt)) : penalizedScore;
     const accuracy = hits.length / results.length;
     await addSession({
       id: Date.now().toString(),
       mode: 'radar',
-      score,
+      score: penalizedScore,
       bestTime,
       accuracy,
       rounds: results.length,
       times: results.map(r => r.rt),
       date: Date.now(),
       ...(timeoutCount > 0 ? { timeouts: timeoutCount } : {}),
+      ...(missCount > 0 ? { missCount } : {}),
     });
     setGameScreen('resultado_radar');
   }, [addSession]);

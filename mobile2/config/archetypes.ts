@@ -146,7 +146,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
       const chips: EvidenceChip[] = [
         { label: `${s.totalSessions} sessões acumuladas` },
       ];
-      if (s.bestScoreByMode.partida !== null) chips.push({ label: `Melhor RT: ${s.bestScoreByMode.partida} ms` });
+      if (s.bestScoreByMode.partida !== null) chips.push({ label: `Melhor Tempo Reflexo: ${s.bestScoreByMode.partida} ms` });
       return chips;
     },
     nextId: 'RESISTENTE',

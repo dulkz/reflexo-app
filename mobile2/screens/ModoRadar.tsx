@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable,
-  Animated, Platform, StatusBar as RNStatusBar,
+  Animated, Platform, StatusBar as RNStatusBar, Dimensions,
 } from 'react-native';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
@@ -15,11 +15,15 @@ const INITIAL_WAIT_MAX = 3000;
 const FEEDBACK_DELAY_HIT = 700;
 const FEEDBACK_DELAY_MISS = 1200;
 
-const CIRCLE_SIZE = 80;
-const OFFSET = 140;                       // distance from center for outer circles
-const CONTAINER = OFFSET * 2 + CIRCLE_SIZE; // 360
+const CIRCLE_SIZE = 110;
+// Adaptive offset: tighter on narrow screens so outer circles fit edge-to-edge.
+// Threshold 420 ensures the 420 px container (155*2 + 110) never overflows.
+const SCREEN_W = Dimensions.get('window').width;
+const OFFSET = SCREEN_W < 420 ? 130 : 155;  // distance from center for outer circles
+const CONTAINER = OFFSET * 2 + CIRCLE_SIZE; // 370 or 420
 const RADAR_COLOR = '#f59e0b';
 const INACTIVE_BORDER = '#1a2a4a';
+const MISS_PENALTY = 200;
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -41,7 +45,7 @@ interface RoundResult {
 }
 
 interface Props {
-  onComplete: (results: RoundResult[], score: number, timeoutCount: number) => void;
+  onComplete: (results: RoundResult[], score: number, timeoutCount: number, missCount: number) => void;
   onBack: () => void;
 }
 
@@ -60,6 +64,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
   const initialWaitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const signalTimeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timeoutCount = useRef(0);
+  const missCount = useRef(0);
   // Latest handler — refs avoid stale closure on results/round in setTimeout.
   const handleTimeoutRef = useRef<() => void>(() => {});
 
@@ -87,7 +92,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
         const score = hits.length > 0
           ? Math.round(hits.reduce((s, r) => s + r.rt, 0) / hits.length)
           : Math.round(newResults.reduce((s, r) => s + r.rt, 0) / newResults.length);
-        onComplete(newResults, score, timeoutCount.current);
+        onComplete(newResults, score, timeoutCount.current, missCount.current);
       } else {
         setRound(next);
         startRound();
@@ -140,6 +145,8 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
   }, [startSignal]);
 
   const startInitialWait = useCallback(() => {
+    timeoutCount.current = 0;
+    missCount.current = 0;
     setGameState('initial_wait');
     const delay = INITIAL_WAIT_MIN + Math.random() * (INITIAL_WAIT_MAX - INITIAL_WAIT_MIN);
     initialWaitTimer.current = setTimeout(startRound, delay);
@@ -162,6 +169,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
       flash(false);
       advance(newResults, FEEDBACK_DELAY_HIT);
     } else {
+      missCount.current += 1;
       playSfx('miss');
       setGameState('miss');
       flash(true);
@@ -186,7 +194,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
           <View style={styles.instrBox}>
             <Text style={styles.instrLine}>① Os 5 círculos ficam visíveis o tempo todo</Text>
             <Text style={styles.instrLine}>② Um deles vai acender — toque nele rápido</Text>
-            <Text style={[styles.instrLine, { color: RADAR_COLOR }]}>③ Localização visual + tempo de resposta</Text>
+            <Text style={[styles.instrLine, { color: '#ef4444' }]}>③ Toque no errado: +{MISS_PENALTY} ms de penalidade</Text>
           </View>
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
             <Text style={styles.startBtnText}>INICIAR</Text>
