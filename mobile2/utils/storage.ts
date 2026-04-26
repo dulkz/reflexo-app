@@ -108,6 +108,25 @@ export async function saveDailySlots(slots: DailySlots): Promise<void> {
   } catch {}
 }
 
+// ── Onboarding flag ───────────────────────────────────────────────────────────
+
+const ONBOARDING_KEY = 'reflexo_onboarding_done_v1';
+
+export async function loadOnboardingDone(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(ONBOARDING_KEY);
+    return raw === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export async function saveOnboardingDone(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+  } catch {}
+}
+
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {
   const best: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null };
   for (const s of sessions) {

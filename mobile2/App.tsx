@@ -13,8 +13,9 @@ import Perfil from './screens/Perfil';
 import Historico from './screens/Historico';
 import Conquistas from './screens/Conquistas';
 import TriageModal from './screens/triage/TriageModal';
+import OnboardingModal from './screens/OnboardingModal';
 import { ModeKey } from './utils/levels';
-import { SessionRecord, loadSessions, saveSession, getBestByMode } from './utils/storage';
+import { SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone } from './utils/storage';
 import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
@@ -103,6 +104,10 @@ function AppInner() {
   const dataReadyRef  = useRef(false);
   const animDoneRef   = useRef(false);
 
+  // Onboarding — shown once on first app open ever (persisted flag)
+  const [onboardingVisible, setOnboardingVisible] = useState(false);
+  const onboardingNeededRef = useRef(false);
+
   // Scroll-to-top ref passed to Home so handleTriageComplete can reset scroll
   const homeScrollRef = useRef<ScrollView>(null);
 
@@ -132,13 +137,17 @@ function AppInner() {
   const tryExitSplash = useCallback(() => {
     if (!dataReadyRef.current || !animDoneRef.current) return;
     Animated.timing(splashOpacity, { toValue: 0, duration: 300, useNativeDriver: true })
-      .start(() => setSplashVisible(false));
+      .start(() => {
+        setSplashVisible(false);
+        if (onboardingNeededRef.current) setOnboardingVisible(true);
+      });
   }, []); // splashOpacity is a stable Animated.Value ref
 
   useEffect(() => {
     Promise.all([
       loadSessions().then(setSessions),
       loadUserProfile().then(setUserProfile),
+      loadOnboardingDone().then(done => { onboardingNeededRef.current = !done; }),
       preloadSounds(),
     ]).then(() => {
       dataReadyRef.current = true;
@@ -537,6 +546,16 @@ function AppInner() {
           />
         </Animated.View>
       )}
+
+      {/* Onboarding modal — first-open only, persisted via reflexo_onboarding_done_v1 */}
+      <Modal
+        visible={onboardingVisible}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => { /* must complete via "COMEÇAR" — no back-dismiss */ }}
+      >
+        <OnboardingModal onComplete={() => setOnboardingVisible(false)} />
+      </Modal>
 
       {/* Milestone beat toast */}
       <Modal
