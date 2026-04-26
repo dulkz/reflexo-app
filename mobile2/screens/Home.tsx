@@ -20,6 +20,7 @@ interface Props {
   onStartPartida: () => void;
   onStartAlvo: () => void;
   onStartSequencia: () => void;
+  onStartRadar: () => void;
   sessions: SessionRecord[];
   bestByMode: Record<ModeKey, number | null>;
   userProfile: UserProfile;
@@ -49,10 +50,17 @@ const MODE_INFO = [
     desc: '20 sinais Go/NoGo · ~25% aleatório',
     sub: 'Mede fadiga cognitiva e controle inibitório',
   },
+  {
+    key: 'radar' as ModeKey,
+    name: 'MODO RADAR',
+    icon: '📡',
+    desc: 'Localização visual · 7 rodadas',
+    sub: '5 círculos em cruz — toque no que acender',
+  },
 ];
 
 export default function Home({
-  onStartPartida, onStartAlvo, onStartSequencia,
+  onStartPartida, onStartAlvo, onStartSequencia, onStartRadar,
   sessions, bestByMode, userProfile, onGoToPerfil, scrollRef,
 }: Props) {
   // Best score (average top-5) across all sessions — used for milestone comparison
@@ -65,7 +73,7 @@ export default function Home({
   const f1Gap = currentBestMs !== null ? Math.round(currentBestMs - 200) : null;
 
   const bestAccByMode = useMemo(() => {
-    const acc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null };
+    const acc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
     for (const s of sessions) {
       if (s.accuracy !== undefined) {
         if (acc[s.mode] === null || s.accuracy > acc[s.mode]!) {
@@ -156,6 +164,7 @@ export default function Home({
     partida: onStartPartida,
     alvo: onStartAlvo,
     sequencia: onStartSequencia,
+    radar: onStartRadar,
   };
 
   return (

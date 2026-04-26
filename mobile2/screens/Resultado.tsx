@@ -6,6 +6,7 @@ import {
 import { getLevelInfo, computeScore, LEVELS, MODE_COLORS, ModeKey } from '../utils/levels';
 import LevelBadge from '../components/LevelBadge';
 import { RoundResult } from './ModoAlvo';
+import { RoundResult as RadarRound } from './ModoRadar';
 import { SeqSummary } from './ModoSequencia';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
@@ -691,6 +692,88 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
   );
 }
 
+// ── Radar result ──────────────────────────────────────────────────────────────
+
+interface RadarProps {
+  radarResults: RadarRound[];
+  score: number;
+  onPlayAgain: () => void;
+  onHome: () => void;
+}
+
+function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
+  const level = getLevelInfo(score);
+  const mc = MODE_COLORS.radar;
+  const hits = radarResults.filter(r => r.hit);
+  const timeoutCount = radarResults.filter(r => r.timeout).length;
+  const accuracy = Math.round((hits.length / radarResults.length) * 100);
+  const bestHit = hits.length > 0 ? Math.min(...hits.map(r => r.rt)) : null;
+
+  return (
+    <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]} showsVerticalScrollIndicator={false}>
+      <View style={styles.hero}>
+        <Text style={styles.heroLabel}>MODO RADAR</Text>
+        <Text style={[styles.heroScore, { color: level.color }]}>{score}</Text>
+        <Text style={styles.heroMs}>ms (média dos acertos)</Text>
+        <LevelBadge level={level} />
+        <Text style={styles.levelDesc}>{level.desc}</Text>
+      </View>
+
+      <ScaleBar score={score} />
+
+      <View style={styles.statsRow}>
+        <View style={styles.stat}>
+          <Text style={[styles.statVal, { color: mc.accent }]}>{accuracy}%</Text>
+          <Text style={styles.statLbl}>ACURÁCIA</Text>
+        </View>
+        <View style={[styles.stat, styles.statMid]}>
+          <Text style={[styles.statVal, { color: bestHit !== null ? getLevelInfo(bestHit).color : '#4a5a7b' }]}>
+            {bestHit !== null ? `${bestHit} ms` : '—'}
+          </Text>
+          <Text style={styles.statLbl}>MELHOR HIT</Text>
+        </View>
+        <View style={styles.stat}>
+          <Text style={styles.statVal}>{hits.length}/{radarResults.length}</Text>
+          <Text style={styles.statLbl}>ACERTOS</Text>
+        </View>
+      </View>
+
+      {timeoutCount > 0 && (
+        <Text style={styles.earlyTapLine}>
+          ⏱ {timeoutCount} timeout{timeoutCount > 1 ? 's' : ''} (sem toque a tempo)
+        </Text>
+      )}
+
+      <Text style={styles.sectionTitle}>RODADAS</Text>
+      {radarResults.map((r, i) => {
+        const icon = r.hit ? '✓' : r.timeout ? '⏱' : '✗';
+        const iconColor = r.hit ? '#10b981' : '#ef4444';
+        const rtColor = r.hit ? getLevelInfo(r.rt).color : '#2d3a55';
+        const rtText = r.timeout ? '— timeout' : `${r.rt} ms`;
+        return (
+          <View key={i} style={styles.row}>
+            <Text style={styles.rowIdx}>{i + 1}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.rowTime, { color: rtColor }]}>{rtText}</Text>
+            </View>
+            <Text style={[styles.rowLevel, { color: iconColor }]}>{icon}</Text>
+          </View>
+        );
+      })}
+
+      <ScaleReference score={score} />
+
+      <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
+        <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.btnSecondary} onPress={onHome} activeOpacity={0.8}>
+        <Text style={styles.btnSecondaryText}>MENU PRINCIPAL</Text>
+      </TouchableOpacity>
+      <Text style={styles.methodNote}>Score = média dos RTs das rodadas com acerto.</Text>
+    </ScrollView>
+  );
+}
+
 // ── Unified Resultado ─────────────────────────────────────────────────────────
 
 interface Props {
@@ -698,6 +781,8 @@ interface Props {
   times?: number[];
   alvoResults?: RoundResult[];
   alvoScore?: number;
+  radarResults?: RadarRound[];
+  radarScore?: number;
   seqSummary?: SeqSummary;
   onPlayAgain: () => void;
   onHome: () => void;
@@ -705,7 +790,7 @@ interface Props {
   userProfile: UserProfile;
 }
 
-export default function Resultado({ mode, times, alvoResults, alvoScore, seqSummary, onPlayAgain, onHome, sessions, userProfile }: Props) {
+export default function Resultado({ mode, times, alvoResults, alvoScore, radarResults, radarScore, seqSummary, onPlayAgain, onHome, sessions, userProfile }: Props) {
   return (
     <View style={styles.root}>
       {mode === 'partida' && times && (
@@ -716,6 +801,9 @@ export default function Resultado({ mode, times, alvoResults, alvoScore, seqSumm
       )}
       {mode === 'sequencia' && seqSummary && (
         <SeqResult summary={seqSummary} onPlayAgain={onPlayAgain} onHome={onHome} sessions={sessions} userProfile={userProfile} />
+      )}
+      {mode === 'radar' && radarResults && radarScore !== undefined && (
+        <RadarResult radarResults={radarResults} score={radarScore} onPlayAgain={onPlayAgain} onHome={onHome} />
       )}
     </View>
   );

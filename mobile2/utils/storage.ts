@@ -128,7 +128,7 @@ export async function saveOnboardingDone(): Promise<void> {
 }
 
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {
-  const best: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null };
+  const best: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
   for (const s of sessions) {
     if (best[s.mode] === null || s.score < best[s.mode]!) {
       best[s.mode] = s.score;

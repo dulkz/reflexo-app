@@ -6,6 +6,7 @@ import Home from './screens/Home';
 import Splash from './screens/Splash';
 import ModoPartida from './screens/ModoPartida';
 import ModoAlvo, { RoundResult } from './screens/ModoAlvo';
+import ModoRadar, { RoundResult as RadarRound } from './screens/ModoRadar';
 import ModoSequencia, { SeqSummary } from './screens/ModoSequencia';
 import Resultado from './screens/Resultado';
 import Ciencia from './screens/Ciencia';
@@ -47,9 +48,11 @@ type GameScreen =
   | 'partida'
   | 'alvo'
   | 'sequencia'
+  | 'radar'
   | 'resultado_partida'
   | 'resultado_alvo'
-  | 'resultado_sequencia';
+  | 'resultado_sequencia'
+  | 'resultado_radar';
 
 const FAB_SIZE      = 70;
 const TAB_BAR_HEIGHT = 52;
@@ -92,6 +95,9 @@ function AppInner() {
   const [alvoScore, setAlvoScore] = useState(0);
   // Sequencia state
   const [seqSummary, setSeqSummary] = useState<SeqSummary | null>(null);
+  // Radar state
+  const [radarResults, setRadarResults] = useState<RadarRound[]>([]);
+  const [radarScore, setRadarScore] = useState(0);
 
   // Set after first session so the next "go home" triggers triage
   const pendingTriage = useRef(false);
@@ -298,6 +304,26 @@ function AppInner() {
     setGameScreen('resultado_sequencia');
   }, [addSession]);
 
+  const handleRadarComplete = useCallback(async (results: RadarRound[], score: number, timeoutCount: number) => {
+    setRadarResults(results);
+    setRadarScore(score);
+    const hits = results.filter(r => r.hit);
+    const bestTime = hits.length > 0 ? Math.min(...hits.map(r => r.rt)) : score;
+    const accuracy = hits.length / results.length;
+    await addSession({
+      id: Date.now().toString(),
+      mode: 'radar',
+      score,
+      bestTime,
+      accuracy,
+      rounds: results.length,
+      times: results.map(r => r.rt),
+      date: Date.now(),
+      ...(timeoutCount > 0 ? { timeouts: timeoutCount } : {}),
+    });
+    setGameScreen('resultado_radar');
+  }, [addSession]);
+
   // ── Tab switching ────────────────────────────────────────────────────────────
 
   const handleTabPress = useCallback((tab: Tab) => {
@@ -338,6 +364,7 @@ function AppInner() {
             onStartPartida={() => setGameScreen('partida')}
             onStartAlvo={() => setGameScreen('alvo')}
             onStartSequencia={() => setGameScreen('sequencia')}
+            onStartRadar={() => setGameScreen('radar')}
             sessions={sessions}
             bestByMode={bestByMode}
             userProfile={userProfile}
@@ -363,6 +390,13 @@ function AppInner() {
         return (
           <ModoSequencia
             onComplete={handleSeqComplete}
+            onBack={() => setGameScreen('home')}
+          />
+        );
+      case 'radar':
+        return (
+          <ModoRadar
+            onComplete={handleRadarComplete}
             onBack={() => setGameScreen('home')}
           />
         );
@@ -400,11 +434,26 @@ function AppInner() {
             userProfile={userProfile}
           />
         ) : null;
+      case 'resultado_radar':
+        return (
+          <Resultado
+            mode="radar"
+            radarResults={radarResults}
+            radarScore={radarScore}
+            onPlayAgain={() => setGameScreen('radar')}
+            onHome={goHome}
+            sessions={sessions}
+            userProfile={userProfile}
+          />
+        );
     }
   };
 
-  const inGame = gameScreen !== 'home' && gameScreen !== 'resultado_partida'
-    && gameScreen !== 'resultado_alvo' && gameScreen !== 'resultado_sequencia';
+  const inGame = gameScreen !== 'home'
+    && gameScreen !== 'resultado_partida'
+    && gameScreen !== 'resultado_alvo'
+    && gameScreen !== 'resultado_sequencia'
+    && gameScreen !== 'resultado_radar';
 
   return (
     <View style={styles.root}>

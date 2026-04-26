@@ -111,6 +111,7 @@ const MODE_META: Record<ModeKey, { name: string; icon: string; sub: string }> = 
   partida: { name: 'MODO PARTIDA', icon: '🏎', sub: 'Reação simples visual' },
   alvo:    { name: 'MODO ALVO',    icon: '🎯', sub: 'Velocidade + precisão' },
   sequencia: { name: 'MODO SEQUÊNCIA', icon: '🧠', sub: 'Controle inibitório' },
+  radar:   { name: 'MODO RADAR',   icon: '📡', sub: 'Localização visual' },
 };
 
 // ── Bar chart ────────────────────────────────────────────────────────────────

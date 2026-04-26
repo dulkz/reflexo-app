@@ -43,6 +43,7 @@ export const MODE_COLORS = {
   partida:  { accent: '#3b82f6', bg: 'rgba(59,130,246,0.12)'  },
   alvo:     { accent: '#06b6d4', bg: 'rgba(6,182,212,0.12)'   },
   sequencia:{ accent: '#8b5cf6', bg: 'rgba(139,92,246,0.12)'  },
+  radar:    { accent: '#f59e0b', bg: 'rgba(245,158,11,0.12)'  },
 } as const;
 
 export type ModeKey = keyof typeof MODE_COLORS;

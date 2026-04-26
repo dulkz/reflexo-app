@@ -59,8 +59,8 @@ function detectArchetypeId(
 }
 
 export function buildUserStats(sessions: SessionRecord[], streak: number): UserStats {
-  const bestScore: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null };
-  const bestAcc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null };
+  const bestScore: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
+  const bestAcc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
   let fatSum = 0;
   let fatCount = 0;
   let alvoSessions = 0;

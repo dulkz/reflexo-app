@@ -56,6 +56,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'partida',   label: 'Partida' },
   { key: 'alvo',      label: 'Alvo' },
   { key: 'sequencia', label: 'Sequência' },
+  { key: 'radar',     label: 'Radar' },
 ];
 
 const PERIODS: { key: PeriodKey; label: string }[] = [
@@ -70,12 +71,14 @@ const MODE_LABELS: Record<ModeKey, string> = {
   partida: 'Partida',
   alvo: 'Alvo',
   sequencia: 'Sequência',
+  radar: 'Radar',
 };
 
 const MODE_ICONS: Record<ModeKey, string> = {
   partida:  '🏁',
   alvo:     '🎯',
   sequencia:'📊',
+  radar:    '📡',
 };
 
 // ── EvoChart ──────────────────────────────────────────────────────────────────
@@ -158,7 +161,7 @@ function EvoChart({ sessions, filter, period, userProfile }: EvoProps) {
   let minV: number, maxV: number;
   if (filter === 'alvo') {
     minV = 300; maxV = 800;
-  } else if (filter === 'partida' || filter === 'sequencia') {
+  } else if (filter === 'partida' || filter === 'sequencia' || filter === 'radar') {
     minV = 150; maxV = 500;
   } else if (hasData) {
     // 'all' with data: dynamic — include milestone so dashed line stays visible
@@ -173,8 +176,8 @@ function EvoChart({ sessions, filter, period, userProfile }: EvoProps) {
   // Choice RT ELITE reference for alvo — mode color cyan
   const choiceRTRef: number | null = filter === 'alvo' ? 420 : null;
 
-  // Simple RT ELITE reference for partida/sequencia — mode-specific color
-  const simpleRTRef: number | null = (filter === 'partida' || filter === 'sequencia') ? 200 : null;
+  // Simple RT ELITE reference for partida/sequencia/radar — mode-specific color
+  const simpleRTRef: number | null = (filter === 'partida' || filter === 'sequencia' || filter === 'radar') ? 200 : null;
   const simpleRTColor = simpleRTRef !== null ? MODE_COLORS[filter as ModeKey].accent : null;
 
   const toY = (v: number) => PAD.t + (1 - (v - minV) / range) * innerH;
@@ -240,7 +243,7 @@ function EvoChart({ sessions, filter, period, userProfile }: EvoProps) {
     xTicks.push({ x: PAD.l + innerW / 2, label: 'Hoje', anchor: 'middle' });
   }
 
-  const modes: ModeKey[] = ['partida', 'alvo', 'sequencia'];
+  const modes: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
 
   return (
     <View style={chart.wrapper}>
@@ -426,7 +429,7 @@ export default function Historico({ sessions, userProfile }: Props) {
   const [period, setPeriod] = useState<PeriodKey>('7d');
 
   const modeCounts = useMemo((): Record<FilterKey, number> => {
-    const c: Record<FilterKey, number> = { all: sessions.length, partida: 0, alvo: 0, sequencia: 0 };
+    const c: Record<FilterKey, number> = { all: sessions.length, partida: 0, alvo: 0, sequencia: 0, radar: 0 };
     for (const s of sessions) c[s.mode]++;
     return c;
   }, [sessions]);
@@ -442,7 +445,7 @@ export default function Historico({ sessions, userProfile }: Props) {
   }, [sessions]);
 
   const { mostPlayed, modeCounts: modeCountsMap } = useMemo(() => {
-    const counts: Record<ModeKey, number> = { partida: 0, alvo: 0, sequencia: 0 };
+    const counts: Record<ModeKey, number> = { partida: 0, alvo: 0, sequencia: 0, radar: 0 };
     for (const s of sessions) counts[s.mode]++;
     let mp: ModeKey | null = null;
     for (const k of Object.keys(counts) as ModeKey[]) {
