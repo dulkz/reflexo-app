@@ -173,8 +173,10 @@ export async function saveHasSeenTriagePrompt(value: boolean): Promise<void> {
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {
   const best: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
   for (const s of sessions) {
-    if (best[s.mode] === null || s.score < best[s.mode]!) {
-      best[s.mode] = s.score;
+    // Alvo and Radar: prefer bestTime (single raw RT without penalty) over score (penalised average)
+    const value = (s.mode === 'alvo' || s.mode === 'radar') ? (s.bestTime ?? s.score) : s.score;
+    if (best[s.mode] === null || value < best[s.mode]!) {
+      best[s.mode] = value;
     }
   }
   return best;

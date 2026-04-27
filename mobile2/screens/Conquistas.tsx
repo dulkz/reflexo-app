@@ -64,20 +64,24 @@ export default function Conquistas({ sessions, userProfile }: Props) {
     [stats],
   );
 
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // unlockDates must be declared before the useMemos that reference it (inline execution order)
+  const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
+
+  // A secret is "discovered" if the live stats check OR the persisted unlockDates record say so.
+  // unlockDates is the definitive truth for achievements that were ever unlocked — guards against
+  // edge cases where a.unlocked(stats) returns false after a session recompute.
   const lockedSecrets = useMemo(
-    () => ACHIEVEMENTS.filter(a => !!a.secret && !a.unlocked(stats)),
-    [stats],
+    () => ACHIEVEMENTS.filter(a => !!a.secret && !a.unlocked(stats) && !unlockDates[a.id]),
+    [stats, unlockDates],
   );
   const discoveredSecrets = useMemo(
     () => ACHIEVEMENTS
-      .filter(a => !!a.secret && a.unlocked(stats))
+      .filter(a => !!a.secret && (a.unlocked(stats) || !!unlockDates[a.id]))
       .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity)),
-    [stats],
+    [stats, unlockDates],
   );
   const discoveredSecretsCount = discoveredSecrets.length;
-
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadUnlockedAchievements().then(stored => {
@@ -101,7 +105,7 @@ export default function Conquistas({ sessions, userProfile }: Props) {
         <View style={styles.header}>
           <Text style={styles.kicker}>CONQUISTAS</Text>
           <Text style={styles.count}>
-            {unlockedCount}/{ACHIEVEMENTS.length} desbloqueadas
+            {unlockedCount}/{ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats) || !!unlockDates[a.id]).length} desbloqueadas
           </Text>
         </View>
 

@@ -364,8 +364,8 @@ export default function Home({
                     </Text>
                     <View style={[styles.levelPill, { backgroundColor: lvl.bg }]}>
                       <View style={[styles.levelDot, { backgroundColor: lvl.color }]} />
-                      <Text style={[styles.levelPillText, { color: lvl.color }]}>
-                        {lvl.label.split(' ').slice(0, 2).join(' ')}
+                      <Text style={[styles.levelPillText, { color: lvl.color }]} numberOfLines={1}>
+                        {lvl.label}
                       </Text>
                     </View>
                   </View>
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   levelDot: { width: 6, height: 6, borderRadius: 3 },
-  levelPillText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  levelPillText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
   newPill: {
     borderWidth: 1, borderRadius: 6,
     paddingHorizontal: 8, paddingVertical: 3,
