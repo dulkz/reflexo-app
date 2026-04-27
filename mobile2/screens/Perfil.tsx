@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Modal, TextInput,
-  Platform, StatusBar as RNStatusBar, TouchableOpacity,
+  Platform, StatusBar as RNStatusBar, TouchableOpacity, Alert,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
 import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
@@ -48,6 +48,7 @@ interface Props {
   onOpenTriage: (editMode: boolean) => void;
   onGoToConquistas: () => void;
   onUpdateProfile: (p: UserProfile) => void;
+  onClearData: () => void;
 }
 
 // ── Gradient avatar ──────────────────────────────────────────────────────────
@@ -191,9 +192,10 @@ const chart = StyleSheet.create({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConquistas, onUpdateProfile }: Props) {
+export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConquistas, onUpdateProfile, onClearData }: Props) {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [avatarExpanded, setAvatarExpanded] = useState(false);
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const archetype = useMemo(() => getArchetypeFromStats(stats), [stats]);
@@ -400,45 +402,76 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         </View>
 
         {/* ── MEU AVATAR ── */}
-        <View style={styles.avatarSection}>
-          <Text style={styles.sectionTitle}>MEU AVATAR</Text>
-          <View style={styles.avatarGrid}>
-            {AVATARS.map(av => {
-              const unlocked = av.isUnlocked(stats, ACHIEVEMENTS);
-              const selectedId = userProfile.selectedAvatar ?? 'initial';
-              const selected = selectedId === av.id;
-              const isInitial = av.id === 'initial';
-              const cellContent = !unlocked
-                ? <Text style={styles.avatarCellLock}>🔒</Text>
-                : isInitial
-                  ? <Text style={styles.avatarCellLetter}>{(userProfile.name || 'U')[0].toUpperCase()}</Text>
-                  : <Text style={styles.avatarCellEmoji}>{av.icon}</Text>;
-              return (
-                <View key={av.id} style={styles.avatarItemWrap}>
-                  <TouchableOpacity
-                    style={[
-                      styles.avatarCell,
-                      selected
-                        ? { borderWidth: 2, borderColor: '#5b4fcf', backgroundColor: 'rgba(91,79,207,0.15)' }
-                        : { borderWidth: 1, borderColor: '#2a3a5a', backgroundColor: '#111a2e' },
-                      !unlocked && styles.avatarCellLocked,
-                    ]}
-                    onPress={unlocked ? async () => {
-                      const updated = { ...userProfile, selectedAvatar: av.id };
-                      await saveUserProfile(updated);
-                      onUpdateProfile(updated);
-                    } : undefined}
-                    disabled={!unlocked}
-                    activeOpacity={0.7}
-                  >
-                    {cellContent}
-                  </TouchableOpacity>
-                  <Text style={styles.avatarCellName} numberOfLines={1}>{av.name}</Text>
+        {(() => {
+          const unlockedAvatarCount = AVATARS.filter(av => av.isUnlocked(stats, ACHIEVEMENTS)).length;
+          const selectedId = userProfile.selectedAvatar ?? 'initial';
+          const currentAv = AVATARS.find(av => av.id === selectedId) ?? AVATARS[0];
+          const isInitial = currentAv.id === 'initial';
+          return (
+            <View style={styles.avatarSection}>
+              <TouchableOpacity
+                style={styles.avatarSectionHeader}
+                onPress={() => setAvatarExpanded(v => !v)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.sectionTitle}>MEU AVATAR</Text>
+                <View style={styles.avatarHeaderRight}>
+                  <Text style={styles.avatarHeaderCount}>{unlockedAvatarCount}/{AVATARS.length} desbloqueados</Text>
+                  <Text style={styles.avatarHeaderChevron}>{avatarExpanded ? '▼' : '▶'}</Text>
                 </View>
-              );
-            })}
-          </View>
-        </View>
+              </TouchableOpacity>
+
+              {!avatarExpanded ? (
+                /* Collapsed: show only the currently selected avatar */
+                <View style={styles.avatarCollapsed}>
+                  <View style={[styles.avatarCell, { borderWidth: 2, borderColor: '#5b4fcf', backgroundColor: 'rgba(91,79,207,0.15)' }]}>
+                    {isInitial
+                      ? <Text style={styles.avatarCellLetter}>{(userProfile.name || 'U')[0].toUpperCase()}</Text>
+                      : <Text style={styles.avatarCellEmoji}>{currentAv.icon}</Text>}
+                  </View>
+                  <Text style={styles.avatarCollapsedName}>{currentAv.name}</Text>
+                </View>
+              ) : (
+                /* Expanded: full grid */
+                <View style={styles.avatarGrid}>
+                  {AVATARS.map(av => {
+                    const unlocked = av.isUnlocked(stats, ACHIEVEMENTS);
+                    const selected = selectedId === av.id;
+                    const avIsInitial = av.id === 'initial';
+                    const cellContent = !unlocked
+                      ? <Text style={styles.avatarCellLock}>🔒</Text>
+                      : avIsInitial
+                        ? <Text style={styles.avatarCellLetter}>{(userProfile.name || 'U')[0].toUpperCase()}</Text>
+                        : <Text style={styles.avatarCellEmoji}>{av.icon}</Text>;
+                    return (
+                      <View key={av.id} style={styles.avatarItemWrap}>
+                        <TouchableOpacity
+                          style={[
+                            styles.avatarCell,
+                            selected
+                              ? { borderWidth: 2, borderColor: '#5b4fcf', backgroundColor: 'rgba(91,79,207,0.15)' }
+                              : { borderWidth: 1, borderColor: '#2a3a5a', backgroundColor: '#111a2e' },
+                            !unlocked && styles.avatarCellLocked,
+                          ]}
+                          onPress={unlocked ? async () => {
+                            const updated = { ...userProfile, selectedAvatar: av.id };
+                            await saveUserProfile(updated);
+                            onUpdateProfile(updated);
+                          } : undefined}
+                          disabled={!unlocked}
+                          activeOpacity={0.7}
+                        >
+                          {cellContent}
+                        </TouchableOpacity>
+                        <Text style={styles.avatarCellName} numberOfLines={1}>{av.name}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          );
+        })()}
 
         {/* ── Archetype card ── */}
         <View style={[styles.archetypeCard, { borderColor: archetype.color + '44' }]}>
@@ -880,6 +913,26 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           </View>
         )}
 
+        {/* ── ZONA DE PERIGO ── */}
+        <View style={styles.dangerZone}>
+          <TouchableOpacity
+            style={styles.dangerButton}
+            onPress={() => {
+              Alert.alert(
+                'Limpar todos os dados',
+                'Tem certeza? Esta ação apaga todo o histórico, conquistas e progresso. Não pode ser desfeita.',
+                [
+                  { text: 'Cancelar', style: 'cancel' },
+                  { text: 'Limpar tudo', style: 'destructive', onPress: onClearData },
+                ],
+              );
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.dangerButtonText}>Limpar todos os dados</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={{ height: 24 }} />
       </ScrollView>
 
@@ -951,6 +1004,14 @@ const styles = StyleSheet.create({
 
   // ── MEU AVATAR ────────────────────────────────────────────────────────────
   avatarSection: { marginBottom: 20 },
+  avatarSectionHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
+  },
+  avatarHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  avatarHeaderCount: { fontSize: 11, color: '#3a4a6b', fontWeight: '600' },
+  avatarHeaderChevron: { fontSize: 12, color: '#3a4a6b' },
+  avatarCollapsed: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatarCollapsedName: { fontSize: 12, color: '#4a5a7b', fontWeight: '600' },
   avatarGrid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start',
   },
@@ -1207,4 +1268,12 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 40, gap: 12 },
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', lineHeight: 20 },
+
+  // ── Danger zone ───────────────────────────────────────────────────────────
+  dangerZone: { marginTop: 24, alignItems: 'center' },
+  dangerButton: {
+    borderWidth: 1, borderColor: '#ef4444', borderRadius: 10,
+    paddingHorizontal: 24, paddingVertical: 10,
+  },
+  dangerButtonText: { fontSize: 13, fontWeight: '700', color: '#ef4444', letterSpacing: 0.5 },
 });

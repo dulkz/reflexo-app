@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Home from './screens/Home';
@@ -426,6 +427,15 @@ function AppInner() {
     homeScrollRef.current?.scrollTo({ y: 0, animated: false });
   }, []);
 
+  const handleClearData = useCallback(async () => {
+    await AsyncStorage.clear();
+    setSessions([]);
+    setUserProfile(defaultUserProfile());
+    setActiveTab('jogar');
+    setGameScreen('home');
+    setOnboardingVisible(true);
+  }, []);
+
   const handleTriageDismiss = useCallback(async () => {
     dismissedThisSession.current = true;
     const updated: UserProfile = {
@@ -555,6 +565,7 @@ function AppInner() {
             onOpenTriage={openTriageForEdit}
             onGoToConquistas={() => handleTabPress('conquistas')}
             onUpdateProfile={setUserProfile}
+            onClearData={handleClearData}
           />
         )}
         {activeTab === 'conquistas' && (
