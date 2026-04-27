@@ -318,8 +318,9 @@ function AppInner() {
   const handleAlvoComplete = useCallback(async (results: RoundResult[], score: number, alvoTimeouts: number) => {
     setAlvoResults(results);
     setAlvoScore(score);
-    const bestTime = Math.min(...results.map(r => r.rt));
-    const accuracy = results.filter(r => r.correct).length / results.length;
+    const hits = results.filter(r => r.correct);
+    const bestTime = hits.length > 0 ? Math.min(...hits.map(r => r.rt)) : score;
+    const accuracy = hits.length / results.length;
     await addSession({
       id: Date.now().toString(),
       mode: 'alvo',

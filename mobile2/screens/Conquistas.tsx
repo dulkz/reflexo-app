@@ -236,8 +236,13 @@ export default function Conquistas({ sessions, userProfile }: Props) {
                               key={a.id}
                               style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor }]}
                             >
-                              <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
-                                <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
+                              <View style={{ flexDirection: 'row', gap: 4, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 2 }}>
+                                <View style={[styles.rarityBadge, { backgroundColor: SECRET_COLOR + '22', borderColor: SECRET_COLOR }]}>
+                                  <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>SECRETA</Text>
+                                </View>
+                                <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
+                                  <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
+                                </View>
                               </View>
                               <Text style={styles.icon}>{a.icon}</Text>
                               <Text style={styles.name}>{a.name}</Text>

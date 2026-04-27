@@ -355,13 +355,18 @@ export default function Home({
 
                 {best !== null && best !== undefined && lvl ? (
                   <View style={styles.modeBottom}>
-                    <Text style={styles.modeBestLabel}>
-                      {'Sua melhor: '}
-                      <Text style={[styles.modeBestMs, { color: lvl.color }]}>{best} ms</Text>
-                      {bestAcc !== null
-                        ? <Text style={styles.modeBestAcc}>{` · ${Math.round(bestAcc * 100)}%`}</Text>
-                        : null}
-                    </Text>
+                    <View style={{ flexShrink: 1 }}>
+                      <Text style={styles.modeBestLabel}>
+                        {'Sua melhor: '}
+                        <Text style={[styles.modeBestMs, { color: lvl.color }]}>{best} ms</Text>
+                        {bestAcc !== null
+                          ? <Text style={styles.modeBestAcc}>{` · ${Math.round(bestAcc * 100)}%`}</Text>
+                          : null}
+                      </Text>
+                      <Text style={styles.modeBestSubLabel}>
+                        {(m.key === 'alvo' || m.key === 'radar') ? 'Melhor Tempo Reflexo' : 'Média RT'}
+                      </Text>
+                    </View>
                     <View style={[styles.levelPill, { backgroundColor: lvl.bg }]}>
                       <View style={[styles.levelDot, { backgroundColor: lvl.color }]} />
                       <Text style={[styles.levelPillText, { color: lvl.color }]} numberOfLines={1}>
@@ -562,7 +567,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 14, paddingVertical: 10,
   },
-  modeBestLabel: { fontSize: 12, color: '#4a5a7b', flexShrink: 1 },
+  modeBestLabel: { fontSize: 12, color: '#4a5a7b' },
+  modeBestSubLabel: { fontSize: 9, color: '#3a4a6b', marginTop: 1 },
   modeBestMs: { fontWeight: '700' },
   modeBestAcc: { color: '#4a5a7b' },
   levelPill: {
