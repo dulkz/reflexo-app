@@ -567,3 +567,71 @@ Adicionar `'radar'` a `MODE_COLORS` propaga `ModeKey = 'partida' | 'alvo' | 'seq
 - Modo Auditivo (futuro)
 - Validar restante do `benchmarks_reflexo.docx` contra benchmarks de Ciencia.tsx (boxer 160–220 vs. real 240–260; sprinter 170–200 vs. real 120–160 auditivo)
 - APK v4 quando consolidar Etapa 2 + onboarding + filtro de período
+
+---
+
+### Sessão APK v7 — Radar score fix + timing unificado + escala atualizada + triagem automática (2026-04-26)
+Branch: `main`
+
+#### Versão atual: APK v7 (próximo build)
+
+#### Correções aplicadas
+
+**Score do Radar — modelo relativo:**
+- RT de cada miss agora conta como `rt + 200ms` na média (em vez de penalty agregado pós-média)
+- Timeouts excluídos da média (não-evento, sem RT válido)
+- Texto resultado: `❌ Erros: N (+200ms avg)` substitui formato antigo
+
+**Timing unificado padrão B nos 4 modos:**
+- `signalTime` capturado em `useEffect` pós-commit em todos os modos (Partida, Alvo, Sequência, Radar)
+- Garante que o timer só inicia depois do React commitar a mudança visual — elimina viés sistemático onde alguns modos capturavam `signalTime` antes do render
+
+**Outros ajustes:**
+- Fade-in de 50ms removido do `ModoPartida` — círculo aparece instantâneo (consistente com os outros modos)
+- Gate `suspiciousSpam` removido de `handleSeqComplete` — Sequência sempre salva sessão (spam continua sendo detectado, só não invalida)
+- Storage: logging completo nos 10 catches (saves + loads) para diagnóstico em produção
+
+**Escala de referência (`utils/levels.ts`):**
+- Novo nível `NA MÉDIA` (300–350 ms)
+- Novo nível `MUITO DEVAGAR` (>500 ms)
+- `ABAIXO DA MÉDIA` movido para 350–400 ms (era 300–400)
+- `IMPOSSÍVEL` / `Limite Fisiológico Humano` removido da tela Ciência (mantido em `levels.ts` como categorização interna, mas não exposto como benchmark de referência aspiracional)
+
+**UX Perfil:**
+- Label de arquétipo cortado corrigido — usava `.split(' ')[0]`, agora exibe label completo
+
+**Onboarding tela 2:**
+- Atualizado para 4 modos de treino (Radar adicionado como 4º card)
+- 4ª barra adicionada ao equalizer animado
+
+**Botão voltar redesenhado nos 4 modos:**
+- Compacto 32×28, laranja `#f59e0b`, `borderRadius 8`
+- Substitui o botão DESISTIR anterior maior
+
+**Cards "Como jogar" nas telas de intro:**
+- Partida, Alvo e Sequência ganham card explicativo substituindo o emoji circle decorativo
+- Radar mantém intro própria
+
+**Triagem automática pós-primeira partida:**
+- Modal dispara após primeira partida em qualquer ação **exceto** "Jogar Novamente"
+- Flags `hasPlayedFirstGame` + `hasSeenTriagePrompt` adicionados ao storage
+- Garante que usuário não pula triagem mas também não é interrompido em sequência rápida de jogos
+
+#### Decisões de design
+
+**Score Radar relativo (rt+200 por miss) vs. agregado:**
+Modelo anterior somava `missCount * 200` à média no fim. Modelo novo trata cada miss como uma rodada com RT inflado. Vantagem: cada rodada contribui de forma equivalente e linear. O resultado numérico é semanticamente equivalente em sessões com poucos erros, mas o display "+200ms avg" comunica melhor a natureza da penalidade.
+
+**Timeouts excluídos da média:**
+Timeout = ausência de evento; sem RT válido para promediar. Incluí-los como "1500ms" inflaria score injustamente. Já estavam refletidos em ACERTOS X/7 e na contagem visível.
+
+**Spam não invalida mais a Sequência:**
+Sessão sempre é salva. Antes, spam → sessão descartada → frustração. Spam continua sendo um marcador interno, mas não bloqueia persistência de dados.
+
+**Triagem só dispara fora do "Jogar Novamente":**
+Usuário em flow de partidas consecutivas não é interrompido. Modal aparece quando o usuário sai do contexto de jogo (volta para home, abre histórico, etc.) — momento natural para considerar triagem.
+
+#### Pendências para próxima sessão
+- Gráfico histórico 7d/30d: eixo X comprimido quando há poucos dados (sessões agrupadas em fração pequena do range)
+- Botão "Limpar todos os dados" no Perfil
+- Etapa 2 do Radar: missões diárias/semanais, conquistas específicas, arquétipo Quadriatleta, `try_all_modes` contando 4 modos (atualmente 3)

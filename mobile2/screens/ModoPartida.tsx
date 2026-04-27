@@ -83,14 +83,18 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
 
     const delay = Math.floor(Math.random() * (MAX_DELAY - MIN_DELAY)) + MIN_DELAY;
     delayTimer.current = setTimeout(() => {
-      signalTime.current = Date.now();
-      setGameState('signal');
-      Animated.parallel([
-        Animated.spring(circleScale, { toValue: 1, useNativeDriver: true, tension: 150, friction: 7 }),
-        Animated.timing(circleOpacity, { toValue: 1, duration: 50, useNativeDriver: true }),
-      ]).start();
+      setGameState('signal'); // signalTime captured in useEffect after this render
+      circleOpacity.setValue(1); // instant — fade-in adds untracked perceptual latency
+      Animated.spring(circleScale, { toValue: 1, useNativeDriver: true, tension: 150, friction: 7 }).start();
     }, delay);
   }, [circleScale, circleOpacity]);
+
+  // Timer starts after 'signal' render commit — matches ModoAlvo/ModoRadar pattern.
+  useEffect(() => {
+    if (gameState === 'signal') {
+      signalTime.current = Date.now();
+    }
+  }, [gameState]);
 
   const handlePress = useCallback(() => {
     if (responded.current) return;
@@ -214,22 +218,17 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
       <View style={[styles.screen, { backgroundColor: '#0b1220' }]}>
         <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
           <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Voltar</Text>
+            <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
           <Text style={styles.introTitle}>MODO PARTIDA</Text>
           <Text style={styles.introSub}>7 tentativas · reação simples</Text>
-          <View style={styles.introInstrBox}>
-            <Text style={styles.introInstrLine}>① Aguarde a tela escura</Text>
-            <Text style={styles.introInstrLine}>② Toque assim que o círculo verde aparecer</Text>
-            <Text style={[styles.introInstrLine, { color: '#f59e0b' }]}>
-              ③ Tocar antes = falsa largada (500 ms fixo)
+          <View style={styles.howToCard}>
+            <Text style={styles.howToTitle}>Como jogar</Text>
+            <Text style={styles.howToText}>
+              Aguarde a tela escurecer. Toque assim que o círculo verde aparecer. Quanto mais rápido, melhor.
             </Text>
-          </View>
-          <View style={styles.introDemoWrap}>
-            <View style={styles.introDemoCircle} />
-            <Text style={styles.introDemoLabel}>TOQUE AQUI</Text>
           </View>
           <TouchableOpacity style={styles.introStartBtn} onPress={() => { setStarted(true); startRound(); }} activeOpacity={0.8}>
             <Text style={styles.introStartBtnText}>INICIAR</Text>
@@ -244,7 +243,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
       {gameState === 'ready' && (
         <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
           <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Voltar</Text>
+            <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -277,8 +276,14 @@ const styles = StyleSheet.create({
   topBar: {
     paddingHorizontal: 20,
   },
-  backBtn: { paddingVertical: 8, alignSelf: 'flex-start' },
-  backText: { color: '#555', fontSize: 15, fontWeight: '600' },
+  backBtn: {
+    width: 32, height: 28, borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: '#f59e0b',
+    alignItems: 'center', justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  backText: { color: '#f59e0b', fontSize: 16, fontWeight: '700', lineHeight: 16, marginTop: -1 },
 
   readyContainer: {
     flex: 1,
@@ -374,24 +379,13 @@ const styles = StyleSheet.create({
   introSub: {
     fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginTop: -12,
   },
-  introInstrBox: {
-    backgroundColor: '#111a2e', borderRadius: 12, padding: 18,
-    borderWidth: 1, borderColor: 'rgba(59,130,246,0.15)', gap: 10,
+  howToCard: {
+    backgroundColor: '#1a2a1a',
+    borderLeftWidth: 4, borderLeftColor: '#22c55e',
+    borderRadius: 12, padding: 16,
   },
-  introInstrLine: { fontSize: 14, color: '#c0cfe0', lineHeight: 20 },
-  introDemoWrap: { alignItems: 'center', gap: 12, paddingVertical: 8 },
-  introDemoCircle: {
-    width: 120, height: 120, borderRadius: 60,
-    backgroundColor: '#00FF44',
-    shadowColor: '#00FF44',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 12,
-  },
-  introDemoLabel: {
-    fontSize: 13, fontWeight: '800', color: '#00C840', letterSpacing: 2,
-  },
+  howToTitle: { fontSize: 13, fontWeight: '700', color: '#22c55e', letterSpacing: 0.5, marginBottom: 8 },
+  howToText: { fontSize: 14, color: '#cbd5e1', lineHeight: 20 },
   introStartBtn: {
     backgroundColor: '#3b82f6', borderRadius: 16,
     paddingVertical: 18, alignItems: 'center',

@@ -92,6 +92,13 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     if (countdownTimer.current) clearInterval(countdownTimer.current);
   }, []);
 
+  // Timer starts after 'signal' render commit — matches ModoAlvo/ModoRadar pattern.
+  useEffect(() => {
+    if (gameState === 'signal') {
+      signalStart.current = Date.now();
+    }
+  }, [gameState]);
+
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
     flashOpacity.setValue(0.4);
@@ -146,10 +153,9 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       responded.current = false;
       circleScale.setValue(0);
       Animated.spring(circleScale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }).start();
-      signalStart.current = Date.now();
       currentSignalRef.current = sequence.current[currentIdx]; // set before state to avoid render race
       setSignalIdx(currentIdx);
-      setGameState('signal');
+      setGameState('signal'); // signalStart captured in useEffect after this render
 
       signalTimer.current = setTimeout(() => {
         if (!responded.current) {
@@ -258,26 +264,17 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       <View style={styles.screen}>
         <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
           <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Voltar</Text>
+            <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
           <Text style={styles.introTitle}>MODO SEQUÊNCIA</Text>
           <Text style={styles.introSub}>20 sinais · Go / NoGo</Text>
-          <View style={styles.instrBox}>
-            <Text style={styles.instrLine}>① <Text style={{ color: '#10b981', fontWeight: '700' }}>CÍRCULO VERDE</Text> → toque imediatamente (Go)</Text>
-            <Text style={styles.instrLine}>② <Text style={{ color: '#ef4444', fontWeight: '700' }}>CÍRCULO VERMELHO</Text> → não toque! (NoGo)</Text>
-            <Text style={[styles.instrLine, { color: '#f59e0b' }]}>③ Você não sabe quando o vermelho vai aparecer. Cada sinal é uma surpresa.</Text>
-          </View>
-          <View style={styles.signalDemo}>
-            <View style={styles.demoItem}>
-              <View style={[styles.demoCircle, { backgroundColor: '#10b981' }]} />
-              <Text style={styles.demoLabel}>GO</Text>
-            </View>
-            <View style={styles.demoItem}>
-              <View style={[styles.demoCircle, { backgroundColor: '#ef4444' }]} />
-              <Text style={styles.demoLabel}>NO-GO</Text>
-            </View>
+          <View style={styles.howToCard}>
+            <Text style={styles.howToTitle}>Como jogar</Text>
+            <Text style={styles.howToText}>
+              Toque apenas nos sinais VERDES (Go). Ignore os vermelhos (No-Go). Controle o impulso de tocar em tudo.
+            </Text>
           </View>
           <TouchableOpacity style={styles.startBtn} onPress={startGame} activeOpacity={0.8}>
             <Text style={styles.startBtnText}>INICIAR</Text>
@@ -364,8 +361,14 @@ const styles = StyleSheet.create({
   centeredFull: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   topBar: { paddingHorizontal: 20 },
-  backBtn: { paddingVertical: 8, alignSelf: 'flex-start' },
-  backText: { color: '#4a5a7b', fontSize: 15, fontWeight: '600' },
+  backBtn: {
+    width: 32, height: 28, borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: '#f59e0b',
+    alignItems: 'center', justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  backText: { color: '#f59e0b', fontSize: 16, fontWeight: '700', lineHeight: 16, marginTop: -1 },
 
   progressBarBg: {
     height: 3, backgroundColor: '#1a2540',
@@ -394,15 +397,13 @@ const styles = StyleSheet.create({
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
   introTitle: { fontSize: 30, fontWeight: '900', color: '#8b5cf6', letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
-  instrBox: {
-    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: 18, gap: 12, marginBottom: 28,
+  howToCard: {
+    backgroundColor: '#1a1a2e',
+    borderLeftWidth: 4, borderLeftColor: '#a855f7',
+    borderRadius: 12, padding: 16, marginBottom: 28,
   },
-  instrLine: { fontSize: 14, color: '#7a8aa0', lineHeight: 20 },
-  signalDemo: { flexDirection: 'row', justifyContent: 'center', gap: 40, marginBottom: 36 },
-  demoItem: { alignItems: 'center', gap: 10 },
-  demoCircle: { width: 70, height: 70, borderRadius: 35 },
-  demoLabel: { fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 2 },
+  howToTitle: { fontSize: 13, fontWeight: '700', color: '#a855f7', letterSpacing: 0.5, marginBottom: 8 },
+  howToText: { fontSize: 14, color: '#cbd5e1', lineHeight: 20 },
   startBtn: { backgroundColor: '#8b5cf6', borderRadius: 14, paddingVertical: 18, alignItems: 'center' },
   startBtnText: { fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 2 },
 

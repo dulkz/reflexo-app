@@ -75,14 +75,6 @@ const SCI_STATS = [
 
 const BENCHMARKS = [
   {
-    icon: '🚫',
-    name: 'Limite fisiológico humano',
-    source: 'Wikipedia Mental Chronometry · Backyard Brains',
-    range: '< 50 ms',
-    level: 'IMPOSSÍVEL',
-    color: '#ff0080',
-  },
-  {
     icon: '👁',
     name: 'Antecipação visual de elite',
     source: 'McLeod 1987 · Caprioli et al., 2023 (ATP)',

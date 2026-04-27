@@ -89,9 +89,13 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
     advanceTimer.current = setTimeout(() => {
       const next = round + 1;
       if (next > TOTAL_ROUNDS) {
-        const hits = newResults.filter(r => r.hit);
-        const score = hits.length > 0
-          ? Math.round(hits.reduce((s, r) => s + r.rt, 0) / hits.length)
+        // Score = mean of hits (rt real) + misses (rt + MISS_PENALTY).
+        // Timeouts excluded — rt=1500 ms would distort the mean.
+        const scored = newResults.filter(r => !r.timeout);
+        const score = scored.length > 0
+          ? Math.round(
+              scored.reduce((s, r) => s + (r.hit ? r.rt : r.rt + MISS_PENALTY), 0) / scored.length,
+            )
           : Math.round(newResults.reduce((s, r) => s + r.rt, 0) / newResults.length);
         onComplete(newResults, score, timeoutCount.current, missCount.current);
       } else {
@@ -189,9 +193,9 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
       <View style={styles.screen}>
         <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
           <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Voltar</Text>
+            <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
-          <View style={{ width: 60 }} />
+          <View style={{ width: 32 }} />
         </View>
         <View style={styles.introContainer}>
           <Text style={styles.introTitle}>MODO RADAR</Text>
@@ -337,8 +341,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 8,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  backBtn: { paddingVertical: 8, width: 60 },
-  backText: { color: '#4a5a7b', fontSize: 15, fontWeight: '600' },
+  backBtn: {
+    width: 32, height: 28, borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: '#f59e0b',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  backText: { color: '#f59e0b', fontSize: 16, fontWeight: '700', lineHeight: 16, marginTop: -1 },
   quitBtn: {
     paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8,
     backgroundColor: 'rgba(239,68,68,0.1)',

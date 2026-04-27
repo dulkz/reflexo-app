@@ -818,8 +818,8 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                   <>
                     <Text style={[styles.modeScore, { color: lvl.color }]}>{displayScore} ms</Text>
                     <View style={[styles.modeLevelPill, { backgroundColor: lvl.bg }]}>
-                      <Text style={[styles.modeLevelText, { color: lvl.color }]}>
-                        {lvl.label.split(' ')[0]}
+                      <Text style={[styles.modeLevelText, { color: lvl.color }]} numberOfLines={1}>
+                        {lvl.label}
                       </Text>
                     </View>
                     {m.key === 'alvo' && (

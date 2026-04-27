@@ -23,6 +23,7 @@ const SCALE_STOPS = [
   { ms: 200, color: '#10b981' },
   { ms: 250, color: '#3b82f6' },
   { ms: 300, color: '#06b6d4' },
+  { ms: 350, color: '#facc15' },
   { ms: 400, color: '#f59e0b' },
   { ms: 500, color: '#ef4444' },
 ];
@@ -201,8 +202,8 @@ function ScaleBar({ score }: { score: number }) {
       </View>
       <View style={sb.labels}>
         <Text style={sb.labelText}>{'<150'}</Text>
-        <Text style={sb.labelText}>250</Text>
-        <Text style={sb.labelText}>{'400+'}</Text>
+        <Text style={sb.labelText}>300</Text>
+        <Text style={sb.labelText}>{'500+'}</Text>
       </View>
     </View>
   );
@@ -741,7 +742,7 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
 
       {missCount > 0 && (
         <Text style={styles.earlyTapLine}>
-          ❌ Erros: {missCount} × +200 ms
+          ❌ Erros: {missCount} (+200ms avg)
         </Text>
       )}
       {timeoutCount > 0 && (

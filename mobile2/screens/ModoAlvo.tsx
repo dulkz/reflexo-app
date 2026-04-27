@@ -183,23 +183,17 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
       <View style={styles.screen}>
         <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
           <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Voltar</Text>
+            <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
           <Text style={styles.introTitle}>MODO ALVO</Text>
           <Text style={styles.introSub}>4 círculos · 10 rodadas</Text>
-          <View style={styles.instrBox}>
-            <Text style={styles.instrLine}>① Observe a cor indicada no topo</Text>
-            <Text style={styles.instrLine}>② Toque no círculo dessa cor assim que aparecer</Text>
-            <Text style={[styles.instrLine, { color: '#f59e0b' }]}>③ Erro = +150 ms de penalidade</Text>
-          </View>
-          <View style={styles.colorRow}>
-            {CIRCLE_COLORS.map(c => (
-              <View key={c.key} style={[styles.colorSample, { backgroundColor: c.color }]}>
-                <Text style={styles.colorSampleLabel}>{c.key}</Text>
-              </View>
-            ))}
+          <View style={styles.howToCard}>
+            <Text style={styles.howToTitle}>Como jogar</Text>
+            <Text style={styles.howToText}>
+              Observe a cor indicada no topo. Toque no círculo dessa cor assim que aparecer. Erro = +150ms de penalidade.
+            </Text>
           </View>
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
             <Text style={styles.startBtnText}>INICIAR</Text>
@@ -308,8 +302,14 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#0b1220' },
 
   topBar: { paddingHorizontal: 20, paddingBottom: 8 },
-  backBtn: { paddingVertical: 8, alignSelf: 'flex-start' },
-  backText: { color: '#4a5a7b', fontSize: 15, fontWeight: '600' },
+  backBtn: {
+    width: 32, height: 28, borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: '#f59e0b',
+    alignItems: 'center', justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  backText: { color: '#f59e0b', fontSize: 16, fontWeight: '700', lineHeight: 16, marginTop: -1 },
   progressInfo: { flexDirection: 'row', justifyContent: 'center' },
   roundText: { textAlign: 'center', fontSize: 13, color: '#4a5a7b', fontWeight: '600' },
   roundNum: { fontSize: 20, fontWeight: '900', color: '#fff' },
@@ -353,14 +353,13 @@ const styles = StyleSheet.create({
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
   introTitle: { fontSize: 34, fontWeight: '900', color: '#06b6d4', letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
-  instrBox: {
-    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: 18, gap: 10, marginBottom: 28,
+  howToCard: {
+    backgroundColor: '#0f1f2a',
+    borderLeftWidth: 4, borderLeftColor: '#06b6d4',
+    borderRadius: 12, padding: 16, marginBottom: 28,
   },
-  instrLine: { fontSize: 14, color: '#7a8aa0', lineHeight: 20 },
-  colorRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 36 },
-  colorSample: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  colorSampleLabel: { fontSize: 8, fontWeight: '900', color: '#fff', letterSpacing: 1 },
+  howToTitle: { fontSize: 13, fontWeight: '700', color: '#06b6d4', letterSpacing: 0.5, marginBottom: 8 },
+  howToText: { fontSize: 14, color: '#cbd5e1', lineHeight: 20 },
   startBtn: { backgroundColor: '#06b6d4', borderRadius: 14, paddingVertical: 18, alignItems: 'center' },
   startBtnText: { fontSize: 16, fontWeight: '800', color: '#000', letterSpacing: 2 },
 });

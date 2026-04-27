@@ -16,7 +16,11 @@ import Conquistas from './screens/Conquistas';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingModal from './screens/OnboardingModal';
 import { ModeKey } from './utils/levels';
-import { SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone } from './utils/storage';
+import {
+  SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
+  loadHasPlayedFirstGame, saveHasPlayedFirstGame,
+  loadHasSeenTriagePrompt, saveHasSeenTriagePrompt,
+} from './utils/storage';
 import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
@@ -114,6 +118,13 @@ function AppInner() {
   const [onboardingVisible, setOnboardingVisible] = useState(false);
   const onboardingNeededRef = useRef(false);
 
+  // First-game / triage-prompt flow — directs untriaged users to triage after their first game
+  const [showTriagePrompt, setShowTriagePrompt] = useState(false);
+  const hasPlayedFirstGameRef = useRef(false);
+  const hasSeenTriagePromptRef = useRef(false);
+  const pendingNavRef = useRef<(() => void) | null>(null);
+  const triagePromptAnim = useRef(new Animated.Value(0)).current;
+
   // Scroll-to-top ref passed to Home so handleTriageComplete can reset scroll
   const homeScrollRef = useRef<ScrollView>(null);
 
@@ -154,12 +165,28 @@ function AppInner() {
       loadSessions().then(setSessions),
       loadUserProfile().then(setUserProfile),
       loadOnboardingDone().then(done => { onboardingNeededRef.current = !done; }),
+      loadHasPlayedFirstGame().then(v => { hasPlayedFirstGameRef.current = v; }),
+      loadHasSeenTriagePrompt().then(v => { hasSeenTriagePromptRef.current = v; }),
       preloadSounds(),
     ]).then(() => {
       dataReadyRef.current = true;
+      // If the user already played their first game in a previous session but never
+      // saw the triage prompt, offer it now (no pending continuation — pure init case).
+      if (hasPlayedFirstGameRef.current && !hasSeenTriagePromptRef.current) {
+        pendingNavRef.current = null;
+        setShowTriagePrompt(true);
+      }
       tryExitSplash();
     });
   }, [tryExitSplash]);
+
+  // Fade+scale entrance animation for the triage prompt card.
+  useEffect(() => {
+    if (showTriagePrompt) {
+      triagePromptAnim.setValue(0);
+      Animated.spring(triagePromptAnim, { toValue: 1, tension: 65, friction: 7, useNativeDriver: true }).start();
+    }
+  }, [showTriagePrompt, triagePromptAnim]);
 
   const addSession = useCallback(async (session: SessionRecord) => {
     const prevBest = sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : null;
@@ -225,14 +252,38 @@ function AppInner() {
     }
   }, [sessions, userProfile]);
 
-  // Navigate home — intercept to show triage if pending
-  const goHome = useCallback(() => {
-    setGameScreen('home');
-    if (pendingTriage.current) {
-      pendingTriage.current = false;
-      setTriageVisible(true);
+  // Mark first-game flag once after the user's very first session ever.
+  const markFirstGamePlayed = useCallback(async () => {
+    if (!hasPlayedFirstGameRef.current) {
+      hasPlayedFirstGameRef.current = true;
+      await saveHasPlayedFirstGame(true);
     }
   }, []);
+
+  // Returns true and arms the prompt if the user finished their first game and hasn't
+  // seen the triage prompt yet. The provided continuation runs when the user picks "Fazer
+  // depois". Returns false when no interception is needed and the caller should proceed.
+  const checkTriageIntercept = useCallback((continuation: () => void): boolean => {
+    if (hasPlayedFirstGameRef.current && !hasSeenTriagePromptRef.current) {
+      pendingNavRef.current = continuation;
+      setShowTriagePrompt(true);
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Navigate home — intercept to show triage if pending
+  const goHome = useCallback(() => {
+    const doNav = () => {
+      setGameScreen('home');
+      if (pendingTriage.current) {
+        pendingTriage.current = false;
+        setTriageVisible(true);
+      }
+    };
+    if (checkTriageIntercept(doNav)) return;
+    doNav();
+  }, [checkTriageIntercept]);
 
   // Open triage — editMode=true for "trocar meta", false for first-time "Definir Minha Meta"
   const openTriageForEdit = useCallback((editMode: boolean) => {
@@ -260,8 +311,9 @@ function AppInner() {
       falseStartCount,
       ...(falseStartCount >= 3 ? { invalidForAchievements: true } : {}),
     });
+    await markFirstGamePlayed();
     setGameScreen('resultado_partida');
-  }, [addSession]);
+  }, [addSession, markFirstGamePlayed]);
 
   const handleAlvoComplete = useCallback(async (results: RoundResult[], score: number, alvoTimeouts: number) => {
     setAlvoResults(results);
@@ -279,42 +331,42 @@ function AppInner() {
       date: Date.now(),
       ...(alvoTimeouts > 0 ? { timeouts: alvoTimeouts } : {}),
     });
+    await markFirstGamePlayed();
     setGameScreen('resultado_alvo');
-  }, [addSession]);
+  }, [addSession, markFirstGamePlayed]);
 
   const handleSeqComplete = useCallback(async (summary: SeqSummary) => {
     setSeqSummary(summary);
-    if (!summary.suspiciousSpam) {
-      const earlyTapCount = summary.earlyTapCount ?? 0;
-      await addSession({
-        id: Date.now().toString(),
-        mode: 'sequencia',
-        score: summary.score + earlyTapCount * 150,
-        bestTime: Math.min(...summary.trials.filter(t => t.rt !== null).map(t => t.rt!), 999),
-        accuracy: summary.accuracy,
-        fatigueIndex: summary.fatigueIndex,
-        noGoErrors: summary.noGoErrors,
-        noGoAccuracy: summary.noGoAccuracy,
-        earlyTapCount: earlyTapCount > 0 ? earlyTapCount : undefined,
-        rounds: summary.trials.length,
-        times: summary.trials.map(t => t.rt ?? 0),
-        date: Date.now(),
-      });
-    }
+    const earlyTapCount = summary.earlyTapCount ?? 0;
+    await addSession({
+      id: Date.now().toString(),
+      mode: 'sequencia',
+      score: summary.score + earlyTapCount * 150,
+      bestTime: Math.min(...summary.trials.filter(t => t.rt !== null).map(t => t.rt!), 999),
+      accuracy: summary.accuracy,
+      fatigueIndex: summary.fatigueIndex,
+      noGoErrors: summary.noGoErrors,
+      noGoAccuracy: summary.noGoAccuracy,
+      earlyTapCount: earlyTapCount > 0 ? earlyTapCount : undefined,
+      rounds: summary.trials.length,
+      times: summary.trials.map(t => t.rt ?? 0),
+      date: Date.now(),
+    });
+    await markFirstGamePlayed();
     setGameScreen('resultado_sequencia');
-  }, [addSession]);
+  }, [addSession, markFirstGamePlayed]);
 
   const handleRadarComplete = useCallback(async (results: RadarRound[], score: number, timeoutCount: number, missCount: number) => {
-    const penalizedScore = score + missCount * 200;
+    // Score chega já com a penalidade relativa (rt + 200 ms para misses) embutida na média.
     setRadarResults(results);
-    setRadarScore(penalizedScore);
+    setRadarScore(score);
     const hits = results.filter(r => r.hit);
-    const bestTime = hits.length > 0 ? Math.min(...hits.map(r => r.rt)) : penalizedScore;
+    const bestTime = hits.length > 0 ? Math.min(...hits.map(r => r.rt)) : score;
     const accuracy = hits.length / results.length;
     await addSession({
       id: Date.now().toString(),
       mode: 'radar',
-      score: penalizedScore,
+      score,
       bestTime,
       accuracy,
       rounds: results.length,
@@ -323,14 +375,43 @@ function AppInner() {
       ...(timeoutCount > 0 ? { timeouts: timeoutCount } : {}),
       ...(missCount > 0 ? { missCount } : {}),
     });
+    await markFirstGamePlayed();
     setGameScreen('resultado_radar');
-  }, [addSession]);
+  }, [addSession, markFirstGamePlayed]);
 
   // ── Tab switching ────────────────────────────────────────────────────────────
 
   const handleTabPress = useCallback((tab: Tab) => {
-    setActiveTab(tab);
-    if (tab === 'jogar') setGameScreen('home');
+    const isOnResult = gameScreen === 'resultado_partida'
+      || gameScreen === 'resultado_alvo'
+      || gameScreen === 'resultado_sequencia'
+      || gameScreen === 'resultado_radar';
+    const doNav = () => {
+      setActiveTab(tab);
+      if (tab === 'jogar') setGameScreen('home');
+    };
+    if (isOnResult && checkTriageIntercept(doNav)) return;
+    doNav();
+  }, [gameScreen, checkTriageIntercept]);
+
+  // ── Triage prompt handlers (shown after first game for untriaged users) ────
+
+  const handleTriagePromptAccept = useCallback(async () => {
+    hasSeenTriagePromptRef.current = true;
+    await saveHasSeenTriagePrompt(true);
+    setShowTriagePrompt(false);
+    pendingNavRef.current = null;
+    setTriageEditMode(false);
+    setTriageVisible(true);
+  }, []);
+
+  const handleTriagePromptDefer = useCallback(async () => {
+    hasSeenTriagePromptRef.current = true;
+    await saveHasSeenTriagePrompt(true);
+    setShowTriagePrompt(false);
+    const cont = pendingNavRef.current;
+    pendingNavRef.current = null;
+    if (cont) cont();
   }, []);
 
   // ── Triage handlers ─────────────────────────────────────────────────────────
@@ -608,6 +689,47 @@ function AppInner() {
         <OnboardingModal onComplete={() => setOnboardingVisible(false)} />
       </Modal>
 
+      {/* Triage prompt — first-game intercept, persisted via reflexo_has_seen_triage_prompt_v1 */}
+      <Modal
+        visible={showTriagePrompt}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={handleTriagePromptDefer}
+      >
+        <View style={styles.triagePromptOverlay}>
+          <Animated.View
+            style={[
+              styles.triagePromptCard,
+              { opacity: triagePromptAnim, transform: [{ scale: triagePromptAnim }] },
+            ]}
+          >
+            <Text style={styles.triagePromptIcon}>⚡</Text>
+            <Text style={styles.triagePromptTitle}>Calibrar seu perfil</Text>
+            <Text style={styles.triagePromptSubtitle}>
+              A triagem ajusta os benchmarks para o seu nível real. Leva menos de 2 minutos.
+            </Text>
+            <TouchableOpacity
+              style={styles.triagePromptPrimary}
+              onPress={handleTriagePromptAccept}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.triagePromptPrimaryText}>Fazer triagem agora</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.triagePromptSecondary}
+              onPress={handleTriagePromptDefer}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.triagePromptSecondaryText}>Fazer depois</Text>
+            </TouchableOpacity>
+            <Text style={styles.triagePromptHint}>
+              Você pode acessar a triagem depois em Perfil
+            </Text>
+          </Animated.View>
+        </View>
+      </Modal>
+
       {/* Milestone beat toast */}
       <Modal
         visible={milestoneBeat !== null}
@@ -689,6 +811,49 @@ const styles = StyleSheet.create({
   fabIcon: {
     fontSize: 32,
     color: '#fff',
+  },
+
+  // ── Triage prompt (first-game intercept) ─────────────────────────────────────
+  triagePromptOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center', justifyContent: 'center',
+    padding: 24,
+  },
+  triagePromptCard: {
+    width: '100%', maxWidth: 380,
+    backgroundColor: '#0f172a', borderRadius: 24, padding: 28,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4, shadowRadius: 18,
+    elevation: 12,
+  },
+  triagePromptIcon: { fontSize: 48, lineHeight: 54, marginBottom: 12 },
+  triagePromptTitle: {
+    fontSize: 22, fontWeight: '800', color: '#ffffff',
+    textAlign: 'center', marginBottom: 10,
+  },
+  triagePromptSubtitle: {
+    fontSize: 15, color: '#cbd5e1', textAlign: 'center',
+    lineHeight: 22, marginBottom: 24,
+  },
+  triagePromptPrimary: {
+    width: '100%', backgroundColor: '#3b82f6',
+    borderRadius: 14, paddingVertical: 14,
+    alignItems: 'center', marginBottom: 8,
+  },
+  triagePromptPrimaryText: {
+    fontSize: 15, fontWeight: '800', color: '#ffffff', letterSpacing: 0.5,
+  },
+  triagePromptSecondary: {
+    width: '100%', paddingVertical: 12, alignItems: 'center',
+  },
+  triagePromptSecondaryText: {
+    fontSize: 14, fontWeight: '600', color: '#94a3b8', letterSpacing: 0.3,
+  },
+  triagePromptHint: {
+    fontSize: 11, color: '#475569', textAlign: 'center', marginTop: 4,
   },
 
   // ── Milestone toast ──────────────────────────────────────────────────────────

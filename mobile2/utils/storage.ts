@@ -27,7 +27,8 @@ export async function loadSessions(): Promise<SessionRecord[]> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (e) {
+    console.error('[storage] error:', e);
     return [];
   }
 }
@@ -37,7 +38,7 @@ export async function saveSession(session: SessionRecord): Promise<void> {
     const all = await loadSessions();
     all.unshift(session);
     await AsyncStorage.setItem(KEY, JSON.stringify(all.slice(0, 200)));
-  } catch {}
+  } catch (e) { console.error('[storage] error:', e); }
 }
 
 export async function clearSessions(): Promise<void> {
@@ -50,7 +51,8 @@ export async function loadUnlockedAchievements(): Promise<Record<string, string>
   try {
     const raw = await AsyncStorage.getItem(ACH_KEY);
     return raw ? JSON.parse(raw) : {};
-  } catch {
+  } catch (e) {
+    console.error('[storage] error:', e);
     return {};
   }
 }
@@ -58,7 +60,7 @@ export async function loadUnlockedAchievements(): Promise<Record<string, string>
 export async function saveUnlockedAchievements(data: Record<string, string>): Promise<void> {
   try {
     await AsyncStorage.setItem(ACH_KEY, JSON.stringify(data));
-  } catch {}
+  } catch (e) { console.error('[storage] error:', e); }
 }
 
 // ── Weekly mission slots ──────────────────────────────────────────────────────
@@ -74,7 +76,8 @@ export async function loadWeeklySlots(): Promise<WeeklySlots | null> {
   try {
     const raw = await AsyncStorage.getItem(WEEKLY_SLOTS_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch {
+  } catch (e) {
+    console.error('[storage] error:', e);
     return null;
   }
 }
@@ -82,7 +85,7 @@ export async function loadWeeklySlots(): Promise<WeeklySlots | null> {
 export async function saveWeeklySlots(slots: WeeklySlots): Promise<void> {
   try {
     await AsyncStorage.setItem(WEEKLY_SLOTS_KEY, JSON.stringify(slots));
-  } catch {}
+  } catch (e) { console.error('[storage] error:', e); }
 }
 
 // ── Daily mission slots ───────────────────────────────────────────────────────
@@ -98,7 +101,8 @@ export async function loadDailySlots(): Promise<DailySlots | null> {
   try {
     const raw = await AsyncStorage.getItem(DAILY_SLOTS_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch {
+  } catch (e) {
+    console.error('[storage] error:', e);
     return null;
   }
 }
@@ -106,7 +110,7 @@ export async function loadDailySlots(): Promise<DailySlots | null> {
 export async function saveDailySlots(slots: DailySlots): Promise<void> {
   try {
     await AsyncStorage.setItem(DAILY_SLOTS_KEY, JSON.stringify(slots));
-  } catch {}
+  } catch (e) { console.error('[storage] error:', e); }
 }
 
 // ── Onboarding flag ───────────────────────────────────────────────────────────
@@ -117,7 +121,8 @@ export async function loadOnboardingDone(): Promise<boolean> {
   try {
     const raw = await AsyncStorage.getItem(ONBOARDING_KEY);
     return raw === 'true';
-  } catch {
+  } catch (e) {
+    console.error('[storage] error:', e);
     return false;
   }
 }
@@ -125,7 +130,44 @@ export async function loadOnboardingDone(): Promise<boolean> {
 export async function saveOnboardingDone(): Promise<void> {
   try {
     await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-  } catch {}
+  } catch (e) { console.error('[storage] error:', e); }
+}
+
+// ── First-game / triage-prompt flags ─────────────────────────────────────────
+
+const FIRST_GAME_KEY = 'reflexo_has_played_first_game_v1';
+const TRIAGE_PROMPT_KEY = 'reflexo_has_seen_triage_prompt_v1';
+
+export async function loadHasPlayedFirstGame(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(FIRST_GAME_KEY);
+    return raw === 'true';
+  } catch (e) {
+    console.error('[storage] error:', e);
+    return false;
+  }
+}
+
+export async function saveHasPlayedFirstGame(value: boolean): Promise<void> {
+  try {
+    await AsyncStorage.setItem(FIRST_GAME_KEY, value ? 'true' : 'false');
+  } catch (e) { console.error('[storage] error:', e); }
+}
+
+export async function loadHasSeenTriagePrompt(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(TRIAGE_PROMPT_KEY);
+    return raw === 'true';
+  } catch (e) {
+    console.error('[storage] error:', e);
+    return false;
+  }
+}
+
+export async function saveHasSeenTriagePrompt(value: boolean): Promise<void> {
+  try {
+    await AsyncStorage.setItem(TRIAGE_PROMPT_KEY, value ? 'true' : 'false');
+  } catch (e) { console.error('[storage] error:', e); }
 }
 
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {

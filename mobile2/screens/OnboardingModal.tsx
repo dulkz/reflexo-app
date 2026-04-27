@@ -124,6 +124,7 @@ function Screen2() {
   const bar1 = useRef(new Animated.Value(0)).current;
   const bar2 = useRef(new Animated.Value(0)).current;
   const bar3 = useRef(new Animated.Value(0)).current;
+  const bar4 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const loop = (val: Animated.Value, dur: number, delay = 0) => Animated.loop(
@@ -136,13 +137,15 @@ function Screen2() {
     const a1 = loop(bar1, 700, 0);
     const a2 = loop(bar2, 1100, 150);
     const a3 = loop(bar3, 850, 300);
-    a1.start(); a2.start(); a3.start();
-    return () => { a1.stop(); a2.stop(); a3.stop(); };
-  }, [bar1, bar2, bar3]);
+    const a4 = loop(bar4, 950, 450);
+    a1.start(); a2.start(); a3.start(); a4.start();
+    return () => { a1.stop(); a2.stop(); a3.stop(); a4.stop(); };
+  }, [bar1, bar2, bar3, bar4]);
 
   const h1 = bar1.interpolate({ inputRange: [0, 1], outputRange: [40, 80] });
   const h2 = bar2.interpolate({ inputRange: [0, 1], outputRange: [40, 80] });
   const h3 = bar3.interpolate({ inputRange: [0, 1], outputRange: [40, 80] });
+  const h4 = bar4.interpolate({ inputRange: [0, 1], outputRange: [40, 80] });
 
   return (
     <View style={styles.screen}>
@@ -153,15 +156,17 @@ function Screen2() {
             <Animated.View style={[styles.eqBar, { height: h1, backgroundColor: COLORS.blue }]} />
             <Animated.View style={[styles.eqBar, { height: h2, backgroundColor: COLORS.cyan2 }]} />
             <Animated.View style={[styles.eqBar, { height: h3, backgroundColor: COLORS.purple }]} />
+            <Animated.View style={[styles.eqBar, { height: h4, backgroundColor: COLORS.amber }]} />
           </View>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.blue }]}>3 modos de treino</Text>
+        <Text style={[styles.bigTitle, { color: COLORS.blue }]}>4 modos de treino</Text>
 
         <View style={styles.modeCardsCol}>
           <ModeCard color={COLORS.blue}    name="PARTIDA"   desc="Reação simples · 7 tentativas" />
           <ModeCard color={COLORS.cyan2}   name="ALVO"      desc="Velocidade + precisão · 10 rodadas" />
           <ModeCard color={COLORS.purple}  name="SEQUÊNCIA" desc="Controle inibitório · Go/NoGo" />
+          <ModeCard color={COLORS.amber}   name="RADAR"     desc="Localização visual · 7 rodadas" />
         </View>
       </View>
     </View>
