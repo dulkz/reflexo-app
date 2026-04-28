@@ -635,3 +635,45 @@ Usuário em flow de partidas consecutivas não é interrompido. Modal aparece qu
 - Gráfico histórico 7d/30d: eixo X comprimido quando há poucos dados (sessões agrupadas em fração pequena do range)
 - Botão "Limpar todos os dados" no Perfil
 - Etapa 2 do Radar: missões diárias/semanais, conquistas específicas, arquétipo Quadriatleta, `try_all_modes` contando 4 modos (atualmente 3)
+
+---
+
+### Sessão APK v8/v9 — Bug fixes pós-APK + melhorias UX (2026-04-27)
+Branch: `main`
+
+#### Versão atual: APK v9
+
+#### Correções aplicadas
+
+**Unificação Home vs Perfil — scores por modo:**
+- `storage.ts` (`getBestByMode`): Alvo e Radar agora usam `s.bestTime ?? s.score` em vez de `s.score` para todos os modos — Home e Perfil exibem o mesmo valor
+
+**bestTime do Alvo corrigido:**
+- `App.tsx` (`handleAlvoComplete`): `bestTime` calculado com `hits = results.filter(r => r.correct)` → `Math.min(...hits.map(r => r.rt))`, fallback `score` se todos erraram; `accuracy` reutiliza `hits.length` (sem duplo filter)
+
+**Label explícito na Home:**
+- `Home.tsx`: Sub-label abaixo do score nos cards de modo — `"Melhor Tempo Reflexo"` (alvo/radar) ou `"Média RT"` (partida/sequência); wrapper `View` com `flexShrink: 1`; estilo `modeBestSubLabel` 9px `#3a4a6b`
+
+**Label "ABAIXO DA MÉDIA" não-truncado na Home:**
+- `Home.tsx`: Removido `.split(' ').slice(0, 2).join(' ')` → `{lvl.label}` direto com `numberOfLines={1}` e `fontSize: 9`
+
+**Badge duplo nas conquistas secretas descobertas:**
+- `Conquistas.tsx`: `discoveredSecrets` exibe badge row com gap 4 e `flexWrap: 'wrap'` — primeiro badge `"SECRETA"` (cor `SECRET_COLOR`), segundo badge de raridade (`cfg.label` com `cfg.cor`)
+
+**Total de conquistas unificado:**
+- `Conquistas.tsx`: denominador usa `ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats) || !!unlockDates[a.id]).length` — mesmo lógica do Perfil (não-secretas + secretas descobertas)
+
+**Conquistas secretas dual-source of truth:**
+- `Conquistas.tsx`: `discoveredSecrets` e `lockedSecrets` verificam `a.unlocked(stats) || !!unlockDates[a.id]`; `unlockDates` movido para antes dos `useMemo` que o referenciam (ordem de declaração)
+
+**Avatares recolhíveis no Perfil:**
+- `Perfil.tsx`: Seção MEU AVATAR tem header clicável com contador `X/Y desbloqueados` + chevron `▼/▶`; estado inicial recolhido (mostra só avatar ativo); expandido mostra grid completo; 6 estilos novos adicionados
+
+**Botão "Limpar todos os dados":**
+- `Perfil.tsx`: Zona de perigo no final do scroll — botão com borda vermelha `#ef4444`, sem fundo; `Alert` de confirmação 2 passos ("Cancelar" / "Limpar tudo" destructive)
+- `App.tsx`: `AsyncStorage` importado; `handleClearData` executa `AsyncStorage.clear()` + reset de `sessions`, `userProfile`, tab `'jogar'`, `gameScreen 'home'`, reabre onboarding; prop `onClearData` passada ao `<Perfil>`
+
+#### Pendências para próxima sessão
+- Reformulação do gráfico/histórico (melhor score do dia, eixo X, seção de evolução por modo)
+- Card "Jornada Completa" → botão que sugere e ativa próxima meta automaticamente
+- Etapa 2 do Radar: missões, conquistas, Quadriatleta, `try_all_modes` contando 4 modos
