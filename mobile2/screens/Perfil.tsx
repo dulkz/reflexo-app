@@ -4,7 +4,7 @@ import {
   Platform, StatusBar as RNStatusBar, TouchableOpacity, Alert,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
-import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
+import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord, loadUnlockedAchievements } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
@@ -141,7 +141,7 @@ function BarChart({ sessions }: { sessions: SessionRecord[] }) {
           const heightPct = range > 0 ? 1 - (s.score - rangeMin) / range : 0.5;
           const barH = Math.max(6, Math.round(heightPct * BAR_MAX_H));
           const mc = MODE_COLORS[s.mode];
-          const lvl = getLevelInfo(s.score);
+          const lvl = getLevelForMode(s.score, s.mode);
           return (
             <View key={i} style={chart.barWrapper}>
               <Text style={chart.scoreLabel}>{s.score}</Text>
@@ -835,7 +835,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           const displayScore = m.key === 'alvo' && m.bestAlvoRt !== null ? m.bestAlvoRt
                              : m.key === 'radar' && m.bestRadarRt !== null ? m.bestRadarRt
                              : m.best;
-          const lvl = displayScore !== null ? getLevelInfo(displayScore) : null;
+          const lvl = displayScore !== null ? getLevelForMode(displayScore, m.key) : null;
 
           return (
             <View key={m.key} style={styles.modeCard}>

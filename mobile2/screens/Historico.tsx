@@ -4,7 +4,7 @@ import {
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import Svg, { Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
-import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
+import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { getAmbition, getNextMilestone } from '../utils/ambition';
@@ -502,7 +502,7 @@ export default function Historico({ sessions, userProfile }: Props) {
           <View style={styles.summaryCell}>
             {bestRtSession ? (
               <>
-                <Text style={[styles.sumVal, { color: getLevelInfo(bestRtSession.bestTime).color }]}>
+                <Text style={[styles.sumVal, { color: getLevelForMode(bestRtSession.bestTime, bestRtSession.mode).color }]}>
                   {bestRtSession.bestTime} ms
                 </Text>
                 <Text style={styles.sumSubtitle}>
@@ -611,7 +611,7 @@ export default function Historico({ sessions, userProfile }: Props) {
         ) : (
           filtered.map(s => {
             const mc = MODE_COLORS[s.mode];
-            const lvl = getLevelInfo(s.score);
+            const lvl = getLevelForMode(s.score, s.mode);
             const acc = s.accuracy !== undefined ? Math.round(s.accuracy * 100) : null;
             const isPB = pbSessionByMode[s.mode]?.id === s.id;
 

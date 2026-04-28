@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
-import { getLevelInfo, MODE_COLORS, ModeKey } from '../utils/levels';
+import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { AVATARS } from '../config/avatars';
@@ -328,7 +328,7 @@ export default function Home({
 
         {MODE_INFO.map(m => {
           const best = bestByMode[m.key];
-          const lvl = best !== null && best !== undefined ? getLevelInfo(best) : null;
+          const lvl = best !== null && best !== undefined ? getLevelForMode(best, m.key) : null;
           const mc = MODE_COLORS[m.key];
           const bestAcc = bestAccByMode[m.key];
 

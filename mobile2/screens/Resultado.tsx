@@ -3,7 +3,9 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
-import { getLevelInfo, computeScore, LEVELS, MODE_COLORS, ModeKey } from '../utils/levels';
+import { getLevelInfo, computeScore, LEVELS, MODE_COLORS, ModeKey,
+  getAlvoLevel, getSeqLevel, getRadarLevel,
+  ALVO_LEVELS, SEQ_LEVELS, RADAR_LEVELS } from '../utils/levels';
 import LevelBadge from '../components/LevelBadge';
 import { RoundResult } from './ModoAlvo';
 import { RoundResult as RadarRound } from './ModoRadar';
@@ -30,35 +32,23 @@ const SCALE_STOPS = [
 const SCALE_MIN = 100;
 const SCALE_MAX = 500;
 
-// ── Choice RT (Modo Alvo) ─────────────────────────────────────────────────────
+// ── Choice RT (Modo Alvo) — delegates to getAlvoLevel from levels.ts ──────────
 
-interface ChoiceLevel { color: string; bg: string; label: string; desc: string }
-
-function getChoiceRTLevel(ms: number): ChoiceLevel {
-  if (ms <= 420) return { color: '#10b981', bg: 'rgba(16,185,129,0.12)', label: 'ELITE',        desc: 'Nível de atleta de esporte de raquete' };
-  if (ms <= 500) return { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', label: 'MUITO BOM',    desc: 'Adulto jovem saudável (25–40 anos)' };
-  if (ms <= 560) return { color: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  label: 'BOM',          desc: 'Adulto médio (40–55 anos)' };
-  if (ms <= 700) return { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', label: 'ABAIXO',       desc: 'Sob fadiga ou distração' };
-  return             { color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   label: 'DEVAGAR',      desc: 'Referência de linha de base baixa' };
-}
+/** Thin alias so existing callers inside AlvoResult don't need renaming. */
+const getChoiceRTLevel = getAlvoLevel;
 
 const CHOICE_SCALE_STOPS = [
-  { ms: 420, color: '#10b981' },
-  { ms: 500, color: '#3b82f6' },
-  { ms: 560, color: '#06b6d4' },
+  { ms: 380, color: '#10b981' },
+  { ms: 450, color: '#3b82f6' },
+  { ms: 520, color: '#06b6d4' },
+  { ms: 600, color: '#facc15' },
   { ms: 700, color: '#f59e0b' },
-  { ms: 800, color: '#ef4444' },
+  { ms: 850, color: '#ef4444' },
 ];
 const CHOICE_SCALE_MIN = 280;
-const CHOICE_SCALE_MAX = 800;
+const CHOICE_SCALE_MAX = 900;
 
-const CHOICE_LEVELS = [
-  { label: 'ELITE',     maxMs: 420,      color: '#10b981', bg: 'rgba(16,185,129,0.12)', desc: 'Atleta de esporte de raquete · 380–420 ms' },
-  { label: 'MUITO BOM', maxMs: 500,      color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', desc: 'Adulto jovem saudável 25–40 · 420–500 ms' },
-  { label: 'BOM',       maxMs: 560,      color: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  desc: 'Adulto médio 40–55 · 480–560 ms' },
-  { label: 'ABAIXO',    maxMs: 700,      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', desc: 'Sob fadiga ou distração · 550–700 ms' },
-  { label: 'DEVAGAR',   maxMs: Infinity, color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  desc: 'Idosos 65+ · 600–800 ms' },
-];
+// ALVO_LEVELS imported from levels.ts (replaces local CHOICE_LEVELS)
 
 function ChoiceScaleBar({ score }: { score: number }) {
   const pct = Math.min(1, Math.max(0, (score - CHOICE_SCALE_MIN) / (CHOICE_SCALE_MAX - CHOICE_SCALE_MIN)));
@@ -79,24 +69,15 @@ function ChoiceScaleBar({ score }: { score: number }) {
         </View>
       </View>
       <View style={sb.labels}>
-        <Text style={sb.labelText}>{'<420'}</Text>
-        <Text style={sb.labelText}>560</Text>
-        <Text style={sb.labelText}>{'800+'}</Text>
+        <Text style={sb.labelText}>{'<380'}</Text>
+        <Text style={sb.labelText}>600</Text>
+        <Text style={sb.labelText}>{'900+'}</Text>
       </View>
     </View>
   );
 }
 
-// ── Seq RT scale reference ────────────────────────────────────────────────────
-
-const SEQ_LEVELS = [
-  { label: 'ELITE',     maxMs: 250,      color: '#10b981', bg: 'rgba(16,185,129,0.12)', desc: 'Jogador de esporte coletivo de alto nível' },
-  { label: 'MUITO BOM', maxMs: 320,      color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', desc: 'Adulto jovem treinado' },
-  { label: 'BOM',       maxMs: 380,      color: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  desc: 'Adulto saudável 30–50 anos' },
-  { label: 'MÉDIO',     maxMs: 450,      color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', desc: 'Nível médio da população geral' },
-  { label: 'ABAIXO',    maxMs: 550,      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', desc: 'Sob fadiga ou distração leve' },
-  { label: 'DEVAGAR',   maxMs: Infinity, color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  desc: 'Sob alta carga cognitiva ou fadiga' },
-];
+// SEQ_LEVELS imported from levels.ts (< 220 Elite … > 550 Muito Devagar)
 
 function SeqScaleReference({ score }: { score: number }) {
   return (
@@ -104,8 +85,8 @@ function SeqScaleReference({ score }: { score: number }) {
       <Text style={styles.sectionTitle}>ESCALA DE REFERÊNCIA — SEQUÊNCIA</Text>
       {SEQ_LEVELS.map((lvl, i) => {
         const isUser = score < lvl.maxMs && (i === 0 || score >= SEQ_LEVELS[i - 1].maxMs);
-        const rangeStr = i === 0 ? '< 250 ms'
-          : lvl.maxMs === Infinity ? '> 550 ms'
+        const rangeStr = i === 0 ? `< ${lvl.maxMs} ms`
+          : lvl.maxMs === Infinity ? `> ${SEQ_LEVELS[i - 1].maxMs} ms`
           : `${SEQ_LEVELS[i - 1].maxMs}–${lvl.maxMs} ms`;
         return (
           <View
@@ -146,8 +127,11 @@ function ChoiceScaleReference({ score }: { score: number }) {
   return (
     <View style={styles.scaleBox}>
       <Text style={styles.sectionTitle}>ESCALA CHOICE RT — MODO ALVO</Text>
-      {CHOICE_LEVELS.map((lvl, i) => {
-        const isUser = score <= lvl.maxMs && (i === 0 || score > CHOICE_LEVELS[i - 1].maxMs);
+      {ALVO_LEVELS.map((lvl, i) => {
+        const isUser = score < lvl.maxMs && (i === 0 || score >= ALVO_LEVELS[i - 1].maxMs);
+        const rangeStr = i === 0 ? `< ${lvl.maxMs} ms`
+          : lvl.maxMs === Infinity ? `> ${ALVO_LEVELS[i - 1].maxMs} ms`
+          : `${ALVO_LEVELS[i - 1].maxMs}–${lvl.maxMs} ms`;
         return (
           <View
             key={lvl.label}
@@ -175,6 +159,7 @@ function ChoiceScaleReference({ score }: { score: number }) {
               </View>
               <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{lvl.desc}</Text>
             </View>
+            <Text style={[styles.scaleRange, isUser && { color: lvl.color, fontWeight: '800' }]}>{rangeStr}</Text>
           </View>
         );
       })}
@@ -226,7 +211,129 @@ const sb = StyleSheet.create({
   labelText: { fontSize: 10, color: '#2d3a55' },
 });
 
-// ── Scale reference list ──────────────────────────────────────────────────────
+// ── Seq scale bar ─────────────────────────────────────────────────────────────
+
+const SEQ_SCALE_STOPS = [
+  { ms: 220, color: '#10b981' },
+  { ms: 270, color: '#3b82f6' },
+  { ms: 320, color: '#06b6d4' },
+  { ms: 380, color: '#facc15' },
+  { ms: 450, color: '#f59e0b' },
+  { ms: 550, color: '#ef4444' },
+];
+const SEQ_SCALE_MIN = 150;
+const SEQ_SCALE_MAX = 600;
+
+function SeqScaleBar({ score }: { score: number }) {
+  const pct = Math.min(1, Math.max(0, (score - SEQ_SCALE_MIN) / (SEQ_SCALE_MAX - SEQ_SCALE_MIN)));
+  const level = getSeqLevel(score);
+  return (
+    <View style={sb.wrapper}>
+      <View style={sb.track}>
+        {SEQ_SCALE_STOPS.map((stop, i) => {
+          const prevMs = i === 0 ? SEQ_SCALE_MIN : SEQ_SCALE_STOPS[i - 1].ms;
+          const w = ((stop.ms - prevMs) / (SEQ_SCALE_MAX - SEQ_SCALE_MIN)) * 100;
+          return <View key={stop.ms} style={[sb.segment, { width: `${w}%`, backgroundColor: stop.color + '44' }]} />;
+        })}
+        <View style={[sb.marker, { left: `${pct * 100}%` }]}>
+          <Text style={[sb.markerLabel, { color: level.color }]}>VOCÊ</Text>
+          <View style={[sb.markerLine, { backgroundColor: level.color }]} />
+        </View>
+      </View>
+      <View style={sb.labels}>
+        <Text style={sb.labelText}>{'<220'}</Text>
+        <Text style={sb.labelText}>380</Text>
+        <Text style={sb.labelText}>{'600+'}</Text>
+      </View>
+    </View>
+  );
+}
+
+// ── Radar scale bar ───────────────────────────────────────────────────────────
+
+const RADAR_SCALE_STOPS = [
+  { ms: 250, color: '#10b981' },
+  { ms: 300, color: '#3b82f6' },
+  { ms: 350, color: '#06b6d4' },
+  { ms: 400, color: '#facc15' },
+  { ms: 500, color: '#f59e0b' },
+  { ms: 600, color: '#ef4444' },
+];
+const RADAR_SCALE_MIN = 200;
+const RADAR_SCALE_MAX = 700;
+
+function RadarScaleBar({ score }: { score: number }) {
+  const pct = Math.min(1, Math.max(0, (score - RADAR_SCALE_MIN) / (RADAR_SCALE_MAX - RADAR_SCALE_MIN)));
+  const level = getRadarLevel(score);
+  return (
+    <View style={sb.wrapper}>
+      <View style={sb.track}>
+        {RADAR_SCALE_STOPS.map((stop, i) => {
+          const prevMs = i === 0 ? RADAR_SCALE_MIN : RADAR_SCALE_STOPS[i - 1].ms;
+          const w = ((stop.ms - prevMs) / (RADAR_SCALE_MAX - RADAR_SCALE_MIN)) * 100;
+          return <View key={stop.ms} style={[sb.segment, { width: `${w}%`, backgroundColor: stop.color + '44' }]} />;
+        })}
+        <View style={[sb.marker, { left: `${pct * 100}%` }]}>
+          <Text style={[sb.markerLabel, { color: level.color }]}>VOCÊ</Text>
+          <View style={[sb.markerLine, { backgroundColor: level.color }]} />
+        </View>
+      </View>
+      <View style={sb.labels}>
+        <Text style={sb.labelText}>{'<250'}</Text>
+        <Text style={sb.labelText}>400</Text>
+        <Text style={sb.labelText}>{'700+'}</Text>
+      </View>
+    </View>
+  );
+}
+
+// ── Radar scale reference ─────────────────────────────────────────────────────
+
+function RadarScaleReference({ score }: { score: number }) {
+  return (
+    <View style={styles.scaleBox}>
+      <Text style={styles.sectionTitle}>ESCALA DE REFERÊNCIA — RADAR</Text>
+      {RADAR_LEVELS.map((lvl, i) => {
+        const isUser = score < lvl.maxMs && (i === 0 || score >= RADAR_LEVELS[i - 1].maxMs);
+        const rangeStr = i === 0 ? `< ${lvl.maxMs} ms`
+          : lvl.maxMs === Infinity ? `> ${RADAR_LEVELS[i - 1].maxMs} ms`
+          : `${RADAR_LEVELS[i - 1].maxMs}–${lvl.maxMs} ms`;
+        return (
+          <View
+            key={lvl.label}
+            style={[
+              styles.scaleRow,
+              isUser && {
+                backgroundColor: lvl.bg,
+                borderRadius: 10, borderWidth: 1.5,
+                borderColor: lvl.color + '66',
+                paddingHorizontal: 8, paddingVertical: 8, marginVertical: 2,
+              },
+            ]}
+          >
+            <View style={[styles.scaleBar, { backgroundColor: isUser ? lvl.color : '#1a2540', height: isUser ? 36 : 32 }]} />
+            <View style={{ flex: 1 }}>
+              <View style={styles.scaleLabelRow}>
+                <Text style={[styles.scaleLabel, isUser && { color: lvl.color, fontWeight: '900', fontSize: 12 }]}>
+                  {lvl.label}
+                </Text>
+                {isUser && (
+                  <View style={[styles.youBadge, { backgroundColor: lvl.color + '33', borderColor: lvl.color + '88' }]}>
+                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>◄ VOCÊ</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{lvl.desc}</Text>
+            </View>
+            <Text style={[styles.scaleRange, isUser && { color: lvl.color, fontWeight: '800' }]}>{rangeStr}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+// ── Scale reference list (Partida) ────────────────────────────────────────────
 
 function ScaleReference({ score }: { score: number }) {
   return (
@@ -583,7 +690,7 @@ interface SeqProps {
 
 function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqProps) {
   const { avgRt, accuracy, fatigueIndex, score, hits, misses, commissions, correctInhibits, noGoErrors, noGoAccuracy } = summary;
-  const level = getLevelInfo(score);
+  const level = getSeqLevel(score);
   const mc = MODE_COLORS.sequencia;
   const accPct = Math.round(accuracy * 100);
   const nogoCount = summary.trials.filter(t => t.signalType === 'nogo').length;
@@ -625,7 +732,7 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
         )}
       </View>
 
-      <ScaleBar score={score} />
+      <SeqScaleBar score={score} />
 
       <View style={[styles.fatigueCard, { borderColor: fatigueColor + '44' }]}>
         <View style={styles.fatigueTop}>
@@ -724,7 +831,7 @@ interface RadarProps {
 }
 
 function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
-  const level = getLevelInfo(score);
+  const level = getRadarLevel(score);
   const mc = MODE_COLORS.radar;
   const hits = radarResults.filter(r => r.hit);
   const timeoutCount = radarResults.filter(r => r.timeout).length;
@@ -742,7 +849,7 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
 
-      <ScaleBar score={score} />
+      <RadarScaleBar score={score} />
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
@@ -750,7 +857,7 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
           <Text style={styles.statLbl}>ACURÁCIA</Text>
         </View>
         <View style={[styles.stat, styles.statMid]}>
-          <Text style={[styles.statVal, { color: bestHit !== null ? getLevelInfo(bestHit).color : '#4a5a7b' }]}>
+          <Text style={[styles.statVal, { color: bestHit !== null ? getRadarLevel(bestHit).color : '#4a5a7b' }]}>
             {bestHit !== null ? `${bestHit} ms` : '—'}
           </Text>
           <Text style={styles.statLbl}>MELHOR HIT</Text>
@@ -776,7 +883,7 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
       {radarResults.map((r, i) => {
         const icon = r.hit ? '✓' : r.timeout ? '⏱' : '✗';
         const iconColor = r.hit ? '#10b981' : '#ef4444';
-        const rtColor = r.hit ? getLevelInfo(r.rt).color : '#2d3a55';
+        const rtColor = r.hit ? getRadarLevel(r.rt).color : '#2d3a55';
         const rtText = r.timeout ? '— timeout' : `${r.rt} ms`;
         return (
           <View key={i} style={styles.row}>
@@ -789,7 +896,7 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
         );
       })}
 
-      <ScaleReference score={score} />
+      <RadarScaleReference score={score} />
 
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
         <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
