@@ -29,9 +29,10 @@ function buildDailyPool(
   const today      = sessions.filter(s => s.date >= dayStart);
   const todayCount = today.length;
 
-  const todayPartida  = today.some(s => s.mode === 'partida');
-  const todayAlvo     = today.some(s => s.mode === 'alvo');
-  const todaySeq      = today.some(s => s.mode === 'sequencia');
+  const todayPartida    = today.some(s => s.mode === 'partida');
+  const todayAlvo       = today.some(s => s.mode === 'alvo');
+  const todaySeq        = today.some(s => s.mode === 'sequencia');
+  const todayRadarCount = today.filter(s => s.mode === 'radar').length;
 
   // Best partida score strictly before today → for beat-record check
   const partidaBefore = sessions.filter(s => s.mode === 'partida' && s.date < dayStart);
@@ -93,6 +94,16 @@ function buildDailyPool(
   pool.push({ id: 'daily_sequencia', icon: '🧠', label: 'Jogue o Modo Sequência hoje',
     current: todaySeq ? 1 : 0, target: 1, done: todaySeq });
 
+  // daily_radar — 1 Radar session today
+  { const cur = todayRadarCount >= 1 ? 1 : 0;
+    pool.push({ id: 'daily_radar', icon: '📡', label: 'Jogue o Modo Radar hoje',
+      current: cur, target: 1, done: cur >= 1 }); }
+
+  // daily_radar_2 — 2 Radar sessions today
+  { const cur = Math.min(todayRadarCount, 2);
+    pool.push({ id: 'daily_radar_2', icon: '📡', label: 'Jogue 2 sessões de Radar hoje',
+      current: cur, target: 2, done: cur >= 2 }); }
+
   // daily_beat_today — only if user has a prior partida record to beat
   if (bestBefore !== null) {
     pool.push({ id: 'daily_beat_today', icon: '🏆', label: 'Bata seu recorde hoje',
@@ -127,6 +138,8 @@ const DAILY_META: Record<string, { icon: string; label: string; target: number }
   daily_partida:    { icon: '🏎', label: 'Jogue o Modo Partida hoje',       target: 1 },
   daily_alvo:       { icon: '🎯', label: 'Jogue o Modo Alvo hoje',          target: 1 },
   daily_sequencia:  { icon: '🧠', label: 'Jogue o Modo Sequência hoje',     target: 1 },
+  daily_radar:      { icon: '📡', label: 'Jogue o Modo Radar hoje',         target: 1 },
+  daily_radar_2:    { icon: '📡', label: 'Jogue 2 sessões de Radar hoje',   target: 2 },
   daily_beat_today: { icon: '🏆', label: 'Bata seu recorde hoje',           target: 1 },
   daily_no_errors:  { icon: '🛡️', label: 'Jogue Sequência sem erros',       target: 1 },
   daily_early:      { icon: '🌅', label: 'Treine antes das 9h',             target: 1 },

@@ -502,6 +502,98 @@ export const ACHIEVEMENTS: Achievement[] = [
     unlocked: (s) => s.totalSessions >= 500,
     progress: (s) => `${s.totalSessions}/500 sessões`,
   },
+  // ── RADAR ────────────────────────────────────────────────────────────────────
+  {
+    id: 'iniciado_radar',
+    name: 'Iniciado no Radar',
+    icon: '📡',
+    description: 'Complete 5 sessões de Radar',
+    rarity: 'comum',
+    unlocked: (s) => s.sessions.filter(r => r.mode === 'radar').length >= 5,
+    progress: (s) => {
+      const n = s.sessions.filter(r => r.mode === 'radar').length;
+      return `${Math.min(n, 5)}/5 sessões de Radar`;
+    },
+  },
+  {
+    id: 'radar_afiado',
+    name: 'Radar Afiado',
+    icon: '⚡',
+    description: 'Score abaixo de 300ms em qualquer sessão de Radar',
+    rarity: 'dificil',
+    unlocked: (s) => s.sessions.some(r => r.mode === 'radar' && r.score < 300),
+    progress: (s) => {
+      const best = s.bestScoreByMode.radar;
+      return best !== null ? `Seu melhor: ${best} ms` : 'Sem sessão de Radar ainda';
+    },
+  },
+  {
+    id: 'mestre_radar',
+    name: 'Mestre do Radar',
+    icon: '🏆',
+    description: '100% de acurácia em 3 sessões consecutivas de Radar',
+    rarity: 'epico',
+    unlocked: (s) => {
+      const radar = s.sessions
+        .filter(r => r.mode === 'radar')
+        .sort((a, b) => a.date - b.date);
+      if (radar.length < 3) return false;
+      let streak = 1;
+      for (let i = 1; i < radar.length; i++) {
+        if ((radar[i].accuracy ?? 0) === 1) {
+          streak++;
+          if (streak >= 3) return true;
+        } else {
+          streak = 1;
+        }
+      }
+      return false;
+    },
+    progress: (s) => {
+      const radar = s.sessions
+        .filter(r => r.mode === 'radar')
+        .sort((a, b) => a.date - b.date);
+      if (radar.length === 0) return 'Sem sessão de Radar ainda';
+      let streak = 1;
+      for (let i = 1; i < radar.length; i++) {
+        if ((radar[i].accuracy ?? 0) === 1) streak++;
+        else streak = 1;
+      }
+      return `Sequência atual: ${streak} sessão${streak !== 1 ? 'ões' : ''} com 100%`;
+    },
+  },
+  {
+    id: 'sniper_radar',
+    name: 'Sniper do Radar',
+    icon: '🎯',
+    description: 'Score abaixo de 250ms em qualquer sessão de Radar',
+    rarity: 'lendario',
+    unlocked: (s) => s.sessions.some(r => r.mode === 'radar' && r.score < 250),
+    progress: (s) => {
+      const best = s.bestScoreByMode.radar;
+      return best !== null ? `Seu melhor: ${best} ms` : 'Sem sessão de Radar ainda';
+    },
+  },
+
+  // ── QUADRIATLETA ─────────────────────────────────────────────────────────────
+  {
+    id: 'quadriatleta',
+    name: 'Quadriatleta',
+    icon: '🏅',
+    description: 'Jogue os 4 modos ao menos uma vez',
+    rarity: 'raro',
+    unlocked: (s) =>
+      s.bestScoreByMode.partida !== null &&
+      s.bestScoreByMode.alvo !== null &&
+      s.bestScoreByMode.sequencia !== null &&
+      s.bestScoreByMode.radar !== null,
+    progress: (s) => {
+      const count = (['partida', 'alvo', 'sequencia', 'radar'] as const)
+        .filter(m => s.bestScoreByMode[m] !== null).length;
+      return `${count}/4 modos`;
+    },
+  },
+
   {
     id: 'the_goat',
     name: 'The GOAT',

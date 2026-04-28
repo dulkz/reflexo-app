@@ -79,8 +79,10 @@ function buildMissionPool(
   let bestPartidaBefore: number | null = null;
   let hasAlvo      = false;
   let hasSeq       = false;
+  let hasRadar     = false;
   let totalAlvo    = 0;
   let totalSeq     = 0;
+  let totalRadar   = 0;
   let hasAlvo100   = false;
   let hasSeqClean  = false;
   let hasMorning   = false;
@@ -102,8 +104,28 @@ function buildMissionPool(
       totalSeq++;
       if ((s.noGoErrors ?? 0) === 0) hasSeqClean = true;
     }
+    if (s.mode === 'radar') {
+      hasRadar = true;
+      totalRadar++;
+    }
     const hour = new Date(s.date).getHours();
     if (hour < 9) hasMorning = true;
+  }
+
+  // Radar-specific this-week metrics
+  const radarThisWeek      = thisWeek.filter(s => s.mode === 'radar').sort((a, b) => a.date - b.date);
+  const hasRadar100ThisWeek = radarThisWeek.some(s => s.accuracy === 1);
+  let radarConsecImprove   = false;
+  if (radarThisWeek.length >= 3) {
+    let cs = 1;
+    for (let i = 1; i < radarThisWeek.length; i++) {
+      if (radarThisWeek[i].score < radarThisWeek[i - 1].score) {
+        cs++;
+        if (cs >= 3) { radarConsecImprove = true; break; }
+      } else {
+        cs = 1;
+      }
+    }
   }
 
   const modesDistinctThisWeek = new Set(thisWeek.map(s => s.mode)).size;
@@ -186,8 +208,13 @@ function buildMissionPool(
     add({ id: 'try_sequencia', icon: '🧠', label: 'Experimente o Modo Sequência', current: cur, target: 1, done: cur >= 1 }, Priority.Exploration);
   }
 
-  if (modesDistinctThisWeek < 3) {
-    add({ id: 'try_all_modes', icon: '🏅', label: 'Jogue os 3 modos esta semana', current: modesDistinctThisWeek, target: 3, done: modesDistinctThisWeek >= 3 }, Priority.Exploration);
+  if (!hasRadar) {
+    const cur = radarThisWeek.length > 0 ? 1 : 0;
+    add({ id: 'try_radar', icon: '📡', label: 'Experimente o Modo Radar', current: cur, target: 1, done: cur >= 1 }, Priority.Exploration);
+  }
+
+  if (modesDistinctThisWeek < 4) {
+    add({ id: 'try_all_modes', icon: '🏅', label: 'Jogue os 4 modos esta semana', current: modesDistinctThisWeek, target: 4, done: modesDistinctThisWeek >= 4 }, Priority.Exploration);
   }
 
   if (totalSeq < 5) {
@@ -196,6 +223,18 @@ function buildMissionPool(
 
   if (totalAlvo < 5) {
     add({ id: 'alvo_5_sessions', icon: '🎯', label: 'Jogue 5 sessões de Alvo', current: Math.min(totalAlvo, 5), target: 5, done: totalAlvo >= 5 }, Priority.Exploration);
+  }
+
+  if (totalRadar < 5) {
+    add({ id: 'radar_5_sessions', icon: '📡', label: 'Jogue 5 sessões de Radar', current: Math.min(totalRadar, 5), target: 5, done: totalRadar >= 5 }, Priority.Exploration);
+  }
+
+  if (!hasRadar100ThisWeek) {
+    add({ id: 'radar_100_accuracy', icon: '🎯', label: 'Acerte 100% em uma sessão de Radar', current: 0, target: 1, done: false }, Priority.Performance);
+  }
+
+  if (!radarConsecImprove) {
+    add({ id: 'radar_streak', icon: '📡', label: 'Melhore o score em 3 Radares consecutivos esta semana', current: 0, target: 1, done: false }, Priority.Performance);
   }
 
   if (!hasMorning) {
@@ -228,12 +267,16 @@ const MISSION_META: Record<string, { icon: string; label: string; target: number
   top_accuracy:    { icon: '🎯', label: 'Acerte 100% no Modo Alvo',             target: 1 },
   no_commission:   { icon: '🧠', label: 'Jogue Sequência sem erros de NoGo',    target: 1 },
   next_milestone:  { icon: '🚀', label: 'Alcance o próximo marco no Partida',   target: 1 },
-  try_alvo:        { icon: '🎯', label: 'Experimente o Modo Alvo',              target: 1 },
-  try_sequencia:   { icon: '🧠', label: 'Experimente o Modo Sequência',         target: 1 },
-  try_all_modes:   { icon: '🏅', label: 'Jogue os 3 modos esta semana',         target: 3 },
-  seq_5_sessions:  { icon: '🧠', label: 'Jogue 5 sessões de Sequência',         target: 5 },
-  alvo_5_sessions: { icon: '🎯', label: 'Jogue 5 sessões de Alvo',              target: 5 },
-  morning_session: { icon: '🌅', label: 'Treine antes das 9h',                  target: 1 },
+  try_alvo:           { icon: '🎯', label: 'Experimente o Modo Alvo',                              target: 1 },
+  try_sequencia:      { icon: '🧠', label: 'Experimente o Modo Sequência',                         target: 1 },
+  try_radar:          { icon: '📡', label: 'Experimente o Modo Radar',                             target: 1 },
+  try_all_modes:      { icon: '🏅', label: 'Jogue os 4 modos esta semana',                        target: 4 },
+  seq_5_sessions:     { icon: '🧠', label: 'Jogue 5 sessões de Sequência',                        target: 5 },
+  alvo_5_sessions:    { icon: '🎯', label: 'Jogue 5 sessões de Alvo',                             target: 5 },
+  radar_5_sessions:   { icon: '📡', label: 'Jogue 5 sessões de Radar',                            target: 5 },
+  radar_100_accuracy: { icon: '🎯', label: 'Acerte 100% em uma sessão de Radar',                  target: 1 },
+  radar_streak:       { icon: '📡', label: 'Melhore o score em 3 Radares consecutivos esta semana', target: 1 },
+  morning_session:    { icon: '🌅', label: 'Treine antes das 9h',                                  target: 1 },
 };
 
 // Fallback for hydration: if a mission's guard excludes it from buildMissionPool because
