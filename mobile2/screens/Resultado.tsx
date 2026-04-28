@@ -583,7 +583,7 @@ interface SeqProps {
 
 function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqProps) {
   const { avgRt, accuracy, fatigueIndex, score, hits, misses, commissions, correctInhibits, noGoErrors, noGoAccuracy } = summary;
-  const level = getLevelInfo(avgRt);
+  const level = getLevelInfo(score);
   const mc = MODE_COLORS.sequencia;
   const accPct = Math.round(accuracy * 100);
   const nogoCount = summary.trials.filter(t => t.signalType === 'nogo').length;
@@ -609,9 +609,10 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
       )}
       <View style={styles.hero}>
         <Text style={styles.heroLabel}>MODO SEQUÊNCIA</Text>
-        <Text style={[styles.heroScore, { color: level.color }]}>{avgRt}</Text>
-        <Text style={styles.heroMs}>ms médio (Go)</Text>
+        <Text style={[styles.heroScore, { color: level.color }]}>{score}</Text>
+        <Text style={styles.heroMs}>ms (score penalizado)</Text>
         <LevelBadge level={level} />
+        <Text style={styles.seqAvgRtLine}>Média Go limpa: {avgRt} ms</Text>
         <View style={styles.inhibRow}>
           <Text style={styles.inhibText}>
             🧠 Controle inibitório: {noGoAccuracy}% · {noGoErrors} {noGoErrors === 1 ? 'erro' : 'erros'}
@@ -624,7 +625,7 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
         )}
       </View>
 
-      <ScaleBar score={avgRt} />
+      <ScaleBar score={score} />
 
       <View style={[styles.fatigueCard, { borderColor: fatigueColor + '44' }]}>
         <View style={styles.fatigueTop}>
@@ -701,7 +702,7 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
         </View>
       </ScrollView>
 
-      <SeqScaleReference score={avgRt} />
+      <SeqScaleReference score={score} />
 
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
         <Text style={[styles.btnPrimaryText, { color: '#fff' }]}>JOGAR NOVAMENTE</Text>
@@ -854,6 +855,7 @@ const styles = StyleSheet.create({
   },
   inhibText: { fontSize: 12, fontWeight: '700', color: '#8b5cf6', letterSpacing: 0.3 },
   earlyTapLine: { fontSize: 11, color: '#4a5a7b', marginTop: 6, textAlign: 'center' },
+  seqAvgRtLine: { fontSize: 11, color: '#4a5a7b', marginTop: 4, textAlign: 'center' },
 
   choiceBadge: {
     borderRadius: 10, borderWidth: 1,
