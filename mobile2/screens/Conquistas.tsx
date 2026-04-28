@@ -64,7 +64,7 @@ export default function Conquistas({ sessions, userProfile }: Props) {
     [stats],
   );
 
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({ unlocked: true });
   // unlockDates must be declared before the useMemos that reference it (inline execution order)
   const [unlockDates, setUnlockDates] = useState<Record<string, string>>({});
 
@@ -109,35 +109,57 @@ export default function Conquistas({ sessions, userProfile }: Props) {
           </Text>
         </View>
 
-        {unlockedSorted.length > 0 && (
-          <View>
-            <Text style={[styles.rarityHeader, { color: '#f59e0b' }]}>🏆 DESBLOQUEADAS</Text>
-            <View style={styles.grid}>
-              {unlockedSorted.map(a => {
-                const cfg = RARITY_CONFIG[a.rarity];
-                const unlockDate = unlockDates[a.id];
-                return (
-                  <View
-                    key={a.id}
-                    style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor }]}
-                  >
-                    <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
-                      <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
-                    </View>
-                    <Text style={styles.icon}>{a.icon}</Text>
-                    <Text style={styles.name}>{a.name}</Text>
-                    <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
-                    <View style={[styles.progressBar, styles.progressBarDone]}>
-                      <Text style={[styles.progressLabel, styles.progressLabelDone]}>
-                        {`✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
+        {unlockedSorted.length > 0 && (() => {
+          const isExpanded = expanded['unlocked'] !== false;
+          return (
+            <View>
+              <TouchableOpacity
+                style={[
+                  styles.accordionHeader,
+                  { backgroundColor: '#f59e0b' + (isExpanded ? '26' : '14') },
+                ]}
+                onPress={() => setExpanded(prev => ({ ...prev, unlocked: !(prev['unlocked'] !== false) }))}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.accordionLabel, { color: '#f59e0b' }]}>🏆 DESBLOQUEADAS</Text>
+                <View style={styles.accordionRight}>
+                  <Text style={[styles.accordionCount, { color: '#f59e0b' }]}>
+                    {unlockedSorted.length}
+                  </Text>
+                  <Text style={[styles.accordionArrow, { color: '#f59e0b' }]}>
+                    {isExpanded ? '▼' : '▶'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              {isExpanded && (
+                <View style={styles.grid}>
+                  {unlockedSorted.map(a => {
+                    const cfg = RARITY_CONFIG[a.rarity];
+                    const unlockDate = unlockDates[a.id];
+                    return (
+                      <View
+                        key={a.id}
+                        style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor }]}
+                      >
+                        <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
+                          <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
+                        </View>
+                        <Text style={styles.icon}>{a.icon}</Text>
+                        <Text style={styles.name}>{a.name}</Text>
+                        <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                        <View style={[styles.progressBar, styles.progressBarDone]}>
+                          <Text style={[styles.progressLabel, styles.progressLabelDone]}>
+                            {`✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
             </View>
-          </View>
-        )}
+          );
+        })()}
 
         {RARITY_ORDER.map(r => {
           // Count only non-secret achievements for display — secrets live in their own section

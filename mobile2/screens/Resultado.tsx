@@ -470,6 +470,15 @@ function JourneyProgressCard({ sessions, userProfile, currentSessionScore }: Jou
   );
 }
 
+function TopReplayButton({ onPlayAgain }: { onPlayAgain: () => void }) {
+  return (
+    <TouchableOpacity style={styles.topReplayBtn} onPress={onPlayAgain} activeOpacity={0.7}>
+      <Text style={styles.topReplayIcon}>↻</Text>
+      <Text style={styles.topReplayText}>JOGAR NOVAMENTE</Text>
+    </TouchableOpacity>
+  );
+}
+
 // ── Partida result ────────────────────────────────────────────────────────────
 
 interface PartidaProps {
@@ -502,6 +511,7 @@ function PartidaResult({ times, onPlayAgain, onHome, sessions, userProfile }: Pa
         <LevelBadge level={level} />
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
+      <TopReplayButton onPlayAgain={onPlayAgain} />
 
       <ScaleBar score={score} />
 
@@ -614,6 +624,7 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
         </View>
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
+      <TopReplayButton onPlayAgain={onPlayAgain} />
 
       <ChoiceScaleBar score={score} />
 
@@ -735,6 +746,7 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
           </Text>
         )}
       </View>
+      <TopReplayButton onPlayAgain={onPlayAgain} />
 
       <SeqScaleBar score={score} />
 
@@ -857,6 +869,7 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
         <LevelBadge level={level} />
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
+      <TopReplayButton onPlayAgain={onPlayAgain} />
 
       <RadarScaleBar score={score} />
 
@@ -1065,6 +1078,16 @@ const styles = StyleSheet.create({
   timelineDot: { alignItems: 'center', gap: 4 },
   tlDot: { width: 10, height: 10, borderRadius: 5 },
   tlLabel: { fontSize: 10, fontWeight: '600' },
+
+  topReplayBtn: {
+    alignSelf: 'center', marginTop: 14, marginBottom: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 18, paddingVertical: 9,
+    borderRadius: 999, backgroundColor: '#111a2e',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+  },
+  topReplayIcon: { fontSize: 13, color: '#cbd5e1' },
+  topReplayText: { fontSize: 12, fontWeight: '700', color: '#cbd5e1', letterSpacing: 1 },
 
   btnPrimary: { borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginBottom: 10 },
   btnPrimaryText: { fontSize: 15, fontWeight: '800', color: '#000', letterSpacing: 2 },

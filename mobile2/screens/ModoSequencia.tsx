@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { playSfx } from '../utils/sfx';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Pressable,
+  View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
   Animated, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 
@@ -57,6 +57,16 @@ function buildSequence(): ('go' | 'nogo')[] {
 
 export default function ModoSequencia({ onComplete, onBack }: Props) {
   const [gameState, setGameState] = useState<SeqState>('intro');
+  const confirmAbort = useCallback(() => {
+    Alert.alert(
+      'Deseja desistir?',
+      'O progresso desta sessão não será salvo.',
+      [
+        { text: 'Continuar jogando', style: 'cancel' },
+        { text: 'Desistir', style: 'destructive', onPress: onBack },
+      ],
+    );
+  }, [onBack]);
   const [signalIdx, setSignalIdx] = useState(0);
   const [trials, setTrials] = useState<TrialResult[]>([]);
   const [lastResponse, setLastResponse] = useState<ResponseType | null>(null);
@@ -327,8 +337,13 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
 
   return (
     <View style={styles.screen}>
+      <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
+        <TouchableOpacity onPress={confirmAbort} style={styles.backBtn}>
+          <Text style={styles.backText}>←</Text>
+        </TouchableOpacity>
+      </View>
       {/* Progress bar */}
-      <View style={[styles.progressBarBg, { marginTop: TOP + 8 }]}>
+      <View style={[styles.progressBarBg, { marginTop: 8 }]}>
         <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
       </View>
       <Text style={styles.progressText}>{trials.length} / {TOTAL_SIGNALS}</Text>
@@ -393,7 +408,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#0b1220' },
   centeredFull: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
-  topBar: { paddingHorizontal: 20 },
+  topBar: { paddingHorizontal: 20, paddingBottom: 6 },
   backBtn: {
     width: 32, height: 28, borderRadius: 8,
     backgroundColor: 'transparent',

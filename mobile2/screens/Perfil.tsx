@@ -195,7 +195,6 @@ const chart = StyleSheet.create({
 export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConquistas, onUpdateProfile, onClearData }: Props) {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
-  const [avatarExpanded, setAvatarExpanded] = useState(false);
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const archetype = useMemo(() => getArchetypeFromStats(stats), [stats]);
@@ -400,78 +399,6 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             </Text>
           </View>
         </View>
-
-        {/* ── MEU AVATAR ── */}
-        {(() => {
-          const unlockedAvatarCount = AVATARS.filter(av => av.isUnlocked(stats, ACHIEVEMENTS)).length;
-          const selectedId = userProfile.selectedAvatar ?? 'initial';
-          const currentAv = AVATARS.find(av => av.id === selectedId) ?? AVATARS[0];
-          const isInitial = currentAv.id === 'initial';
-          return (
-            <View style={styles.avatarSection}>
-              <TouchableOpacity
-                style={styles.avatarSectionHeader}
-                onPress={() => setAvatarExpanded(v => !v)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.sectionTitle}>MEU AVATAR</Text>
-                <View style={styles.avatarHeaderRight}>
-                  <Text style={styles.avatarHeaderCount}>{unlockedAvatarCount}/{AVATARS.length} desbloqueados</Text>
-                  <Text style={styles.avatarHeaderChevron}>{avatarExpanded ? '▼' : '▶'}</Text>
-                </View>
-              </TouchableOpacity>
-
-              {!avatarExpanded ? (
-                /* Collapsed: show only the currently selected avatar */
-                <View style={styles.avatarCollapsed}>
-                  <View style={[styles.avatarCell, { borderWidth: 2, borderColor: '#5b4fcf', backgroundColor: 'rgba(91,79,207,0.15)' }]}>
-                    {isInitial
-                      ? <Text style={styles.avatarCellLetter}>{(userProfile.name || 'U')[0].toUpperCase()}</Text>
-                      : <Text style={styles.avatarCellEmoji}>{currentAv.icon}</Text>}
-                  </View>
-                  <Text style={styles.avatarCollapsedName}>{currentAv.name}</Text>
-                </View>
-              ) : (
-                /* Expanded: full grid */
-                <View style={styles.avatarGrid}>
-                  {AVATARS.map(av => {
-                    const unlocked = av.isUnlocked(stats, ACHIEVEMENTS);
-                    const selected = selectedId === av.id;
-                    const avIsInitial = av.id === 'initial';
-                    const cellContent = !unlocked
-                      ? <Text style={styles.avatarCellLock}>🔒</Text>
-                      : avIsInitial
-                        ? <Text style={styles.avatarCellLetter}>{(userProfile.name || 'U')[0].toUpperCase()}</Text>
-                        : <Text style={styles.avatarCellEmoji}>{av.icon}</Text>;
-                    return (
-                      <View key={av.id} style={styles.avatarItemWrap}>
-                        <TouchableOpacity
-                          style={[
-                            styles.avatarCell,
-                            selected
-                              ? { borderWidth: 2, borderColor: '#5b4fcf', backgroundColor: 'rgba(91,79,207,0.15)' }
-                              : { borderWidth: 1, borderColor: '#2a3a5a', backgroundColor: '#111a2e' },
-                            !unlocked && styles.avatarCellLocked,
-                          ]}
-                          onPress={unlocked ? async () => {
-                            const updated = { ...userProfile, selectedAvatar: av.id };
-                            await saveUserProfile(updated);
-                            onUpdateProfile(updated);
-                          } : undefined}
-                          disabled={!unlocked}
-                          activeOpacity={0.7}
-                        >
-                          {cellContent}
-                        </TouchableOpacity>
-                        <Text style={styles.avatarCellName} numberOfLines={1}>{av.name}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-          );
-        })()}
 
         {/* ── Archetype card ── */}
         <View style={[styles.archetypeCard, { borderColor: archetype.color + '44' }]}>
@@ -936,7 +863,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         <View style={{ height: 24 }} />
       </ScrollView>
 
-      {/* Name edit modal */}
+      {/* Profile edit modal */}
       <Modal
         visible={editingName}
         transparent
@@ -945,23 +872,76 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
       >
         <View style={styles.nameModalOverlay}>
           <View style={styles.nameModalCard}>
-            <Text style={styles.nameModalTitle}>EDITAR NOME</Text>
-            <TextInput
-              style={styles.nameModalInput}
-              value={nameInput}
-              onChangeText={setNameInput}
-              placeholder="Seu nome"
-              placeholderTextColor="#4a5a7b"
-              maxLength={30}
-              autoFocus
-            />
+            <Text style={styles.nameModalTitle}>EDITAR PERFIL</Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 4 }}>
+              <Text style={styles.editFieldLabel}>NOME</Text>
+              <TextInput
+                style={styles.nameModalInput}
+                value={nameInput}
+                onChangeText={setNameInput}
+                placeholder="Seu nome"
+                placeholderTextColor="#4a5a7b"
+                maxLength={30}
+              />
+
+              {(() => {
+                const unlockedAvatarCount = AVATARS.filter(av => av.isUnlocked(stats, ACHIEVEMENTS)).length;
+                const selectedId = userProfile.selectedAvatar ?? 'initial';
+                return (
+                  <View style={{ marginTop: 18 }}>
+                    <View style={styles.editAvatarHeader}>
+                      <Text style={styles.editFieldLabel}>AVATAR</Text>
+                      <Text style={styles.avatarHeaderCount}>
+                        {unlockedAvatarCount}/{AVATARS.length} desbloqueados
+                      </Text>
+                    </View>
+                    <View style={styles.avatarGrid}>
+                      {AVATARS.map(av => {
+                        const unlocked = av.isUnlocked(stats, ACHIEVEMENTS);
+                        const selected = selectedId === av.id;
+                        const avIsInitial = av.id === 'initial';
+                        const cellContent = !unlocked
+                          ? <Text style={styles.avatarCellLock}>🔒</Text>
+                          : avIsInitial
+                            ? <Text style={styles.avatarCellLetter}>{(nameInput || userProfile.name || 'U')[0].toUpperCase()}</Text>
+                            : <Text style={styles.avatarCellEmoji}>{av.icon}</Text>;
+                        return (
+                          <View key={av.id} style={styles.avatarItemWrap}>
+                            <TouchableOpacity
+                              style={[
+                                styles.avatarCell,
+                                selected
+                                  ? { borderWidth: 2, borderColor: '#5b4fcf', backgroundColor: 'rgba(91,79,207,0.15)' }
+                                  : { borderWidth: 1, borderColor: '#2a3a5a', backgroundColor: '#111a2e' },
+                                !unlocked && styles.avatarCellLocked,
+                              ]}
+                              onPress={unlocked ? async () => {
+                                const updated = { ...userProfile, selectedAvatar: av.id };
+                                await saveUserProfile(updated);
+                                onUpdateProfile(updated);
+                              } : undefined}
+                              disabled={!unlocked}
+                              activeOpacity={0.7}
+                            >
+                              {cellContent}
+                            </TouchableOpacity>
+                            <Text style={styles.avatarCellName} numberOfLines={1}>{av.name}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+
             <View style={styles.nameModalBtns}>
               <TouchableOpacity
                 style={styles.nameModalCancel}
                 onPress={() => setEditingName(false)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.nameModalCancelText}>CANCELAR</Text>
+                <Text style={styles.nameModalCancelText}>FECHAR</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.nameModalSave}
@@ -1245,8 +1225,11 @@ const styles = StyleSheet.create({
   nameModalCard: {
     backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
     borderColor: 'rgba(59,130,246,0.2)', padding: 24, width: '100%', gap: 16,
+    maxHeight: '85%',
   },
   nameModalTitle: { fontSize: 11, fontWeight: '800', color: '#3a4a6b', letterSpacing: 2 },
+  editFieldLabel: { fontSize: 10, fontWeight: '700', color: '#4a5a7b', letterSpacing: 2, marginBottom: 8 },
+  editAvatarHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 },
   nameModalInput: {
     backgroundColor: '#0d1525', borderRadius: 10, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 14, paddingVertical: 12,

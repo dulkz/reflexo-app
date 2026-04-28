@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, Pressable, Animated,
+  View, Text, StyleSheet, Pressable, Animated, Alert,
   TouchableOpacity, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { getLevelInfo } from '../utils/levels';
@@ -24,6 +24,7 @@ const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 export default function ModoPartida({ onComplete, onBack }: Props) {
   const [started, setStarted] = useState(false);
+  const [showReady, setShowReady] = useState(false);
   const [gameState, setGameState] = useState<GameState>('ready');
   const [round, setRound] = useState(1);
   const [times, setTimes] = useState<number[]>([]);
@@ -95,6 +96,17 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
       signalTime.current = Date.now();
     }
   }, [gameState]);
+
+  const confirmAbort = useCallback(() => {
+    Alert.alert(
+      'Deseja desistir?',
+      'O progresso desta sessão não será salvo.',
+      [
+        { text: 'Continuar jogando', style: 'cancel' },
+        { text: 'Desistir', style: 'destructive', onPress: onBack },
+      ],
+    );
+  }, [onBack]);
 
   const handlePress = useCallback(() => {
     if (responded.current) return;
@@ -230,7 +242,11 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
               Aguarde a tela escurecer. Toque assim que o círculo verde aparecer. Quanto mais rápido, melhor.
             </Text>
           </View>
-          <TouchableOpacity style={styles.introStartBtn} onPress={() => { setStarted(true); startRound(); }} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.introStartBtn} onPress={() => {
+            setStarted(true);
+            setShowReady(true);
+            setTimeout(() => { setShowReady(false); startRound(); }, 1500);
+          }} activeOpacity={0.8}>
             <Text style={styles.introStartBtnText}>INICIAR</Text>
           </TouchableOpacity>
         </View>
@@ -240,22 +256,26 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
 
   return (
     <View style={styles.screen}>
-      {gameState === 'ready' && (
-        <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
-          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+      {!showReady && gameState === 'ready' && renderReady()}
+      {!showReady && gameState === 'waiting' && renderWaiting()}
+      {!showReady && gameState === 'signal' && renderSignal()}
+      {!showReady && gameState === 'done' && renderDone()}
+
+      {showReady && (
+        <View style={[styles.centeredFull, { pointerEvents: 'none' }]}>
+          <Text style={styles.readyBig}>READY</Text>
         </View>
       )}
 
-      {gameState === 'ready' && renderReady()}
-      {gameState === 'waiting' && renderWaiting()}
-      {gameState === 'signal' && renderSignal()}
-      {gameState === 'done' && renderDone()}
-
-      {touchActive && (
+      {!showReady && touchActive && (
         <Pressable style={StyleSheet.absoluteFill} onPressIn={handlePress} />
       )}
+
+      <View style={[styles.topBar, styles.topBarOverlay, { paddingTop: TOP + 8 }]}>
+        <TouchableOpacity onPress={confirmAbort} style={styles.backBtn}>
+          <Text style={styles.backText}>←</Text>
+        </TouchableOpacity>
+      </View>
 
       <Animated.View
         style={[
@@ -275,6 +295,9 @@ const styles = StyleSheet.create({
   },
   topBar: {
     paddingHorizontal: 20,
+  },
+  topBarOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
   },
   backBtn: {
     width: 32, height: 28, borderRadius: 8,
@@ -345,6 +368,10 @@ const styles = StyleSheet.create({
     flex: 1, alignItems: 'center', justifyContent: 'center',
   },
   waitingDots: { fontSize: 32, color: '#1E1E1E', letterSpacing: 12 },
+  readyBig: {
+    fontSize: 64, fontWeight: '900', color: '#3b82f6',
+    letterSpacing: 6, textAlign: 'center',
+  },
 
   circle: {
     width: 180, height: 180, borderRadius: 90,

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Pressable,
+  View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
   Animated, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { getLevelInfo } from '../utils/levels';
@@ -42,6 +42,16 @@ function shuffle<T>(arr: T[]): T[] {
 
 export default function ModoAlvo({ onComplete, onBack }: Props) {
   const [gameState, setGameState] = useState<AlvoState>('intro');
+  const confirmAbort = useCallback(() => {
+    Alert.alert(
+      'Deseja desistir?',
+      'O progresso desta sessão não será salvo.',
+      [
+        { text: 'Continuar jogando', style: 'cancel' },
+        { text: 'Desistir', style: 'destructive', onPress: onBack },
+      ],
+    );
+  }, [onBack]);
   const [round, setRound] = useState(1);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [targetIdx, setTargetIdx] = useState(0);
@@ -208,13 +218,17 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
   return (
     <View style={styles.screen}>
       {/* Top bar */}
-      <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
+      <View style={[styles.topBar, styles.topBarRow, { paddingTop: TOP + 8 }]}>
+        <TouchableOpacity onPress={confirmAbort} style={styles.backBtn}>
+          <Text style={styles.backText}>←</Text>
+        </TouchableOpacity>
         <View style={styles.progressInfo}>
           <Text style={styles.roundText}>
             RODADA <Text style={styles.roundNum}>{round}</Text>
             <Text style={styles.roundTotal}> / {TOTAL_ROUNDS}</Text>
           </Text>
         </View>
+        <View style={styles.backBtnSpacer} />
       </View>
 
       {renderDots()}
@@ -302,6 +316,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#0b1220' },
 
   topBar: { paddingHorizontal: 20, paddingBottom: 8 },
+  topBarRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backBtnSpacer: { width: 32 },
   backBtn: {
     width: 32, height: 28, borderRadius: 8,
     backgroundColor: 'transparent',

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Pressable,
+  View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
   Animated, Platform, StatusBar as RNStatusBar, Dimensions,
 } from 'react-native';
 import { getLevelInfo } from '../utils/levels';
@@ -51,6 +51,16 @@ interface Props {
 
 export default function ModoRadar({ onComplete, onBack }: Props) {
   const [gameState, setGameState] = useState<RadarState>('intro');
+  const confirmAbort = useCallback(() => {
+    Alert.alert(
+      'Deseja desistir?',
+      'O progresso desta sessão não será salvo.',
+      [
+        { text: 'Continuar jogando', style: 'cancel' },
+        { text: 'Desistir', style: 'destructive', onPress: onBack },
+      ],
+    );
+  }, [onBack]);
   const [round, setRound] = useState(1);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -220,7 +230,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
           RODADA <Text style={styles.roundNum}>{round}</Text>
           <Text style={styles.roundTotal}> / {TOTAL_ROUNDS}</Text>
         </Text>
-        <TouchableOpacity onPress={onBack} style={styles.quitBtn} activeOpacity={0.7}>
+        <TouchableOpacity onPress={confirmAbort} style={styles.quitBtn} activeOpacity={0.7}>
           <Text style={styles.quitText}>DESISTIR</Text>
         </TouchableOpacity>
       </View>
