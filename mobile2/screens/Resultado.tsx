@@ -471,10 +471,15 @@ interface AlvoProps {
 function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userProfile }: AlvoProps) {
   const level = getChoiceRTLevel(score);
   const mc = MODE_COLORS.alvo;
-  const correct = alvoResults.filter(r => r.correct).length;
+  const hitsAlvo = alvoResults.filter(r => r.correct);
+  const correct = hitsAlvo.length;
   const accuracy = Math.round((correct / alvoResults.length) * 100);
-  const avgRt = Math.round(alvoResults.reduce((s, r) => s + r.rt, 0) / alvoResults.length);
-  const best = Math.min(...alvoResults.map(r => r.rt));
+  const avgRt = hitsAlvo.length > 0
+    ? Math.round(hitsAlvo.reduce((s, r) => s + r.rt, 0) / hitsAlvo.length)
+    : Math.round(alvoResults.reduce((s, r) => s + r.rt, 0) / alvoResults.length);
+  const best = hitsAlvo.length > 0
+    ? Math.min(...hitsAlvo.map(r => r.rt))
+    : Math.min(...alvoResults.map(r => r.rt));
   const worstRt = Math.max(...alvoResults.map(r => r.rt));
   const variation = worstRt - best;
   const consistencyTarget = best + 100;
