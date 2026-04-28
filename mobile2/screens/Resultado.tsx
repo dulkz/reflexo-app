@@ -783,8 +783,13 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
           {summary.trials.map((t, i) => {
             const ep = t.earlyPenalty ?? 0;
             const hasEarly = ep > 0;
-            const c = t.responseType === 'hit' ? '#10b981'
-              : t.responseType === 'correct_inhibit' ? (hasEarly ? '#f59e0b' : '#8b5cf6')
+            // Any early tap = error → red regardless of final outcome.
+            // Scenario A: Go hit + early → red (anticipated = error even if hit)
+            // Scenario B: NoGo inhibit + early → red (early tap was an error)
+            // Scenario C: commission (± early) → always red
+            const c = hasEarly ? '#ef4444'
+              : t.responseType === 'hit' ? '#10b981'
+              : t.responseType === 'correct_inhibit' ? '#8b5cf6'
               : '#ef4444';
             // Base label per scenario, then append early annotation if applicable
             // Scenario A: Go hit (± early)
