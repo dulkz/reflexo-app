@@ -341,6 +341,10 @@ function ScaleReference({ score }: { score: number }) {
       <Text style={styles.sectionTitle}>ESCALA DE REFERÊNCIA</Text>
       {LEVELS.map((lvl, i) => {
         const isUser = score < lvl.maxMs && (i === 0 || score >= LEVELS[i - 1].maxMs);
+        // IMPOSSÍVEL (<50ms) and SUPER-HUMANO (<100ms) are hidden unless the user
+        // actually achieved that range — they exist internally but clutter the reference
+        // for the vast majority of users who will never reach them.
+        if (lvl.maxMs <= 100 && !isUser) return null;
         const rangeStr = i === 0 ? `< ${lvl.maxMs} ms`
           : lvl.maxMs === Infinity ? `> ${LEVELS[i - 1].maxMs} ms`
           : `${LEVELS[i - 1].maxMs}–${lvl.maxMs} ms`;

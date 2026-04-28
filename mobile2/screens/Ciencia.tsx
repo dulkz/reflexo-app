@@ -211,6 +211,11 @@ export default function Ciencia({ userProfile, sessions }: Props) {
   // Highlight color: use the elite_sport group color (these are always elite_sport ambitions)
   const goalHighlightColor = GROUP_COLOR['elite_sport'];
 
+  // Best simple-RT for visibility gate on ultra-rare benchmarks
+  const bestPartidaRt = sessions.filter(s => s.mode === 'partida').reduce<number | null>(
+    (best, s) => best === null || s.score < best ? s.score : best, null,
+  );
+
   // Alvo RT user data for "VOCÊ ESTÁ AQUI" badge
   const alvoSessions = sessions.filter(s => s.mode === 'alvo');
   const bestAlvoRt = alvoSessions.length > 0
@@ -309,6 +314,12 @@ export default function Ciencia({ userProfile, sessions }: Props) {
         <Text style={styles.benchGroupLabel}>PARTIDA E SEQUÊNCIA — ESCALA DE REFERÊNCIA</Text>
 
         {BENCHMARKS.map(b => {
+          // Hide SUPER-HUMANO / IMPOSSÍVEL benchmark cards unless user has actually
+          // achieved that range (bestPartidaRt < 100ms). Avoids confusing aspirational
+          // reference for levels essentially no one reaches through normal play.
+          if (b.level === 'SUPER-HUMANO' || b.level === 'IMPOSSÍVEL') {
+            if (bestPartidaRt === null || bestPartidaRt >= 100) return null;
+          }
           const isGoal = goalBenchmarkName !== null && b.name === goalBenchmarkName;
           return (
             <View
