@@ -13,7 +13,7 @@ import Resultado from './screens/Resultado';
 import Ciencia from './screens/Ciencia';
 import Perfil from './screens/Perfil';
 import Historico from './screens/Historico';
-import Conquistas from './screens/Conquistas';
+import Jornada from './screens/Jornada';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingModal from './screens/OnboardingModal';
 import { ModeKey } from './utils/levels';
@@ -47,7 +47,7 @@ function computeStreakFromSessions(sessions: SessionRecord[]): number {
   return s;
 }
 
-type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'conquistas';
+type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'jornada';
 type GameScreen =
   | 'home'
   | 'partida'
@@ -63,7 +63,7 @@ const FAB_SIZE      = 70;
 const TAB_BAR_HEIGHT = 52;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
-  { key: 'conquistas', label: 'Conquistas', icon: '🏆' },
+  { key: 'jornada', label: 'Jornada', icon: '🗺️' },
   { key: 'ciencia',    label: 'Ciência',    icon: '🧠' },
 ];
 const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
@@ -563,13 +563,13 @@ function AppInner() {
             sessions={sessions}
             userProfile={userProfile}
             onOpenTriage={openTriageForEdit}
-            onGoToConquistas={() => handleTabPress('conquistas')}
+            onGoToConquistas={() => handleTabPress('historico')}
             onUpdateProfile={setUserProfile}
             onClearData={handleClearData}
           />
         )}
-        {activeTab === 'conquistas' && (
-          <Conquistas sessions={sessions} userProfile={userProfile} />
+        {activeTab === 'jornada' && (
+          <Jornada sessions={sessions} userProfile={userProfile} onOpenTriage={openTriageForEdit} />
         )}
       </View>
 

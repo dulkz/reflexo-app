@@ -8,7 +8,6 @@ import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/le
 import { SessionRecord, loadUnlockedAchievements } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
-import { getWeeklyMissions, WeeklyMission } from '../utils/missions';
 
 const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
   { id: 'EXPLORADOR',  icon: '🔭', tagline: 'Descobrindo seu perfil' },
@@ -34,7 +33,6 @@ import {
   getMilestonesState,
 } from '../utils/ambition';
 import { GROUP_COLOR } from '../config/ambitions';
-import JourneyMap from '../components/JourneyMap';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -273,12 +271,6 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   const isBrainHealth = ambition?.group === 'brain_health';
   const ambitionGroupColor = ambition ? GROUP_COLOR[ambition.group] : '#3b82f6';
 
-  // ── Objectives data ───────────────────────────────────────────────────────────
-  const [weeklyMissions, setWeeklyMissions] = useState<WeeklyMission[]>([]);
-  useEffect(() => {
-    getWeeklyMissions(sessions, userProfile).then(setWeeklyMissions);
-  }, [sessions, userProfile]);
-
   const nextAchievementInfo = useMemo(() => {
     const locked = ACHIEVEMENTS.filter(a => !a.unlocked(stats) && !a.secret);
     if (locked.length === 0) return null;
@@ -468,37 +460,6 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           );
         })()}
 
-        {/* ── OBJETIVOS DA SEMANA ── */}
-        <View style={styles.objectivesSection}>
-          <Text style={styles.sectionTitle}>OBJETIVOS DA SEMANA</Text>
-          {weeklyMissions.map(m => (
-            <View key={m.id} style={styles.objCard}>
-              <View style={styles.objCardTop}>
-                <Text style={styles.objIcon}>{m.icon}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.objLabel, m.done && styles.objLabelDone]} numberOfLines={1}>
-                    {m.label}
-                  </Text>
-                  <Text style={styles.objProgress}>
-                    {m.done ? '✓ Concluída' : `${m.current} / ${m.target}`}
-                  </Text>
-                </View>
-                {m.done && <Text style={styles.objCheck}>✓</Text>}
-              </View>
-              <View style={styles.objTrack}>
-                <View style={[
-                  styles.objFill,
-                  {
-                    flex: m.current,
-                    backgroundColor: m.done ? '#10b981' : '#5b4fcf',
-                  },
-                ]} />
-                <View style={{ flex: Math.max(0, m.target - m.current) }} />
-              </View>
-            </View>
-          ))}
-        </View>
-
         {/* ── METAS DE LONGO PRAZO ── */}
         <View style={styles.ltSection}>
           <Text style={styles.sectionTitle}>METAS DE LONGO PRAZO</Text>
@@ -640,58 +601,6 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             </View>
           )}
         </View>
-
-        {/* ── MINHA JORNADA ── */}
-        {!userProfile.triageCompleted ? (
-          /* CTA for pre-triage users (also accessible after 3 dismissals) */
-          <View style={styles.journeyCTA}>
-            <Text style={styles.journeyCTATitle}>Defina sua meta</Text>
-            <Text style={styles.journeyCTADesc}>
-              Escolha uma ambição e veja sua jornada personalizada em todas as telas.
-            </Text>
-            <TouchableOpacity style={styles.journeyCTABtn} onPress={() => onOpenTriage(false)} activeOpacity={0.8}>
-              <Text style={styles.journeyCTABtnText}>DEFINIR MINHA META</Text>
-            </TouchableOpacity>
-          </View>
-        ) : ambition ? (
-          <View style={styles.journeySection}>
-            {/* Header row */}
-            <View style={styles.journeySectionHeader}>
-              <Text style={styles.journeyKicker}>MINHA JORNADA</Text>
-            </View>
-            <View style={styles.journeyAmbitionRow}>
-              <Text style={styles.journeyAmbitionIcon}>{ambition.icon}</Text>
-              <Text style={[styles.journeyAmbitionName, { color: ambitionGroupColor }]}>
-                {ambition.name}
-              </Text>
-              <TouchableOpacity onPress={() => onOpenTriage(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={styles.journeyChangeLink}>trocar meta</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Summary line */}
-            <Text style={styles.journeySummary}>
-              {isBrainHealth
-                ? `Baseline: ${baselineMs ?? '—'} ms · ${beatenCount} de ${ambition.milestones.length} marcos conquistados`
-                : `Baseline: ${baselineMs ?? '—'} ms · Meta: ${ambition.finalMetaMs ?? '—'} ms · ${beatenCount} de ${ambition.milestones.length} marcos batidos`
-              }
-            </Text>
-
-            {/* Journey map — full size with current progress */}
-            {baselineMs !== null && (
-              <View style={styles.journeyMapWrap}>
-                <JourneyMap
-                  ambitionId={ambition.id}
-                  baselineMs={baselineMs}
-                  currentBestMs={currentBestMs}
-                  sessions={sessions}
-                  showYouAreHere
-                />
-              </View>
-            )}
-
-          </View>
-        ) : null}
 
         {/* ── PARA VIRAR block ── */}
         {nextDef && archetype.targetCriteria.length > 0 && !reachedDestination && (

@@ -3,15 +3,10 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
-import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
+import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { AVATARS } from '../config/avatars';
-import {
-  getAmbition, getNextMilestone, calculateDeltaToNextMilestone, getMilestonesState,
-} from '../utils/ambition';
-import { getWeeklyMissions, WeeklyMission } from '../utils/missions';
-import { getDailyMissions, DailyMission } from '../utils/dailyMissions';
 import { calculateStreak, streakColor } from '../utils/streak';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -63,15 +58,6 @@ export default function Home({
   onStartPartida, onStartAlvo, onStartSequencia, onStartRadar,
   sessions, bestByMode, userProfile, onGoToPerfil, scrollRef,
 }: Props) {
-  // Best score (average top-5) across all sessions — used for milestone comparison
-  const currentBestMs = useMemo(
-    () => sessions.length > 0 ? Math.min(...sessions.map(s => s.score)) : null,
-    [sessions],
-  );
-
-  // Gap to top F1 Elite tier (upper bound = 200 ms) — fallback when triage not done
-  const f1Gap = currentBestMs !== null ? Math.round(currentBestMs - 200) : null;
-
   const bestAccByMode = useMemo(() => {
     const acc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
     for (const s of sessions) {
@@ -83,64 +69,6 @@ export default function Home({
     }
     return acc;
   }, [sessions]);
-
-  // ── Motivation card data ────────────────────────────────────────────────────
-  const motivData = useMemo(() => {
-    if (!userProfile.triageCompleted || !userProfile.ambitionId) return null;
-
-    const ambition = getAmbition(userProfile.ambitionId);
-    if (!ambition) return null;
-
-    const baselineMs = userProfile.baselineMs ?? null;
-
-    // Brain-health: qualitative milestones
-    if (ambition.group === 'brain_health') {
-      const nextM = getNextMilestone(baselineMs, currentBestMs, ambition.id, sessions);
-      return {
-        icon: ambition.icon,
-        type: 'qualitative' as const,
-        label: nextM ? `Próximo marco: ${nextM.label}` : `Meta ${ambition.name} em andamento`,
-        allBeaten: nextM === null,
-        ambitionName: ambition.name,
-      };
-    }
-
-    // Numeric milestones
-    const states = getMilestonesState(baselineMs, currentBestMs, ambition.id, sessions);
-    const allBeaten = states.every(s => s.status !== 'pendente');
-
-    if (allBeaten) {
-      return {
-        icon: ambition.icon,
-        type: 'all_beaten' as const,
-        ambitionName: ambition.name,
-        label: '',
-        allBeaten: true,
-      };
-    }
-
-    const delta = calculateDeltaToNextMilestone(currentBestMs, ambition.id, baselineMs, sessions);
-    const nextM = getNextMilestone(baselineMs, currentBestMs, ambition.id, sessions);
-
-    return {
-      icon: ambition.icon,
-      type: 'numeric' as const,
-      delta,
-      nextLabel: nextM?.label ?? ambition.name,
-      allBeaten: false,
-      ambitionName: ambition.name,
-    };
-  }, [userProfile, currentBestMs]);
-
-  const [weeklyMissions, setWeeklyMissions] = useState<WeeklyMission[]>([]);
-  useEffect(() => {
-    getWeeklyMissions(sessions, userProfile).then(setWeeklyMissions);
-  }, [sessions, userProfile]);
-
-  const [dailyMissions, setDailyMissions] = useState<DailyMission[]>([]);
-  useEffect(() => {
-    getDailyMissions(sessions, userProfile).then(setDailyMissions);
-  }, [sessions, userProfile]);
 
   const streak = useMemo(() => calculateStreak(sessions), [sessions]);
 
@@ -210,119 +138,6 @@ export default function Home({
             )}
           </View>
         )}
-
-        {/* ── Daily objectives card ── */}
-        {dailyMissions.length > 0 && (() => {
-          const doneDailyCount = dailyMissions.filter(m => m.done).length;
-          const allDone = doneDailyCount === dailyMissions.length;
-          return (
-            <View style={styles.dailyCard}>
-              <View style={styles.missionHeader}>
-                <Text style={styles.missionHeaderText}>OBJETIVO DO DIA</Text>
-                <Text style={styles.missionCount}>
-                  {'🎯 '}
-                  <Text style={{ color: allDone ? '#10b981' : '#06b6d4' }}>
-                    {doneDailyCount}/{dailyMissions.length}
-                  </Text>
-                  {' completos'}
-                </Text>
-              </View>
-              <View style={styles.missionProgressTrack}>
-                <View style={[
-                  styles.missionProgressFill,
-                  { flex: doneDailyCount, backgroundColor: allDone ? '#10b981' : '#06b6d4' },
-                ]} />
-                <View style={{ flex: Math.max(0, dailyMissions.length - doneDailyCount) }} />
-              </View>
-              {dailyMissions.map(m => (
-                <View key={m.id} style={[styles.missionRow, m.done && { opacity: 0.5 }]}>
-                  <Text style={styles.missionRowIcon}>{m.icon}</Text>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={[
-                      styles.missionRowLabel,
-                      m.done && { color: '#10b981' },
-                    ]} numberOfLines={1}>
-                      {m.label}
-                    </Text>
-                    {m.target > 1 && (
-                      <View style={styles.missionMiniTrack}>
-                        <View style={[
-                          styles.missionMiniFill,
-                          { flex: m.current, backgroundColor: m.done ? '#10b981' : '#06b6d4' },
-                        ]} />
-                        <View style={{ flex: Math.max(0, m.target - m.current) }} />
-                      </View>
-                    )}
-                  </View>
-                  {m.done
-                    ? <Text style={styles.missionRowCheck}>✓</Text>
-                    : <Text style={styles.missionRowProgress}>{m.current}/{m.target}</Text>
-                  }
-                </View>
-              ))}
-            </View>
-          );
-        })()}
-
-        {/* ── Weekly missions card ── */}
-        {(() => {
-          const doneCount = weeklyMissions.filter(m => m.done).length;
-          return (
-            <TouchableOpacity
-              style={styles.missionCard}
-              onPress={onGoToPerfil}
-              activeOpacity={0.8}
-            >
-              <View style={styles.missionHeader}>
-                <Text style={styles.missionHeaderText}>MISSÃO DA SEMANA</Text>
-                <Text style={styles.missionCount}>
-                  {'📋 '}
-                  <Text style={{ color: doneCount === 3 ? '#10b981' : '#5b4fcf' }}>
-                    {doneCount}/3
-                  </Text>
-                  {' completas'}
-                </Text>
-              </View>
-              <View style={styles.missionProgressTrack}>
-                <View style={[
-                  styles.missionProgressFill,
-                  {
-                    flex: doneCount,
-                    backgroundColor: doneCount === 3 ? '#10b981' : '#5b4fcf',
-                  },
-                ]} />
-                <View style={{ flex: Math.max(0, 3 - doneCount) }} />
-              </View>
-              {weeklyMissions.map(m => (
-                <View key={m.id} style={[styles.missionRow, m.done && { opacity: 0.5 }]}>
-                  <Text style={styles.missionRowIcon}>{m.icon}</Text>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={[
-                      styles.missionRowLabel,
-                      m.done && { color: '#10b981' },
-                    ]} numberOfLines={1}>
-                      {m.label}
-                    </Text>
-                    <View style={styles.missionMiniTrack}>
-                      <View style={[
-                        styles.missionMiniFill,
-                        {
-                          flex: m.current,
-                          backgroundColor: m.done ? '#10b981' : '#5b4fcf',
-                        },
-                      ]} />
-                      <View style={{ flex: Math.max(0, m.target - m.current) }} />
-                    </View>
-                  </View>
-                  {m.done
-                    ? <Text style={styles.missionRowCheck}>✓</Text>
-                    : <Text style={styles.missionRowProgress}>{m.current}/{m.target}</Text>
-                  }
-                </View>
-              ))}
-            </TouchableOpacity>
-          );
-        })()}
 
         <Text style={styles.sectionTitle}>MODOS DE JOGO</Text>
 
@@ -404,72 +219,6 @@ export default function Home({
             : 'Baseado em benchmarks científicos de atletas de elite'}
         </Text>
       </ScrollView>
-
-      {/* ── Fixed motivation card ── */}
-      <View style={styles.motivCard}>
-        <Text style={styles.motivIcon}>
-          {motivData ? motivData.icon : '🏎'}
-        </Text>
-        <View style={{ flex: 1 }}>
-          {/* ── No triage: original F1 hardcoded behavior ── */}
-          {!motivData && (
-            currentBestMs === null ? (
-              <Text style={styles.motivText}>
-                Complete seu primeiro treino para medir o gap até o nível F1!
-              </Text>
-            ) : f1Gap !== null && f1Gap > 0 ? (
-              <Text style={styles.motivText}>
-                {'Você está a '}
-                <Text style={styles.motivHighlight}>{f1Gap} ms</Text>
-                {' do nível de piloto de F1 de ponta.'}
-              </Text>
-            ) : (
-              <Text style={styles.motivText}>
-                {'Você já está no nível '}
-                <Text style={styles.motivHighlight}>Elite</Text>
-                {' de piloto de F1!'}
-              </Text>
-            )
-          )}
-
-          {/* ── Triage done: all beaten ── */}
-          {motivData?.type === 'all_beaten' && (
-            <Text style={styles.motivText}>
-              {'Meta '}
-              <Text style={styles.motivHighlight}>{motivData.ambitionName}</Text>
-              {' conquistada. Escolha sua próxima rota no Perfil.'}
-            </Text>
-          )}
-
-          {/* ── Triage done: qualitative (brain_health) ── */}
-          {motivData?.type === 'qualitative' && (
-            <Text style={styles.motivText}>{motivData.label}</Text>
-          )}
-
-          {/* ── Triage done: numeric milestone ── */}
-          {motivData?.type === 'numeric' && (
-            currentBestMs === null ? (
-              <Text style={styles.motivText}>
-                Complete seu primeiro treino para ver o progresso até{' '}
-                <Text style={styles.motivHighlight}>{motivData.ambitionName}</Text>!
-              </Text>
-            ) : motivData.delta !== null && motivData.delta > 0 ? (
-              <Text style={styles.motivText}>
-                {'Você está a '}
-                <Text style={styles.motivHighlight}>{motivData.delta} ms</Text>
-                {` de ${motivData.nextLabel}.`}
-              </Text>
-            ) : (
-              <Text style={styles.motivText}>
-                {'Próximo marco: '}
-                <Text style={styles.motivHighlight}>{motivData.nextLabel}</Text>
-                {' — continue treinando!'}
-              </Text>
-            )
-          )}
-        </View>
-      </View>
-
     </View>
   );
 }
@@ -516,41 +265,6 @@ const styles = StyleSheet.create({
   },
   streakBadgePulseText: { fontSize: 11, color: '#f59e0b', fontWeight: '700' },
 
-  // ── Daily objectives card ─────────────────────────────────────────────────
-  dailyCard: {
-    backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
-    borderColor: 'rgba(6,182,212,0.3)', padding: 14, marginBottom: 10,
-  },
-
-  // ── Weekly missions card ──────────────────────────────────────────────────
-  missionCard: {
-    backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
-    borderColor: 'rgba(91,79,207,0.3)', padding: 14, marginBottom: 16,
-  },
-  missionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: 8,
-  },
-  missionHeaderText: { fontSize: 10, fontWeight: '800', color: '#3a4a6b', letterSpacing: 2 },
-  missionCount: { fontSize: 11, color: '#4a5a7b' },
-  missionProgressTrack: {
-    flexDirection: 'row', height: 4, borderRadius: 2,
-    backgroundColor: '#1e2d45', marginBottom: 12, overflow: 'hidden',
-  },
-  missionProgressFill: { borderRadius: 2 },
-  missionRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10,
-  },
-  missionRowIcon: { fontSize: 16, width: 22 },
-  missionRowLabel: { fontSize: 12, color: '#7a8aa0', fontWeight: '600' },
-  missionRowCheck: { fontSize: 13, color: '#10b981', fontWeight: '800', width: 22, textAlign: 'right' },
-  missionRowProgress: { fontSize: 11, color: '#4a5a7b', width: 28, textAlign: 'right' },
-  missionMiniTrack: {
-    flexDirection: 'row', height: 3, borderRadius: 2,
-    backgroundColor: '#1e2d45', overflow: 'hidden',
-  },
-  missionMiniFill: { borderRadius: 2 },
-
   modeCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     flexDirection: 'row', marginBottom: 10, overflow: 'hidden',
@@ -594,18 +308,4 @@ const styles = StyleSheet.create({
   insightBody: { fontSize: 12, color: '#4a5a7b', lineHeight: 18 },
 
   footer: { fontSize: 11, color: '#2d3a55', textAlign: 'center', marginBottom: 4 },
-
-  motivCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#0d1b33',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(59,130,246,0.25)',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  motivIcon: { fontSize: 22 },
-  motivText: { fontSize: 13, color: '#7a8aa0', lineHeight: 19 },
-  motivHighlight: { color: '#3b82f6', fontWeight: '800' },
 });

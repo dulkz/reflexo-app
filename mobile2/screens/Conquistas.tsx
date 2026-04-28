@@ -52,7 +52,12 @@ interface Props {
   userProfile: UserProfile;
 }
 
-export default function Conquistas({ sessions, userProfile }: Props) {
+interface ContentProps {
+  sessions: SessionRecord[];
+  showHeader?: boolean;
+}
+
+export function ConquistasContent({ sessions, showHeader = true }: ContentProps) {
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const unlockedCount = useMemo(() => getUnlockedCount(stats), [stats]);
@@ -100,14 +105,20 @@ export default function Conquistas({ sessions, userProfile }: Props) {
   }, [stats]);
 
   return (
-    <View style={styles.root}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+    <View>
+      {showHeader && (
         <View style={styles.header}>
           <Text style={styles.kicker}>CONQUISTAS</Text>
           <Text style={styles.count}>
             {unlockedCount}/{ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats) || !!unlockDates[a.id]).length} desbloqueadas
           </Text>
         </View>
+      )}
+      {!showHeader && (
+        <Text style={styles.embedCount}>
+          {unlockedCount}/{ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats) || !!unlockDates[a.id]).length} desbloqueadas
+        </Text>
+      )}
 
         {unlockedSorted.length > 0 && (() => {
           const isExpanded = expanded['unlocked'] !== false;
@@ -313,6 +324,15 @@ export default function Conquistas({ sessions, userProfile }: Props) {
           );
         })()}
 
+    </View>
+  );
+}
+
+export default function Conquistas({ sessions }: Props) {
+  return (
+    <View style={styles.root}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ConquistasContent sessions={sessions} showHeader />
         <View style={{ height: 24 }} />
       </ScrollView>
     </View>
@@ -329,6 +349,7 @@ const styles = StyleSheet.create({
   },
   kicker: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2 },
   count: { fontSize: 11, color: '#3a4a6b' },
+  embedCount: { fontSize: 11, color: '#3a4a6b', marginBottom: 8, textAlign: 'right' },
 
   rarityHeader: {
     fontSize: 11, fontWeight: '800', letterSpacing: 1.5,

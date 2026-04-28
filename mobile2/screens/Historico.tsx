@@ -1,69 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
-import Svg, { Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
-import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
+import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
-import { getAmbition, getNextMilestone } from '../utils/ambition';
+import { ConquistasContent } from './Conquistas';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const DAY = 86_400_000;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
   'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
-function dayStart(ts: number): number {
-  const d = new Date(ts);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-
-function formatRelativeDate(ts: number): string {
-  const diff = Math.round((dayStart(Date.now()) - dayStart(ts)) / DAY);
-  if (diff === 0) return 'hoje';
-  if (diff === 1) return 'ontem';
-  if (diff < 7) return `há ${diff} dias`;
-  const d = new Date(ts);
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
-}
-
-function formatRelativeDateTime(ts: number): string {
-  const d = new Date(ts);
-  const time = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-  const diff = Math.round((dayStart(Date.now()) - dayStart(ts)) / DAY);
-  if (diff === 0) return `Hoje, ${time}`;
-  if (diff === 1) return `Ontem, ${time}`;
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}, ${time}`;
-}
-
-function formatShortDate(ts: number): string {
-  const d = new Date(ts);
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
-}
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-type FilterKey = 'all' | ModeKey;
-type PeriodKey = '7d' | '30d' | 'all';
-
-const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'all',       label: 'Todos' },
-  { key: 'partida',   label: 'Partida' },
-  { key: 'alvo',      label: 'Alvo' },
-  { key: 'sequencia', label: 'Sequência' },
-  { key: 'radar',     label: 'Radar' },
-];
-
-const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: '7d',  label: '7 dias' },
-  { key: '30d', label: '30 dias' },
-  { key: 'all', label: 'Tudo' },
-];
 
 const DAYS_OF_WEEK = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -81,370 +30,230 @@ const MODE_ICONS: Record<ModeKey, string> = {
   radar:    '📡',
 };
 
-// ── EvoChart ──────────────────────────────────────────────────────────────────
+const MODE_SCORE_LABEL: Record<ModeKey, string> = {
+  partida: 'Média RT',
+  sequencia: 'Score',
+  alvo: 'Melhor Tempo Reflexo',
+  radar: 'Melhor Tempo Reflexo',
+};
 
-interface EvoProps {
-  sessions: SessionRecord[];
-  filter: FilterKey;
-  period: PeriodKey;
-  userProfile?: UserProfile;
+function dayStart(ts: number): number {
+  const d = new Date(ts);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
 }
 
-function EvoChart({ sessions, filter, period, userProfile }: EvoProps) {
-  const W = 320;
-  const H = 140;
-  const PAD = { t: 20, r: 8, b: 28, l: 40 };
-  const innerW = W - PAD.l - PAD.r;
-  const innerH = H - PAD.t - PAD.b;
+function formatShortDate(ts: number): string {
+  const d = new Date(ts);
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
 
-  // Mode filter
-  const modeFiltered = filter === 'all'
-    ? sessions
-    : sessions.filter(s => s.mode === (filter as ModeKey));
+function formatRelativeDate(ts: number): string {
+  const diff = Math.round((dayStart(Date.now()) - dayStart(ts)) / DAY);
+  if (diff === 0) return 'hoje';
+  if (diff === 1) return 'ontem';
+  if (diff < 7) return `há ${diff} dias`;
+  return formatShortDate(ts);
+}
 
-  // Period window (fixed for 7d/30d, null for 'all')
-  const todayStart = dayStart(Date.now());
-  const windowStart = period === '7d'  ? todayStart - 6 * DAY
-                    : period === '30d' ? todayStart - 29 * DAY
-                    : null;
-  const windowEnd = todayStart + DAY;
+// Per-mode display score: alvo/radar use bestTime when available; partida/sequencia use score
+function displayScore(s: SessionRecord): number {
+  if (s.mode === 'alvo' || s.mode === 'radar') {
+    return s.bestTime ?? s.score;
+  }
+  return s.score;
+}
 
-  const periodFiltered = windowStart === null
-    ? modeFiltered
-    : modeFiltered.filter(s => s.date >= windowStart);
+type Trend = 'up' | 'flat' | 'down' | 'unknown';
 
-  // Chronological order (oldest → newest); cap only 'all' at 20 to avoid clutter
-  const sessionsToPlot = period === 'all'
-    ? periodFiltered.slice(0, 20).reverse()
-    : periodFiltered.slice().reverse();
+function computeTrend(scores: number[]): Trend {
+  if (scores.length < 3) return 'unknown';
+  // scores are chronological (oldest → newest); lower is better.
+  // Compare first-half average to second-half average.
+  const half = Math.floor(scores.length / 2);
+  const first = scores.slice(0, half);
+  const second = scores.slice(scores.length - half);
+  const avg = (xs: number[]) => xs.reduce((s, n) => s + n, 0) / xs.length;
+  const a = avg(first);
+  const b = avg(second);
+  const diff = a - b; // positive → improving (newer scores lower)
+  const threshold = a * 0.03; // 3% of baseline counts as meaningful change
+  if (diff > threshold)  return 'up';
+  if (diff < -threshold) return 'down';
+  return 'flat';
+}
 
-  // 'all' with no data → hide chart entirely; 7d/30d → render empty axis
-  if (sessionsToPlot.length < 1 && period === 'all') return null;
+const TREND_META: Record<Trend, { icon: string; label: string; color: string }> = {
+  up:      { icon: '↑', label: 'melhorando', color: '#10b981' },
+  flat:    { icon: '→', label: 'estável',    color: '#06b6d4' },
+  down:    { icon: '↓', label: 'piorando',   color: '#ef4444' },
+  unknown: { icon: '·', label: '—',          color: '#4a5a7b' },
+};
 
-  const allScores = sessionsToPlot.map(s => s.score);
-  const hasData = allScores.length > 0;
-  const rawMin = hasData ? Math.min(...allScores) : 0;
-  const rawMax = hasData ? Math.max(...allScores) : 0;
+interface ModeCardProps {
+  mode: ModeKey;
+  sessions: SessionRecord[];
+  expanded: boolean;
+  onToggle: () => void;
+}
 
-  const isBrainHealth = userProfile?.triageCompleted &&
-    userProfile.ambitionId &&
-    getAmbition(userProfile.ambitionId)?.group === 'brain_health';
+function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
+  const mc = MODE_COLORS[mode];
+  const mSessions = sessions.filter(s => s.mode === mode);
 
-  // ── Next milestone line (non-alvo: ambition-based; alvo: choice RT thresholds) ─
-  let nextMilestoneMs: number | null = null;
-  if (hasData && filter !== 'alvo' && userProfile?.triageCompleted &&
-      userProfile.ambitionId && !isBrainHealth) {
-    const currentBestMs = Math.min(...allScores);
-    const next = getNextMilestone(
-      userProfile.baselineMs ?? null,
-      currentBestMs,
-      userProfile.ambitionId,
-    );
-    if (next && next.type !== 'qualitative' && next.ms !== undefined) {
-      nextMilestoneMs = next.ms;
+  const data = useMemo(() => {
+    if (mSessions.length === 0) return null;
+
+    // sessions array is newest → oldest. Reverse for chronological order.
+    const chrono = mSessions.slice().reverse();
+    const allScores = chrono.map(displayScore);
+
+    const best = Math.min(...allScores);
+    const first = chrono[0];
+    const latest = chrono[chrono.length - 1];
+    const firstScore = displayScore(first);
+    const latestScore = displayScore(latest);
+
+    // Trend on last 5 sessions
+    const last5 = chrono.slice(-5).map(displayScore);
+    const trend = computeTrend(last5);
+
+    // Best day of week — by avg displayScore (lower is better)
+    const dayBuckets: number[][] = [[], [], [], [], [], [], []];
+    const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+    for (const s of chrono) {
+      const dow = new Date(s.date).getDay();
+      dayBuckets[dow].push(displayScore(s));
+      dayCounts[dow] += 1;
     }
-  }
-
-  // Alvo next goal: next choice RT threshold above user's best alvo score
-  let alvoNextGoalMs: number | null = null;
-  if (hasData && filter === 'alvo' && userProfile?.triageCompleted &&
-      userProfile.ambitionId && !isBrainHealth) {
-    const bestAlvo = Math.min(...allScores);
-    if (bestAlvo > 700)      alvoNextGoalMs = 700;
-    else if (bestAlvo > 560) alvoNextGoalMs = 560;
-    else if (bestAlvo > 500) alvoNextGoalMs = 500;
-    else if (bestAlvo > 420) alvoNextGoalMs = 420;
-    // ≤420 = ELITE, no next goal
-  }
-
-  // ── Y scale ────────────────────────────────────────────────────────────────
-  let minV: number, maxV: number;
-  if (filter === 'alvo') {
-    minV = 300; maxV = 800;
-  } else if (filter === 'partida' || filter === 'sequencia' || filter === 'radar') {
-    minV = 150; maxV = 500;
-  } else if (hasData) {
-    // 'all' with data: dynamic — include milestone so dashed line stays visible
-    const effectiveMin = nextMilestoneMs !== null ? Math.min(rawMin, nextMilestoneMs) : rawMin;
-    minV = Math.floor((effectiveMin - 20) / 20) * 20;
-    maxV = Math.ceil((rawMax + 20) / 20) * 20;
-  } else {
-    minV = 150; maxV = 500;
-  }
-  const range = maxV - minV || 80;
-
-  // Choice RT ELITE reference for alvo — mode color cyan
-  const choiceRTRef: number | null = filter === 'alvo' ? 420 : null;
-
-  // Simple RT ELITE reference for partida/sequencia/radar — mode-specific color
-  const simpleRTRef: number | null = (filter === 'partida' || filter === 'sequencia' || filter === 'radar') ? 200 : null;
-  const simpleRTColor = simpleRTRef !== null ? MODE_COLORS[filter as ModeKey].accent : null;
-
-  const toY = (v: number) => PAD.t + (1 - (v - minV) / range) * innerH;
-
-  // X axis: fixed window for 7d/30d, dynamic for 'all'
-  const useFixedWindow = period === '7d' || period === '30d';
-  let tMin: number, tMax: number, useTimeBased: boolean;
-  if (useFixedWindow) {
-    tMin = windowStart!;
-    tMax = windowEnd;
-    useTimeBased = true;
-  } else if (hasData) {
-    tMin = sessionsToPlot[0].date;
-    tMax = Date.now();
-    useTimeBased = (tMax - tMin) >= DAY && sessionsToPlot.length > 1;
-  } else {
-    tMin = Date.now();
-    tMax = Date.now();
-    useTimeBased = false;
-  }
-
-  const toX = (date: number, idx: number): number => {
-    if (useTimeBased) {
-      const span = tMax - tMin || 1;
-      return PAD.l + Math.max(0, Math.min(1, (date - tMin) / span)) * innerW;
-    }
-    if (sessionsToPlot.length <= 1) return PAD.l + innerW / 2;
-    return PAD.l + (idx / (sessionsToPlot.length - 1)) * innerW;
-  };
-
-  const xTicks: { x: number; label: string; anchor: 'start' | 'middle' | 'end' }[] = [];
-  if (period === '7d') {
-    const span = tMax - tMin;
+    let bestDayIdx = -1;
+    let bestDayAvg = Infinity;
     for (let i = 0; i < 7; i++) {
-      const d = new Date(todayStart - (6 - i) * DAY);
-      const center = d.getTime() + DAY / 2;
-      const x = PAD.l + ((center - tMin) / span) * innerW;
-      xTicks.push({ x, label: DAYS_OF_WEEK[d.getDay()], anchor: 'middle' });
+      if (dayBuckets[i].length === 0) continue;
+      const avg = dayBuckets[i].reduce((a, b) => a + b, 0) / dayBuckets[i].length;
+      if (avg < bestDayAvg) { bestDayAvg = avg; bestDayIdx = i; }
     }
-  } else if (period === '30d') {
-    const span = tMax - tMin;
-    for (let daysAgo = 28; daysAgo >= 0; daysAgo -= 7) {
-      const dayMs = todayStart - daysAgo * DAY;
-      const center = dayMs + DAY / 2;
-      const x = PAD.l + ((center - tMin) / span) * innerW;
-      const label = daysAgo === 0 ? 'hoje' : formatShortDate(dayMs);
-      const anchor: 'start' | 'middle' | 'end' =
-        daysAgo === 0 ? 'end' : daysAgo === 28 ? 'start' : 'middle';
-      xTicks.push({ x, label, anchor });
-    }
-  } else if (useTimeBased) {
-    const tNow = Date.now();
-    const timeSpan = tMax - tMin;
-    xTicks.push({ x: PAD.l + innerW, label: 'hoje', anchor: 'end' });
-    const x7 = PAD.l + ((tNow - 7 * DAY - tMin) / timeSpan) * innerW;
-    if (x7 > PAD.l + 8 && x7 < PAD.l + innerW - 20)
-      xTicks.push({ x: x7, label: '7d', anchor: 'middle' });
-    const x15 = PAD.l + ((tNow - 15 * DAY - tMin) / timeSpan) * innerW;
-    if (x15 >= PAD.l && x15 < x7 - 20)
-      xTicks.push({ x: x15, label: '15d', anchor: 'middle' });
-    xTicks.push({ x: PAD.l, label: formatShortDate(tMin), anchor: 'start' });
-  } else {
-    xTicks.push({ x: PAD.l + innerW / 2, label: 'Hoje', anchor: 'middle' });
-  }
 
-  const modes: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
+    // Most-played day of week (tie-break: most recent)
+    let mostPlayedIdx = -1;
+    let mostPlayedCount = -1;
+    for (let i = 0; i < 7; i++) {
+      if (dayCounts[i] > mostPlayedCount) {
+        mostPlayedCount = dayCounts[i];
+        mostPlayedIdx = i;
+      }
+    }
+
+    return {
+      best,
+      firstScore,
+      latestScore,
+      trend,
+      total: chrono.length,
+      latestDate: latest.date,
+      bestDayIdx,
+      bestDayAvg,
+      mostPlayedIdx,
+      mostPlayedCount,
+    };
+  }, [mSessions]);
+
+  const lvl = data ? getLevelForMode(data.best, mode) : null;
+  const trendMeta = TREND_META[data?.trend ?? 'unknown'];
 
   return (
-    <View style={chart.wrapper}>
-      {/* Brain-health notice (no milestone line for qualitative journeys) */}
-      {isBrainHealth && (
-        <View style={chart.brainCard}>
-          <Text style={chart.brainText}>
-            🧠 Sua jornada é de consistência. Continue jogando regularmente.
-          </Text>
+    <View style={[styles.modeCard, { borderColor: mc.accent + '33' }]}>
+      <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.modeCardHeader}>
+        <View style={[styles.modeIconBox, { backgroundColor: mc.accent + '22' }]}>
+          <Text style={styles.modeIconText}>{MODE_ICONS[mode]}</Text>
         </View>
-      )}
-
-      <Svg width={W} height={H}>
-        {/* Y grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map(p => {
-          const y = PAD.t + p * innerH;
-          const val = Math.round(maxV - p * range);
-          return (
-            <React.Fragment key={p}>
-              <Line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y}
-                stroke="#1a2540" strokeWidth={1} />
-              <SvgText x={PAD.l - 4} y={y + 4} fontSize={8}
-                fill="#2d3a55" textAnchor="end">{val}</SvgText>
-            </React.Fragment>
-          );
-        })}
-
-        {/* X-axis tick labels */}
-        {xTicks.map(t => (
-          <SvgText key={t.label} x={t.x} y={H - 5} fontSize={8}
-            fill="#2d3a55" textAnchor={t.anchor}>{t.label}</SvgText>
-        ))}
-
-        {/* Journey milestone dashed line (non-alvo, only if within Y range) */}
-        {nextMilestoneMs !== null && nextMilestoneMs >= minV && nextMilestoneMs <= maxV && (
-          <React.Fragment>
-            <Line
-              x1={PAD.l} y1={toY(nextMilestoneMs)}
-              x2={W - PAD.r} y2={toY(nextMilestoneMs)}
-              stroke="#4a5a7b" strokeWidth={1}
-              strokeDasharray="4 3"
-            />
-            <SvgText
-              x={W - PAD.r - 2} y={toY(nextMilestoneMs) - 3}
-              fontSize={7} fill="#4a5a7b" textAnchor="end"
-            >
-              {`🎯 Próxima meta: ${nextMilestoneMs} ms`}
-            </SvgText>
-          </React.Fragment>
-        )}
-
-        {/* Alvo next choice-RT goal line */}
-        {alvoNextGoalMs !== null && (
-          <React.Fragment>
-            <Line
-              x1={PAD.l} y1={toY(alvoNextGoalMs)}
-              x2={W - PAD.r} y2={toY(alvoNextGoalMs)}
-              stroke="#4a5a7b" strokeWidth={1}
-              strokeDasharray="4 3"
-            />
-            <SvgText
-              x={W - PAD.r - 2} y={toY(alvoNextGoalMs) - 3}
-              fontSize={7} fill="#4a5a7b" textAnchor="end"
-            >
-              {`🎯 Próxima meta: ${alvoNextGoalMs} ms`}
-            </SvgText>
-          </React.Fragment>
-        )}
-
-        {/* Choice RT ELITE reference line (alvo filter) — mode color cyan */}
-        {choiceRTRef !== null && (
-          <React.Fragment>
-            <Line
-              x1={PAD.l} y1={toY(choiceRTRef)}
-              x2={W - PAD.r} y2={toY(choiceRTRef)}
-              stroke="#06b6d4" strokeWidth={1}
-              strokeDasharray="4 3"
-            />
-            <SvgText
-              x={W - PAD.r - 2} y={toY(choiceRTRef) - 3}
-              fontSize={7} fill="#06b6d4" textAnchor="end"
-            >
-              Elite: 420 ms
-            </SvgText>
-          </React.Fragment>
-        )}
-
-        {/* Simple RT ELITE reference line (partida/sequencia) — mode-specific color */}
-        {simpleRTRef !== null && simpleRTColor !== null && (
-          <React.Fragment>
-            <Line
-              x1={PAD.l} y1={toY(simpleRTRef)}
-              x2={W - PAD.r} y2={toY(simpleRTRef)}
-              stroke={simpleRTColor} strokeWidth={1}
-              strokeDasharray="4 3"
-            />
-            <SvgText
-              x={W - PAD.r - 2} y={toY(simpleRTRef) - 3}
-              fontSize={7} fill={simpleRTColor} textAnchor="end"
-            >
-              Elite: 200 ms
-            </SvgText>
-          </React.Fragment>
-        )}
-
-        {/* Series — only modes matching the active filter */}
-        {(filter === 'all' ? modes : [filter as ModeKey]).map(mode => {
-          const mc = MODE_COLORS[mode];
-          const modePts = sessionsToPlot
-            .map((s, i) => s.mode === mode
-              ? { x: toX(s.date, i), y: toY(s.score) }
-              : null)
-            .filter((p): p is { x: number; y: number } => p !== null);
-
-          if (modePts.length === 0) return null;
-          return (
-            <React.Fragment key={mode}>
-              {modePts.length >= 2 && (
-                <Polyline
-                  points={modePts.map(p => `${p.x},${p.y}`).join(' ')}
-                  fill="none" stroke={mc.accent}
-                  strokeWidth={2} strokeOpacity={0.85}
-                />
-              )}
-              {modePts.map((p, i) => (
-                <Circle key={i} cx={p.x} cy={p.y} r={3.5} fill={mc.accent} />
-              ))}
-            </React.Fragment>
-          );
-        })}
-      </Svg>
-
-      {filter === 'all' && (
-        <View style={chart.legend}>
-          {modes.map(m => (
-            <View key={m} style={chart.legendItem}>
-              <View style={[chart.legendDot, { backgroundColor: MODE_COLORS[m].accent }]} />
-              <Text style={chart.legendLabel}>{MODE_LABELS[m]}</Text>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={[styles.modeName, { color: mc.accent }]}>{MODE_LABELS[mode].toUpperCase()}</Text>
+          {data && lvl ? (
+            <View style={styles.modeHeaderRow}>
+              <Text style={[styles.modeBest, { color: lvl.color }]}>{data.best} ms</Text>
+              <View style={[styles.levelMini, { backgroundColor: lvl.bg }]}>
+                <Text style={[styles.levelMiniText, { color: lvl.color }]} numberOfLines={1}>{lvl.label}</Text>
+              </View>
+              <Text style={[styles.trendBadge, { color: trendMeta.color }]}>
+                {trendMeta.icon} {trendMeta.label}
+              </Text>
             </View>
-          ))}
+          ) : (
+            <Text style={styles.modeEmpty}>Nenhuma sessão registrada</Text>
+          )}
         </View>
-      )}
+        <Text style={[styles.modeChevron, { color: mc.accent }]}>{expanded ? '▼' : '▶'}</Text>
+      </TouchableOpacity>
 
-      {filter === 'all' && (
-        <Text style={chart.allModeNote}>
-          O Modo Alvo usa escala diferente — selecione-o para ver sua evolução isolada.
-        </Text>
+      {expanded && data && (
+        <View style={styles.modeBody}>
+          <View style={styles.modeRow}>
+            <Text style={styles.modeRowLabel}>Melhor de sempre</Text>
+            <Text style={[styles.modeRowValue, lvl && { color: lvl.color }]}>{data.best} ms</Text>
+          </View>
+          <View style={styles.modeRow}>
+            <Text style={styles.modeRowLabel}>Primeiro vs. atual</Text>
+            <Text style={styles.modeRowValue}>
+              {data.firstScore} → <Text style={{ color: mc.accent }}>{data.latestScore} ms</Text>
+              <Text style={styles.modeRowSub}>{
+                data.firstScore > data.latestScore
+                  ? `  (-${data.firstScore - data.latestScore} ms)`
+                  : data.firstScore < data.latestScore
+                  ? `  (+${data.latestScore - data.firstScore} ms)`
+                  : '  (=)'
+              }</Text>
+            </Text>
+          </View>
+          <View style={styles.modeRow}>
+            <Text style={styles.modeRowLabel}>Total de sessões</Text>
+            <Text style={styles.modeRowValue}>{data.total}</Text>
+          </View>
+          <View style={styles.modeRow}>
+            <Text style={styles.modeRowLabel}>Última sessão</Text>
+            <Text style={styles.modeRowValue}>{formatRelativeDate(data.latestDate)}</Text>
+          </View>
+          {data.bestDayIdx >= 0 && (
+            <View style={styles.modeRow}>
+              <Text style={styles.modeRowLabel}>Melhor dia da semana</Text>
+              <Text style={styles.modeRowValue}>
+                {DAYS_OF_WEEK[data.bestDayIdx]}
+                <Text style={styles.modeRowSub}>  · {Math.round(data.bestDayAvg)} ms</Text>
+              </Text>
+            </View>
+          )}
+          {data.mostPlayedIdx >= 0 && data.mostPlayedCount > 0 && (
+            <View style={styles.modeRow}>
+              <Text style={styles.modeRowLabel}>Dia mais jogado</Text>
+              <Text style={styles.modeRowValue}>
+                {DAYS_OF_WEEK[data.mostPlayedIdx]}
+                <Text style={styles.modeRowSub}>  · {data.mostPlayedCount} sess.</Text>
+              </Text>
+            </View>
+          )}
+          <Text style={styles.modeFootnote}>{MODE_SCORE_LABEL[mode]}</Text>
+        </View>
       )}
     </View>
   );
 }
-
-const chart = StyleSheet.create({
-  wrapper: {
-    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: 12, marginBottom: 20,
-  },
-  brainCard: {
-    backgroundColor: 'rgba(16,185,129,0.08)', borderRadius: 8,
-    borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)',
-    paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10,
-  },
-  brainText: { fontSize: 12, color: '#10b981', lineHeight: 18 },
-  legend: { flexDirection: 'row', gap: 16, justifyContent: 'center', marginTop: 4 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendLabel: { fontSize: 10, color: '#4a5a7b' },
-  allModeNote: {
-    fontSize: 10, color: '#3a4a6b', textAlign: 'center',
-    marginTop: 6, lineHeight: 14, paddingHorizontal: 4,
-  },
-});
-
-// ── Historico ─────────────────────────────────────────────────────────────────
 
 interface Props {
   sessions: SessionRecord[];
   userProfile: UserProfile;
 }
 
-export default function Historico({ sessions, userProfile }: Props) {
-  const [filter, setFilter] = useState<FilterKey>('all');
-  const [period, setPeriod] = useState<PeriodKey>('7d');
-
-  const modeCounts = useMemo((): Record<FilterKey, number> => {
-    const c: Record<FilterKey, number> = { all: sessions.length, partida: 0, alvo: 0, sequencia: 0, radar: 0 };
-    for (const s of sessions) c[s.mode]++;
-    return c;
-  }, [sessions]);
-
-  const filtered = useMemo(() =>
-    filter === 'all' ? sessions : sessions.filter(s => s.mode === filter),
-    [sessions, filter],
-  );
+export default function Historico({ sessions }: Props) {
+  const [expanded, setExpanded] = useState<Record<ModeKey, boolean>>({
+    partida: false, alvo: false, sequencia: false, radar: false,
+  });
 
   const bestRtSession = useMemo(() => {
     if (sessions.length === 0) return null;
     return sessions.reduce((best, s) => s.bestTime < best.bestTime ? s : best);
   }, [sessions]);
 
-  const { mostPlayed, modeCounts: modeCountsMap } = useMemo(() => {
+  const { mostPlayed, modeCounts } = useMemo(() => {
     const counts: Record<ModeKey, number> = { partida: 0, alvo: 0, sequencia: 0, radar: 0 };
     for (const s of sessions) counts[s.mode]++;
     let mp: ModeKey | null = null;
@@ -480,13 +289,7 @@ export default function Historico({ sessions, userProfile }: Props) {
     return Math.max(1, Math.round((Date.now() - oldest) / DAY) + 1);
   }, [sessions]);
 
-  const pbSessionByMode = useMemo(() => {
-    const pb: Partial<Record<ModeKey, SessionRecord>> = {};
-    for (const s of sessions) {
-      if (!pb[s.mode] || s.bestTime < pb[s.mode]!.bestTime) pb[s.mode] = s;
-    }
-    return pb as Record<ModeKey, SessionRecord | undefined>;
-  }, [sessions]);
+  const modes: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
 
   return (
     <View style={styles.root}>
@@ -522,7 +325,7 @@ export default function Historico({ sessions, userProfile }: Props) {
                   {MODE_LABELS[mostPlayed]}
                 </Text>
                 <Text style={styles.sumSubtitle}>
-                  {modeCountsMap[mostPlayed]} de {sessions.length} sessões
+                  {modeCounts[mostPlayed]} de {sessions.length} sessões
                 </Text>
               </>
             ) : (
@@ -552,112 +355,27 @@ export default function Historico({ sessions, userProfile }: Props) {
           </View>
         </View>
 
-        {/* ── Evolution chart ── */}
-        {sessions.length >= 1 && (
-          <>
-            <Text style={styles.sectionTitle}>EVOLUÇÃO</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.periodRow}>
-              {PERIODS.map(p => {
-                const active = period === p.key;
-                return (
-                  <TouchableOpacity
-                    key={p.key}
-                    style={[styles.pill, active && styles.pillActivePeriod]}
-                    onPress={() => setPeriod(p.key)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.pillText, active && styles.pillTextActivePeriod]}>
-                      {p.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-            <EvoChart sessions={sessions} filter={filter} period={period} userProfile={userProfile} />
-          </>
-        )}
+        {/* ── Evolução por modo ── */}
+        <Text style={styles.sectionTitle}>EVOLUÇÃO POR MODO</Text>
+        {modes.map(m => (
+          <ModeStatsCard
+            key={m}
+            mode={m}
+            sessions={sessions}
+            expanded={expanded[m]}
+            onToggle={() => setExpanded(prev => ({ ...prev, [m]: !prev[m] }))}
+          />
+        ))}
 
-        {/* ── Filter pills with counts ── */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-          {FILTERS.map(f => {
-            const active = filter === f.key;
-            const ac = f.key !== 'all'
-              ? MODE_COLORS[f.key as ModeKey].accent
-              : '#3b82f6';
-            return (
-              <TouchableOpacity
-                key={f.key}
-                style={[styles.pill, active && { backgroundColor: ac + '22', borderColor: ac + '66' }]}
-                onPress={() => setFilter(f.key)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.pillText, active && { color: ac }]}>
-                  {f.label}
-                  <Text style={[styles.pillCount, active && { color: ac + 'bb' }]}>
-                    {` · ${modeCounts[f.key]}`}
-                  </Text>
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        {/* ── Conquistas ── */}
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>CONQUISTAS</Text>
+        <ConquistasContent sessions={sessions} showHeader={false} />
 
-        {/* ── Session list ── */}
-        {filtered.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📭</Text>
-            <Text style={styles.emptyText}>Nenhuma sessão registrada ainda.</Text>
-          </View>
-        ) : (
-          filtered.map(s => {
-            const mc = MODE_COLORS[s.mode];
-            const lvl = getLevelForMode(s.score, s.mode);
-            const acc = s.accuracy !== undefined ? Math.round(s.accuracy * 100) : null;
-            const isPB = pbSessionByMode[s.mode]?.id === s.id;
-
-            return (
-              <View key={s.id} style={styles.sessionCard}>
-                <View style={[styles.sessionAccent, { backgroundColor: mc.accent }]} />
-                <View style={[styles.sessionIconBox, { backgroundColor: mc.accent + '2a' }]}>
-                  <Text style={styles.sessionIconText}>{MODE_ICONS[s.mode]}</Text>
-                </View>
-                <View style={styles.sessionBody}>
-                  <View style={styles.sessionTop}>
-                    <Text style={[styles.sessionMode, { color: mc.accent }]}>
-                      {MODE_LABELS[s.mode].toUpperCase()}
-                    </Text>
-                    <Text style={styles.sessionDate}>{formatRelativeDateTime(s.date)}</Text>
-                  </View>
-                  <View style={styles.sessionStats}>
-                    <Text style={[styles.sessionScore, { color: lvl.color }]}>{s.score} ms</Text>
-                    <View style={[styles.levelMini, { backgroundColor: lvl.bg }]}>
-                      <Text style={[styles.levelMiniText, { color: lvl.color }]}>{lvl.label}</Text>
-                    </View>
-                    {isPB && (
-                      <View style={styles.pbBadge}>
-                        <Text style={styles.pbText}>🏆 PB</Text>
-                      </View>
-                    )}
-                    {acc !== null && (
-                      <Text style={styles.sessionAcc}>{acc}%</Text>
-                    )}
-                  </View>
-                  {acc !== null && (
-                    <View style={styles.accBarBg}>
-                      <View style={[styles.accBarFill, { width: `${acc}%`, backgroundColor: mc.accent }]} />
-                    </View>
-                  )}
-                </View>
-              </View>
-            );
-          })
-        )}
+        <View style={{ height: 24 }} />
       </ScrollView>
     </View>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0b1220' },
@@ -678,52 +396,39 @@ const styles = StyleSheet.create({
   sumSubtitle: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
   sumLbl: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 1.5, marginTop: 4 },
 
-  filterRow: { marginBottom: 16 },
-  periodRow: { marginBottom: 10 },
-  pill: {
-    borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 14, paddingVertical: 7, marginRight: 8,
-    backgroundColor: '#111a2e',
+  // ── Mode card ─────────────────────────────────────────────────────────────
+  modeCard: {
+    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
+    marginBottom: 10, overflow: 'hidden',
   },
-  pillText: { fontSize: 13, fontWeight: '600', color: '#4a5a7b' },
-  pillCount: { fontSize: 11, fontWeight: '500', color: '#2d3a55' },
-  pillActivePeriod: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
-  pillTextActivePeriod: { color: '#fff' },
-
-  sessionCard: {
-    flexDirection: 'row',
-    backgroundColor: '#111a2e', borderRadius: 12,
-    marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
-    overflow: 'hidden',
-    alignItems: 'stretch',
+  modeCardHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14,
   },
-  sessionAccent: { width: 4 },
-  sessionIconBox: {
-    width: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'stretch',
+  modeIconBox: {
+    width: 44, height: 44, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
   },
-  sessionIconText: { fontSize: 20 },
-  sessionBody: { flex: 1, padding: 11, paddingLeft: 10, gap: 5 },
-  sessionTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sessionMode: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
-  sessionDate: { fontSize: 11, color: '#2d3a55' },
-  sessionStats: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  sessionScore: { fontSize: 20, fontWeight: '800' },
+  modeIconText: { fontSize: 20 },
+  modeName: { fontSize: 12, fontWeight: '800', letterSpacing: 1.5 },
+  modeHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  modeBest: { fontSize: 17, fontWeight: '900', letterSpacing: -0.5 },
   levelMini: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
   levelMiniText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  pbBadge: {
-    backgroundColor: 'rgba(251,191,36,0.15)',
-    borderRadius: 6, borderWidth: 1, borderColor: 'rgba(251,191,36,0.35)',
-    paddingHorizontal: 6, paddingVertical: 2,
-  },
-  pbText: { fontSize: 9, fontWeight: '800', color: '#fbbf24', letterSpacing: 0.5 },
-  sessionAcc: { marginLeft: 'auto' as any, fontSize: 13, color: '#4a5a7b' },
-  accBarBg: { height: 3, backgroundColor: '#1a2540', borderRadius: 2 },
-  accBarFill: { height: 3, borderRadius: 2 },
+  trendBadge: { fontSize: 11, fontWeight: '700' },
+  modeEmpty: { fontSize: 11, color: '#4a5a7b' },
+  modeChevron: { fontSize: 12, fontWeight: '800', marginLeft: 'auto' as any },
 
-  emptyState: { alignItems: 'center', paddingTop: 48, gap: 12 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 14, color: '#4a5a7b' },
+  modeBody: {
+    paddingHorizontal: 14, paddingBottom: 14, paddingTop: 4,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)',
+    gap: 8,
+  },
+  modeRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline',
+    paddingTop: 8,
+  },
+  modeRowLabel: { fontSize: 12, color: '#4a5a7b' },
+  modeRowValue: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  modeRowSub: { fontSize: 11, color: '#4a5a7b', fontWeight: '600' },
+  modeFootnote: { fontSize: 10, color: '#3a4a6b', marginTop: 6, fontStyle: 'italic' },
 });
