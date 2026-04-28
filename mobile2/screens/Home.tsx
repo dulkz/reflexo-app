@@ -54,7 +54,7 @@ const MODE_INFO = [
     key: 'radar' as ModeKey,
     name: 'MODO RADAR',
     icon: '📡',
-    desc: 'Localização visual · 7 rodadas',
+    desc: 'Localização visual · 15 rodadas',
     sub: '5 círculos em cruz — toque no que acender',
   },
 ];

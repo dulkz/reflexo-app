@@ -12,8 +12,8 @@ const SIGNAL_DURATION = 1400;
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
-type SignalType = 'go' | 'nogo';
-type ResponseType = 'hit' | 'miss' | 'commission' | 'correct_inhibit';
+type SignalType = 'go' | 'nogo' | 'early';
+type ResponseType = 'hit' | 'miss' | 'commission' | 'correct_inhibit' | 'early';
 type SeqState = 'intro' | 'countdown' | 'inter' | 'signal' | 'feedback' | 'done';
 
 interface TrialResult {
@@ -77,6 +77,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
 
   // Anticipation (early tap during inter)
   const earlyTapRef = useRef<number>(0);
+  const overlayStartRef = useRef<number>(0);
   const penaltyVisibleRef = useRef<boolean>(false);
   const pausedForPenaltyRef = useRef<boolean>(false);
   const pendingScheduleRef = useRef<{ idx: number; trials: TrialResult[] } | null>(null);
@@ -106,12 +107,14 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   }, [flashOpacity]);
 
   const computeSummary = useCallback((allTrials: TrialResult[]): SeqSummary => {
+    // 'early' trials have signalType='early' — exclude from go/nogo counts
     const goTrials = allTrials.filter(t => t.signalType === 'go');
     const hits = allTrials.filter(t => t.responseType === 'hit').length;
     const misses = allTrials.filter(t => t.responseType === 'miss').length;
     const commissions = allTrials.filter(t => t.responseType === 'commission').length;
     const correctInhibits = allTrials.filter(t => t.responseType === 'correct_inhibit').length;
     const hitRts = allTrials.filter(t => t.responseType === 'hit' && t.rt !== null).map(t => t.rt!);
+    // avgRt reflects clean reaction speed on Go signals only (no penalties)
     const avgRt = hitRts.length ? Math.round(hitRts.reduce((a, b) => a + b, 0) / hitRts.length) : 999;
     const accuracy = goTrials.length ? hits / goTrials.length : 0;
 
@@ -126,9 +129,23 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       fatigueIndex = Math.round(((avgLast - avgFirst) / avgFirst) * 100);
     }
 
-    // Score: avg RT penalized for errors — miss = +200ms, commission = +150ms per error
-    const penaltyMs = misses * 200 + commissions * 150;
-    const score = Math.round(avgRt + penaltyMs / allTrials.length);
+    // Score: avg of all reaction events.
+    //   hit   → real RT
+    //   early → real RT already includes +150ms penalty (rt = resumeRt + 150)
+    //   miss  → 400ms fixed (Go timeout = full signal duration penalty)
+    //   commission → 400ms fixed (NoGo tap = impulsivity penalty)
+    //   correct_inhibit → excluded (successful inhibition, no RT event)
+    const scorableTrials = allTrials.filter(t =>
+      t.responseType === 'hit' || t.responseType === 'early' ||
+      t.responseType === 'miss' || t.responseType === 'commission'
+    );
+    const totalRt = scorableTrials.reduce((sum, t) => {
+      if (t.responseType === 'hit' || t.responseType === 'early') return sum + (t.rt ?? 400);
+      return sum + 400; // miss or commission
+    }, 0);
+    const score = scorableTrials.length > 0
+      ? Math.round(totalRt / scorableTrials.length)
+      : 999;
 
     const totalNoGo = allTrials.filter(t => t.signalType === 'nogo').length;
     const noGoErrors = commissions;
@@ -192,20 +209,30 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     if (now - lastTapRef.current < 150) return;
     lastTapRef.current = now;
 
-    // Early tap during inter (anticipation): cancel scheduled signal, show overlay, resume after
+    // User taps while penalty overlay is showing → record early trial and resume game
+    if (penaltyVisibleRef.current) {
+      const resumeRt = Date.now() - overlayStartRef.current;
+      const earlyTrial: TrialResult = { signalType: 'early', responseType: 'early', rt: resumeRt + 150 };
+      setShowPenaltyOverlay(false);
+      penaltyVisibleRef.current = false;
+      pausedForPenaltyRef.current = false;
+      const pending = pendingScheduleRef.current;
+      if (pending) {
+        const newTrials = [...pending.trials, earlyTrial];
+        pendingScheduleRef.current = { idx: pending.idx, trials: newTrials };
+        scheduleNext(pending.idx, newTrials);
+      }
+      return;
+    }
+
+    // Early tap during inter (anticipation): cancel scheduled signal, show overlay, wait for user tap
     if (gameState === 'inter' && !penaltyVisibleRef.current) {
       if (interTimer.current) { clearTimeout(interTimer.current); interTimer.current = null; }
       earlyTapRef.current += 1;
+      overlayStartRef.current = Date.now();
       penaltyVisibleRef.current = true;
       pausedForPenaltyRef.current = true;
       setShowPenaltyOverlay(true);
-      setTimeout(() => {
-        setShowPenaltyOverlay(false);
-        penaltyVisibleRef.current = false;
-        pausedForPenaltyRef.current = false;
-        const pending = pendingScheduleRef.current;
-        if (pending) scheduleNext(pending.idx, pending.trials);
-      }, 600);
       return;
     }
 
@@ -341,6 +368,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
           <Text style={styles.penaltyIcon}>❌</Text>
           <Text style={styles.penaltyTitle}>Antecipou!</Text>
           <Text style={styles.penaltyMs}>+150ms</Text>
+          <Text style={styles.penaltyContinue}>Toque para continuar</Text>
         </View>
       )}
 
@@ -417,4 +445,5 @@ const styles = StyleSheet.create({
   penaltyIcon: { fontSize: 48, marginBottom: 8 },
   penaltyTitle: { fontSize: 28, fontWeight: '900', color: '#ef4444', letterSpacing: 1 },
   penaltyMs: { fontSize: 20, fontWeight: '800', color: '#f59e0b', marginTop: 6 },
+  penaltyContinue: { fontSize: 13, color: '#4a5a7b', marginTop: 14, letterSpacing: 0.5 },
 });

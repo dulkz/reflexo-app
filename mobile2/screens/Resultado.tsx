@@ -675,11 +675,18 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
           {summary.trials.map((t, i) => {
             const c = t.responseType === 'hit' ? '#10b981'
               : t.responseType === 'correct_inhibit' ? '#8b5cf6'
+              : t.responseType === 'early' ? '#f59e0b'
               : '#ef4444';
+            const label =
+              t.responseType === 'hit' ? `${t.rt}ms`
+              : t.responseType === 'miss' ? '400ms (timeout)'
+              : t.responseType === 'commission' ? '400ms (NoGo)'
+              : t.responseType === 'early' ? `${t.rt}ms (largada)`
+              : '—'; // correct_inhibit
             return (
               <View key={i} style={styles.timelineDot}>
                 <View style={[styles.tlDot, { backgroundColor: c }]} />
-                <Text style={[styles.tlLabel, { color: c }]}>{t.rt !== null ? t.rt : '—'}</Text>
+                <Text style={[styles.tlLabel, { color: c }]}>{label}</Text>
               </View>
             );
           })}

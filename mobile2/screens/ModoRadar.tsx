@@ -6,7 +6,7 @@ import {
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
 
-const TOTAL_ROUNDS = 7;
+const TOTAL_ROUNDS = 15;
 const SIGNAL_TIMEOUT = 1500;
 const READY_MIN = 1000;
 const READY_MAX = 3000;
@@ -199,7 +199,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
         </View>
         <View style={styles.introContainer}>
           <Text style={styles.introTitle}>MODO RADAR</Text>
-          <Text style={styles.introSub}>5 círculos em cruz · 7 rodadas</Text>
+          <Text style={styles.introSub}>5 círculos em cruz · 15 rodadas</Text>
           <View style={styles.instrBox}>
             <Text style={styles.instrLine}>① Os 5 círculos ficam visíveis o tempo todo</Text>
             <Text style={styles.instrLine}>② Um deles vai acender — toque nele rápido</Text>

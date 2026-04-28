@@ -343,7 +343,7 @@ function AppInner() {
     await addSession({
       id: Date.now().toString(),
       mode: 'sequencia',
-      score: summary.score + earlyTapCount * 150,
+      score: summary.score,
       bestTime: Math.min(...summary.trials.filter(t => t.rt !== null).map(t => t.rt!), 999),
       accuracy: summary.accuracy,
       fatigueIndex: summary.fatigueIndex,
