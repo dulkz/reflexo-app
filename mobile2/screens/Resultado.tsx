@@ -673,16 +673,24 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
         <View style={styles.timeline}>
           {summary.trials.map((t, i) => {
+            const ep = t.earlyPenalty ?? 0;
+            const hasEarly = ep > 0;
             const c = t.responseType === 'hit' ? '#10b981'
-              : t.responseType === 'correct_inhibit' ? '#8b5cf6'
-              : t.responseType === 'early' ? '#f59e0b'
+              : t.responseType === 'correct_inhibit' ? (hasEarly ? '#f59e0b' : '#8b5cf6')
               : '#ef4444';
-            const label =
+            // Base label per scenario, then append early annotation if applicable
+            // Scenario A: Go hit (± early)
+            // Scenario B: NoGo correct inhibit + early penalty only
+            // Scenario C: NoGo commission (± early)
+            const baseLabel =
               t.responseType === 'hit' ? `${t.rt}ms`
               : t.responseType === 'miss' ? '400ms (timeout)'
               : t.responseType === 'commission' ? '400ms (NoGo)'
-              : t.responseType === 'early' ? `${t.rt}ms (largada)`
-              : '—'; // correct_inhibit
+              : '—'; // correct_inhibit without early
+            const earlyLabel = t.responseType === 'correct_inhibit'
+              ? `+${ep}ms ⚡` // Scenario B: only early penalty
+              : `${baseLabel} +${ep}⚡`;
+            const label = hasEarly ? earlyLabel : baseLabel;
             return (
               <View key={i} style={styles.timelineDot}>
                 <View style={[styles.tlDot, { backgroundColor: c }]} />
