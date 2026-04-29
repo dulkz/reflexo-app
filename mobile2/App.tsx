@@ -655,7 +655,12 @@ function AppInner() {
           />
         )}
         {activeTab === 'jornada' && (
-          <Jornada sessions={sessions} userProfile={userProfile} onOpenTriage={openTriageForEdit} />
+          <Jornada
+            sessions={sessions}
+            userProfile={userProfile}
+            onOpenTriage={openTriageForEdit}
+            onUpdateProfile={setUserProfile}
+          />
         )}
       </View>
 

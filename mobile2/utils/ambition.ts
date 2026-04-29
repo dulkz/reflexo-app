@@ -129,6 +129,34 @@ export function calculateDeltaToNextMilestone(
   return Math.round(currentBestMs - next.ms);
 }
 
+// ── Progressão de ambições ────────────────────────────────────────────────────
+//
+// Progressão linear da mais fácil para a mais difícil:
+//   brain (qualitativa) → populacional (top50→top10→top1)
+//   → elite esporte (boxer/tennis → f1 → sprinter)
+//
+// boxer e tennis ambas avançam para f1 (mesmo grupo de dificuldade: 200 ms).
+// sprinter (160 ms) é o pináculo — sem próxima meta.
+//
+const NEXT_AMBITION_MAP: Record<string, string | null> = {
+  brain:    'top50',
+  top50:    'top10',
+  top10:    'top1',
+  top1:     'sprinter',   // 200 ms → 160 ms
+  boxer:    'f1',         // 250 ms → 200 ms
+  tennis:   'f1',         // 250 ms → 200 ms
+  f1:       'sprinter',   // 200 ms → 160 ms
+  sprinter: null,         // pináculo — nenhuma próxima meta
+};
+
+/**
+ * Retorna o ID da próxima ambição na hierarquia de dificuldade.
+ * Retorna null se a ambição atual for o pináculo (sprinter) ou desconhecida.
+ */
+export function getNextAmbitionId(currentAmbitionId: string): string | null {
+  return NEXT_AMBITION_MAP[currentAmbitionId] ?? null;
+}
+
 // Maps elite_sport ambitionId → benchmark card name as it appears in Ciencia.tsx.
 const BENCHMARK_MAP: Record<string, string> = {
   f1:       'Piloto de F1 de ponta',

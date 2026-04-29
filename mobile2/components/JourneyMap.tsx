@@ -13,6 +13,9 @@ interface Props {
   // real-session progress exists yet). When false/omitted with currentBestMs, shows
   // "Sua melhor: N ms" pill at the first pending milestone instead.
   showYouAreHere?: boolean;
+  // When true, suprime o footer card "JORNADA COMPLETA" para que o pai renderize
+  // seu próprio card interativo (usado em Jornada.tsx).
+  hideCompletionCard?: boolean;
 }
 
 export default function JourneyMap({
@@ -22,6 +25,7 @@ export default function JourneyMap({
   compact = false,
   sessions,
   showYouAreHere,
+  hideCompletionCard = false,
 }: Props) {
   const ambition = getAmbition(ambitionId);
   if (!ambition) return null;
@@ -164,7 +168,8 @@ export default function JourneyMap({
             <Text style={s.nextCardDelta}>faltam {deltaToNext} ms</Text>
           )}
         </View>
-      ) : allBeaten ? (
+      ) : allBeaten && !hideCompletionCard ? (
+        // Card estático — renderizado apenas quando o pai não fornece o seu próprio
         <View style={[s.nextCard, compact && s.nextCardSm]}>
           <Text style={s.nextCardKicker}>JORNADA COMPLETA</Text>
           <Text style={[s.nextCardLabel, compact && s.nextCardLabelSm]}>
