@@ -409,6 +409,18 @@ interface Props {
 
 export default function OnboardingModal({ onComplete }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const swipeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(swipeAnim, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(swipeAnim, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [swipeAnim]);
 
   const handleStart = async () => {
     await saveOnboardingDone();
@@ -419,6 +431,11 @@ export default function OnboardingModal({ onComplete }: Props) {
     const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_W);
     if (idx !== activeIndex) setActiveIndex(idx);
   };
+
+  const showSwipeHint = activeIndex < 4;
+  const swipeTranslate = swipeAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 6] });
+  const swipeOpacity   = swipeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0.85] });
+  const hintColor = SCREEN_COLORS[activeIndex];
 
   return (
     <View style={styles.root}>
@@ -439,6 +456,18 @@ export default function OnboardingModal({ onComplete }: Props) {
           </View>
         )}
       />
+
+      {/* Swipe hint — visible on screens 1–4, hidden on the final CTA screen */}
+      {showSwipeHint && (
+        <Animated.View
+          style={[styles.swipeHint, { opacity: swipeOpacity, transform: [{ translateX: swipeTranslate }] }]}
+          pointerEvents="none"
+        >
+          <Text style={[styles.swipeHintText, { color: hintColor }]}>
+            Deslize para continuar →
+          </Text>
+        </Animated.View>
+      )}
 
       {/* Progress dots */}
       <View style={[styles.dotsRow, { top: TOP + 16 }]} pointerEvents="none">
@@ -525,6 +554,18 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#1a2a4a',
+  },
+
+  // Swipe hint
+  swipeHint: {
+    position: 'absolute',
+    left: 0, right: 0, bottom: 24,
+    alignItems: 'center',
+  },
+  swipeHintText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.5,
   },
 
   // Screen 2 — equalizer + cards

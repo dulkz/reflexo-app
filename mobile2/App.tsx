@@ -16,7 +16,7 @@ import Historico from './screens/Historico';
 import Jornada from './screens/Jornada';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingModal from './screens/OnboardingModal';
-import { ModeKey } from './utils/levels';
+import { ModeKey, MODE_COLORS } from './utils/levels';
 import {
   SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
   loadHasPlayedFirstGame, saveHasPlayedFirstGame,
@@ -83,6 +83,7 @@ function AppInner() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('jogar');
   const [gameScreen, setGameScreen] = useState<GameScreen>('home');
+  const [modePickerVisible, setModePickerVisible] = useState(false);
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile());
   const [triageVisible, setTriageVisible] = useState(false);
@@ -622,7 +623,13 @@ function AppInner() {
           >
             <TouchableOpacity
               style={styles.fab}
-              onPress={() => handleTabPress('jogar')}
+              onPress={() => {
+                if (activeTab === 'jogar' && gameScreen === 'home') {
+                  setModePickerVisible(true);
+                } else {
+                  handleTabPress('jogar');
+                }
+              }}
               activeOpacity={0.85}
             >
               <Text style={styles.fabIcon}>⚡</Text>
@@ -740,6 +747,60 @@ function AppInner() {
             </Text>
           </Animated.View>
         </View>
+      </Modal>
+
+      {/* Mode picker bottom sheet — opens when FAB is tapped while already on Home */}
+      <Modal
+        visible={modePickerVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModePickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modePickerOverlay}
+          onPress={() => setModePickerVisible(false)}
+          activeOpacity={1}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.modePickerSheet} onPress={() => { /* swallow taps inside sheet */ }}>
+            <View style={styles.modePickerHandle} />
+            <View style={styles.modePickerHeader}>
+              <Text style={styles.modePickerTitle}>ESCOLHA UM MODO</Text>
+              <TouchableOpacity
+                onPress={() => setModePickerVisible(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.modePickerClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {([
+              { key: 'partida'   as ModeKey, name: 'PARTIDA',   desc: 'Reação simples · 7 tentativas',     icon: '🏎', target: 'partida'   as GameScreen },
+              { key: 'alvo'      as ModeKey, name: 'ALVO',      desc: '4 alvos · 10 rodadas · escolha',    icon: '🎯', target: 'alvo'      as GameScreen },
+              { key: 'sequencia' as ModeKey, name: 'SEQUÊNCIA', desc: '20 sinais Go/NoGo · inibição',      icon: '🧠', target: 'sequencia' as GameScreen },
+              { key: 'radar'     as ModeKey, name: 'RADAR',     desc: '5 círculos · localização visual',   icon: '📡', target: 'radar'     as GameScreen },
+            ]).map(m => {
+              const mc = MODE_COLORS[m.key];
+              return (
+                <TouchableOpacity
+                  key={m.key}
+                  style={[styles.modePickerCard, { borderColor: mc.accent + '66', backgroundColor: mc.bg }]}
+                  onPress={() => {
+                    setModePickerVisible(false);
+                    setActiveTab('jogar');
+                    setGameScreen(m.target);
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.modePickerIcon}>{m.icon}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.modePickerName, { color: mc.accent }]}>{m.name}</Text>
+                    <Text style={styles.modePickerDesc}>{m.desc}</Text>
+                  </View>
+                  <Text style={[styles.modePickerArrow, { color: mc.accent }]}>›</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* Milestone beat toast */}
@@ -902,4 +963,39 @@ const styles = StyleSheet.create({
   achieveToastDesc: {
     fontSize: 13, color: '#7a8aa0', textAlign: 'center', lineHeight: 19,
   },
+
+  // ── Mode picker bottom sheet ─────────────────────────────────────────────────
+  modePickerOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end',
+  },
+  modePickerSheet: {
+    backgroundColor: '#0f1729',
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 28,
+  },
+  modePickerHandle: {
+    alignSelf: 'center', width: 40, height: 4, borderRadius: 2,
+    backgroundColor: '#2a3a5a', marginBottom: 16,
+  },
+  modePickerHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  modePickerTitle: {
+    fontSize: 12, fontWeight: '800', color: '#7a8aa0', letterSpacing: 2.5,
+  },
+  modePickerClose: { fontSize: 18, color: '#4a5a7b', fontWeight: '700' },
+  modePickerCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderRadius: 14, borderWidth: 1,
+    paddingHorizontal: 16, paddingVertical: 16,
+    marginBottom: 10,
+  },
+  modePickerIcon: { fontSize: 28 },
+  modePickerName: { fontSize: 14, fontWeight: '900', letterSpacing: 1.5 },
+  modePickerDesc: { fontSize: 12, color: '#7a8aa0', marginTop: 2 },
+  modePickerArrow: { fontSize: 24, fontWeight: '300' },
 });
