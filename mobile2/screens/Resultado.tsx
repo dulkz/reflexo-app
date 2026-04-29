@@ -511,9 +511,9 @@ function PartidaResult({ times, onPlayAgain, onHome, sessions, userProfile }: Pa
         <LevelBadge level={level} />
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
-      <TopReplayButton onPlayAgain={onPlayAgain} />
-
       <ScaleBar score={score} />
+
+      <TopReplayButton onPlayAgain={onPlayAgain} />
 
       <View style={[styles.benchCard, { borderColor: mc.accent + '44' }]}>
         <Text style={styles.benchIcon}>🏎</Text>
@@ -624,9 +624,9 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
         </View>
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
-      <TopReplayButton onPlayAgain={onPlayAgain} />
-
       <ChoiceScaleBar score={score} />
+
+      <TopReplayButton onPlayAgain={onPlayAgain} />
 
       {variation > 200 && (
         <View style={styles.consistencyCard}>
@@ -746,9 +746,9 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
           </Text>
         )}
       </View>
-      <TopReplayButton onPlayAgain={onPlayAgain} />
-
       <SeqScaleBar score={score} />
+
+      <TopReplayButton onPlayAgain={onPlayAgain} />
 
       <View style={[styles.fatigueCard, { borderColor: fatigueColor + '44' }]}>
         <View style={styles.fatigueTop}>
@@ -869,9 +869,9 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
         <LevelBadge level={level} />
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
-      <TopReplayButton onPlayAgain={onPlayAgain} />
-
       <RadarScaleBar score={score} />
+
+      <TopReplayButton onPlayAgain={onPlayAgain} />
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
@@ -1080,7 +1080,7 @@ const styles = StyleSheet.create({
   tlLabel: { fontSize: 10, fontWeight: '600' },
 
   topReplayBtn: {
-    alignSelf: 'center', marginTop: 14, marginBottom: 4,
+    alignSelf: 'center', marginTop: 16, marginBottom: 18,
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: 18, paddingVertical: 9,
     borderRadius: 999, backgroundColor: '#111a2e',

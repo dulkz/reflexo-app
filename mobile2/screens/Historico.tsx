@@ -30,13 +30,6 @@ const MODE_ICONS: Record<ModeKey, string> = {
   radar:    '📡',
 };
 
-const MODE_SCORE_LABEL: Record<ModeKey, string> = {
-  partida: 'Média RT',
-  sequencia: 'Score',
-  alvo: 'Melhor Tempo Reflexo',
-  radar: 'Melhor Tempo Reflexo',
-};
-
 function dayStart(ts: number): number {
   const d = new Date(ts);
   d.setHours(0, 0, 0, 0);
@@ -56,11 +49,13 @@ function formatRelativeDate(ts: number): string {
   return formatShortDate(ts);
 }
 
-// Per-mode display score: alvo/radar use bestTime when available; partida/sequencia use score
-function displayScore(s: SessionRecord): number {
-  if (s.mode === 'alvo' || s.mode === 'radar') {
-    return s.bestTime ?? s.score;
-  }
+// Best individual round/hit (= Melhor Tempo Reflexo). Falls back to session score if absent.
+function bestReflex(s: SessionRecord): number {
+  return s.bestTime ?? s.score;
+}
+
+// Session-level average score (= Média RT). Includes penalties for alvo/seq/radar.
+function avgScore(s: SessionRecord): number {
   return s.score;
 }
 
@@ -106,24 +101,25 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
 
     // sessions array is newest → oldest. Reverse for chronological order.
     const chrono = mSessions.slice().reverse();
-    const allScores = chrono.map(displayScore);
 
-    const best = Math.min(...allScores);
+    const bestReflexes = chrono.map(bestReflex);
+    const avgScores = chrono.map(avgScore);
+
+    const bestReflexMs = Math.min(...bestReflexes);    // fastest individual round/hit ever
+    const bestAvgMs    = Math.min(...avgScores);       // lowest session-level avg ever
     const first = chrono[0];
     const latest = chrono[chrono.length - 1];
-    const firstScore = displayScore(first);
-    const latestScore = displayScore(latest);
 
-    // Trend on last 5 sessions
-    const last5 = chrono.slice(-5).map(displayScore);
+    // Trend on last 5 sessions — uses session-level avg (more stable than single-round best)
+    const last5 = chrono.slice(-5).map(avgScore);
     const trend = computeTrend(last5);
 
-    // Best day of week — by avg displayScore (lower is better)
+    // Best day of week — by avg-of-session-avgs (lower is better)
     const dayBuckets: number[][] = [[], [], [], [], [], [], []];
     const dayCounts = [0, 0, 0, 0, 0, 0, 0];
     for (const s of chrono) {
       const dow = new Date(s.date).getDay();
-      dayBuckets[dow].push(displayScore(s));
+      dayBuckets[dow].push(avgScore(s));
       dayCounts[dow] += 1;
     }
     let bestDayIdx = -1;
@@ -145,9 +141,10 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
     }
 
     return {
-      best,
-      firstScore,
-      latestScore,
+      bestReflexMs,
+      bestAvgMs,
+      firstAvg: avgScore(first),
+      latestAvg: avgScore(latest),
       trend,
       total: chrono.length,
       latestDate: latest.date,
@@ -158,7 +155,8 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
     };
   }, [mSessions]);
 
-  const lvl = data ? getLevelForMode(data.best, mode) : null;
+  // Level pill is anchored to the session-level avg (Média RT) — aligns with trend metric
+  const lvl = data ? getLevelForMode(data.bestAvgMs, mode) : null;
   const trendMeta = TREND_META[data?.trend ?? 'unknown'];
 
   return (
@@ -170,15 +168,23 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={[styles.modeName, { color: mc.accent }]}>{MODE_LABELS[mode].toUpperCase()}</Text>
           {data && lvl ? (
-            <View style={styles.modeHeaderRow}>
-              <Text style={[styles.modeBest, { color: lvl.color }]}>{data.best} ms</Text>
-              <View style={[styles.levelMini, { backgroundColor: lvl.bg }]}>
-                <Text style={[styles.levelMiniText, { color: lvl.color }]} numberOfLines={1}>{lvl.label}</Text>
+            <>
+              <View style={styles.modeHeaderRow}>
+                <Text style={[styles.modeBest, { color: lvl.color }]}>{data.bestAvgMs} ms</Text>
+                <Text style={styles.modeBestSub}>média</Text>
+                <Text style={styles.modeBestDot}>·</Text>
+                <Text style={[styles.modeBestSecondary, { color: mc.accent }]}>{data.bestReflexMs} ms</Text>
+                <Text style={styles.modeBestSub}>melhor</Text>
               </View>
-              <Text style={[styles.trendBadge, { color: trendMeta.color }]}>
-                {trendMeta.icon} {trendMeta.label}
-              </Text>
-            </View>
+              <View style={styles.modeHeaderRow}>
+                <View style={[styles.levelMini, { backgroundColor: lvl.bg }]}>
+                  <Text style={[styles.levelMiniText, { color: lvl.color }]} numberOfLines={1}>{lvl.label}</Text>
+                </View>
+                <Text style={[styles.trendBadge, { color: trendMeta.color }]}>
+                  {trendMeta.icon} {trendMeta.label}
+                </Text>
+              </View>
+            </>
           ) : (
             <Text style={styles.modeEmpty}>Nenhuma sessão registrada</Text>
           )}
@@ -189,18 +195,22 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
       {expanded && data && (
         <View style={styles.modeBody}>
           <View style={styles.modeRow}>
-            <Text style={styles.modeRowLabel}>Melhor de sempre</Text>
-            <Text style={[styles.modeRowValue, lvl && { color: lvl.color }]}>{data.best} ms</Text>
+            <Text style={styles.modeRowLabel}>Melhor Tempo Reflexo</Text>
+            <Text style={[styles.modeRowValue, { color: mc.accent }]}>{data.bestReflexMs} ms</Text>
+          </View>
+          <View style={styles.modeRow}>
+            <Text style={styles.modeRowLabel}>Média RT (melhor sessão)</Text>
+            <Text style={[styles.modeRowValue, lvl && { color: lvl.color }]}>{data.bestAvgMs} ms</Text>
           </View>
           <View style={styles.modeRow}>
             <Text style={styles.modeRowLabel}>Primeiro vs. atual</Text>
             <Text style={styles.modeRowValue}>
-              {data.firstScore} → <Text style={{ color: mc.accent }}>{data.latestScore} ms</Text>
+              {data.firstAvg} → <Text style={{ color: mc.accent }}>{data.latestAvg} ms</Text>
               <Text style={styles.modeRowSub}>{
-                data.firstScore > data.latestScore
-                  ? `  (-${data.firstScore - data.latestScore} ms)`
-                  : data.firstScore < data.latestScore
-                  ? `  (+${data.latestScore - data.firstScore} ms)`
+                data.firstAvg > data.latestAvg
+                  ? `  (-${data.firstAvg - data.latestAvg} ms)`
+                  : data.firstAvg < data.latestAvg
+                  ? `  (+${data.latestAvg - data.firstAvg} ms)`
                   : '  (=)'
               }</Text>
             </Text>
@@ -231,7 +241,9 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
               </Text>
             </View>
           )}
-          <Text style={styles.modeFootnote}>{MODE_SCORE_LABEL[mode]}</Text>
+          <Text style={styles.modeFootnote}>
+            Melhor reflexo = rodada/hit individual mais rápido. Média RT = score da melhor sessão (com penalidades quando aplicável).
+          </Text>
         </View>
       )}
     </View>
@@ -410,8 +422,11 @@ const styles = StyleSheet.create({
   },
   modeIconText: { fontSize: 20 },
   modeName: { fontSize: 12, fontWeight: '800', letterSpacing: 1.5 },
-  modeHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  modeHeaderRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
   modeBest: { fontSize: 17, fontWeight: '900', letterSpacing: -0.5 },
+  modeBestSecondary: { fontSize: 14, fontWeight: '800', letterSpacing: -0.3 },
+  modeBestSub: { fontSize: 10, color: '#4a5a7b', fontWeight: '600', letterSpacing: 0.5 },
+  modeBestDot: { fontSize: 12, color: '#2d3a55', marginHorizontal: 2 },
   levelMini: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
   levelMiniText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
   trendBadge: { fontSize: 11, fontWeight: '700' },
