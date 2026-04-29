@@ -8,6 +8,7 @@ import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { AVATARS } from '../config/avatars';
 import { calculateStreak, streakColor } from '../utils/streak';
+import { MAX_ENERGY_PER_MODE } from '../config/monetization';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -21,6 +22,12 @@ interface Props {
   userProfile: UserProfile;
   onGoToPerfil: () => void;
   scrollRef?: RefObject<ScrollView | null>;
+  /** Energia restante por modo (null = dados ainda carregando) */
+  energyCounts?: Record<ModeKey, number> | null;
+  /** true enquanto o período de graça de 3 dias estiver ativo */
+  inGrace?: boolean;
+  /** Timestamp de expiração da graça, para countdown (ms) */
+  graceExpiryMs?: number | null;
 }
 
 const MODE_INFO = [
@@ -57,6 +64,7 @@ const MODE_INFO = [
 export default function Home({
   onStartPartida, onStartAlvo, onStartSequencia, onStartRadar,
   sessions, bestByMode, userProfile, onGoToPerfil, scrollRef,
+  energyCounts = null, inGrace = false, graceExpiryMs = null,
 }: Props) {
   const bestAccByMode = useMemo(() => {
     const acc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
@@ -71,6 +79,14 @@ export default function Home({
   }, [sessions]);
 
   const streak = useMemo(() => calculateStreak(sessions), [sessions]);
+
+  // Tick a cada 60s para atualizar o countdown da graça no badge
+  const [graceTick, setGraceTick] = useState(0);
+  useEffect(() => {
+    if (!inGrace) return;
+    const id = setInterval(() => setGraceTick(t => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, [inGrace]);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -147,6 +163,24 @@ export default function Home({
           const mc = MODE_COLORS[m.key];
           const bestAcc = bestAccByMode[m.key];
 
+          // ── Badge de energia ──────────────────────────────────────────
+          const modeEnergy = energyCounts ? energyCounts[m.key] : null;
+          const noEnergy = !inGrace && modeEnergy !== null && modeEnergy <= 0;
+          let energyBadgeText: string | null = null;
+          let energyBadgeStyle: object = styles.energyBadgeOk;
+          if (inGrace && graceExpiryMs !== null) {
+            void graceTick; // força re-render quando tick muda
+            const msLeft = Math.max(0, graceExpiryMs - Date.now());
+            const h = Math.floor(msLeft / (60 * 60 * 1000));
+            const min = Math.floor((msLeft % (60 * 60 * 1000)) / 60_000);
+            const displayTime = h > 0 ? `${h}h` : min > 0 ? `${min}m` : '<1m';
+            energyBadgeText = `⚡ Grátis · expira em ${displayTime}`;
+            energyBadgeStyle = styles.energyBadgeGrace;
+          } else if (modeEnergy !== null) {
+            energyBadgeText = `⚡ ${modeEnergy}/${MAX_ENERGY_PER_MODE}`;
+            energyBadgeStyle = noEnergy ? styles.energyBadgeEmpty : styles.energyBadgeOk;
+          }
+
           return (
             <TouchableOpacity
               key={m.key}
@@ -182,18 +216,32 @@ export default function Home({
                         {(m.key === 'alvo' || m.key === 'radar') ? 'Melhor Tempo Reflexo' : 'Média RT'}
                       </Text>
                     </View>
-                    <View style={[styles.levelPill, { backgroundColor: lvl.bg }]}>
-                      <View style={[styles.levelDot, { backgroundColor: lvl.color }]} />
-                      <Text style={[styles.levelPillText, { color: lvl.color }]} numberOfLines={1}>
-                        {lvl.label}
-                      </Text>
+                    <View style={styles.modeBottomRight}>
+                      {energyBadgeText !== null && (
+                        <Text style={[styles.energyBadge, energyBadgeStyle]} numberOfLines={1}>
+                          {energyBadgeText}
+                        </Text>
+                      )}
+                      <View style={[styles.levelPill, { backgroundColor: lvl.bg }]}>
+                        <View style={[styles.levelDot, { backgroundColor: lvl.color }]} />
+                        <Text style={[styles.levelPillText, { color: lvl.color }]} numberOfLines={1}>
+                          {lvl.label}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 ) : (
                   <View style={styles.modeBottom}>
                     <Text style={styles.modeBestLabel}>Ainda não jogado</Text>
-                    <View style={[styles.newPill, { borderColor: mc.accent + '66' }]}>
-                      <Text style={[styles.newPillText, { color: mc.accent }]}>NOVO</Text>
+                    <View style={styles.modeBottomRight}>
+                      {energyBadgeText !== null && (
+                        <Text style={[styles.energyBadge, energyBadgeStyle]} numberOfLines={1}>
+                          {energyBadgeText}
+                        </Text>
+                      )}
+                      <View style={[styles.newPill, { borderColor: mc.accent + '66' }]}>
+                        <Text style={[styles.newPillText, { color: mc.accent }]}>NOVO</Text>
+                      </View>
                     </View>
                   </View>
                 )}
@@ -279,9 +327,12 @@ const styles = StyleSheet.create({
   modeDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginHorizontal: 14 },
   modeBottom: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 14, paddingVertical: 10,
+    paddingHorizontal: 14, paddingVertical: 10, gap: 8,
   },
-  modeBestLabel: { fontSize: 12, color: '#4a5a7b' },
+  modeBottomRight: {
+    flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0,
+  },
+  modeBestLabel: { fontSize: 12, color: '#4a5a7b', flexShrink: 1 },
   modeBestSubLabel: { fontSize: 9, color: '#3a4a6b', marginTop: 1 },
   modeBestMs: { fontWeight: '700' },
   modeBestAcc: { color: '#4a5a7b' },
@@ -297,6 +348,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 3,
   },
   newPillText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  // ── Badge de energia ─────────────────────────────────────────────────────
+  energyBadge: {
+    fontSize: 9, fontWeight: '700', letterSpacing: 0.5,
+    paddingHorizontal: 7, paddingVertical: 2,
+    borderRadius: 6, overflow: 'hidden',
+  },
+  energyBadgeGrace: {
+    color: '#10b981',
+    backgroundColor: 'rgba(16,185,129,0.12)',
+  },
+  energyBadgeOk: {
+    color: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,0.12)',
+  },
+  energyBadgeEmpty: {
+    color: '#ef4444',
+    backgroundColor: 'rgba(239,68,68,0.12)',
+  },
 
   insightStrip: {
     flexDirection: 'row', gap: 12, alignItems: 'flex-start',

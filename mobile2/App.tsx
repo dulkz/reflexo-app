@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Home from './screens/Home';
@@ -21,7 +20,13 @@ import {
   SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
   loadHasPlayedFirstGame, saveHasPlayedFirstGame,
   loadHasSeenTriagePrompt, saveHasSeenTriagePrompt,
+  clearUserData,
 } from './utils/storage';
+import {
+  EnergyData, loadEnergy, consumeEnergy, addEnergy,
+  ensureInstallDate, isInGracePeriod,
+} from './utils/energy';
+import SemEnergia from './screens/SemEnergia';
 import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
@@ -105,6 +110,12 @@ function AppInner() {
   const [radarResults, setRadarResults] = useState<RadarRound[]>([]);
   const [radarScore, setRadarScore] = useState(0);
 
+  // ── Sistema de energia ───────────────────────────────────────────────────────
+  const [energyData, setEnergyData] = useState<EnergyData | null>(null);
+  const [installDate, setInstallDate] = useState<number | null>(null);
+  // Qual modo está bloqueado por falta de energia (null = nenhum)
+  const [semEnergiaMode, setSemEnergiaMode] = useState<ModeKey | null>(null);
+
   // Set after first session so the next "go home" triggers triage
   const pendingTriage = useRef(false);
   // Prevent re-offering triage if dismissed in this app session
@@ -169,6 +180,8 @@ function AppInner() {
       loadOnboardingDone().then(done => { onboardingNeededRef.current = !done; }),
       loadHasPlayedFirstGame().then(v => { hasPlayedFirstGameRef.current = v; }),
       loadHasSeenTriagePrompt().then(v => { hasSeenTriagePromptRef.current = v; }),
+      loadEnergy().then(setEnergyData),
+      ensureInstallDate().then(setInstallDate),
       preloadSounds(),
     ]).then(() => {
       dataReadyRef.current = true;
@@ -286,6 +299,52 @@ function AppInner() {
     if (checkTriageIntercept(doNav)) return;
     doNav();
   }, [checkTriageIntercept]);
+
+  // ── Navegar para um modo com verificação de energia ─────────────────────────
+  //
+  // • Se em período de graça → pode jogar (sem consumir)
+  // • Se tem energia → consome 1 e navega
+  // • Se sem energia → exibe SemEnergia
+  // • Se dados de energia ainda não carregaram → navega direto (fallback seguro)
+  //
+  const tryStartMode = useCallback(async (mode: ModeKey) => {
+    // Dados ainda carregando — não acontece em interações normais do usuário
+    if (!energyData || installDate === null) {
+      setActiveTab('jogar');
+      setGameScreen(mode as GameScreen);
+      return;
+    }
+
+    const inGrace = isInGracePeriod(installDate);
+
+    if (inGrace || energyData.counts[mode] > 0) {
+      // Tem acesso — consome energia (exceto no período de graça)
+      if (!inGrace) {
+        const updated = await consumeEnergy(mode, energyData);
+        setEnergyData(updated);
+      }
+      setActiveTab('jogar');
+      setGameScreen(mode as GameScreen);
+    } else {
+      // Sem energia — abre tela de paywall
+      setSemEnergiaMode(mode);
+    }
+  }, [energyData, installDate]);
+
+  // Callback da SemEnergia quando o usuário compra energia:
+  // 1. energia já foi adicionada dentro de SemEnergia via addEnergy()
+  // 2. consome 1 energia para a sessão que vai começar
+  // 3. navega para o modo
+  const handleEnergyAdded = useCallback(async (updated: EnergyData) => {
+    const targetMode = semEnergiaMode;
+    if (!targetMode) return;
+
+    const afterConsume = await consumeEnergy(targetMode, updated);
+    setEnergyData(afterConsume);
+    setSemEnergiaMode(null);
+    setActiveTab('jogar');
+    setGameScreen(targetMode as GameScreen);
+  }, [semEnergiaMode]);
 
   // Open triage — editMode=true for "trocar meta", false for first-time "Definir Minha Meta"
   const openTriageForEdit = useCallback((editMode: boolean) => {
@@ -429,11 +488,14 @@ function AppInner() {
   }, []);
 
   const handleClearData = useCallback(async () => {
-    await AsyncStorage.clear();
+    // Usa clearUserData (não AsyncStorage.clear) para preservar
+    // reflexo_energy_v1 e reflexo_install_date_v1
+    await clearUserData();
     setSessions([]);
     setUserProfile(defaultUserProfile());
     setActiveTab('jogar');
     setGameScreen('home');
+    setSemEnergiaMode(null);
     setOnboardingVisible(true);
   }, []);
 
@@ -451,20 +513,41 @@ function AppInner() {
 
   // ── Render game screen ──────────────────────────────────────────────────────
 
+  // Energia disponível por modo (para badges na Home e no mode picker)
+  const inGrace = installDate !== null && isInGracePeriod(installDate);
+  const energyCounts: Record<ModeKey, number> | null = energyData
+    ? energyData.counts
+    : null;
+
   const renderGame = () => {
+    // SemEnergia sobrepõe qualquer gameScreen — tem prioridade de render
+    if (semEnergiaMode !== null && energyData) {
+      return (
+        <SemEnergia
+          mode={semEnergiaMode}
+          energyData={energyData}
+          onBack={() => setSemEnergiaMode(null)}
+          onEnergyAdded={handleEnergyAdded}
+        />
+      );
+    }
+
     switch (gameScreen) {
       case 'home':
         return (
           <Home
-            onStartPartida={() => setGameScreen('partida')}
-            onStartAlvo={() => setGameScreen('alvo')}
-            onStartSequencia={() => setGameScreen('sequencia')}
-            onStartRadar={() => setGameScreen('radar')}
+            onStartPartida={() => tryStartMode('partida')}
+            onStartAlvo={() => tryStartMode('alvo')}
+            onStartSequencia={() => tryStartMode('sequencia')}
+            onStartRadar={() => tryStartMode('radar')}
             sessions={sessions}
             bestByMode={bestByMode}
             userProfile={userProfile}
             onGoToPerfil={() => handleTabPress('perfil')}
             scrollRef={homeScrollRef}
+            energyCounts={energyCounts}
+            inGrace={inGrace}
+            graceExpiryMs={installDate !== null ? installDate + 3 * 24 * 60 * 60 * 1000 : null}
           />
         );
       case 'partida':
@@ -500,7 +583,7 @@ function AppInner() {
           <Resultado
             mode="partida"
             times={partidaTimes}
-            onPlayAgain={() => setGameScreen('partida')}
+            onPlayAgain={() => tryStartMode('partida')}
             onHome={goHome}
             sessions={sessions}
             userProfile={userProfile}
@@ -512,7 +595,7 @@ function AppInner() {
             mode="alvo"
             alvoResults={alvoResults}
             alvoScore={alvoScore}
-            onPlayAgain={() => setGameScreen('alvo')}
+            onPlayAgain={() => tryStartMode('alvo')}
             onHome={goHome}
             sessions={sessions}
             userProfile={userProfile}
@@ -523,7 +606,7 @@ function AppInner() {
           <Resultado
             mode="sequencia"
             seqSummary={seqSummary}
-            onPlayAgain={() => setGameScreen('sequencia')}
+            onPlayAgain={() => tryStartMode('sequencia')}
             onHome={goHome}
             sessions={sessions}
             userProfile={userProfile}
@@ -535,7 +618,7 @@ function AppInner() {
             mode="radar"
             radarResults={radarResults}
             radarScore={radarScore}
-            onPlayAgain={() => setGameScreen('radar')}
+            onPlayAgain={() => tryStartMode('radar')}
             onHome={goHome}
             sessions={sessions}
             userProfile={userProfile}
@@ -544,11 +627,13 @@ function AppInner() {
     }
   };
 
-  const inGame = gameScreen !== 'home'
+  const inGame = (
+    gameScreen !== 'home'
     && gameScreen !== 'resultado_partida'
     && gameScreen !== 'resultado_alvo'
     && gameScreen !== 'resultado_sequencia'
-    && gameScreen !== 'resultado_radar';
+    && gameScreen !== 'resultado_radar'
+  ) || semEnergiaMode !== null;
 
   return (
     <View style={styles.root}>
@@ -773,20 +858,27 @@ function AppInner() {
               </TouchableOpacity>
             </View>
             {([
-              { key: 'partida'   as ModeKey, name: 'PARTIDA',   desc: 'Reação simples · 7 tentativas',     icon: '🏎', target: 'partida'   as GameScreen },
-              { key: 'alvo'      as ModeKey, name: 'ALVO',      desc: '4 alvos · 10 rodadas · escolha',    icon: '🎯', target: 'alvo'      as GameScreen },
-              { key: 'sequencia' as ModeKey, name: 'SEQUÊNCIA', desc: '20 sinais Go/NoGo · inibição',      icon: '🧠', target: 'sequencia' as GameScreen },
-              { key: 'radar'     as ModeKey, name: 'RADAR',     desc: '5 círculos · localização visual',   icon: '📡', target: 'radar'     as GameScreen },
+              { key: 'partida'   as ModeKey, name: 'PARTIDA',   desc: 'Reação simples · 7 tentativas',     icon: '🏎' },
+              { key: 'alvo'      as ModeKey, name: 'ALVO',      desc: '4 alvos · 10 rodadas · escolha',    icon: '🎯' },
+              { key: 'sequencia' as ModeKey, name: 'SEQUÊNCIA', desc: '20 sinais Go/NoGo · inibição',      icon: '🧠' },
+              { key: 'radar'     as ModeKey, name: 'RADAR',     desc: '5 círculos · localização visual',   icon: '📡' },
             ]).map(m => {
               const mc = MODE_COLORS[m.key];
+              // Badge de energia para o mode picker
+              const modeEnergy = energyCounts ? energyCounts[m.key] : null;
+              const noEnergy = !inGrace && modeEnergy !== null && modeEnergy <= 0;
+              const energyLabel = inGrace
+                ? '⚡ Grátis'
+                : modeEnergy !== null
+                  ? `⚡ ${modeEnergy}/5`
+                  : null;
               return (
                 <TouchableOpacity
                   key={m.key}
                   style={[styles.modePickerCard, { borderColor: mc.accent + '66', backgroundColor: mc.bg }]}
                   onPress={() => {
                     setModePickerVisible(false);
-                    setActiveTab('jogar');
-                    setGameScreen(m.target);
+                    tryStartMode(m.key);
                   }}
                   activeOpacity={0.85}
                 >
@@ -795,6 +887,14 @@ function AppInner() {
                     <Text style={[styles.modePickerName, { color: mc.accent }]}>{m.name}</Text>
                     <Text style={styles.modePickerDesc}>{m.desc}</Text>
                   </View>
+                  {energyLabel !== null && (
+                    <Text style={[
+                      styles.modePickerEnergy,
+                      noEnergy ? styles.modePickerEnergyEmpty : styles.modePickerEnergyOk,
+                    ]}>
+                      {energyLabel}
+                    </Text>
+                  )}
                   <Text style={[styles.modePickerArrow, { color: mc.accent }]}>›</Text>
                 </TouchableOpacity>
               );
@@ -998,4 +1098,18 @@ const styles = StyleSheet.create({
   modePickerName: { fontSize: 14, fontWeight: '900', letterSpacing: 1.5 },
   modePickerDesc: { fontSize: 12, color: '#7a8aa0', marginTop: 2 },
   modePickerArrow: { fontSize: 24, fontWeight: '300' },
+  modePickerEnergy: {
+    fontSize: 10, fontWeight: '700', letterSpacing: 0.5,
+    paddingHorizontal: 7, paddingVertical: 3,
+    borderRadius: 6, overflow: 'hidden',
+    marginRight: 2,
+  },
+  modePickerEnergyOk: {
+    color: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,0.12)',
+  },
+  modePickerEnergyEmpty: {
+    color: '#ef4444',
+    backgroundColor: 'rgba(239,68,68,0.12)',
+  },
 });

@@ -170,6 +170,30 @@ export async function saveHasSeenTriagePrompt(value: boolean): Promise<void> {
   } catch (e) { console.error('[storage] error:', e); }
 }
 
+// ── clearUserData — remove todas as chaves do usuário, preserva energia ───────
+//
+// NÃO remove: reflexo_energy_v1 e reflexo_install_date_v1
+// (evita hack de energia infinita via "Limpar todos os dados")
+//
+const USER_DATA_KEYS = [
+  'reflexo_sessions_v1',
+  'reflexo_achievements_v1',
+  'reflexo_weekly_missions_v1',
+  'reflexo_daily_missions_v1',
+  'reflexo_onboarding_done_v1',
+  'reflexo_has_played_first_game_v1',
+  'reflexo_has_seen_triage_prompt_v1',
+  'reflexo_user_profile_v1',
+] as const;
+
+export async function clearUserData(): Promise<void> {
+  try {
+    await AsyncStorage.multiRemove([...USER_DATA_KEYS]);
+  } catch (e) {
+    console.error('[storage] clearUserData error:', e);
+  }
+}
+
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {
   const best: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
   for (const s of sessions) {
