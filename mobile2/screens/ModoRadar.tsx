@@ -210,10 +210,11 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
         <View style={styles.introContainer}>
           <Text style={styles.introTitle}>MODO RADAR</Text>
           <Text style={styles.introSub}>5 círculos em cruz · 15 rodadas</Text>
-          <View style={styles.instrBox}>
-            <Text style={styles.instrLine}>① Os 5 círculos ficam visíveis o tempo todo</Text>
-            <Text style={styles.instrLine}>② Um deles vai acender — toque nele rápido</Text>
-            <Text style={[styles.instrLine, { color: '#ef4444' }]}>③ Toque no errado: +{MISS_PENALTY} ms de penalidade</Text>
+          <View style={styles.howToCard}>
+            <Text style={styles.howToTitle}>Como jogar</Text>
+            <Text style={styles.howToText}>
+              Os 5 círculos ficam visíveis o tempo todo. Um deles vai acender — toque nele o mais rápido possível. Toque no errado: +{MISS_PENALTY}ms de penalidade na média.
+            </Text>
           </View>
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
             <Text style={styles.startBtnText}>INICIAR</Text>
@@ -411,11 +412,13 @@ const styles = StyleSheet.create({
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
   introTitle: { fontSize: 34, fontWeight: '900', color: RADAR_COLOR, letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
-  instrBox: {
-    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: 18, gap: 10, marginBottom: 28,
+  howToCard: {
+    backgroundColor: '#1a1a0f',
+    borderLeftWidth: 4, borderLeftColor: '#f59e0b',
+    borderRadius: 12, padding: 16, marginBottom: 28,
   },
-  instrLine: { fontSize: 14, color: '#7a8aa0', lineHeight: 20 },
+  howToTitle: { fontSize: 13, fontWeight: '700', color: '#f59e0b', letterSpacing: 0.5, marginBottom: 8 },
+  howToText: { fontSize: 14, color: '#cbd5e1', lineHeight: 20 },
   startBtn: { backgroundColor: RADAR_COLOR, borderRadius: 14, paddingVertical: 18, alignItems: 'center' },
   startBtnText: { fontSize: 16, fontWeight: '800', color: '#0b1220', letterSpacing: 2 },
 });
