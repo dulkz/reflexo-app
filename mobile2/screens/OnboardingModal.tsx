@@ -464,7 +464,7 @@ export default function OnboardingModal({ onComplete }: Props) {
           pointerEvents="none"
         >
           <Text style={[styles.swipeHintText, { color: hintColor }]}>
-            Deslize para continuar →
+            ← Deslize para avançar
           </Text>
         </Animated.View>
       )}
