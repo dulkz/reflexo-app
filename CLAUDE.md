@@ -677,3 +677,148 @@ Branch: `main`
 - Reformulação do gráfico/histórico (melhor score do dia, eixo X, seção de evolução por modo)
 - Card "Jornada Completa" → botão que sugere e ativa próxima meta automaticamente
 - Etapa 2 do Radar: missões, conquistas, Quadriatleta, `try_all_modes` contando 4 modos
+
+---
+
+### Sessão APK v10/v11 — Sprints 1+2+3: reorg de abas, fluxo de jogo, polish (2026-04-28)
+Branch: `main`
+
+#### Versão atual: APK v11 (próximo build)
+
+#### Sprint 1 — Penalidades, escalas, polish (commit `4506c95`)
+
+**Modo Sequência — penalidades expandidas:**
+- NoGo errado (commission): +400 ms (era +150 ms)
+- Timeout no Go (miss): +400 ms à média
+- Antecipação durante `'inter'`: +150 ms × ocorrências (mantido)
+- Os 3 cenários agora são distintos e visíveis no resultado
+
+**Linha do tempo (Histórico) — cores por modo:**
+- Cada série usa `MODE_COLORS[mode].accent`
+- Legenda só aparece no filtro Todos
+
+**Escalas próprias por modo (`utils/levels.ts`):**
+- `ALVO_LEVELS` (380/450/520/600/700/850/Inf — choice RT)
+- `SEQ_LEVELS` (220/270/320/380/450/550/Inf — Go/NoGo)
+- `RADAR_LEVELS` (250/300/350/400/500/600/Inf — localização)
+- `getLevelForMode(ms, mode)` faz dispatch
+- Resultados, Home e Histórico passam a usar a escala correta por modo
+
+**Modo Radar — 15 rodadas (era 7):**
+- `TOTAL_ROUNDS = 15` em `ModoRadar.tsx`
+- Mais sessões para extrair tendência confiável
+
+**Impossível/Super-Humano ocultos:**
+- `Resultado.tsx` (Partida): `if (lvl.maxMs <= 100 && !isUser) return null`
+- `Ciencia.tsx` (BENCHMARKS): cards SUPER-HUMANO/IMPOSSÍVEL escondidos a menos que `bestPartidaRt < 100`
+- Decisão: a maioria nunca alcança esses tiers; mostrar polui e confunde
+
+#### Sprint 2 — Fluxo de jogo (commit `097e011`)
+
+**Botão desistir com confirmação (4 modos):**
+- Helper `confirmAbort` em cada modo dispara `Alert.alert('Deseja desistir?', 'O progresso desta sessão não será salvo.', [Continuar jogando, Desistir destructive→onBack])`
+- Intro mantém `onBack` direto (sem confirmação) — comportamento desejado
+- ModoPartida: top bar overlay com `position:'absolute', zIndex: 20` para não ser interceptado pelo `Pressable absoluteFill`
+- ModoAlvo: back button na top bar row (linha com `RODADA X / Y`)
+- ModoSequencia: back button antes da progress bar
+- ModoRadar: troca onPress do botão DESISTIR existente para `confirmAbort`
+
+**READY antes da 1ª rodada (Modo Partida):**
+- State `showReady` ativado quando usuário clica `INICIAR` na intro
+- Overlay 64px / 900 / `#3b82f6` letterSpacing 6 por 1500 ms; `setTimeout` chama `setShowReady(false); startRound()`
+- Aparece só na 1ª rodada — rodadas seguintes seguem o fluxo `'ready' → 'waiting' → 'signal'` normal
+- Render condiciona conteúdo de gameplay e o `Pressable` de tap a `!showReady`
+
+**Botão "Jogar novamente" no topo do resultado:**
+- Componente `TopReplayButton` (pílula `borderRadius: 999` fundo `#111a2e`, texto `#cbd5e1` 12px/700, ícone `↻`)
+- Inserido após o `<View style={styles.hero}>...</View>` em PartidaResult, AlvoResult, SeqResult e RadarResult
+- Botão primário no fim do scroll permanece intacto
+
+**Conquistas DESBLOQUEADAS recolhível:**
+- `[Conquistas.tsx](mobile2/screens/Conquistas.tsx)` — header acordeão com chevron `▼/▶`, estado inicial `{ unlocked: true }`
+- Mesmo padrão visual das outras categorias de raridade (`accordionHeader/Label/Right/Count/Arrow`)
+- Cor laranja `#f59e0b` mantida
+
+**Avatar dentro de "Editar Perfil":**
+- Seção `MEU AVATAR` separada removida do scroll do Perfil (junto com state `avatarExpanded`)
+- Modal renomeado de "EDITAR NOME" → "EDITAR PERFIL" com 2 campos: NOME (TextInput) + AVATAR (grade completa de `AVATARS`)
+- `nameModalCard` ganhou `maxHeight: '85%'` + ScrollView interna para acomodar a grade
+- Tap em avatar persiste imediatamente (mesmo padrão de antes); botão SALVAR só persiste o nome
+- Cell `'initial'` agora usa `nameInput || userProfile.name` como letra (reflete edição em andamento)
+
+#### Sprint 3 — Reestruturação das abas (commit `2d9e294`)
+
+**Aba Conquistas → Jornada (🗺️):**
+- `Tab` type: `'conquistas'` → `'jornada'` em `App.tsx`
+- LEFT_TABS[0]: `{ key: 'jornada', label: 'Jornada', icon: '🗺️' }`
+- Nova tela [`Jornada.tsx`](mobile2/screens/Jornada.tsx) com 2 seções:
+  - **MINHA JORNADA**: ambition row + summary line (baseline/meta/marcos) + `<JourneyMap>` cheio com `showYouAreHere` + linha "Próximo: X · faltam Y ms" (CTA pre-triage se necessário)
+  - **MISSÕES**: card teal `OBJETIVO DO DIA` (diárias) + card roxo `MISSÃO DA SEMANA` (semanais)
+- `Conquistas.tsx` refatorado: exporta `ConquistasContent` (sem ScrollView/root próprios) para uso embutido; `<Conquistas>` default mantém wrapper standalone
+
+**Home limpa:**
+- Removido card `OBJETIVO DO DIA`, card `MISSÃO DA SEMANA`, motivCard fixed do rodapé inteiro (mensagem F1 / próximo marco / meta conquistada)
+- Removidos imports/states/computeds: `getAmbition`, `getNextMilestone`, `calculateDeltaToNextMilestone`, `getMilestonesState`, `getWeeklyMissions`, `getDailyMissions`, `weeklyMissions`, `dailyMissions`, `currentBestMs`, `f1Gap`, `motivData`
+- Mantido: header, streak, 4 mode cards, F1 insight strip, footer
+
+**Perfil clean:**
+- Removido bloco `OBJETIVOS DA SEMANA` (state `weeklyMissions` + import `getWeeklyMissions/WeeklyMission`)
+- Removido bloco `MINHA JORNADA` inteiro (CTA pre-triage + journey map + ambition row + import `JourneyMap`)
+- Mantido: identidade, arquétipo, EVOLUÇÃO chain, METAS DE LONGO PRAZO (próximo marco/conquista/arquétipo + CONCLUÍDAS recolhível), PARA VIRAR, POR MODO, ÚLTIMAS N SESSÕES bar chart, CONQUISTAS summary, ZONA DE PERIGO, modal Editar Perfil
+
+**Histórico — sessões fora, evolução por modo + conquistas:**
+- Removido: lista de cards de sessão, filtros de modo (FILTERS, `filter` state, modeCounts), `EvoChart` inteiro (~310 linhas SVG com Polyline/legenda/period pills/milestone line)
+- Adicionado: 4 cards expansíveis (`ModeStatsCard`) — um por modo
+  - **Recolhido:** ícone + nome + best ms + pílula de nível + trend badge (↑ melhorando / → estável / ↓ piorando, 3% threshold sobre últimas 5 sessões) + chevron
+  - **Expandido:** Melhor de sempre, Primeiro vs. atual (com delta), Total de sessões, Última sessão, Melhor dia da semana (menor avg), Dia mais jogado (count), footnote do tipo de score
+- Adicionado: seção `CONQUISTAS` no fim, embedando `<ConquistasContent showHeader={false} />`
+- `displayScore(s)` helper: alvo/radar usam `bestTime ?? score`, partida/seq usam `score` (consistente com Perfil POR MODO)
+- 4 summary cards do topo (Melhor Tempo Reflexo / Mais Jogado / Streak / Total) preservados
+
+#### Correções finais (commit `6e0e4a4`)
+
+**Swipe hint no onboarding:**
+- `OnboardingModal.tsx`: state `swipeAnim`, loop infinito 0↔1 (1.8s ciclo)
+- Texto "Deslize para continuar →" no rodapé (`position: 'absolute', bottom: 24`)
+- Visível apenas em telas 1–4 (`activeIndex < 4`); tela 5 já tem CTA `CONTINUAR`
+- Pulsa opacidade 0.45→0.85 + `translateX 0→6` para sugerir movimento
+- Cor muda por tela (`SCREEN_COLORS[activeIndex]` — cyan/blue/purple/amber/green)
+- `pointerEvents="none"` para não bloquear swipe da FlatList
+
+**Mode picker no FAB ⚡ (App.tsx):**
+- State `modePickerVisible` adicionado
+- FAB `onPress` ramifica: `if (activeTab === 'jogar' && gameScreen === 'home') setModePickerVisible(true) else handleTabPress('jogar')`
+- Bottom sheet (`Modal animationType="slide" transparent`):
+  - Overlay `rgba(0,0,0,0.7)` com `justifyContent: 'flex-end'`
+  - Sheet `#0f1729`, `borderTopLeftRadius: 24` / `borderTopRightRadius: 24`, handle bar 40×4
+  - Header: kicker "ESCOLHA UM MODO" + botão `✕`
+  - 4 cards (PARTIDA / ALVO / SEQUÊNCIA / RADAR) com nome em `MODE_COLORS[m.key].accent`, descrição curta, chevron `›`
+  - Tap em card: fecha modal + `setActiveTab('jogar')` + `setGameScreen(target)` (vai direto para o modo)
+  - Tap no overlay/✕/back: fecha sem ação; tap dentro do sheet absorvido por TouchableOpacity wrapper
+
+#### Decisões de design
+
+**Conquistas movidas de aba dedicada para fim do Histórico:**
+A aba dedicada de Conquistas competia com Jornada por espaço de navegação. Conquistas são "consequência" de jogar; Jornada é "para onde estou indo". Histórico já é o lar de "onde estive" — conquistas se encaixam semanticamente lá. Refatorando `ConquistasContent` em vez de duplicar, ambas as visões compartilham a mesma lógica.
+
+**Gráfico SVG → cards expansíveis:**
+O `EvoChart` mostrava 4 modos em escalas conflitantes; choice RT (alvo, ~400+ ms) e simple RT (partida/seq, ~200 ms) não comparavam bem na mesma série. Cards por modo dão a cada modo seu próprio espaço com escala correta, label correto, trend dedicado — mais informativo, menos ruído.
+
+**Trend baseado em últimas 5 sessões com threshold 3%:**
+3% é alto o suficiente para filtrar variação natural sessão-a-sessão (RT de uma pessoa varia ~2-3% por dia) e baixo o suficiente para captar melhora consistente em poucas sessões. Janela de 5 sessões equilibra responsividade (não exige mês para mostrar tendência) com estabilidade (não muda a cada sessão isolada).
+
+**FAB com comportamento contextual:**
+Antes, FAB sempre voltava para Home. Estando na Home, era no-op. Agora, na Home, FAB é "ataque rápido" — escolhe modo sem precisar rolar até o card. Em outras abas, mantém o comportamento de "voltar para Home" (esperado para botão de ação central).
+
+**Bottom sheet vs. fullscreen modal:**
+Bottom sheet preserva contexto visual (usuário ainda vê a Home atrás, sabe que pode fechar e estará no mesmo lugar). Fullscreen seria visualmente mais agressivo para uma escolha rápida de 4 opções.
+
+**Swipe hint só em telas 1–4 do onboarding:**
+Tela 5 tem CTA "CONTINUAR" próprio (botão grande verde). Mostrar "Deslize" lá seria redundante e contradiz a ação esperada (tap no botão).
+
+#### Pendências para próxima sessão
+- 3 modos de dificuldade (Fácil / Médio / Difícil) — futuro
+- Versão em inglês — futuro
+- Avaliar poluição visual após uso real do app reformulado (Sprints 2+3 enxugaram bastante; ver se ainda há excessos)
+- Ícones novos do Claude Design (substituir emojis nas tabs/conquistas/missões por ícones consistentes)
+- Build APK v11 com todas as mudanças desta sessão
