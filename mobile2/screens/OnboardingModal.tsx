@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   // Swipe hint
   swipeHint: {
     position: 'absolute',
-    left: 0, right: 0, bottom: 24,
+    left: 0, right: 0, top: 60,
     alignItems: 'center',
   },
   swipeHintText: {
