@@ -1,0 +1,14 @@
+export const ICONS = {
+  modes: {
+    partida: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/></svg>`,
+    alvo: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/><path d="M12 1.5v3"/><path d="M12 19.5v3"/><path d="M1.5 12h3"/><path d="M19.5 12h3"/></svg>`,
+    sequencia: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5" fill="#8b5cf6"/><circle cx="15" cy="12" r="5"/></svg>`,
+    radar: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><path d="M8.5 12a3.5 3.5 0 0 1 3.5-3.5"/><path d="M5 12a7 7 0 0 1 7-7"/><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/></svg>`,
+  },
+  nav: {
+    jornada: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="5.5" r="1.5"/><path d="M7 18C9.5 18 9.5 14 12 14s2.5 4 5 4"/><path d="M5.5 17C5.5 14.5 8.5 14.5 8.5 12s-3-2.5-3-5"/><path d="M17 5.5c-2.5 0-2.5 3-5 3s-2.5-3-5-3"/></svg>`,
+    ciencia: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.25"/><circle cx="6" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/><circle cx="12" cy="3.5" r="1.25"/><path d="M10.4 10.4L7 7"/><path d="M13.6 10.4L17 7"/><path d="M10.4 13.6L7 17"/><path d="M13.6 13.6L17 17"/><path d="M12 9.75V5"/></svg>`,
+    historico: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 4v15a1 1 0 0 0 1 1h16"/><path d="M7 16l4-5 3.5 3 5-7"/><path d="M17 7h2.5v2.5"/></svg>`,
+    perfil: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.5" r="3"/><path d="M5 21c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M12.8 16l-1.8 2.6h2l-1.4 2.4"/></svg>`,
+  },
+} as const;

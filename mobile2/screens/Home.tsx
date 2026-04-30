@@ -3,12 +3,14 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { AVATARS } from '../config/avatars';
 import { calculateStreak, streakColor } from '../utils/streak';
 import { MAX_ENERGY_PER_MODE } from '../config/monetization';
+import { ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -34,28 +36,28 @@ const MODE_INFO = [
   {
     key: 'partida' as ModeKey,
     name: 'MODO PARTIDA',
-    icon: '🏎',
+    icon: ICONS.modes.partida,
     desc: 'Reação simples visual · 7 tentativas',
     sub: 'Top 5 de 7 — descarta as 2 piores',
   },
   {
     key: 'alvo' as ModeKey,
     name: 'MODO ALVO',
-    icon: '🎯',
+    icon: ICONS.modes.alvo,
     desc: '4 alvos simultâneos · 10 rodadas',
     sub: 'Acerte o correto — penalidade por erro',
   },
   {
     key: 'sequencia' as ModeKey,
     name: 'MODO SEQUÊNCIA',
-    icon: '🧠',
+    icon: ICONS.modes.sequencia,
     desc: '20 sinais Go/NoGo · ~25% aleatório',
     sub: 'Mede fadiga cognitiva e controle inibitório',
   },
   {
     key: 'radar' as ModeKey,
     name: 'MODO RADAR',
-    icon: '📡',
+    icon: ICONS.modes.radar,
     desc: 'Localização visual · 15 rodadas',
     sub: '5 círculos em cruz — toque no que acender',
   },
@@ -192,7 +194,7 @@ export default function Home({
               <View style={styles.modeCardInner}>
 
                 <View style={styles.modeTop}>
-                  <Text style={styles.modeIcon}>{m.icon}</Text>
+                  <SvgXml xml={m.icon} width={28} height={28} />
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.modeName, { color: mc.accent }]}>{m.name}</Text>
                     <Text style={styles.modeDesc}>{m.desc}</Text>
@@ -320,7 +322,6 @@ const styles = StyleSheet.create({
   modeAccentBar: { width: 4 },
   modeCardInner: { flex: 1 },
   modeTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, paddingBottom: 12 },
-  modeIcon: { fontSize: 26 },
   modeName: { fontSize: 13, fontWeight: '800', letterSpacing: 1.5 },
   modeDesc: { fontSize: 12, color: '#4a5a7b', marginTop: 2 },
   modeArrow: { fontSize: 22, fontWeight: '300', marginRight: 2 },

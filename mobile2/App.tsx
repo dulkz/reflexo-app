@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Home from './screens/Home';
@@ -33,6 +34,7 @@ import { getAmbition } from './utils/ambition';
 import { preloadSounds, playSfx } from './utils/sfx';
 import { ACHIEVEMENTS, Achievement, RARITY_CONFIG, RarityKey } from './config/achievements';
 import { buildUserStats } from './config/archetypes';
+import { ICONS } from './assets/icons';
 
 const RARITY_PRIORITY: Record<RarityKey, number> = {
   lendario: 6, epico: 5, raro: 4, dificil: 3, medio: 2, comum: 1,
@@ -68,12 +70,12 @@ const FAB_SIZE      = 70;
 const TAB_BAR_HEIGHT = 52;
 
 const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
-  { key: 'jornada', label: 'Jornada', icon: '🗺️' },
-  { key: 'ciencia',    label: 'Ciência',    icon: '🧠' },
+  { key: 'jornada',  label: 'Jornada',   icon: ICONS.nav.jornada },
+  { key: 'ciencia',  label: 'Ciência',   icon: ICONS.nav.ciencia },
 ];
 const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'historico', label: 'Histórico', icon: '📈' },
-  { key: 'perfil',    label: 'Perfil',    icon: '👤' },
+  { key: 'historico', label: 'Histórico', icon: ICONS.nav.historico },
+  { key: 'perfil',    label: 'Perfil',    icon: ICONS.nav.perfil },
 ];
 
 export default function App() {
@@ -678,7 +680,7 @@ function AppInner() {
                   activeOpacity={0.7}
                 >
                   <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                    <Text style={styles.tabIcon}>{t.icon}</Text>
+                    <SvgXml xml={t.icon.replace(/#FFFFFF/g, active ? '#3b82f6' : '#FFFFFF')} width={24} height={24} />
                     <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
                   </View>
                 </TouchableOpacity>
@@ -698,7 +700,7 @@ function AppInner() {
                   activeOpacity={0.7}
                 >
                   <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                    <Text style={styles.tabIcon}>{t.icon}</Text>
+                    <SvgXml xml={t.icon.replace(/#FFFFFF/g, active ? '#3b82f6' : '#FFFFFF')} width={24} height={24} />
                     <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
                   </View>
                 </TouchableOpacity>
@@ -964,7 +966,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(59,130,246,0.15)',
     borderColor: 'rgba(59,130,246,0.3)',
   },
-  tabIcon: { fontSize: 26 },
   tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
   tabLabelActive: { color: '#3b82f6' },
   fabContainer: {
