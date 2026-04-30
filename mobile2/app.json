@@ -19,7 +19,7 @@
       "package": "com.dulks.reflexo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0A0F1E"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
