@@ -822,3 +822,15 @@ Tela 5 tem CTA "CONTINUAR" próprio (botão grande verde). Mostrar "Deslize" lá
 - Avaliar poluição visual após uso real do app reformulado (Sprints 2+3 enxugaram bastante; ver se ainda há excessos)
 - Ícones novos do Claude Design (substituir emojis nas tabs/conquistas/missões por ícones consistentes)
 - Build APK v11 com todas as mudanças desta sessão
+
+---
+
+### Sessão Ícones (2026-04-30)
+Branch: `main`
+
+- SVGs exportados do Claude Design para `mobile2/assets/logo/` (app-icon, mark-amber, mark-blue, mark-mono)
+- `app-icon.svg` convertido para PNG 1024×1024 via sharp (uso local, não commitado no package.json)
+- `assets/icon.png` e `assets/adaptive-icon.png` atualizados com o novo ícone oficial
+- `app.json`: `adaptiveIcon.backgroundColor` corrigido `#ffffff` → `#0A0F1E` (alinha com fundo do SVG)
+- Commit: `44969d4`
+- Próximo: ícones de navegação nas tabs (substituir emojis por SVGs de `assets/logo/../icons/nav/`)
