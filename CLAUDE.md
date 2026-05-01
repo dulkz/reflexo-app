@@ -834,3 +834,26 @@ Branch: `main`
 - `app.json`: `adaptiveIcon.backgroundColor` corrigido `#ffffff` → `#0A0F1E` (alinha com fundo do SVG)
 - Commit: `44969d4`
 - Próximo: ícones de navegação nas tabs (substituir emojis por SVGs de `assets/logo/../icons/nav/`)
+
+---
+
+### Sessão Assets (2026-05-01)
+Branch: `main`
+
+#### Ícones e splash atualizados
+
+**app-icon.svg → PNG (commit `44969d4`):**
+- `app-icon.svg` copiado para `mobile2/assets/logo/` junto com mark-amber, mark-blue, mark-mono
+- Convertido para `assets/icon.png` 1024×1024 via sharp (uso local)
+- `assets/adaptive-icon.png` gerado com mesmo SVG
+- `app.json`: `adaptiveIcon.backgroundColor` `#ffffff` → `#0A0F1E`
+
+**Splash screen (commit `724aa91`):**
+- `assets/splash-icon.png` regenerado: 1284×2778, ícone 400×400 centralizado sobre fundo `#0A0F1E`
+- `app.json`: `splash.backgroundColor` `#ffffff` → `#0A0F1E`
+
+**Ícones de navegação nas tabs:**
+- Verificado: tabs já usam `SvgXml` com SVGs inline em `assets/icons.ts` — idênticos aos exportados pelo Claude Design
+- Nenhuma alteração necessária
+
+**Próximo:** FAB — substituir emoji ⚡ pelo mark SVG do Reflexo (mark-blue.svg); avaliar cor do traço (azul vs âmbar)
