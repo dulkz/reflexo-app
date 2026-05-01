@@ -123,11 +123,14 @@ export default function Home({
           <Text style={styles.greeting}>Olá, {userProfile.name || 'Atleta'}</Text>
         </View>
         <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
-          <Text style={styles.avatarLetter}>
-            {(userProfile.selectedAvatar ?? 'initial') !== 'initial'
-              ? (AVATARS.find(a => a.id === userProfile.selectedAvatar)?.icon ?? (userProfile.name || 'Atleta')[0].toUpperCase())
-              : (userProfile.name || 'Atleta')[0].toUpperCase()}
-          </Text>
+          {(() => {
+            const av = (userProfile.selectedAvatar ?? 'initial') !== 'initial'
+              ? AVATARS.find(a => a.id === userProfile.selectedAvatar)
+              : null;
+            return av?.icon
+              ? <SvgXml xml={av.icon} width={42} height={42} />
+              : <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>;
+          })()}
         </TouchableOpacity>
       </View>
 

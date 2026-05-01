@@ -3,9 +3,11 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
+import { ICONS } from '../assets/icons';
 import { ConquistasContent } from './Conquistas';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -24,10 +26,10 @@ const MODE_LABELS: Record<ModeKey, string> = {
 };
 
 const MODE_ICONS: Record<ModeKey, string> = {
-  partida:  '🏁',
-  alvo:     '🎯',
-  sequencia:'📊',
-  radar:    '📡',
+  partida:   ICONS.modes.partida,
+  alvo:      ICONS.modes.alvo,
+  sequencia: ICONS.modes.sequencia,
+  radar:     ICONS.modes.radar,
 };
 
 function dayStart(ts: number): number {
@@ -163,7 +165,7 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
     <View style={[styles.modeCard, { borderColor: mc.accent + '33' }]}>
       <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.modeCardHeader}>
         <View style={[styles.modeIconBox, { backgroundColor: mc.accent + '22' }]}>
-          <Text style={styles.modeIconText}>{MODE_ICONS[mode]}</Text>
+          <SvgXml xml={MODE_ICONS[mode]} width={24} height={24} />
         </View>
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={[styles.modeName, { color: mc.accent }]}>{MODE_LABELS[mode].toUpperCase()}</Text>

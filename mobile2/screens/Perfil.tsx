@@ -4,7 +4,9 @@ import {
   Platform, StatusBar as RNStatusBar, TouchableOpacity, Alert,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
+import { SvgXml } from 'react-native-svg';
 import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
+import { ICONS } from '../assets/icons';
 import { SessionRecord, loadUnlockedAchievements } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
@@ -107,10 +109,10 @@ function computeStreak(sessions: SessionRecord[]): number {
 // ── Mode card data ───────────────────────────────────────────────────────────
 
 const MODE_META: Record<ModeKey, { name: string; icon: string; sub: string }> = {
-  partida: { name: 'MODO PARTIDA', icon: '🏎', sub: 'Reação simples visual' },
-  alvo:    { name: 'MODO ALVO',    icon: '🎯', sub: 'Velocidade + precisão' },
-  sequencia: { name: 'MODO SEQUÊNCIA', icon: '🧠', sub: 'Controle inibitório' },
-  radar:   { name: 'MODO RADAR',   icon: '📡', sub: 'Localização visual' },
+  partida:   { name: 'MODO PARTIDA',   icon: ICONS.modes.partida,   sub: 'Reação simples visual' },
+  alvo:      { name: 'MODO ALVO',      icon: ICONS.modes.alvo,      sub: 'Velocidade + precisão' },
+  sequencia: { name: 'MODO SEQUÊNCIA', icon: ICONS.modes.sequencia, sub: 'Controle inibitório' },
+  radar:     { name: 'MODO RADAR',     icon: ICONS.modes.radar,     sub: 'Localização visual' },
 };
 
 // ── Bar chart ────────────────────────────────────────────────────────────────
@@ -364,13 +366,13 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {/* ── Identity block ── */}
         <View style={styles.identityBlock}>
           {userProfile.selectedAvatar && userProfile.selectedAvatar !== 'initial'
-            ? (
-              <View style={styles.emojiAvatarLarge}>
-                <Text style={styles.emojiAvatarLargeText}>
-                  {AVATARS.find(a => a.id === userProfile.selectedAvatar)?.icon ?? (userProfile.name || 'U')[0].toUpperCase()}
-                </Text>
-              </View>
-            ) : (
+            ? (() => {
+                const av = AVATARS.find(a => a.id === userProfile.selectedAvatar);
+                return av?.icon
+                  ? <SvgXml xml={av.icon} width={72} height={72} style={{ borderRadius: 36 }} />
+                  : <GradientAvatar size={72} letter={(userProfile.name || 'Usuário')[0].toUpperCase()} />;
+              })()
+            : (
               <GradientAvatar size={72} letter={(userProfile.name || 'Usuário')[0].toUpperCase()} />
             )
           }
@@ -676,7 +678,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           return (
             <View key={m.key} style={styles.modeCard}>
               <View style={[styles.modeIconBox, { backgroundColor: mc.accent + '2a' }]}>
-                <Text style={styles.modeIconText}>{meta.icon}</Text>
+                <SvgXml xml={meta.icon} width={28} height={28} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={[styles.modeName, { color: mc.accent }]}>{meta.name}</Text>
@@ -813,7 +815,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                           ? <Text style={styles.avatarCellLock}>🔒</Text>
                           : avIsInitial
                             ? <Text style={styles.avatarCellLetter}>{(nameInput || userProfile.name || 'U')[0].toUpperCase()}</Text>
-                            : <Text style={styles.avatarCellEmoji}>{av.icon}</Text>;
+                            : <SvgXml xml={av.icon!} width={56} height={56} />;
                         return (
                           <View key={av.id} style={styles.avatarItemWrap}>
                             <TouchableOpacity

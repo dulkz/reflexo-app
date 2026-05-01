@@ -724,7 +724,7 @@ function AppInner() {
               }}
               activeOpacity={0.85}
             >
-              <Text style={styles.fabIcon}>⚡</Text>
+              <SvgXml xml={ICONS.mark} width={28} height={28} />
             </TouchableOpacity>
           </View>
         </>
@@ -865,10 +865,10 @@ function AppInner() {
               </TouchableOpacity>
             </View>
             {([
-              { key: 'partida'   as ModeKey, name: 'PARTIDA',   desc: 'Reação simples · 7 tentativas',     icon: '🏎' },
-              { key: 'alvo'      as ModeKey, name: 'ALVO',      desc: '4 alvos · 10 rodadas · escolha',    icon: '🎯' },
-              { key: 'sequencia' as ModeKey, name: 'SEQUÊNCIA', desc: '20 sinais Go/NoGo · inibição',      icon: '🧠' },
-              { key: 'radar'     as ModeKey, name: 'RADAR',     desc: '5 círculos · localização visual',   icon: '📡' },
+              { key: 'partida'   as ModeKey, name: 'PARTIDA',   desc: 'Reação simples · 7 tentativas',     icon: ICONS.modes.partida },
+              { key: 'alvo'      as ModeKey, name: 'ALVO',      desc: '4 alvos · 10 rodadas · escolha',    icon: ICONS.modes.alvo },
+              { key: 'sequencia' as ModeKey, name: 'SEQUÊNCIA', desc: '20 sinais Go/NoGo · inibição',      icon: ICONS.modes.sequencia },
+              { key: 'radar'     as ModeKey, name: 'RADAR',     desc: '5 círculos · localização visual',   icon: ICONS.modes.radar },
             ]).map(m => {
               const mc = MODE_COLORS[m.key];
               // Badge de energia para o mode picker
@@ -889,7 +889,7 @@ function AppInner() {
                   }}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.modePickerIcon}>{m.icon}</Text>
+                  <SvgXml xml={m.icon} width={28} height={28} />
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.modePickerName, { color: mc.accent }]}>{m.name}</Text>
                     <Text style={styles.modePickerDesc}>{m.desc}</Text>
@@ -981,7 +981,7 @@ const styles = StyleSheet.create({
     borderRadius: FAB_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#5b4fcf',
+    backgroundColor: '#f59e0b',
     borderWidth: 2.5,
     borderColor: 'rgba(255,255,255,0.3)',
     elevation: 0,
