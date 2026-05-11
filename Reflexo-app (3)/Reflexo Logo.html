@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Reflexo — Logo</title>
+<style>
+  :root {
+    --bg: #0A0F1E;
+    --bg-card: #111729;
+    --bg-light: #f5f5f0;
+    --line: rgba(255,255,255,0.08);
+    --fg: #ffffff;
+    --fg-dim: rgba(255,255,255,0.6);
+    --fg-mute: rgba(255,255,255,0.4);
+    --blue: #3b82f6;
+    --amber: #f59e0b;
+    --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  body { padding: 64px 48px 96px; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+
+  header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding-bottom: 28px; border-bottom: 1px solid var(--line); margin-bottom: 56px;
+  }
+  h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+  h1 span { color: var(--fg-mute); font-weight: 400; margin-left: 8px; }
+  .meta {
+    font-family: var(--mono); font-size: 11px; color: var(--fg-mute);
+    text-align: right; line-height: 1.7;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  .section-title {
+    display: flex; align-items: baseline; gap: 14px;
+    margin-bottom: 24px; margin-top: 64px;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+  .section-title h2 {
+    font-size: 13px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-dim);
+  }
+  .section-title .num {
+    font-family: var(--mono); font-size: 11px; color: var(--fg-mute);
+  }
+  .section-title .rule { flex: 1; height: 1px; background: var(--line); }
+
+  /* WORDMARK */
+  .wordmark {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+  .wordmark .R {
+    position: relative;
+    display: inline-block;
+  }
+  .wordmark .R::after {
+    content: "";
+    position: absolute;
+    right: -0.04em;
+    top: 0.18em;
+    width: 0.2em;
+    height: 3px;
+    background: currentColor;
+    transform: rotate(-45deg);
+    transform-origin: right center;
+    border-radius: 1px;
+  }
+  .wordmark .X {
+    color: var(--accent, currentColor);
+  }
+
+  /* MARK GRID */
+  .mark-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .mark-cell {
+    background: var(--bg-card);
+    padding: 56px 32px 32px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .mark-cell svg { width: 140px; height: 140px; margin-bottom: 28px; }
+  .mark-label {
+    font-family: var(--mono); font-size: 10px; color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .mark-name { font-size: 14px; font-weight: 500; }
+
+  /* HORIZONTAL */
+  .lockup-row {
+    display: grid; grid-template-columns: 1fr; gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .lockup-cell {
+    background: var(--bg-card);
+    padding: 48px 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 32px;
+  }
+  .lockup-cell.light { background: var(--bg-light); color: #0A0F1E; }
+  .lockup-cell .lockup-info {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    text-align: right;
+    line-height: 1.7;
+  }
+  .lockup-cell.light .lockup-info { color: rgba(10,15,30,0.5); }
+
+  .horiz {
+    display: flex; align-items: center; gap: 20px;
+  }
+  .horiz svg { width: 64px; height: 64px; }
+  .horiz .wm { font-size: 56px; }
+
+  /* STACKED */
+  .stack-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .stack-cell {
+    background: var(--bg-card);
+    padding: 56px 32px 40px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 20px;
+  }
+  .stack-cell.light { background: var(--bg-light); color: #0A0F1E; }
+  .stack-cell svg { width: 96px; height: 96px; }
+  .stack-cell .wm { font-size: 36px; }
+  .stack-tag {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.18em;
+    margin-top: 2px;
+  }
+  .stack-cell.light .stack-tag { color: rgba(10,15,30,0.5); }
+
+  /* APPLICATIONS */
+  .app-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 16px;
+  }
+  .app-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 32px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 260px;
+    gap: 18px;
+  }
+  .app-label {
+    font-family: var(--mono); font-size: 10px; color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-top: auto; align-self: flex-start;
+  }
+  .app-icon {
+    width: 88px; height: 88px;
+    background: var(--bg);
+    border-radius: 22px;
+    display: grid; place-items: center;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  }
+  .app-icon svg { width: 56px; height: 56px; }
+  .app-splash {
+    flex: 1;
+    width: 100%;
+    background: var(--bg);
+    border-radius: 4px;
+    display: grid; place-items: center;
+    padding: 32px;
+  }
+
+  footer {
+    margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px; color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Reflexo<span>logo system</span></h1>
+    <div class="meta">
+      mark · wordmark · lockups<br>
+      mono · blue · amber
+    </div>
+  </header>
+
+  <!-- 01 — MARK -->
+  <div class="section-title">
+    <span class="num">01</span>
+    <h2>Mark</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="mark-row">
+    <div class="mark-cell">
+      <svg viewBox="0 0 120 120" fill="none">
+        <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+        <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+        <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+        <path d="M82 38l-10 12" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div class="mark-label">mono</div>
+      <div class="mark-name">Reflexo Mark</div>
+    </div>
+    <div class="mark-cell">
+      <svg viewBox="0 0 120 120" fill="none">
+        <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+        <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+        <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+        <path d="M82 38l-10 12" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div class="mark-label">blue accent</div>
+      <div class="mark-name">#3B82F6</div>
+    </div>
+    <div class="mark-cell">
+      <svg viewBox="0 0 120 120" fill="none">
+        <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+        <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+        <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+        <path d="M82 38l-10 12" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div class="mark-label">amber accent</div>
+      <div class="mark-name">#F59E0B</div>
+    </div>
+  </div>
+
+  <!-- 02 — HORIZONTAL LOCKUP -->
+  <div class="section-title">
+    <span class="num">02</span>
+    <h2>Horizontal Lockup</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="lockup-row">
+
+    <div class="lockup-cell">
+      <div class="horiz">
+        <svg viewBox="0 0 120 120" fill="none">
+          <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+          <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+          <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+          <path d="M82 38l-10 12" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark wm" style="color:#FFFFFF;"><span class="R">R</span>EFLE<span class="X">X</span>O</div>
+      </div>
+      <div class="lockup-info">v1 · monochrome<br>white on dark</div>
+    </div>
+
+    <div class="lockup-cell">
+      <div class="horiz">
+        <svg viewBox="0 0 120 120" fill="none">
+          <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+          <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+          <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+          <path d="M82 38l-10 12" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark wm" style="color:#FFFFFF; --accent:#3b82f6;"><span class="R">R</span>EFLE<span class="X">X</span>O</div>
+      </div>
+      <div class="lockup-info">v2 · blue accent<br>X = #3B82F6</div>
+    </div>
+
+    <div class="lockup-cell">
+      <div class="horiz">
+        <svg viewBox="0 0 120 120" fill="none">
+          <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+          <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+          <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+          <path d="M82 38l-10 12" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark wm" style="color:#FFFFFF; --accent:#f59e0b;"><span class="R">R</span>EFLE<span class="X">X</span>O</div>
+      </div>
+      <div class="lockup-info">v3 · amber accent<br>X = #F59E0B</div>
+    </div>
+
+    <div class="lockup-cell light">
+      <div class="horiz">
+        <svg viewBox="0 0 120 120" fill="none">
+          <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#0A0F1E" stroke-width="5" stroke-linecap="square"/>
+          <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#0A0F1E" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+          <path d="M50 40v40" stroke="#0A0F1E" stroke-width="9" stroke-linecap="square"/>
+          <path d="M82 38l-10 12" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark wm" style="color:#0A0F1E; --accent:#3b82f6;"><span class="R">R</span>EFLE<span class="X">X</span>O</div>
+      </div>
+      <div class="lockup-info" style="color:rgba(10,15,30,0.5);">v4 · inverted<br>dark on light</div>
+    </div>
+
+  </div>
+
+  <!-- 03 — STACKED LOCKUP -->
+  <div class="section-title">
+    <span class="num">03</span>
+    <h2>Stacked Lockup</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="stack-row">
+
+    <div class="stack-cell">
+      <svg viewBox="0 0 120 120" fill="none">
+        <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+        <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+        <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+        <path d="M82 38l-10 12" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div class="wordmark wm" style="color:#FFFFFF;"><span class="R">R</span>EFLE<span class="X">X</span>O</div>
+      <div class="stack-tag">reaction trainer</div>
+    </div>
+
+    <div class="stack-cell">
+      <svg viewBox="0 0 120 120" fill="none">
+        <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+        <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+        <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+        <path d="M82 38l-10 12" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div class="wordmark wm" style="color:#FFFFFF; --accent:#3b82f6;"><span class="R">R</span>EFLE<span class="X">X</span>O</div>
+      <div class="stack-tag" style="color:#3b82f6;">reaction trainer</div>
+    </div>
+
+    <div class="stack-cell">
+      <svg viewBox="0 0 120 120" fill="none">
+        <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+        <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+        <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+        <path d="M82 38l-10 12" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div class="wordmark wm" style="color:#FFFFFF; --accent:#f59e0b;"><span class="R">R</span>EFLE<span class="X">X</span>O</div>
+      <div class="stack-tag" style="color:#f59e0b;">reaction trainer</div>
+    </div>
+
+  </div>
+
+  <!-- 04 — APPLICATIONS -->
+  <div class="section-title">
+    <span class="num">04</span>
+    <h2>In Use</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="app-row">
+
+    <div class="app-card">
+      <div class="app-splash">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+          <svg viewBox="0 0 120 120" fill="none" style="width:72px; height:72px;">
+            <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+            <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+            <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+            <path d="M82 38l-10 12" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+          <div class="wordmark" style="font-size:28px; color:#FFFFFF; --accent:#3b82f6;"><span class="R">R</span>EFLE<span class="X">X</span>O</div>
+        </div>
+      </div>
+      <div class="app-label">splash screen</div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-icon">
+        <svg viewBox="0 0 120 120" fill="none">
+          <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+          <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+          <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+          <path d="M82 38l-10 12" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="app-label">app icon · iOS</div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-icon" style="border-radius:50%;">
+        <svg viewBox="0 0 120 120" fill="none">
+          <path d="M22 30V22h8M98 30V22h-8M22 90v8h8M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/>
+          <path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/>
+          <path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/>
+          <path d="M82 38l-10 12" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="app-label">app icon · Android</div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>Reflexo · Logo System</span>
+    <span>SVGs in /logo/</span>
+  </footer>
+
+</div>
+</body>
+</html>
