@@ -369,7 +369,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             ? (() => {
                 const av = AVATARS.find(a => a.id === userProfile.selectedAvatar);
                 return av?.icon
-                  ? <SvgXml xml={av.icon} width={72} height={72} style={{ borderRadius: 36 }} />
+                  ? <SvgXml xml={av.icon} width={72} height={72} />
                   : <GradientAvatar size={72} letter={(userProfile.name || 'Usuário')[0].toUpperCase()} />;
               })()
             : (

@@ -724,7 +724,7 @@ function AppInner() {
               }}
               activeOpacity={0.85}
             >
-              <SvgXml xml={ICONS.mark} width={28} height={28} />
+              <SvgXml xml={ICONS.mark} width={36} height={36} />
             </TouchableOpacity>
           </View>
         </>
