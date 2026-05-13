@@ -10,9 +10,19 @@ import { UserProfile } from '../types/user';
 import { AVATARS } from '../config/avatars';
 import { calculateStreak, streakColor } from '../utils/streak';
 import { MAX_ENERGY_PER_MODE } from '../config/monetization';
-import { ICONS } from '../assets/icons';
+import { ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
+
+function getStreakSvg(days: number): string {
+  if (days >= 30) return ACHIEVEMENT_ICONS.streak60;
+  const color =
+    days < 4  ? '#6b7280' :
+    days < 7  ? '#3b82f6' :
+    days < 10 ? '#8b5cf6' :
+                '#f59e0b';
+  return ACHIEVEMENT_ICONS.streak5.replace('#3b82f6', color);
+}
 
 interface Props {
   onStartPartida: () => void;
@@ -143,7 +153,7 @@ export default function Home({
         {/* ── Streak block ── */}
         {streak.current >= 1 && (
           <View style={styles.streakCard}>
-            <Text style={styles.streakFire}>🔥</Text>
+            <SvgXml xml={getStreakSvg(streak.current)} width={22} height={22} />
             <Text style={[styles.streakNumber, { color: streakColor(streak.current) }]}>
               {streak.current}
             </Text>
@@ -257,7 +267,7 @@ export default function Home({
 
         {/* F1 insight strip */}
         <View style={styles.insightStrip}>
-          <Text style={styles.insightIcon}>🏁</Text>
+          <SvgXml xml={ACHIEVEMENT_ICONS.piloto} width={22} height={22} />
           <View style={{ flex: 1 }}>
             <Text style={styles.insightTitle}>Benchmark F1</Text>
             <Text style={styles.insightBody}>

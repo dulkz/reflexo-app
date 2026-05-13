@@ -3,6 +3,8 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { ARCHETYPE_ICONS, ACHIEVEMENT_ICONS, MISSION_ICONS } from '../../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -26,18 +28,21 @@ export default function TriageIntro({ onNext, onDismiss }: Props) {
       {/* Content */}
       <View style={styles.body}>
         <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>⚡</Text>
+          <SvgXml xml={ARCHETYPE_ICONS.VELOCISTA} width={56} height={56} />
         </View>
 
         <View style={styles.chipsRow}>
           <View style={styles.chipSport}>
-            <Text style={styles.chipTextSport}>⚡ 150ms F1</Text>
+            <SvgXml xml={ARCHETYPE_ICONS.VELOCISTA} width={16} height={16} />
+            <Text style={styles.chipTextSport}>150ms F1</Text>
           </View>
           <View style={styles.chipBrain}>
-            <Text style={styles.chipTextBrain}>🧠 +40% atenção</Text>
+            <SvgXml xml={ACHIEVEMENT_ICONS.semfadiga} width={16} height={16} />
+            <Text style={styles.chipTextBrain}>+40% atenção</Text>
           </View>
           <View style={styles.chipFit}>
-            <Text style={styles.chipTextFit}>💪 Treinável</Text>
+            <SvgXml xml={MISSION_ICONS.muscle} width={16} height={16} />
+            <Text style={styles.chipTextFit}>Treinável</Text>
           </View>
         </View>
 
@@ -75,25 +80,27 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(91,79,207,0.2)',
     alignItems: 'center', justifyContent: 'center',
   },
-  iconText: { fontSize: 72 },
 
   chipsRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' },
   chipSport: {
     backgroundColor: 'rgba(91,79,207,0.15)', borderWidth: 1,
     borderColor: 'rgba(91,79,207,0.5)', borderRadius: 20,
     paddingHorizontal: 10, paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
   },
   chipTextSport: { fontSize: 11, fontWeight: '700', color: '#8b5cf6' },
   chipBrain: {
     backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1,
     borderColor: 'rgba(16,185,129,0.5)', borderRadius: 20,
     paddingHorizontal: 10, paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
   },
   chipTextBrain: { fontSize: 11, fontWeight: '700', color: '#10b981' },
   chipFit: {
     backgroundColor: 'rgba(59,130,246,0.15)', borderWidth: 1,
     borderColor: 'rgba(59,130,246,0.5)', borderRadius: 20,
     paddingHorizontal: 10, paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
   },
   chipTextFit: { fontSize: 11, fontWeight: '700', color: '#3b82f6' },
 

@@ -3,6 +3,8 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { ICONS, ACHIEVEMENT_ICONS, ARCHETYPE_ICONS, RARITY_ICONS_SVG, UI_ICONS } from '../assets/icons';
 import { getLevelInfo, computeScore, LEVELS, MODE_COLORS, ModeKey,
   getAlvoLevel, getSeqLevel, getRadarLevel,
   ALVO_LEVELS, SEQ_LEVELS, RADAR_LEVELS } from '../utils/levels';
@@ -445,16 +447,23 @@ function JourneyProgressCard({ sessions, userProfile, currentSessionScore }: Jou
       <View style={jc.separator} />
       <View style={jc.card}>
         <Text style={jc.label}>SUA JORNADA</Text>
-        <Text style={jc.bestRow}>
-          {'🏆 Seu melhor: '}<Text style={jc.bestMs}>{currentBestMs} ms</Text>
-        </Text>
+        <View style={[jc.row, { marginBottom: 4 }]}>
+          <SvgXml xml={RARITY_ICONS_SVG.desbloqueadas} width={16} height={16} />
+          <Text style={jc.bestRow}>
+            {'Seu melhor: '}<Text style={jc.bestMs}>{currentBestMs} ms</Text>
+          </Text>
+        </View>
         {isNewRecord && (
-          <View style={jc.recordBadge}>
-            <Text style={jc.recordText}>🎉 NOVO RECORDE!</Text>
+          <View style={[jc.recordBadge, jc.row]}>
+            <SvgXml xml={UI_ICONS.celebrate} width={14} height={14} />
+            <Text style={jc.recordText}>NOVO RECORDE!</Text>
           </View>
         )}
         {allBeaten ? (
-          <Text style={jc.completeText}>🏁 Jornada completa!</Text>
+          <View style={[jc.row, { marginBottom: 10 }]}>
+            <SvgXml xml={ACHIEVEMENT_ICONS.piloto} width={14} height={14} />
+            <Text style={[jc.completeText, { marginBottom: 0 }]}>Jornada completa!</Text>
+          </View>
         ) : (
           <Text style={jc.nextMeta}>
             {nextMilestone && nextMilestone.type !== 'qualitative' && nextMilestone.ms !== undefined
@@ -516,7 +525,7 @@ function PartidaResult({ times, onPlayAgain, onHome, sessions, userProfile }: Pa
       <TopReplayButton onPlayAgain={onPlayAgain} />
 
       <View style={[styles.benchCard, { borderColor: mc.accent + '44' }]}>
-        <Text style={styles.benchIcon}>🏎</Text>
+        <SvgXml xml={ARCHETYPE_ICONS.PILOTO} width={24} height={24} />
         <View style={{ flex: 1 }}>
           <Text style={styles.benchTitle}>{f1Msg}</Text>
           <Text style={styles.benchSub}>Pilotos de F1 largam em 150–250 ms</Text>
@@ -644,7 +653,7 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
       )}
 
       <View style={[styles.benchCard, { borderColor: mc.accent + '44' }]}>
-        <Text style={styles.benchIcon}>🎯</Text>
+        <SvgXml xml={ICONS.modes.alvo} width={24} height={24} />
         <View style={{ flex: 1 }}>
           <Text style={styles.benchTitle}>{choiceBenchMsg}</Text>
           <Text style={styles.benchSub}>Choice RT · Identificação de cor sob pressão</Text>
@@ -1110,7 +1119,8 @@ const jc = StyleSheet.create({
   separator: { height: 1, backgroundColor: '#1a2a4a', marginBottom: 12 },
   card: { backgroundColor: '#111a2e', borderRadius: 12, padding: 16 },
   label: { fontSize: 10, fontWeight: '700', color: '#4a5a7b', letterSpacing: 2, marginBottom: 8 },
-  bestRow: { fontSize: 14, color: '#8a9ab8', marginBottom: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  bestRow: { fontSize: 14, color: '#8a9ab8' },
   bestMs: { fontSize: 14, fontWeight: '800', color: '#fff' },
   recordBadge: {
     alignSelf: 'flex-start',

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { getAmbition, getMilestonesState, MilestoneState } from '../utils/ambition';
+import { ACHIEVEMENT_ICONS } from '../assets/icons';
 import { SessionRecord } from '../utils/storage';
 
 interface Props {
@@ -66,7 +67,7 @@ export default function JourneyMap({
             s.baselineNode,
             { width: baseSize, height: baseSize, borderRadius: baseSize / 2 },
           ]}>
-            <Text style={{ fontSize: compact ? 12 : 16 }}>🏁</Text>
+            <SvgXml xml={ACHIEVEMENT_ICONS.piloto} width={compact ? 14 : 18} height={compact ? 14 : 18} />
           </View>
           <View style={[s.connector, { minHeight: connectorMin }]} />
         </View>

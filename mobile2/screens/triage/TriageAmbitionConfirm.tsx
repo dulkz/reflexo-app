@@ -51,7 +51,7 @@ export default function TriageAmbitionConfirm({ ambitionId, onNext, onBack }: Pr
       <View style={styles.body}>
         {/* ZONA 1 — identidade */}
         <View style={styles.identity}>
-          <SvgXml xml={ambition.icon} width={40} height={40} />
+          <SvgXml xml={ambition.icon} width={64} height={64} />
           <Text style={styles.name}>{ambition.name}</Text>
           <Text style={[styles.groupTag, { color: groupColor }]}>{groupLabel}</Text>
         </View>
@@ -89,7 +89,7 @@ export default function TriageAmbitionConfirm({ ambitionId, onNext, onBack }: Pr
 
       {/* ZONA 3 — Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.btnPrimary} onPress={onNext} activeOpacity={0.8}>
+        <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: groupColor }]} onPress={onNext} activeOpacity={0.8}>
           <Text style={styles.btnPrimaryText}>CONTINUAR</Text>
         </TouchableOpacity>
         <Text style={styles.footerHint}>Próximo: medimos seu reflexo base</Text>

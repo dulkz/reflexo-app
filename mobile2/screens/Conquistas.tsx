@@ -9,7 +9,7 @@ import { buildUserStats } from '../config/archetypes';
 import { ACHIEVEMENTS, getUnlockedCount, RARITY_CONFIG, RarityKey } from '../config/achievements';
 import { loadUnlockedAchievements, saveUnlockedAchievements } from '../utils/storage';
 import { SvgXml } from 'react-native-svg';
-import { ACHIEVEMENT_ICONS, RARITY_ICONS_SVG } from '../assets/icons';
+import { ACHIEVEMENT_ICONS, RARITY_ICONS_SVG, UI_ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const DAY = 86_400_000;
@@ -320,7 +320,10 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                           <Text style={styles.name}>???</Text>
                           <Text style={styles.desc} numberOfLines={2}>Conquista secreta — descubra jogando</Text>
                           <View style={styles.progressBar}>
-                            <Text style={styles.progressLabel}>🔒 Bloqueada</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              <SvgXml xml={UI_ICONS.lock} width={11} height={11} />
+                              <Text style={styles.progressLabel}>Bloqueada</Text>
+                            </View>
                           </View>
                         </View>
                       ))}

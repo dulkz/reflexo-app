@@ -34,7 +34,7 @@ import { getAmbition } from './utils/ambition';
 import { preloadSounds, playSfx } from './utils/sfx';
 import { ACHIEVEMENTS, Achievement, RARITY_CONFIG, RarityKey } from './config/achievements';
 import { buildUserStats } from './config/archetypes';
-import { ICONS } from './assets/icons';
+import { ICONS, ARCHETYPE_ICONS, RARITY_ICONS_SVG } from './assets/icons';
 
 const RARITY_PRIORITY: Record<RarityKey, number> = {
   lendario: 6, epico: 5, raro: 4, dificil: 3, medio: 2, comum: 1,
@@ -764,9 +764,12 @@ function AppInner() {
             const rcfg = RARITY_CONFIG[a.rarity];
             return (
               <Animated.View style={[styles.toastCard, { borderColor: rcfg.cor + '66', transform: [{ scale: achieveAnim }], opacity: achieveAnim }]}>
-                <Text style={[styles.achieveToastKicker, { color: a.secret ? '#f59e0b' : rcfg.cor }]}>
-                  {a.secret ? '🔒 SEGREDO REVELADO!' : 'CONQUISTA DESBLOQUEADA!'}
-                </Text>
+                <View style={styles.achieveToastKickerRow}>
+                  {a.secret && <SvgXml xml={RARITY_ICONS_SVG.secretas} width={12} height={12} />}
+                  <Text style={[styles.achieveToastKicker, { color: a.secret ? '#f59e0b' : rcfg.cor }]}>
+                    {a.secret ? 'SEGREDO REVELADO!' : 'CONQUISTA DESBLOQUEADA!'}
+                  </Text>
+                </View>
                 <View style={[styles.achieveToastBadge, { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor }]}>
                   <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{rcfg.label}</Text>
                 </View>
@@ -817,7 +820,7 @@ function AppInner() {
               { opacity: triagePromptAnim, transform: [{ scale: triagePromptAnim }] },
             ]}
           >
-            <Text style={styles.triagePromptIcon}>⚡</Text>
+            <SvgXml xml={ARCHETYPE_ICONS.VELOCISTA} width={48} height={48} style={{ marginBottom: 12 }} />
             <Text style={styles.triagePromptTitle}>Calibrar seu perfil</Text>
             <Text style={styles.triagePromptSubtitle}>
               A triagem ajusta os benchmarks para o seu nível real. Leva menos de 2 minutos.
@@ -925,7 +928,7 @@ function AppInner() {
           activeOpacity={1}
         >
           <Animated.View style={[styles.toastCard, { transform: [{ scale: toastAnim }], opacity: toastAnim }]}>
-            <Text style={styles.toastEmoji}>🏆</Text>
+            <SvgXml xml={RARITY_ICONS_SVG.desbloqueadas} width={52} height={52} />
             <Text style={styles.toastTitle}>MARCO BATIDO!</Text>
             <Text style={styles.toastLabel}>{milestoneBeat}</Text>
             <Text style={styles.toastSub}>Toque para continuar</Text>
@@ -1060,8 +1063,11 @@ const styles = StyleSheet.create({
   toastSub: { fontSize: 11, color: '#3a4a6b', marginTop: 8, letterSpacing: 1 },
 
   // ── Achievement toast ────────────────────────────────────────────────────────
+  achieveToastKickerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4,
+  },
   achieveToastKicker: {
-    fontSize: 10, fontWeight: '800', letterSpacing: 2, marginBottom: 4,
+    fontSize: 10, fontWeight: '800', letterSpacing: 2,
   },
   achieveToastBadge: {
     borderWidth: 1, borderRadius: 6,

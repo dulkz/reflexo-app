@@ -563,9 +563,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   swipeHintText: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '700',
-    letterSpacing: 1.5,
+    letterSpacing: 2,
   },
 
   // Screen 2 — equalizer + cards

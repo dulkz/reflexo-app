@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable,
-  Platform, StatusBar as RNStatusBar,
+  Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
-import { ICONS } from '../../assets/icons';
+import { ICONS, UI_ICONS } from '../../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -59,6 +59,14 @@ function generateSeqSignals(): ('go' | 'nogo')[] {
   return Array.from({ length: 3 }, () => Math.random() < 0.25 ? 'nogo' : 'go');
 }
 
+function getBaselineColor(ms: number): string {
+  if (ms < 200)  return '#f59e0b'; // âmbar elite
+  if (ms < 251)  return '#ef4444'; // vermelho épico
+  if (ms < 301)  return '#8b5cf6'; // roxo difícil
+  if (ms < 351)  return '#3b82f6'; // azul médio
+  return '#6b7280';                // cinza comum
+}
+
 function computeBaseline(rts: Rts): number {
   const all = [rts.partida!, rts.alvo!, rts.seq!];
   const sorted = [...all].sort((a, b) => a - b); // ascending
@@ -82,6 +90,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   const signalTime = useRef(0);
   const phaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownNext = useRef<'partida_jitter' | 'alvo_jitter' | 'seq_jitter'>('partida_jitter');
+  const transCheckOpacity = useRef(new Animated.Value(0)).current;
 
   // Seq 3-signal state
   const seqSignalsRef = useRef<('go' | 'nogo')[]>([]);
@@ -167,12 +176,16 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     }
 
     if (phase === 'trans_alvo') {
+      transCheckOpacity.setValue(0);
+      Animated.timing(transCheckOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
       phaseTimer.current = setTimeout(() => {
         setPhase('alvo_instr');
       }, 1600);
     }
 
     if (phase === 'trans_seq') {
+      transCheckOpacity.setValue(0);
+      Animated.timing(transCheckOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
       phaseTimer.current = setTimeout(() => {
         setPhase('seq_instr');
       }, 1600);
@@ -461,7 +474,9 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       <View style={styles.root}>
         {renderHeader(5)}
         <View style={styles.transArea}>
-          <Text style={styles.transCheck}>✓</Text>
+          <Animated.View style={{ opacity: transCheckOpacity }}>
+            <SvgXml xml={UI_ICONS.celebrate} width={48} height={48} />
+          </Animated.View>
           <Text style={styles.transText}>{from} concluído.</Text>
           <Text style={styles.transNext}>Próximo: {next}</Text>
         </View>
@@ -524,7 +539,9 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       {renderHeader(5)}
       <View style={styles.resultBody}>
         <Text style={styles.resultLabel}>SEU BASELINE</Text>
-        <Text style={styles.resultMs}>{baseline}</Text>
+        <Text style={[styles.resultMs, baseline !== null && { color: getBaselineColor(baseline) }]}>
+          {baseline}
+        </Text>
         <Text style={styles.resultUnit}>ms</Text>
         <Text style={styles.resultSub}>Ponto de partida registrado. Agora vem a parte boa — sua jornada.</Text>
       </View>
@@ -559,7 +576,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 15, color: '#4a5a7b', lineHeight: 23, marginBottom: 24 },
 
   modeCard: {
-    flexDirection: 'row', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
     overflow: 'hidden', marginBottom: 10,
@@ -622,7 +639,6 @@ const styles = StyleSheet.create({
   },
 
   transArea: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  transCheck: { fontSize: 56, color: '#10b981' },
   transText: { fontSize: 22, fontWeight: '800', color: '#fff' },
   transNext: { fontSize: 14, color: '#4a5a7b', fontWeight: '600' },
 

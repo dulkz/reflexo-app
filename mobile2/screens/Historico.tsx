@@ -7,7 +7,7 @@ import { SvgXml } from 'react-native-svg';
 import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
-import { ICONS } from '../assets/icons';
+import { ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
 import { ConquistasContent } from './Conquistas';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -353,9 +353,15 @@ export default function Historico({ sessions }: Props) {
               {streak} {streak === 1 ? 'dia' : 'dias'}
             </Text>
             {streakStartTs ? (
-              <Text style={styles.sumSubtitle}>🔥 desde {formatShortDate(streakStartTs)}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                <SvgXml xml={ACHIEVEMENT_ICONS.streak5} width={14} height={14} />
+                <Text style={styles.sumSubtitle}>desde {formatShortDate(streakStartTs)}</Text>
+              </View>
             ) : streak === 1 ? (
-              <Text style={styles.sumSubtitle}>🔥 desde hoje</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                <SvgXml xml={ACHIEVEMENT_ICONS.streak5} width={14} height={14} />
+                <Text style={styles.sumSubtitle}>desde hoje</Text>
+              </View>
             ) : null}
             <Text style={styles.sumLbl}>STREAK ATUAL</Text>
           </View>

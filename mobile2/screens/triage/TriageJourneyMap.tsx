@@ -4,7 +4,7 @@ import {
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import { getAmbitionById } from '../../config/ambitions';
+import { getAmbitionById, GROUP_COLOR } from '../../config/ambitions';
 import JourneyMap from '../../components/JourneyMap';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -27,7 +27,7 @@ export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: P
         <View style={{ width: 60 }} />
       </View>
       <View style={styles.ambitionSubRow}>
-        <SvgXml xml={ambition.icon} width={18} height={18} />
+        <SvgXml xml={ambition.icon} width={28} height={28} />
         <Text style={styles.ambitionSubText}>Rumo a {ambition.name}</Text>
       </View>
 
@@ -41,7 +41,11 @@ export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: P
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.btnPrimary} onPress={onFinish} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={[styles.btnPrimary, { backgroundColor: GROUP_COLOR[ambition.group] }]}
+          onPress={onFinish}
+          activeOpacity={0.8}
+        >
           <Text style={styles.btnPrimaryText}>COMEÇAR A JOGAR</Text>
         </TouchableOpacity>
       </View>

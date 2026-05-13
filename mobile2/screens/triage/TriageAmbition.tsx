@@ -44,6 +44,7 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
       <View style={styles.titleArea}>
         <Text style={styles.title}>Até onde você quer chegar?</Text>
         <Text style={styles.subtitle}>Sem pressão. Dá pra mudar depois.</Text>
+        <Text style={styles.chooseOne}>Escolha apenas uma meta</Text>
       </View>
 
       {/* List */}
@@ -65,12 +66,13 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
                     key={a.id}
                     style={[
                       styles.card,
-                      isSelected && { borderColor: color, borderWidth: 2 },
+                      isSelected && { borderColor: color, borderWidth: 2, backgroundColor: color + '20' },
+                      selected !== null && !isSelected && styles.cardDimmed,
                     ]}
                     onPress={() => setSelected(a.id)}
                     activeOpacity={0.75}
                   >
-                    <SvgXml xml={a.icon} width={32} height={32} />
+                    <SvgXml xml={a.icon} width={40} height={40} />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.cardName, isSelected && { color }]}>{a.name}</Text>
                     </View>
@@ -117,7 +119,8 @@ const styles = StyleSheet.create({
 
   titleArea: { paddingHorizontal: 24, paddingBottom: 12 },
   title: { fontSize: 26, fontWeight: '900', color: '#fff', marginBottom: 6, letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, color: '#4a5a7b' },
+  subtitle: { fontSize: 14, color: '#4a5a7b', marginBottom: 4 },
+  chooseOne: { fontSize: 13, color: '#6b7280', marginTop: 2 },
 
   scroll: { paddingHorizontal: 20 },
   section: { marginBottom: 20 },
@@ -134,6 +137,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingVertical: 14, paddingHorizontal: 14, marginBottom: 8,
   },
+  cardDimmed: { opacity: 0.4 },
   cardIcon: { fontSize: 26 },
   cardName: { fontSize: 14, fontWeight: '700', color: '#fff' },
   cardMs: { fontSize: 12, color: '#3a4a6b', fontWeight: '600' },
