@@ -153,7 +153,7 @@ const CHOICE_BENCHMARKS = [
   },
   {
     icon: MISSION_ICONS.diamond,
-    name: 'Sob fadiga ou distração',
+    name: 'Iniciando a jornada',
     source: 'Mental Chronometry literature',
     range: '550–700 ms',
     level: 'ABAIXO',
@@ -161,7 +161,7 @@ const CHOICE_BENCHMARKS = [
   },
   {
     icon: MISSION_ICONS.elder,
-    name: 'Idosos (65+)',
+    name: 'Calibrando o ritmo',
     source: 'Mental Chronometry, Wikipedia',
     range: '600–800 ms',
     level: 'DEVAGAR',

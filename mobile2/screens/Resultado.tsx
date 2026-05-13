@@ -615,12 +615,12 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
   const consistencyTarget = best + 100;
 
   const choiceBenchMsg = score <= 420
-    ? 'Você está no nível de atletas de esporte de raquete!'
+    ? 'Você está no nível de atleta de alto rendimento!'
     : score <= 500
-    ? `${score - 420} ms do nível de atleta de raquete (ELITE)`
+    ? `${score - 420} ms do nível ELITE (atleta de alto rendimento)`
     : score <= 560
-    ? `${score - 500} ms do nível de adulto jovem saudável`
-    : `Continue treinando — próximo nível: ${score <= 700 ? 'BOM (até 560 ms)' : 'ABAIXO (até 700 ms)'}`;
+    ? `${score - 500} ms do nível MUITO BOM`
+    : `Continue treinando — próximo nível: ${score <= 700 ? 'BOM (até 560 ms)' : 'CONSTRUINDO (até 700 ms)'}`;
 
   return (
     <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]} showsVerticalScrollIndicator={false}>
