@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { getAmbitionById } from '../../config/ambitions';
 import JourneyMap from '../../components/JourneyMap';
 
@@ -25,7 +26,10 @@ export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: P
         <Text style={styles.headerTitle}>SUA JORNADA</Text>
         <View style={{ width: 60 }} />
       </View>
-      <Text style={styles.ambitionSub}>{`Rumo a ${ambition.name} ${ambition.icon}`}</Text>
+      <View style={styles.ambitionSubRow}>
+        <SvgXml xml={ambition.icon} width={18} height={18} />
+        <Text style={styles.ambitionSubText}>Rumo a {ambition.name}</Text>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <JourneyMap
@@ -53,7 +57,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 4,
   },
   headerTitle: { fontSize: 13, fontWeight: '800', color: '#fff', letterSpacing: 2 },
-  ambitionSub: { fontSize: 13, color: '#4a5a7b', textAlign: 'center', marginBottom: 20, paddingHorizontal: 24 },
+  ambitionSubRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, marginBottom: 20, paddingHorizontal: 24,
+  },
+  ambitionSubText: { fontSize: 13, color: '#4a5a7b' },
 
   scroll: { paddingHorizontal: 24 },
 

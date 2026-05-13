@@ -484,6 +484,8 @@ function AppInner() {
     setUserProfile(updated);
     setTriageVisible(false);
     setTriageEditMode(false);
+    hasSeenTriagePromptRef.current = true;
+    await saveHasSeenTriagePrompt(true);
     setActiveTab('jogar');
     setGameScreen('home');
     homeScrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -768,7 +770,7 @@ function AppInner() {
                 <View style={[styles.achieveToastBadge, { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor }]}>
                   <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{rcfg.label}</Text>
                 </View>
-                <Text style={styles.toastEmoji}>{a.icon}</Text>
+                <SvgXml xml={a.icon} width={28} height={28} />
                 <Text style={[styles.toastTitle, { color: '#fff' }]}>{a.name}</Text>
                 <Text style={styles.achieveToastDesc}>{a.description}</Text>
                 <Text style={styles.toastSub}>Toque para continuar</Text>

@@ -3,6 +3,8 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { ACHIEVEMENT_ICONS, MISSION_ICONS } from '../assets/icons';
 import { SessionRecord } from '../utils/storage';
 import { saveUserProfile } from '../utils/userProfile';
 import { UserProfile } from '../types/user';
@@ -139,7 +141,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
               <Text style={styles.sectionTitle}>MINHA JORNADA</Text>
             </View>
             <View style={styles.journeyAmbitionRow}>
-              <Text style={styles.journeyAmbitionIcon}>{ambition.icon}</Text>
+              <SvgXml xml={ambition.icon} width={26} height={26} />
               <Text style={[styles.journeyAmbitionName, { color: ambitionGroupColor }]}>
                 {ambition.name}
               </Text>
@@ -193,7 +195,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                   <>
                     {/* ── Tem próxima meta ── */}
                     <View style={styles.completionHeader}>
-                      <Text style={styles.completionIcon}>🎯</Text>
+                      <SvgXml xml={ACHIEVEMENT_ICONS.sniper} width={28} height={28} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.completionKicker}>JORNADA COMPLETA</Text>
                         <Text style={styles.completionTitle}>
@@ -221,7 +223,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                     >
                       <Text style={styles.nextAmbitionBtnKicker}>INICIAR PRÓXIMO DESAFIO</Text>
                       <View style={styles.nextAmbitionBtnRow}>
-                        <Text style={styles.nextAmbitionBtnIcon}>{nextAmbition.icon}</Text>
+                        <SvgXml xml={nextAmbition.icon} width={24} height={24} />
                         <View style={{ flex: 1 }}>
                           <Text style={[styles.nextAmbitionBtnName, { color: GROUP_COLOR[nextAmbition.group] }]}>
                             {starting ? 'Iniciando…' : nextAmbition.name}
@@ -241,7 +243,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                 ) : (
                   /* ── Pináculo: sem próxima meta ── */
                   <View style={styles.completionPeak}>
-                    <Text style={styles.completionPeakIcon}>🏆</Text>
+                    <SvgXml xml={ACHIEVEMENT_ICONS.cem_sessoes} width={44} height={44} />
                     <Text style={styles.completionPeakTitle}>Você atingiu o nível máximo!</Text>
                     <Text style={styles.completionPeakSub}>
                       Velocidade de reação do 1% mais rápido do mundo.{'\n'}Nenhum desafio restante.
@@ -261,13 +263,13 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
           <View style={styles.dailyCard}>
             <View style={styles.missionHeader}>
               <Text style={styles.missionHeaderText}>OBJETIVO DO DIA</Text>
-              <Text style={styles.missionCount}>
-                {'🎯 '}
-                <Text style={{ color: doneDaily === dailyMissions.length ? '#10b981' : '#06b6d4' }}>
+              <View style={styles.missionCount}>
+                <SvgXml xml={ACHIEVEMENT_ICONS.sniper} width={14} height={14} />
+                <Text style={{ fontSize: 11, color: doneDaily === dailyMissions.length ? '#10b981' : '#06b6d4' }}>
                   {doneDaily}/{dailyMissions.length}
                 </Text>
-                {' completos'}
-              </Text>
+                <Text style={{ fontSize: 11, color: '#4a5a7b' }}>{' completos'}</Text>
+              </View>
             </View>
             <View style={styles.missionProgressTrack}>
               <View style={[
@@ -278,7 +280,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
             </View>
             {dailyMissions.map(m => (
               <View key={m.id} style={[styles.missionRow, m.done && { opacity: 0.5 }]}>
-                <Text style={styles.missionRowIcon}>{m.icon}</Text>
+                <SvgXml xml={m.icon} width={22} height={22} />
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={[styles.missionRowLabel, m.done && { color: '#10b981' }]} numberOfLines={1}>
                     {m.label}
@@ -307,13 +309,13 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
           <View style={styles.weeklyCard}>
             <View style={styles.missionHeader}>
               <Text style={styles.missionHeaderText}>MISSÃO DA SEMANA</Text>
-              <Text style={styles.missionCount}>
-                {'📋 '}
-                <Text style={{ color: doneWeekly === weeklyMissions.length ? '#10b981' : '#5b4fcf' }}>
+              <View style={styles.missionCount}>
+                <SvgXml xml={MISSION_ICONS.clipboard} width={14} height={14} />
+                <Text style={{ fontSize: 11, color: doneWeekly === weeklyMissions.length ? '#10b981' : '#5b4fcf' }}>
                   {doneWeekly}/{weeklyMissions.length}
                 </Text>
-                {' completas'}
-              </Text>
+                <Text style={{ fontSize: 11, color: '#4a5a7b' }}>{' completas'}</Text>
+              </View>
             </View>
             <View style={styles.missionProgressTrack}>
               <View style={[
@@ -324,7 +326,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
             </View>
             {weeklyMissions.map(m => (
               <View key={m.id} style={[styles.missionRow, m.done && { opacity: 0.5 }]}>
-                <Text style={styles.missionRowIcon}>{m.icon}</Text>
+                <SvgXml xml={m.icon} width={22} height={22} />
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={[styles.missionRowLabel, m.done && { color: '#10b981' }]} numberOfLines={1}>
                     {m.label}
@@ -470,7 +472,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   missionHeaderText: { fontSize: 10, fontWeight: '800', color: '#3a4a6b', letterSpacing: 2 },
-  missionCount: { fontSize: 11, color: '#4a5a7b' },
+  missionCount: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   missionProgressTrack: {
     flexDirection: 'row', height: 4, borderRadius: 2,
     backgroundColor: '#1e2d45', marginBottom: 12, overflow: 'hidden',

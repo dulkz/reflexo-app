@@ -11,13 +11,13 @@ import { SessionRecord, loadUnlockedAchievements } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
 
-const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
-  { id: 'EXPLORADOR',  icon: '🔭', tagline: 'Descobrindo seu perfil' },
-  { id: 'EM_EVOLUCAO', icon: '🌱', tagline: 'Crescendo a cada treino' },
-  { id: 'RESISTENTE',  icon: '🛡️', tagline: 'Consistente sob fadiga' },
-  { id: 'ATIRADOR',    icon: '🎯', tagline: 'Precisão cirúrgica' },
-  { id: 'VELOCISTA',   icon: '⚡',  tagline: 'Velocidade de elite' },
-  { id: 'PILOTO',      icon: '🏎️', tagline: 'Reflexos de elite' },
+const ARCHETYPE_CHAIN: { id: string; tagline: string }[] = [
+  { id: 'EXPLORADOR',  tagline: 'Descobrindo seu perfil' },
+  { id: 'EM_EVOLUCAO', tagline: 'Crescendo a cada treino' },
+  { id: 'RESISTENTE',  tagline: 'Consistente sob fadiga' },
+  { id: 'ATIRADOR',    tagline: 'Precisão cirúrgica' },
+  { id: 'VELOCISTA',   tagline: 'Velocidade de elite' },
+  { id: 'PILOTO',      tagline: 'Reflexos de elite' },
 ];
 
 // Destination archetype by ambition group — the "ceiling" the user is aiming for
@@ -27,6 +27,7 @@ const DEST_BY_GROUP: Record<string, { id: string; label: string }> = {
   brain_health: { id: 'RESISTENTE', label: 'O Consistente' },
 };
 import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import { ARCHETYPE_ICONS, UI_ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
 import { AVATARS } from '../config/avatars';
 import { saveUserProfile } from '../utils/userProfile';
 import {
@@ -383,7 +384,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 onPress={() => { setNameInput(userProfile.name || ''); setEditingName(true); }}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Text style={styles.editNameBtn}>✏️</Text>
+                <SvgXml xml={UI_ICONS.edit} width={16} height={16} />
               </TouchableOpacity>
             </View>
             <Text style={styles.identitySub}>
@@ -397,7 +398,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {/* ── Archetype card ── */}
         <View style={[styles.archetypeCard, { borderColor: archetype.color + '44' }]}>
           <View style={styles.archetypeHeader}>
-            <Text style={styles.archetypeIcon}>{archetype.icon}</Text>
+            <SvgXml xml={archetype.icon} width={34} height={34} />
             <View style={{ flex: 1 }}>
               <Text style={styles.archetypeKicker}>ARQUÉTIPO ATUAL</Text>
               <Text style={[styles.archetypeName, { color: archetype.color }]}>{archetype.name}</Text>
@@ -441,7 +442,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                         isFuture  && styles.chainCardFuture,
                       ]}>
                         {isPast && <Text style={styles.chainCheck}>✓</Text>}
-                        <Text style={styles.chainIcon}>{a.icon}</Text>
+                        <SvgXml xml={ARCHETYPES[a.id].icon} width={20} height={20} />
                         <Text style={[
                           styles.chainName,
                           isCurrent && { color: '#fff' },
@@ -472,7 +473,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
            currentBestMs !== null && (
             <View style={styles.ltCard}>
               <View style={styles.ltCardTop}>
-                <Text style={styles.ltIcon}>🚀</Text>
+                <SvgXml xml={ARCHETYPE_ICONS.ROCKET} width={22} height={22} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.ltKicker}>PRÓXIMO MARCO</Text>
                   <Text style={styles.ltTitle}>{nextMilestone.label}</Text>
@@ -499,7 +500,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           {nextAchievementInfo && (
             <View style={styles.ltCard}>
               <View style={styles.ltCardTop}>
-                <Text style={styles.ltIcon}>{nextAchievementInfo.a.icon}</Text>
+                <SvgXml xml={nextAchievementInfo.a.icon} width={22} height={22} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.ltKicker}>PRÓXIMA CONQUISTA</Text>
                   <Text style={styles.ltTitle}>{nextAchievementInfo.a.name}</Text>
@@ -521,7 +522,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           {nextDef && archetype.targetCriteria.length > 0 && (
             <View style={styles.ltCard}>
               <View style={styles.ltCardTop}>
-                <Text style={styles.ltIcon}>{nextDef.icon}</Text>
+                <SvgXml xml={nextDef.icon} width={24} height={24} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.ltKicker}>PRÓXIMO ARQUÉTIPO</Text>
                   <Text style={[styles.ltTitle, { color: nextDef.color }]}>{nextDef.name}</Text>
@@ -610,7 +611,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             <View style={styles.paraVirarHeader}>
               <Text style={styles.paraVirarKicker}>PARA VIRAR</Text>
               <View style={styles.paraVirarTarget}>
-                <Text style={styles.paraVirarIcon}>{nextDef.icon}</Text>
+                <SvgXml xml={nextDef.icon} width={24} height={24} />
                 <Text style={[styles.paraVirarName, { color: nextDef.color }]}>{nextDef.name}</Text>
               </View>
             </View>
@@ -656,7 +657,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             {/* Destination footer — only when destination is further than the immediate next arch */}
             {showDestFooter && destinationArch && (
               <View style={styles.destRow}>
-                <Text style={styles.destIcon}>🎯</Text>
+                <SvgXml xml={ACHIEVEMENT_ICONS.sniper} width={20} height={20} />
                 <Text style={[styles.destLabel, { color: ambitionGroupColor }]}>
                   Seu destino: {destinationArch.label}
                 </Text>
@@ -744,7 +745,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
 
         {sessions.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🎮</Text>
+            <SvgXml xml={UI_ICONS.emptyGame} width={48} height={48} />
             <Text style={styles.emptyText}>
               Complete sua primeira sessão para ver seu perfil evoluir!
             </Text>
@@ -812,7 +813,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                         const selected = selectedId === av.id;
                         const avIsInitial = av.id === 'initial';
                         const cellContent = !unlocked
-                          ? <Text style={styles.avatarCellLock}>🔒</Text>
+                          ? <SvgXml xml={UI_ICONS.lock} width={24} height={24} />
                           : avIsInitial
                             ? <Text style={styles.avatarCellLetter}>{(nameInput || userProfile.name || 'U')[0].toUpperCase()}</Text>
                             : <SvgXml xml={av.icon!} width={56} height={56} />;
@@ -1062,7 +1063,6 @@ const styles = StyleSheet.create({
     marginTop: 10, paddingTop: 10,
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)',
   },
-  destIcon: { fontSize: 14 },
   destLabel: { fontSize: 12, fontWeight: '700' },
 
   // ── Section title ─────────────────────────────────────────────────────────

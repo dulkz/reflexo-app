@@ -1,5 +1,6 @@
 import { SessionRecord } from '../utils/storage';
 import { ModeKey } from '../utils/levels';
+import { ARCHETYPE_ICONS } from '../assets/icons';
 
 export interface UserStats {
   sessions: SessionRecord[];
@@ -108,7 +109,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   EXPLORADOR: {
     id: 'EXPLORADOR',
     name: 'EXPLORADOR',
-    icon: '🔭',
+    icon: ARCHETYPE_ICONS.EXPLORADOR,
     color: '#4a5a7b',
     description: 'Você está descobrindo como seu cérebro reage. Complete mais sessões para revelar seu perfil.',
     evidence: (s) => [
@@ -139,7 +140,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   EM_EVOLUCAO: {
     id: 'EM_EVOLUCAO',
     name: 'EM EVOLUÇÃO',
-    icon: '📈',
+    icon: ARCHETYPE_ICONS.EM_EVOLUCAO,
     color: '#f59e0b',
     description: 'Seu ritmo de treino está crescendo. Diversifique os modos para acelerar a evolução.',
     evidence: (s) => {
@@ -175,7 +176,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   RESISTENTE: {
     id: 'RESISTENTE',
     name: 'O RESISTENTE',
-    icon: '🛡️',
+    icon: ARCHETYPE_ICONS.RESISTENTE,
     color: '#06b6d4',
     description: 'Mantém consistência sob fadiga — uma habilidade rara que separa atletas de amadores.',
     evidence: (s) => {
@@ -213,7 +214,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   ATIRADOR: {
     id: 'ATIRADOR',
     name: 'O ATIRADOR',
-    icon: '🎯',
+    icon: ARCHETYPE_ICONS.ATIRADOR,
     color: '#3b82f6',
     description: 'Precisão cirúrgica no Alvo. Agora foca na velocidade pura do Partida para chegar ao Elite.',
     evidence: (s) => {
@@ -244,7 +245,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   VELOCISTA: {
     id: 'VELOCISTA',
     name: 'O VELOCISTA',
-    icon: '⚡',
+    icon: ARCHETYPE_ICONS.VELOCISTA,
     color: '#8b5cf6',
     description: 'Velocidade de elite com boa precisão. O nível Piloto de F1 está ao alcance.',
     evidence: (s) => {
@@ -281,7 +282,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   PILOTO: {
     id: 'PILOTO',
     name: 'O PILOTO',
-    icon: '🏎',
+    icon: ARCHETYPE_ICONS.PILOTO,
     color: '#10b981',
     description: 'Rápido, preciso e resistente à fadiga. Você atingiu o perfil do piloto de corrida de elite.',
     evidence: (s) => {

@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { AMBITIONS, GROUP_LABELS, GROUP_COLOR, AmbitionGroup } from '../../config/ambitions';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -69,7 +70,7 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
                     onPress={() => setSelected(a.id)}
                     activeOpacity={0.75}
                   >
-                    <Text style={styles.cardIcon}>{a.icon}</Text>
+                    <SvgXml xml={a.icon} width={32} height={32} />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.cardName, isSelected && { color }]}>{a.name}</Text>
                     </View>

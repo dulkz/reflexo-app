@@ -8,6 +8,8 @@ import { UserProfile } from '../types/user';
 import { buildUserStats } from '../config/archetypes';
 import { ACHIEVEMENTS, getUnlockedCount, RARITY_CONFIG, RarityKey } from '../config/achievements';
 import { loadUnlockedAchievements, saveUnlockedAchievements } from '../utils/storage';
+import { SvgXml } from 'react-native-svg';
+import { ACHIEVEMENT_ICONS, RARITY_ICONS_SVG } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const DAY = 86_400_000;
@@ -17,7 +19,12 @@ const MONTH_ABBR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out',
 const RARITY_ORDER: RarityKey[] = ['lendario', 'epico', 'raro', 'dificil', 'medio', 'comum'];
 const SECRET_COLOR = '#4a5a7b';
 const RARITY_ICONS: Record<RarityKey, string> = {
-  lendario: '💎', epico: '🔥', raro: '🌟', dificil: '⚡', medio: '🔷', comum: '⬜',
+  lendario: RARITY_ICONS_SVG.lendario,
+  epico:    RARITY_ICONS_SVG.epico,
+  raro:     RARITY_ICONS_SVG.raro,
+  dificil:  RARITY_ICONS_SVG.dificil,
+  medio:    RARITY_ICONS_SVG.medio,
+  comum:    RARITY_ICONS_SVG.comum,
 };
 
 const GROUPED = (() => {
@@ -132,7 +139,10 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                 onPress={() => setExpanded(prev => ({ ...prev, unlocked: !(prev['unlocked'] !== false) }))}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.accordionLabel, { color: '#f59e0b' }]}>🏆 DESBLOQUEADAS</Text>
+                <View style={styles.accordionLabelRow}>
+                  <SvgXml xml={RARITY_ICONS_SVG.desbloqueadas} width={18} height={18} />
+                  <Text style={[styles.accordionLabel, { color: '#f59e0b' }]}>DESBLOQUEADAS</Text>
+                </View>
                 <View style={styles.accordionRight}>
                   <Text style={[styles.accordionCount, { color: '#f59e0b' }]}>
                     {unlockedSorted.length}
@@ -155,7 +165,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                         <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
                           <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
                         </View>
-                        <Text style={styles.icon}>{a.icon}</Text>
+                        <SvgXml xml={a.icon} width={28} height={28} />
                         <Text style={styles.name}>{a.name}</Text>
                         <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
                         <View style={[styles.progressBar, styles.progressBarDone]}>
@@ -191,9 +201,12 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                 onPress={() => !allDone && setExpanded(prev => ({ ...prev, [r]: !prev[r] }))}
                 activeOpacity={allDone ? 1 : 0.8}
               >
-                <Text style={[styles.accordionLabel, { color: allDone ? cfg.cor + '99' : cfg.cor }]}>
-                  {RARITY_ICONS[r]} {cfg.label}
-                </Text>
+                <View style={styles.accordionLabelRow}>
+                  <SvgXml xml={RARITY_ICONS[r]} width={18} height={18} style={{ opacity: allDone ? 0.5 : 1 }} />
+                  <Text style={[styles.accordionLabel, { color: allDone ? cfg.cor + '99' : cfg.cor }]}>
+                    {cfg.label}
+                  </Text>
+                </View>
                 <View style={styles.accordionRight}>
                   <Text style={[styles.accordionCount, { color: allDone ? cfg.cor + '99' : cfg.cor }]}>
                     {allDone ? '✓ Todas conquistadas' : `${unlockedCount}/${nonSecretAll.length}`}
@@ -215,7 +228,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                     <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
                       <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
                     </View>
-                    <Text style={styles.icon}>{a.icon}</Text>
+                    <SvgXml xml={a.icon} width={28} height={28} />
                     <Text style={styles.name}>{a.name}</Text>
                     <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
                     <View style={styles.progressBar}>
@@ -242,9 +255,10 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                 onPress={() => setExpanded(prev => ({ ...prev, secret: !prev['secret'] }))}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.accordionLabel, { color: SECRET_COLOR }]}>
-                  🔒 SECRETAS
-                </Text>
+                <View style={styles.accordionLabelRow}>
+                  <SvgXml xml={RARITY_ICONS_SVG.secretas} width={18} height={18} />
+                  <Text style={[styles.accordionLabel, { color: SECRET_COLOR }]}>SECRETAS</Text>
+                </View>
                 <View style={styles.accordionRight}>
                   <Text style={[styles.accordionCount, { color: SECRET_COLOR }]}>
                     {`${discoveredSecretsCount} descoberta${discoveredSecretsCount !== 1 ? 's' : ''} / ${SECRET_TOTAL} existem`}
@@ -277,7 +291,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                                   <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
                                 </View>
                               </View>
-                              <Text style={styles.icon}>{a.icon}</Text>
+                              <SvgXml xml={a.icon} width={28} height={28} />
                               <Text style={styles.name}>{a.name}</Text>
                               <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
                               <View style={[styles.progressBar, styles.progressBarDone]}>
@@ -302,7 +316,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                           <View style={[styles.rarityBadge, { backgroundColor: SECRET_COLOR + '22', borderColor: SECRET_COLOR }]}>
                             <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>SECRETA</Text>
                           </View>
-                          <Text style={styles.icon}>🔒</Text>
+                          <SvgXml xml={ACHIEVEMENT_ICONS.streak100} width={28} height={28} />
                           <Text style={styles.name}>???</Text>
                           <Text style={styles.desc} numberOfLines={2}>Conquista secreta — descubra jogando</Text>
                           <View style={styles.progressBar}>
@@ -360,6 +374,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     borderRadius: 10, padding: 12, marginBottom: 8, marginTop: 8,
   },
+  accordionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   accordionLabel: { fontSize: 12, fontWeight: '800', letterSpacing: 1.5 },
   accordionRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   accordionCount: { fontSize: 11, fontWeight: '700' },
@@ -377,7 +392,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4, paddingVertical: 2,
   },
   rarityBadgeText: { fontSize: 9, fontWeight: '700' },
-  icon: { fontSize: 24 },
   name: { fontSize: 13, fontWeight: '800', color: '#fff' },
   desc: { fontSize: 11, color: '#4a5a7b', lineHeight: 16 },
   progressBar: {

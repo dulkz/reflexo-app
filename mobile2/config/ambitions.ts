@@ -1,6 +1,8 @@
 // NOTE: finalMetaMs values and intermediate milestone thresholds are placeholders.
 // Validate all numbers against benchmarks_reflexo.docx before production release.
 
+import { ACHIEVEMENT_ICONS, ARCHETYPE_ICONS, MISSION_ICONS } from '../assets/icons';
+
 export type AmbitionGroup = 'elite_sport' | 'populational' | 'brain_health';
 
 export type Milestone =
@@ -22,7 +24,7 @@ export const AMBITIONS: Ambition[] = [
   {
     id: 'f1',
     group: 'elite_sport',
-    icon: '🏎️',
+    icon: ARCHETYPE_ICONS.PILOTO,
     name: 'F1 de ponta',
     description: 'Atingir o tempo de reação dos melhores pilotos de Fórmula 1.',
     finalMetaMs: 200,
@@ -31,13 +33,13 @@ export const AMBITIONS: Ambition[] = [
       { ms: 300, label: 'Nível adulto jovem saudável' },
       { ms: 260, label: 'Zona de atleta amador' },
       { ms: 230, label: 'Nível tenista ATP' },
-      { ms: 200, label: 'F1 de ponta — meta final 🏎️' },
+      { ms: 200, label: 'F1 de ponta — meta final' },
     ],
   },
   {
     id: 'boxer',
     group: 'elite_sport',
-    icon: '🥊',
+    icon: MISSION_ICONS.boxing,
     name: 'Boxeador olímpico',
     description: 'Desenvolver a velocidade de reação de um boxeador de alto rendimento.',
     finalMetaMs: 250, // Seleção Brasileira: 240–260 ms (Loturco et al., 2015)
@@ -46,13 +48,13 @@ export const AMBITIONS: Ambition[] = [
       { ms: 320, label: 'Adulto jovem saudável' },
       { ms: 290, label: 'Acima da média de esportistas' },
       { ms: 270, label: 'Zona de ringue amador' },
-      { ms: 250, label: 'Boxeador olímpico — meta final 🥊' },
+      { ms: 250, label: 'Boxeador olímpico — meta final' },
     ],
   },
   {
     id: 'tennis',
     group: 'elite_sport',
-    icon: '🎾',
+    icon: MISSION_ICONS.tennis,
     name: 'Tenista ATP',
     description: 'Atingir a velocidade de reação de um tenista profissional de alto nível.',
     finalMetaMs: 250,
@@ -61,13 +63,13 @@ export const AMBITIONS: Ambition[] = [
       { ms: 330, label: 'Adulto jovem saudável' },
       { ms: 290, label: 'Nível clube competitivo' },
       { ms: 270, label: 'Acima da média ATP' },
-      { ms: 250, label: 'Tenista ATP — meta final 🎾' },
+      { ms: 250, label: 'Tenista ATP — meta final' },
     ],
   },
   {
     id: 'sprinter',
     group: 'elite_sport',
-    icon: '⚡',
+    icon: ARCHETYPE_ICONS.VELOCISTA,
     name: 'Velocista olímpico',
     description: 'Treinar a velocidade de reação de largada dos melhores velocistas do mundo.',
     finalMetaMs: 160, // referência auditiva — visual seria ~200 ms (PLoS ONE 2018: 120–160 ms ao tiro de partida)
@@ -76,7 +78,7 @@ export const AMBITIONS: Ambition[] = [
       { ms: 280, label: 'Adulto jovem saudável' },
       { ms: 230, label: 'Atleta treinado' },
       { ms: 190, label: 'Elite internacional' },
-      { ms: 160, label: 'Velocista olímpico — meta final ⚡' },
+      { ms: 160, label: 'Velocista olímpico — meta final' },
     ],
   },
 
@@ -84,7 +86,7 @@ export const AMBITIONS: Ambition[] = [
   {
     id: 'top50',
     group: 'populational',
-    icon: '🎯',
+    icon: MISSION_ICONS.percent_50,
     name: 'Top 50% de todas as idades',
     description: 'Superar a maioria das pessoas da sua faixa etária em velocidade de reação.',
     finalMetaMs: 280, // adulto jovem saudável: 250–300 ms (Wikipedia Mental Chronometry)
@@ -93,13 +95,13 @@ export const AMBITIONS: Ambition[] = [
       { ms: 350, label: 'Acima de sob fadiga/distração' },
       { ms: 320, label: 'Na média populacional' },
       { ms: 300, label: 'Quase lá' },
-      { ms: 280, label: 'Top 50% — meta final 🎯' },
+      { ms: 280, label: 'Top 50% — meta final' },
     ],
   },
   {
     id: 'top10',
     group: 'populational',
-    icon: '💪',
+    icon: MISSION_ICONS.percent_10,
     name: 'Top 10% de todas as idades',
     description: 'Estar entre os 10% mais rápidos da população geral.',
     finalMetaMs: 240,
@@ -108,13 +110,13 @@ export const AMBITIONS: Ambition[] = [
       { ms: 320, label: 'Média populacional' },
       { ms: 280, label: 'Top 30%' },
       { ms: 260, label: 'Top 20%' },
-      { ms: 240, label: 'Top 10% — meta final 💪' },
+      { ms: 240, label: 'Top 10% — meta final' },
     ],
   },
   {
     id: 'top1',
     group: 'populational',
-    icon: '🔥',
+    icon: MISSION_ICONS.percent_1,
     name: 'Top 1% de todas as idades',
     description: 'Atingir o nível de reação do 1% mais rápido da população.',
     finalMetaMs: 200,
@@ -123,7 +125,7 @@ export const AMBITIONS: Ambition[] = [
       { ms: 300, label: 'Média populacional' },
       { ms: 260, label: 'Top 20%' },
       { ms: 230, label: 'Top 5%' },
-      { ms: 200, label: 'Top 1% — meta final 🔥' },
+      { ms: 200, label: 'Top 1% — meta final' },
     ],
   },
 
@@ -131,7 +133,7 @@ export const AMBITIONS: Ambition[] = [
   {
     id: 'brain',
     group: 'brain_health',
-    icon: '🧠',
+    icon: ACHIEVEMENT_ICONS.semfadiga,
     name: 'Manter o cérebro afiado',
     description: 'Usar o treino de reação como ferramenta de saúde cognitiva e longevidade mental.',
     finalMetaMs: null,
@@ -140,7 +142,7 @@ export const AMBITIONS: Ambition[] = [
       { type: 'qualitative', label: 'Rotina estabelecida — 2 semanas consecutivas' },
       { type: 'qualitative', label: 'Hábito consolidado — 1 mês' },
       { type: 'qualitative', label: 'Fadiga <5% em Sequência por 3 semanas' },
-      { type: 'qualitative', label: 'Consistência mestre — 3 meses ativos 🧠' },
+      { type: 'qualitative', label: 'Consistência mestre — 3 meses ativos' },
     ],
   },
 ];

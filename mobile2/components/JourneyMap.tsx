@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { getAmbition, getMilestonesState, MilestoneState } from '../utils/ambition';
 import { SessionRecord } from '../utils/storage';
 
@@ -107,7 +108,7 @@ export default function JourneyMap({
                 {beaten
                   ? <Text style={s.nodeCheck}>✓</Text>
                   : isLast
-                  ? <Text style={{ fontSize: compact ? 12 : 16 }}>{ambition.icon}</Text>
+                  ? <SvgXml xml={ambition.icon} width={compact ? 14 : 18} height={compact ? 14 : 18} />
                   : <View style={s.nodeDot} />
                 }
               </View>
@@ -172,9 +173,10 @@ export default function JourneyMap({
         // Card estático — renderizado apenas quando o pai não fornece o seu próprio
         <View style={[s.nextCard, compact && s.nextCardSm]}>
           <Text style={s.nextCardKicker}>JORNADA COMPLETA</Text>
-          <Text style={[s.nextCardLabel, compact && s.nextCardLabelSm]}>
-            {ambition.name} {ambition.icon}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <SvgXml xml={ambition.icon} width={18} height={18} />
+            <Text style={[s.nextCardLabel, compact && s.nextCardLabelSm]}>{ambition.name}</Text>
+          </View>
           <Text style={[s.nextCardDelta, { color: '#10b981' }]}>
             ✓ Todos os marcos batidos!
           </Text>

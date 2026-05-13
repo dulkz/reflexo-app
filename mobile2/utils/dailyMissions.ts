@@ -1,6 +1,7 @@
 import { SessionRecord } from './storage';
 import { UserProfile } from '../types/user';
 import { loadDailySlots, saveDailySlots } from './storage';
+import { ACHIEVEMENT_ICONS, ARCHETYPE_ICONS, MISSION_ICONS } from '../assets/icons';
 
 export interface DailyMission {
   id: string;
@@ -68,61 +69,61 @@ function buildDailyPool(
 
   // daily_login — instantly complete when app is opened
   pool.push({
-    id: 'daily_login', icon: '📱', label: 'Abra o app hoje',
+    id: 'daily_login', icon: MISSION_ICONS.smartphone, label: 'Abra o app hoje',
     current: 1, target: 1, done: true,
   });
 
   // daily_play — 1 session today
   { const cur = Math.min(todayCount, 1);
-    pool.push({ id: 'daily_play', icon: '⚡', label: 'Jogue 1 partida hoje',
+    pool.push({ id: 'daily_play', icon: ACHIEVEMENT_ICONS.sub300, label: 'Jogue 1 partida hoje',
       current: cur, target: 1, done: cur >= 1 }); }
 
   // daily_play_3 — 3 sessions today
   { const cur = Math.min(todayCount, 3);
-    pool.push({ id: 'daily_play_3', icon: '🎯', label: 'Jogue 3 partidas hoje',
+    pool.push({ id: 'daily_play_3', icon: ACHIEVEMENT_ICONS.sniper, label: 'Jogue 3 partidas hoje',
       current: cur, target: 3, done: cur >= 3 }); }
 
   // daily_partida
-  pool.push({ id: 'daily_partida', icon: '🏎', label: 'Jogue o Modo Partida hoje',
+  pool.push({ id: 'daily_partida', icon: ARCHETYPE_ICONS.PILOTO, label: 'Jogue o Modo Partida hoje',
     current: todayPartida ? 1 : 0, target: 1, done: todayPartida });
 
   // daily_alvo
-  pool.push({ id: 'daily_alvo', icon: '🎯', label: 'Jogue o Modo Alvo hoje',
+  pool.push({ id: 'daily_alvo', icon: ACHIEVEMENT_ICONS.sniper, label: 'Jogue o Modo Alvo hoje',
     current: todayAlvo ? 1 : 0, target: 1, done: todayAlvo });
 
   // daily_sequencia
-  pool.push({ id: 'daily_sequencia', icon: '🧠', label: 'Jogue o Modo Sequência hoje',
+  pool.push({ id: 'daily_sequencia', icon: ACHIEVEMENT_ICONS.semfadiga, label: 'Jogue o Modo Sequência hoje',
     current: todaySeq ? 1 : 0, target: 1, done: todaySeq });
 
   // daily_radar — 1 Radar session today
   { const cur = todayRadarCount >= 1 ? 1 : 0;
-    pool.push({ id: 'daily_radar', icon: '📡', label: 'Jogue o Modo Radar hoje',
+    pool.push({ id: 'daily_radar', icon: ACHIEVEMENT_ICONS.iniciado_radar, label: 'Jogue o Modo Radar hoje',
       current: cur, target: 1, done: cur >= 1 }); }
 
   // daily_radar_2 — 2 Radar sessions today
   { const cur = Math.min(todayRadarCount, 2);
-    pool.push({ id: 'daily_radar_2', icon: '📡', label: 'Jogue 2 sessões de Radar hoje',
+    pool.push({ id: 'daily_radar_2', icon: ACHIEVEMENT_ICONS.iniciado_radar, label: 'Jogue 2 sessões de Radar hoje',
       current: cur, target: 2, done: cur >= 2 }); }
 
   // daily_beat_today — only if user has a prior partida record to beat
   if (bestBefore !== null) {
-    pool.push({ id: 'daily_beat_today', icon: '🏆', label: 'Bata seu recorde hoje',
+    pool.push({ id: 'daily_beat_today', icon: ACHIEVEMENT_ICONS.cem_sessoes, label: 'Bata seu recorde hoje',
       current: beatRecord ? 1 : 0, target: 1, done: beatRecord });
   }
 
   // daily_no_errors — only if user has prior Sequência history
   if (hasSeqHistory) {
-    pool.push({ id: 'daily_no_errors', icon: '🛡️', label: 'Jogue Sequência sem erros',
+    pool.push({ id: 'daily_no_errors', icon: ARCHETYPE_ICONS.RESISTENTE, label: 'Jogue Sequência sem erros',
       current: seqCleanToday ? 1 : 0, target: 1, done: seqCleanToday });
   }
 
   // daily_early — train before 9h (always in pool; selectability enforced externally)
-  pool.push({ id: 'daily_early', icon: '🌅', label: 'Treine antes das 9h',
+  pool.push({ id: 'daily_early', icon: MISSION_ICONS.sunrise, label: 'Treine antes das 9h',
     current: earlyToday ? 1 : 0, target: 1, done: earlyToday });
 
   // daily_streak — only if has active streak
   if (streak >= 1) {
-    pool.push({ id: 'daily_streak', icon: '🔥', label: 'Mantenha sua sequência viva',
+    pool.push({ id: 'daily_streak', icon: ACHIEVEMENT_ICONS.streak5, label: 'Mantenha sua sequência viva',
       current: playedToday ? 1 : 0, target: 1, done: playedToday });
   }
 
@@ -132,18 +133,18 @@ function buildDailyPool(
 // Static metadata used as fallback when a slot's mission is excluded from pool
 // (e.g. daily_early after 9h, or daily_beat_today when no prior record exists).
 const DAILY_META: Record<string, { icon: string; label: string; target: number }> = {
-  daily_login:      { icon: '📱', label: 'Abra o app hoje',                target: 1 },
-  daily_play:       { icon: '⚡', label: 'Jogue 1 partida hoje',            target: 1 },
-  daily_play_3:     { icon: '🎯', label: 'Jogue 3 partidas hoje',           target: 3 },
-  daily_partida:    { icon: '🏎', label: 'Jogue o Modo Partida hoje',       target: 1 },
-  daily_alvo:       { icon: '🎯', label: 'Jogue o Modo Alvo hoje',          target: 1 },
-  daily_sequencia:  { icon: '🧠', label: 'Jogue o Modo Sequência hoje',     target: 1 },
-  daily_radar:      { icon: '📡', label: 'Jogue o Modo Radar hoje',         target: 1 },
-  daily_radar_2:    { icon: '📡', label: 'Jogue 2 sessões de Radar hoje',   target: 2 },
-  daily_beat_today: { icon: '🏆', label: 'Bata seu recorde hoje',           target: 1 },
-  daily_no_errors:  { icon: '🛡️', label: 'Jogue Sequência sem erros',       target: 1 },
-  daily_early:      { icon: '🌅', label: 'Treine antes das 9h',             target: 1 },
-  daily_streak:     { icon: '🔥', label: 'Mantenha sua sequência viva',     target: 1 },
+  daily_login:      { icon: MISSION_ICONS.smartphone,          label: 'Abra o app hoje',                target: 1 },
+  daily_play:       { icon: ACHIEVEMENT_ICONS.sub300,          label: 'Jogue 1 partida hoje',            target: 1 },
+  daily_play_3:     { icon: ACHIEVEMENT_ICONS.sniper,          label: 'Jogue 3 partidas hoje',           target: 3 },
+  daily_partida:    { icon: ARCHETYPE_ICONS.PILOTO,            label: 'Jogue o Modo Partida hoje',       target: 1 },
+  daily_alvo:       { icon: ACHIEVEMENT_ICONS.sniper,          label: 'Jogue o Modo Alvo hoje',          target: 1 },
+  daily_sequencia:  { icon: ACHIEVEMENT_ICONS.semfadiga,       label: 'Jogue o Modo Sequência hoje',     target: 1 },
+  daily_radar:      { icon: ACHIEVEMENT_ICONS.iniciado_radar,  label: 'Jogue o Modo Radar hoje',         target: 1 },
+  daily_radar_2:    { icon: ACHIEVEMENT_ICONS.iniciado_radar,  label: 'Jogue 2 sessões de Radar hoje',   target: 2 },
+  daily_beat_today: { icon: ACHIEVEMENT_ICONS.cem_sessoes,     label: 'Bata seu recorde hoje',           target: 1 },
+  daily_no_errors:  { icon: ARCHETYPE_ICONS.RESISTENTE,        label: 'Jogue Sequência sem erros',       target: 1 },
+  daily_early:      { icon: MISSION_ICONS.sunrise,             label: 'Treine antes das 9h',             target: 1 },
+  daily_streak:     { icon: ACHIEVEMENT_ICONS.streak5,         label: 'Mantenha sua sequência viva',     target: 1 },
 };
 
 // Fallback for hydration when a slot's mission is no longer emitted by buildDailyPool.

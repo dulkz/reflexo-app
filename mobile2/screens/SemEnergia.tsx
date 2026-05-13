@@ -12,6 +12,8 @@ import {
   MONETIZATION_ENABLED,
   ENERGY_PACKAGES, SUBSCRIPTIONS,
 } from '../config/monetization';
+import { SvgXml } from 'react-native-svg';
+import { ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -23,10 +25,10 @@ const MODE_LABEL: Record<ModeKey, string> = {
   radar:     'MODO RADAR',
 };
 const MODE_ICON: Record<ModeKey, string> = {
-  partida:   '🏎',
-  alvo:      '🎯',
-  sequencia: '🧠',
-  radar:     '📡',
+  partida:   ICONS.modes.partida,
+  alvo:      ICONS.modes.alvo,
+  sequencia: ICONS.modes.sequencia,
+  radar:     ICONS.modes.radar,
 };
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -114,7 +116,7 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
 
         {/* ── Hero — ícone + título + contador ── */}
         <View style={styles.hero}>
-          <Text style={styles.heroIcon}>{MODE_ICON[mode]}</Text>
+          <SvgXml xml={MODE_ICON[mode]} width={54} height={54} style={{ marginBottom: 4 }} />
           <Text style={[styles.heroMode, { color: mc.accent }]}>{MODE_LABEL[mode]}</Text>
           <Text style={styles.heroTitle}>ENERGIA ESGOTADA</Text>
 

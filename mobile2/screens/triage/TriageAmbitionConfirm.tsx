@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { getAmbitionById, GROUP_COLOR, GROUP_LABELS } from '../../config/ambitions';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -50,7 +51,7 @@ export default function TriageAmbitionConfirm({ ambitionId, onNext, onBack }: Pr
       <View style={styles.body}>
         {/* ZONA 1 — identidade */}
         <View style={styles.identity}>
-          <Text style={styles.icon}>{ambition.icon}</Text>
+          <SvgXml xml={ambition.icon} width={40} height={40} />
           <Text style={styles.name}>{ambition.name}</Text>
           <Text style={[styles.groupTag, { color: groupColor }]}>{groupLabel}</Text>
         </View>

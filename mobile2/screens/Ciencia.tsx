@@ -4,6 +4,8 @@ import {
   Platform, StatusBar as RNStatusBar,
   StyleProp, TextStyle,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { ACHIEVEMENT_ICONS, ARCHETYPE_ICONS, MISSION_ICONS } from '../assets/icons';
 import { UserProfile } from '../types/user';
 import { SessionRecord } from '../utils/storage';
 import { getMetaBenchmark } from '../utils/ambition';
@@ -46,21 +48,21 @@ const MECHS = [
     title: 'Velocidade de Processamento',
     desc: 'O tempo entre o estímulo e a resposta motora reflete a velocidade de condução neural — treinável com prática repetida.',
     color: '#3b82f6',
-    icon: '⚡',
+    icon: ACHIEVEMENT_ICONS.sub280,
   },
   {
     num: '02',
     title: 'Atenção Sustentada',
     desc: 'Manter o foco por períodos prolongados sem lapso. O Modo Sequência mede isso diretamente via índice de fadiga.',
     color: '#8b5cf6',
-    icon: '🎯',
+    icon: ACHIEVEMENT_ICONS.sniper,
   },
   {
     num: '03',
     title: 'Controle Inibitório',
     desc: 'Suprimir respostas automáticas. O paradigma Go/NoGo é o padrão-ouro clínico — usado em diagnóstico de TDAH.',
     color: '#10b981',
-    icon: '🧠',
+    icon: ACHIEVEMENT_ICONS.semfadiga,
   },
 ];
 
@@ -75,7 +77,7 @@ const SCI_STATS = [
 
 const BENCHMARKS = [
   {
-    icon: '👁',
+    icon: MISSION_ICONS.eye,
     name: 'Antecipação visual de elite',
     source: 'McLeod 1987 · Caprioli et al., 2023 (ATP)',
     range: '50–100 ms',
@@ -83,7 +85,7 @@ const BENCHMARKS = [
     color: '#00f5ff',
   },
   {
-    icon: '🏎',
+    icon: ARCHETYPE_ICONS.PILOTO,
     name: 'Piloto de F1 de ponta',
     source: 'Vienna Reaction Apparatus',
     range: '150–250 ms',
@@ -91,7 +93,7 @@ const BENCHMARKS = [
     color: '#10b981',
   },
   {
-    icon: '🥊',
+    icon: MISSION_ICONS.boxing,
     name: 'Boxeador olímpico',
     source: 'Loturco et al., 2015 · Seleção Brasileira',
     range: '160–220 ms',
@@ -99,7 +101,7 @@ const BENCHMARKS = [
     color: '#10b981',
   },
   {
-    icon: '🎾',
+    icon: MISSION_ICONS.tennis,
     name: 'Tenista ATP',
     source: 'Journal of Sports Sciences, 2019',
     range: '200–250 ms',
@@ -107,7 +109,7 @@ const BENCHMARKS = [
     color: '#3b82f6',
   },
   {
-    icon: '⚡',
+    icon: ARCHETYPE_ICONS.VELOCISTA,
     name: 'Velocista olímpico',
     source: 'Lipps et al., 2011 · Sprint start research',
     range: '170–200 ms',
@@ -115,7 +117,7 @@ const BENCHMARKS = [
     color: '#10b981',
   },
   {
-    icon: '🧍',
+    icon: MISSION_ICONS.person,
     name: 'Adulto saudável (25–45)',
     source: 'Meta-análise · PMC, 2021',
     range: '200–300 ms',
@@ -126,7 +128,7 @@ const BENCHMARKS = [
 
 const CHOICE_BENCHMARKS = [
   {
-    icon: '🎯',
+    icon: ACHIEVEMENT_ICONS.sniper,
     name: 'Atleta de esporte de raquete',
     source: 'Balakrishnan et al., 2014 · PMC',
     range: '380–420 ms',
@@ -134,7 +136,7 @@ const CHOICE_BENCHMARKS = [
     color: '#10b981',
   },
   {
-    icon: '💪',
+    icon: MISSION_ICONS.muscle,
     name: 'Adulto jovem saudável (25–40)',
     source: 'PMC, 2014 · Mental Chronometry',
     range: '420–500 ms',
@@ -142,7 +144,7 @@ const CHOICE_BENCHMARKS = [
     color: '#3b82f6',
   },
   {
-    icon: '👤',
+    icon: MISSION_ICONS.silhouette,
     name: 'Adulto médio (40–55)',
     source: 'Donders RT paradigm · Wikipedia',
     range: '480–560 ms',
@@ -150,7 +152,7 @@ const CHOICE_BENCHMARKS = [
     color: '#06b6d4',
   },
   {
-    icon: '🔶',
+    icon: MISSION_ICONS.diamond,
     name: 'Sob fadiga ou distração',
     source: 'Mental Chronometry literature',
     range: '550–700 ms',
@@ -158,7 +160,7 @@ const CHOICE_BENCHMARKS = [
     color: '#f59e0b',
   },
   {
-    icon: '🧓',
+    icon: MISSION_ICONS.elder,
     name: 'Idosos (65+)',
     source: 'Mental Chronometry, Wikipedia',
     range: '600–800 ms',
@@ -254,7 +256,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
         <View style={styles.freqCard}>
           {isPersonalized ? (
             <View style={styles.freqAmbitionRow}>
-              <Text style={styles.freqAmbitionIcon}>{ambition!.icon}</Text>
+              <SvgXml xml={ambition!.icon} width={20} height={20} />
               <Text style={styles.freqAmbitionName}>{ambition!.name}</Text>
             </View>
           ) : (
@@ -265,7 +267,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
           <View style={styles.freqMain}>
             <View style={styles.freqCol}>
               <Text style={styles.freqBig}>{rec.times}</Text>
-              <Text style={styles.freqColLabel}>VEZES{'\n'}SEMANA</Text>
+              <Text style={styles.freqColLabel}>SESSÕES</Text>
             </View>
             <Text style={styles.freqTimes}>×</Text>
             <View style={styles.freqCol}>
@@ -276,15 +278,6 @@ export default function Ciencia({ userProfile, sessions }: Props) {
           <Text style={styles.freqContext}>
             {`= ${rec.times * rec.mins} minutos semanais · menos de ${Math.ceil(rec.times * rec.mins / 7)} min por dia`}
           </Text>
-          <View style={styles.freqBullets}>
-            {[
-              '⚡ Melhora RT em 10–15% em 4 semanas',
-              '🧠 Ativa neuroplasticidade por repetição',
-              '🎯 Consistência supera intensidade',
-            ].map(b => (
-              <Text key={b} style={styles.freqBullet}>{b}</Text>
-            ))}
-          </View>
           <Text style={styles.freqRationale}>{rec.tagline}</Text>
         </View>
 
@@ -331,7 +324,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
               ]}
             >
               <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
-                <Text style={styles.benchIconText}>{b.icon}</Text>
+                <SvgXml xml={b.icon} width={22} height={22} />
               </View>
 
               <View style={styles.benchInfo}>
@@ -373,7 +366,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
               ]}
             >
               <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
-                <Text style={styles.benchIconText}>{b.icon}</Text>
+                <SvgXml xml={b.icon} width={22} height={22} />
               </View>
               <View style={styles.benchInfo}>
                 {isYouHere && (
@@ -397,19 +390,6 @@ export default function Ciencia({ userProfile, sessions }: Props) {
           );
         })}
 
-        {/* ══ SEÇÃO 3 — POR QUE TREINAR REAÇÃO ══ */}
-        <SectionHeader kicker="POR QUE TREINAR REAÇÃO" />
-
-        <View style={styles.sciGrid}>
-          {SCI_STATS.map(s => (
-            <View key={s.stat + s.fonte} style={[styles.sciCard, { borderColor: s.cor + '33' }]}>
-              <Text style={[styles.sciStat, { color: s.cor }]}>{s.stat}</Text>
-              <Text style={styles.sciDesc}>{s.desc}</Text>
-              <Text style={styles.sciSource}>{s.fonte}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* ══ SEÇÃO 4 — COMO FUNCIONA ══ */}
         <SectionHeader
           kicker="COMO FUNCIONA"
@@ -425,6 +405,19 @@ export default function Ciencia({ userProfile, sessions }: Props) {
           </RichText>
         </View>
 
+        {/* ══ SEÇÃO 3 — POR QUE TREINAR REAÇÃO ══ */}
+        <SectionHeader kicker="POR QUE TREINAR REAÇÃO" />
+
+        <View style={styles.sciGrid}>
+          {SCI_STATS.map(s => (
+            <View key={s.stat + s.fonte} style={[styles.sciCard, { borderColor: s.cor + '33' }]}>
+              <Text style={[styles.sciStat, { color: s.cor }]}>{s.stat}</Text>
+              <Text style={styles.sciDesc}>{s.desc}</Text>
+              <Text style={styles.sciSource}>{s.fonte}</Text>
+            </View>
+          ))}
+        </View>
+
         {/* ══ SEÇÃO 5 — 3 MECANISMOS NEURAIS ══ */}
         <SectionHeader kicker="3 MECANISMOS NEURAIS" />
 
@@ -435,7 +428,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
             </View>
             <View style={{ flex: 1 }}>
               <View style={styles.mechHeaderRow}>
-                <Text style={styles.mechIcon}>{m.icon}</Text>
+                <SvgXml xml={m.icon} width={16} height={16} />
                 <Text style={[styles.mechTitle, { color: m.color }]}>{m.title}</Text>
               </View>
               <Text style={styles.mechDesc}>{m.desc}</Text>
@@ -445,7 +438,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
 
         {/* ══ FECHAMENTO EDITORIAL ══ */}
         <View style={styles.closingCard}>
-          <Text style={styles.closingIcon}>🧠</Text>
+          <SvgXml xml={ACHIEVEMENT_ICONS.semfadiga} width={28} height={28} style={{ marginTop: 2 }} />
           <View style={{ flex: 1 }}>
             <Text style={styles.closingBody}>
               Não prometemos genialidade nem juventude eterna. Mas três minutos três vezes por semana mexem com um dos sistemas mais sensíveis ao tempo que existem no seu corpo.
@@ -456,7 +449,7 @@ export default function Ciencia({ userProfile, sessions }: Props) {
 
         {/* ══ DISCLAIMER TÉCNICO ══ */}
         <View style={styles.toneBox}>
-          <Text style={styles.toneIcon}>💡</Text>
+          <SvgXml xml={MISSION_ICONS.bulb} width={18} height={18} />
           <Text style={styles.toneText}>
             Resultados refletem reação simples visual — diferente de decisões complexas.
             Fatores como iluminação, sono e cafeína afetam o resultado.
@@ -577,14 +570,15 @@ const styles = StyleSheet.create({
   freqBullets: {
     alignSelf: 'stretch', marginBottom: 16, gap: 8,
   },
+  freqBulletRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+  },
   freqBullet: {
-    fontSize: 12, color: '#4a5a7b', lineHeight: 18,
+    fontSize: 12, color: '#4a5a7b', lineHeight: 18, flex: 1,
   },
   freqRationale: {
     fontSize: 13, color: '#4a5a7b', textAlign: 'center',
-    lineHeight: 20, marginTop: 4,
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)',
-    paddingTop: 16, alignSelf: 'stretch',
+    lineHeight: 20, marginTop: 12, alignSelf: 'stretch',
   },
 
   // ── Frequência ideal (SEG/QUA/SEX) ───────────────────────────────────────

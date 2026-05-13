@@ -4,6 +4,8 @@ import {
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SvgXml } from 'react-native-svg';
+import { ICONS } from '../../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -86,6 +88,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   const seqSignalIdxRef = useRef(0);
   const seqGoRtsRef = useRef<number[]>([]);
   const [seqCurrentSignal, setSeqCurrentSignal] = useState<'go' | 'nogo'>('go');
+  const [seqSignalTapped, setSeqSignalTapped] = useState(false);
   // Prevents multi-tap within a single signal's 400ms inter-signal gap
   const seqTapHandledRef = useRef(false);
 
@@ -137,6 +140,8 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       const interval = SEQ_JITTER_MIN + Math.random() * (SEQ_JITTER_MAX - SEQ_JITTER_MIN);
       phaseTimer.current = setTimeout(() => {
         setSeqCurrentSignal(seqSignalsRef.current[seqSignalIdxRef.current]);
+        setSeqSignalTapped(false);
+        seqTapHandledRef.current = false;
         setPhase('seq_go');
       }, interval);
     }
@@ -144,7 +149,6 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     if (phase === 'seq_go') {
       // signalTime set here (post-render) for accuracy, same pattern as ModoAlvo
       signalTime.current = Date.now();
-      seqTapHandledRef.current = false; // reset lock for each new signal
       // 1400ms timeout: Go=miss (no RT), NoGo=correct_inhibit — advance either way
       phaseTimer.current = setTimeout(() => {
         const nextIdx = seqSignalIdxRef.current + 1;
@@ -206,6 +210,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     if (seqSignalsRef.current[seqSignalIdxRef.current] === 'nogo') return;
 
     seqTapHandledRef.current = true;
+    setSeqSignalTapped(true);
     clearTimer();
     const rt = Date.now() - signalTime.current;
     seqGoRtsRef.current.push(rt);
@@ -249,9 +254,9 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   // ── INTRO ────────────────────────────────────────────────────────────────────
   if (phase === 'intro') {
     const MODE_CARDS = [
-      { icon: '🏎', name: 'PARTIDA',   metric: 'VELOCIDADE DE REAÇÃO', range: '~200–400 ms', accent: '#3b82f6' },
-      { icon: '🎯', name: 'ALVO',      metric: 'PRECISÃO SOB PRESSÃO', range: '~300–600 ms', accent: '#06b6d4' },
-      { icon: '🧠', name: 'SEQUÊNCIA', metric: 'CONTROLE INIBITÓRIO',  range: '~250–500 ms', accent: '#8b5cf6' },
+      { icon: ICONS.modes.partida,   name: 'PARTIDA',   metric: 'VELOCIDADE DE REAÇÃO', range: '~200–400 ms', accent: '#3b82f6' },
+      { icon: ICONS.modes.alvo,      name: 'ALVO',      metric: 'PRECISÃO SOB PRESSÃO', range: '~300–600 ms', accent: '#06b6d4' },
+      { icon: ICONS.modes.sequencia, name: 'SEQUÊNCIA', metric: 'CONTROLE INIBITÓRIO',  range: '~250–500 ms', accent: '#8b5cf6' },
     ];
     return (
       <View style={styles.root}>
@@ -264,7 +269,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
           {MODE_CARDS.map(m => (
             <View key={m.name} style={styles.modeCard}>
               <View style={[styles.modeCardBar, { backgroundColor: m.accent }]} />
-              <Text style={styles.modeCardIcon}>{m.icon}</Text>
+              <SvgXml xml={m.icon} width={32} height={32} />
               <View style={styles.modeCardContent}>
                 <Text style={[styles.modeCardName, { color: m.accent }]}>{m.name}</Text>
                 <Text style={styles.modeCardMetric}>{m.metric}</Text>
@@ -285,7 +290,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   // ── INSTRUCTION SCREENS ──────────────────────────────────────────────────────
   const INSTR_DATA = {
     partida_instr: {
-      icon: '🏎',
+      icon: ICONS.modes.partida,
       name: 'PARTIDA',
       desc: 'Aperte o mais rápido possível assim que o círculo verde aparecer. Sem pressa, espera aparecer, pois será penalizado em caso de queimar a largada.',
       onStart: () => {
@@ -294,7 +299,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       },
     },
     alvo_instr: {
-      icon: '🎯',
+      icon: ICONS.modes.alvo,
       name: 'ALVO',
       desc: 'Toque no círculo com a cor indicada no topo em cada rodada quando ele aparecer. Ignore as outras cores.',
       onStart: () => {
@@ -307,7 +312,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       },
     },
     seq_instr: {
-      icon: '🧠',
+      icon: ICONS.modes.sequencia,
       name: 'SEQUÊNCIA',
       desc: 'Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho). Serão 3 sinais.',
       onStart: () => {
@@ -338,7 +343,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         {renderHeader(5)}
         <View style={styles.instrBody}>
           <View style={[styles.instrIconCircle, { backgroundColor: modeBg }]}>
-            <Text style={styles.instrIconLarge}>{instr.icon}</Text>
+            <SvgXml xml={instr.icon} width={40} height={40} />
           </View>
           <Text style={[styles.instrName, { color: modeColor }]}>{instr.name}</Text>
           <View style={[styles.instrSciCard, { borderColor: modeColor + '44' }]}>
@@ -499,11 +504,15 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         {renderHeader(5)}
         <Pressable style={styles.tapArea} onPressIn={handleSeqTap}>
           <Text style={styles.seqCounter}>{seqSignalIdxRef.current + 1} / 3</Text>
-          <View style={[styles.seqSignalCircle, {
-            backgroundColor: circleColor,
-            shadowColor: circleColor,
-          }]} />
-          {!isNogo && <Text style={styles.tapHint}>TOQUE AGORA!</Text>}
+          {seqSignalTapped ? (
+            <Text style={styles.seqHitCheck}>✓</Text>
+          ) : (
+            <View style={[styles.seqSignalCircle, {
+              backgroundColor: circleColor,
+              shadowColor: circleColor,
+            }]} />
+          )}
+          {!isNogo && !seqSignalTapped && <Text style={styles.tapHint}>TOQUE AGORA!</Text>}
         </Pressable>
       </View>
     );
@@ -605,6 +614,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5, marginBottom: 20,
   },
   tapHint: { fontSize: 13, fontWeight: '800', color: '#10b981', letterSpacing: 2.5 },
+  seqHitCheck: { fontSize: 72, color: '#10b981', lineHeight: 80 },
 
   goText: {
     fontSize: 96, fontWeight: '900', color: '#10b981',
