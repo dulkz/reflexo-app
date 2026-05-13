@@ -1,8 +1,11 @@
+import './i18n';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 import Home from './screens/Home';
 import Splash from './screens/Splash';
 import ModoPartida from './screens/ModoPartida';
@@ -80,9 +83,11 @@ const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <AppInner />
-    </SafeAreaProvider>
+    <I18nextProvider i18n={i18n}>
+      <SafeAreaProvider>
+        <AppInner />
+      </SafeAreaProvider>
+    </I18nextProvider>
   );
 }
 

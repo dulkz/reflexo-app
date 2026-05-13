@@ -1,0 +1,422 @@
+{
+  "common": {
+    "back": "← Voltar",
+    "backArrow": "←",
+    "continue": "CONTINUAR",
+    "start": "INICIAR",
+    "cancel": "Cancelar",
+    "quit": "Desistir",
+    "keepPlaying": "Continuar jogando",
+    "quitTitle": "Deseja desistir?",
+    "quitMessage": "O progresso desta sessão não será salvo.",
+    "howToPlay": "Como jogar",
+    "round": "RODADA",
+    "ms": "ms",
+    "newBadge": "NOVO",
+    "ok": "OK",
+    "soon": "Em breve",
+    "noData": "Sem dados"
+  },
+
+  "home": {
+    "appName": "REFLEXO",
+    "greeting": "Olá, {{name}}",
+    "modesTitle": "MODOS DE JOGO",
+    "streakDays": "dias seguidos",
+    "streakToday": "✓ hoje",
+    "streakPlayToday": "⚡ jogue hoje",
+    "notPlayed": "Ainda não jogado",
+    "yourBest": "Sua melhor: ",
+    "bestReflexTime": "Melhor Tempo Reflexo",
+    "avgRt": "Média RT",
+    "f1BenchmarkTitle": "Benchmark F1",
+    "f1BenchmarkBody": "Pilotos de Fórmula 1 largam em 150–250 ms — testados em condições de corrida real.",
+    "sessionsCount_one": "{{count}} sessão registrada",
+    "sessionsCount_other": "{{count}} sessões registradas",
+    "noSessions": "Baseado em benchmarks científicos de atletas de elite",
+    "graceExpiring": "⚡ Grátis · expira em {{time}}",
+    "energyCount": "⚡ {{current}}/{{max}}"
+  },
+
+  "modes": {
+    "partida": {
+      "name": "MODO PARTIDA",
+      "desc": "Reação simples visual · 7 tentativas",
+      "sub": "Top 5 de 7 — descarta as 2 piores"
+    },
+    "alvo": {
+      "name": "MODO ALVO",
+      "desc": "4 alvos simultâneos · 10 rodadas",
+      "sub": "Acerte o correto — penalidade por erro"
+    },
+    "sequencia": {
+      "name": "MODO SEQUÊNCIA",
+      "desc": "20 sinais Go/NoGo · ~25% aleatório",
+      "sub": "Mede fadiga cognitiva e controle inibitório"
+    },
+    "radar": {
+      "name": "MODO RADAR",
+      "desc": "Localização visual · 15 rodadas",
+      "sub": "5 círculos em cruz — toque no que acender"
+    }
+  },
+
+  "partida": {
+    "title": "MODO PARTIDA",
+    "subtitle": "7 tentativas · reação simples",
+    "howToText": "Aguarde a tela escurecer. Toque assim que o círculo verde aparecer. Quanto mais rápido, melhor.",
+    "falseStart": "FALSA LARGADA",
+    "penaltyFixed": "500 ms fixo",
+    "waitHint": "Aguarde a tela escura — toque assim que o círculo verde aparecer",
+    "waitWarn": "Tocar antes = falsa largada (500 ms fixo)",
+    "startRound": "INICIAR RODADA {{round}}",
+    "ready": "READY"
+  },
+
+  "alvo": {
+    "title": "MODO ALVO",
+    "subtitle": "4 círculos · 10 rodadas",
+    "howToText": "Observe a cor indicada no topo. Toque no círculo dessa cor assim que aparecer. Erro = +150ms de penalidade.",
+    "tapCircle": "TOQUE NO CÍRCULO",
+    "waitHint": "aguarde o estímulo",
+    "correct": "CORRETO!",
+    "wrong": "ERROU!",
+    "colors": {
+      "AZUL": "AZUL",
+      "VERDE": "VERDE",
+      "LARANJA": "LARANJA",
+      "ROXO": "ROXO"
+    }
+  },
+
+  "sequencia": {
+    "title": "MODO SEQUÊNCIA",
+    "subtitle": "20 sinais · Go / NoGo",
+    "howToText": "Toque apenas nos sinais VERDES (Go). Ignore os vermelhos (No-Go). Controle o impulso de tocar em tudo.",
+    "prepare": "PREPARE-SE",
+    "hintGo": "VERDE → toque",
+    "hintNoGo": "VERMELHO → não toque",
+    "miss": "PERDEU",
+    "error": "ERRO!",
+    "inhibited": "✓ INIBIU",
+    "penaltyTitle": "Antecipou!",
+    "penaltyMs": "+150ms",
+    "penaltyContinue": "Toque para continuar"
+  },
+
+  "radar": {
+    "title": "MODO RADAR",
+    "subtitle": "5 círculos em cruz · 15 rodadas",
+    "howToText": "Os 5 círculos ficam visíveis o tempo todo. Um deles vai acender — toque nele o mais rápido possível. Toque no errado: +{{penalty}}ms de penalidade na média.",
+    "waitHint": "aguarde...",
+    "tapHint": "toque no círculo aceso",
+    "hit": "✓ ACERTOU",
+    "miss": "✗ ERROU",
+    "timeout": "⏱ TIMEOUT",
+    "quitBtn": "DESISTIR"
+  },
+
+  "triage": {
+    "intro": {
+      "title": "Bora traçar\nsua rota?",
+      "subtitle": "Pilotos de F1 reagem em 150ms. Atletas olímpicos em 160ms. Onde você está? Vamos descobrir agora.",
+      "chip1": "150ms F1",
+      "chip2": "+40% atenção",
+      "chip3": "Treinável",
+      "btnPrimary": "BORA",
+      "btnSecondary": "Agora não"
+    },
+    "ambition": {
+      "title": "Até onde você quer chegar?",
+      "subtitle": "Sem pressão. Dá pra mudar depois.",
+      "chooseOne": "Escolha apenas uma meta",
+      "noMsTarget": "sem meta de ms",
+      "groups": {
+        "elite_sport": "ELITE DO ESPORTE",
+        "populational": "POSIÇÃO POPULACIONAL",
+        "brain_health": "SAÚDE CEREBRAL"
+      },
+      "groupSubtitles": {
+        "elite_sport": "Compare seu reflexo com atletas profissionais medidos em laboratório.",
+        "populational": "Compare-se com a população geral — de todas as idades e perfis.",
+        "brain_health": "Sem competição. Foco em consistência e longevidade cognitiva."
+      }
+    },
+    "confirm": {
+      "yourFinalGoal": "SUA META FINAL",
+      "toGetThere": "PARA CHEGAR LÁ",
+      "consistencyGoal": "Consistência e evolução contínua",
+      "howTo": "Treinos curtos, todo dia. Vamos medir onde você está agora.",
+      "nextHint": "Próximo: medimos seu reflexo base",
+      "population": {
+        "f1": "Top 1% da população",
+        "boxer": "Top 3% da população",
+        "tennis": "Top 5% da população",
+        "sprinter": "Top 0.1% — elite mundial",
+        "top50": "Top 50% da população",
+        "top10": "Top 10% da população",
+        "top1": "Top 1% da população"
+      }
+    },
+    "age": {
+      "title": "Qual sua faixa etária?",
+      "subtitle": "A gente usa pra te comparar com o grupo certo — sua ambição continua a mesma.",
+      "options": {
+        "lt25": "Menos de 25",
+        "r25_40": "25 – 40",
+        "r40_55": "40 – 55",
+        "r55_70": "55 – 70",
+        "r70plus": "70+"
+      }
+    },
+    "baseline": {
+      "title": "Vamos medir sua base",
+      "subtitle": "3 testes rápidos — leva menos de 2 minutos",
+      "partida": "PARTIDA",
+      "alvo": "ALVO",
+      "sequencia": "SEQUÊNCIA",
+      "tapWhenGreen": "Toque quando aparecer o verde",
+      "tapCorrectColor": "Toque na cor indicada",
+      "tapGoIgnoreNoGo": "Toque no verde, ignore o vermelho",
+      "startBtn": "COMEÇAR",
+      "done": "PRONTO"
+    }
+  },
+
+  "result": {
+    "yourScore": "SEU SCORE",
+    "roundList": "RODADAS",
+    "round": "Rodada",
+    "hit": "✓ Acertou",
+    "miss": "✗ Errou",
+    "timeout": "⏱ Timeout",
+    "falseStart": "Falsa largada",
+    "playAgain": "↻ Jogar novamente",
+    "backToHome": "VOLTAR",
+    "newRecord": "NOVO RECORDE",
+    "totalSessions": "Total de sessões",
+    "best": "Melhor",
+    "accuracy": "PRECISÃO",
+    "inhibitionControl": "🧠 Controle inibitório: {{pct}}% · {{errors}} erro(s)",
+    "earlyTaps": "❌ Antecipações: {{count}} × +150ms",
+    "missErrors": "❌ Erros: {{count}} (+200ms avg)",
+    "hits": "ACERTOS",
+    "bestHit": "MELHOR HIT",
+    "errors": "ERROS",
+    "partida": {
+      "stat1": "TOP 5",
+      "stat2": "MELHOR",
+      "stat3": "PIORES 2"
+    },
+    "alvo": {
+      "stat1": "ACURÁCIA",
+      "stat2": "MELHOR",
+      "stat3": "TIMEOUTS"
+    },
+    "sequencia": {
+      "stat1": "HITS",
+      "stat2": "MÉDIA RT",
+      "stat3": "FADIGA",
+      "stat4": "ERROS INIBIÇÃO",
+      "noGoAccuracy": "CONTROLE INIBITÓRIO"
+    },
+    "radar": {
+      "stat1": "ACURÁCIA",
+      "stat2": "MELHOR HIT",
+      "stat3": "ACERTOS"
+    }
+  },
+
+  "history": {
+    "title": "EVOLUÇÃO",
+    "filters": {
+      "all": "Todos",
+      "partida": "Partida",
+      "alvo": "Alvo",
+      "sequencia": "Sequência",
+      "radar": "Radar"
+    },
+    "period": {
+      "7d": "7d",
+      "30d": "30d",
+      "all": "Tudo"
+    },
+    "bestTime": "MELHOR TEMPO REFLEXO",
+    "mostPlayed": "MAIS JOGADO",
+    "streak": "SEQUÊNCIA",
+    "total": "TOTAL",
+    "sessions": "sessões",
+    "noSessions": "Nenhuma sessão registrada",
+    "trend": {
+      "improving": "↑ melhorando",
+      "stable": "→ estável",
+      "declining": "↓ piorando"
+    },
+    "stats": {
+      "bestEver": "Melhor de sempre",
+      "firstVsCurrent": "Primeiro vs. atual",
+      "totalSessions": "Total de sessões",
+      "lastSession": "Última sessão",
+      "bestDayOfWeek": "Melhor dia da semana",
+      "mostPlayedDay": "Dia mais jogado"
+    },
+    "achievements": "CONQUISTAS"
+  },
+
+  "profile": {
+    "title": "PERFIL",
+    "editProfile": "EDITAR PERFIL",
+    "name": "NOME",
+    "avatar": "AVATAR",
+    "save": "SALVAR",
+    "archetype": "ARQUÉTIPO ATUAL",
+    "nextArchetype": "PARA VIRAR",
+    "destination": "Seu destino:",
+    "longTermGoals": "METAS DE LONGO PRAZO",
+    "completed": "✓ CONCLUÍDAS",
+    "byMode": "POR MODO",
+    "lastSessions": "ÚLTIMAS SESSÕES",
+    "achievementsSummary": "CONQUISTAS",
+    "dangerZone": "ZONA DE PERIGO",
+    "clearData": "Limpar todos os dados",
+    "clearDataConfirmTitle": "Limpar todos os dados?",
+    "clearDataConfirmMessage": "Todas as sessões, conquistas e configurações serão apagadas. Esta ação não pode ser desfeita.",
+    "clearDataBtn": "Limpar tudo",
+    "milestone": "MARCO",
+    "achievement": "CONQUISTA",
+    "archetypeLabel": "ARQUÉTIPO",
+    "bestReflexTime": "Melhor Tempo Reflexo",
+    "accuracy": "Precisão"
+  },
+
+  "achievements": {
+    "title": "CONQUISTAS",
+    "unlocked": "DESBLOQUEADAS",
+    "locked": "BLOQUEADAS",
+    "secret": "SECRETAS",
+    "secretCount": "{{count}} existem",
+    "discovered": "✓ DESCOBERTAS",
+    "allUnlocked": "✓ Todas conquistadas",
+    "progress": "{{current}}/{{total}}",
+    "rare": "RARO",
+    "epic": "ÉPICO",
+    "legendary": "LENDÁRIO",
+    "common": "COMUM",
+    "medium": "MÉDIO",
+    "hard": "DIFÍCIL",
+    "secret_badge": "SECRETA"
+  },
+
+  "journey": {
+    "title": "JORNADA",
+    "myJourney": "MINHA JORNADA",
+    "missions": "MISSÕES",
+    "dailyGoal": "OBJETIVO DO DIA",
+    "weeklyMission": "MISSÃO DA SEMANA",
+    "nextMilestone": "Próximo: {{label}} · faltam {{ms}} ms",
+    "currentBest": "Seu melhor atual: {{ms}} ms",
+    "startTriage": "Fazer triagem",
+    "triageCta": "Faça a triagem para ver sua jornada"
+  },
+
+  "onboarding": {
+    "swipeHint": "Deslize para continuar →",
+    "continue": "CONTINUAR",
+    "screen1": {
+      "subtitle": "velocidade de reação"
+    },
+    "screen2": {
+      "title": "4 MODOS DE TREINO",
+      "partida": "PARTIDA",
+      "alvo": "ALVO",
+      "sequencia": "SEQUÊNCIA",
+      "radar": "RADAR"
+    },
+    "screen3": {
+      "title": "BENCHMARKS REAIS",
+      "stat1": "17",
+      "stat2": "40+",
+      "stat3": "conquistas"
+    },
+    "screen4": {
+      "title": "SUA JORNADA",
+      "subtitle": "Do ponto de partida à sua meta"
+    },
+    "screen5": {
+      "title": "TREINÁVEL",
+      "card1": "10–15%",
+      "card1Desc": "de melhora em 4 semanas",
+      "card2": "∞",
+      "card2Desc": "sessões ilimitadas",
+      "card3": "<5min",
+      "card3Desc": "por sessão"
+    }
+  },
+
+  "energy": {
+    "depleted": "ENERGIA ESGOTADA",
+    "resetLabel": "Energia repõe à meia-noite",
+    "resetSub": "Aguarde ou recarregue agora",
+    "rechargeNow": "RECARREGAR AGORA",
+    "perModeDesc": "{{energies}} energias · todos os modos",
+    "once": "única",
+    "premium": "PREMIUM",
+    "premiumDesc": "Energia ilimitada · Sem anúncios · Badge exclusivo",
+    "best": "MELHOR",
+    "testModeFooter": "⚙ Modo teste ativo — compras simuladas sem cobrança",
+    "testModeTitle": "⚡ Modo teste",
+    "testModeEnergy": "{{energies}} energias adicionadas a todos os modos (sem cobrança real).",
+    "testModeSubscription": "Assinatura \"{{label}}\" simulada — energia ilimitada ativada (sem cobrança real).",
+    "comingSoonPackage": "Compra de \"{{label}}\" será processada via Google Play.",
+    "comingSoonSubscription": "Assinatura \"{{label}}\" ({{price}}) via Google Play."
+  },
+
+  "levels": {
+    "partida": {
+      "IMPOSSÍVEL":     { "label": "IMPOSSÍVEL",     "desc": "Abaixo de qualquer limite fisiológico humano" },
+      "SUPER-HUMANO":   { "label": "SUPER-HUMANO",   "desc": "Abaixo do limite de reação visual humana" },
+      "ELITE EXTREMO":  { "label": "ELITE EXTREMO",  "desc": "Velocistas olímpicos em partida auditiva" },
+      "ELITE":          { "label": "ELITE",           "desc": "Pilotos de F1 de ponta · Top 5% da população" },
+      "MUITO BOM":      { "label": "MUITO BOM",       "desc": "Atletas profissionais · Tenistas ATP" },
+      "BOM":            { "label": "BOM",             "desc": "Reflexo funcional, base para evoluir" },
+      "NA MÉDIA":       { "label": "NA MÉDIA",        "desc": "Linha de base populacional adulta" },
+      "CONSTRUINDO":    { "label": "CONSTRUINDO",     "desc": "Todo treino começa aqui" },
+      "AQUECENDO":      { "label": "AQUECENDO",       "desc": "O ritmo vai aumentar" },
+      "INICIANDO":      { "label": "INICIANDO",       "desc": "Cada sessão já muda isso" }
+    },
+    "alvo": {
+      "ELITE":          { "label": "ELITE",           "desc": "Atleta de alto rendimento" },
+      "MUITO BOM":      { "label": "MUITO BOM",       "desc": "Reflexo afiado" },
+      "BOM":            { "label": "BOM",             "desc": "Tempo de reação sólido" },
+      "NA MÉDIA":       { "label": "NA MÉDIA",        "desc": "Ponto de partida normal" },
+      "CONSTRUINDO":    { "label": "CONSTRUINDO",     "desc": "Todo treino começa aqui" },
+      "AQUECENDO":      { "label": "AQUECENDO",       "desc": "O ritmo vai aumentar" },
+      "INICIANDO":      { "label": "INICIANDO",       "desc": "Cada sessão já muda isso" }
+    },
+    "sequencia": {
+      "ELITE":          { "label": "ELITE",           "desc": "Atleta cognitivo de alto nível" },
+      "MUITO BOM":      { "label": "MUITO BOM",       "desc": "Adulto jovem treinado" },
+      "BOM":            { "label": "BOM",             "desc": "Controle inibitório natural" },
+      "NA MÉDIA":       { "label": "NA MÉDIA",        "desc": "Nível médio da população geral" },
+      "CONSTRUINDO":    { "label": "CONSTRUINDO",     "desc": "O controle inibitório está se formando" },
+      "AQUECENDO":      { "label": "AQUECENDO",       "desc": "O foco vai se afiar" },
+      "INICIANDO":      { "label": "INICIANDO",       "desc": "Cada sessão treina inibição" }
+    },
+    "radar": {
+      "ELITE":          { "label": "ELITE",           "desc": "Atleta de reação visual altamente treinado" },
+      "MUITO BOM":      { "label": "MUITO BOM",       "desc": "Coordenação visual afiada" },
+      "BOM":            { "label": "BOM",             "desc": "Localização visual consistente" },
+      "NA MÉDIA":       { "label": "NA MÉDIA",        "desc": "Linha de base populacional" },
+      "CONSTRUINDO":    { "label": "CONSTRUINDO",     "desc": "O mapa visual está se formando" },
+      "AQUECENDO":      { "label": "AQUECENDO",       "desc": "A acuidade espacial vai crescer" },
+      "INICIANDO":      { "label": "INICIANDO",       "desc": "Cada rodada calibra o sistema" }
+    }
+  },
+
+  "f1": {
+    "above": "Incrível — você está ACIMA do nível de piloto de F1!",
+    "top": "Você está no nível dos melhores pilotos de F1!",
+    "within": "Você está dentro da faixa de pilotos de F1 (150–250 ms).",
+    "gap": "Você está {{gap}} ms do nível de piloto de F1 (150–250 ms)."
+  }
+}
