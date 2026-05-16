@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { playSfx } from '../utils/sfx';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
@@ -56,17 +57,18 @@ function buildSequence(): ('go' | 'nogo')[] {
 }
 
 export default function ModoSequencia({ onComplete, onBack }: Props) {
+  const { t } = useTranslation();
   const [gameState, setGameState] = useState<SeqState>('intro');
   const confirmAbort = useCallback(() => {
     Alert.alert(
-      'Deseja desistir?',
-      'O progresso desta sessão não será salvo.',
+      t('common.quitTitle'),
+      t('common.quitMessage'),
       [
-        { text: 'Continuar jogando', style: 'cancel' },
-        { text: 'Desistir', style: 'destructive', onPress: onBack },
+        { text: t('common.keepPlaying'), style: 'cancel' },
+        { text: t('common.quit'), style: 'destructive', onPress: onBack },
       ],
     );
-  }, [onBack]);
+  }, [onBack, t]);
   const [signalIdx, setSignalIdx] = useState(0);
   const [trials, setTrials] = useState<TrialResult[]>([]);
   const [lastResponse, setLastResponse] = useState<ResponseType | null>(null);
@@ -310,16 +312,14 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
-          <Text style={styles.introTitle}>MODO SEQUÊNCIA</Text>
-          <Text style={styles.introSub}>20 sinais · Go / NoGo</Text>
+          <Text style={styles.introTitle}>{t('sequence.title')}</Text>
+          <Text style={styles.introSub}>{t('sequence.subtitle')}</Text>
           <View style={styles.howToCard}>
-            <Text style={styles.howToTitle}>Como jogar</Text>
-            <Text style={styles.howToText}>
-              Toque apenas nos sinais VERDES (Go). Ignore os vermelhos (No-Go). Controle o impulso de tocar em tudo.
-            </Text>
+            <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
+            <Text style={styles.howToText}>{t('sequence.howToText')}</Text>
           </View>
           <TouchableOpacity style={styles.startBtn} onPress={startGame} activeOpacity={0.8}>
-            <Text style={styles.startBtnText}>INICIAR</Text>
+            <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -330,7 +330,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     return (
       <View style={[styles.screen, styles.centeredFull]}>
         <Text style={styles.countdownNum}>{countdown}</Text>
-        <Text style={styles.countdownLabel}>PREPARE-SE</Text>
+        <Text style={styles.countdownLabel}>{t('sequence.prepare')}</Text>
       </View>
     );
   }
@@ -367,9 +367,9 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
         {gameState === 'feedback' && lastResponse && (
           <View style={styles.feedbackContainer}>
             {lastResponse === 'hit' && <Text style={[styles.feedbackBig, { color: '#10b981' }]}>✓</Text>}
-            {lastResponse === 'miss' && <Text style={[styles.feedbackBig, { color: '#ef4444' }]}>PERDEU</Text>}
-            {lastResponse === 'commission' && <Text style={[styles.feedbackBig, { color: '#ef4444' }]}>ERRO!</Text>}
-            {lastResponse === 'correct_inhibit' && <Text style={[styles.feedbackBig, { color: '#8b5cf6' }]}>✓ INIBIU</Text>}
+            {lastResponse === 'miss' && <Text style={[styles.feedbackBig, { color: '#ef4444' }]}>{t('sequence.miss')}</Text>}
+            {lastResponse === 'commission' && <Text style={[styles.feedbackBig, { color: '#ef4444' }]}>{t('sequence.error')}</Text>}
+            {lastResponse === 'correct_inhibit' && <Text style={[styles.feedbackBig, { color: '#8b5cf6' }]}>{t('sequence.inhibited')}</Text>}
           </View>
         )}
       </Pressable>
@@ -377,8 +377,8 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       {/* Instruction reminder */}
       {gameState === 'inter' && (
         <View style={styles.bottomHint}>
-          <Text style={[styles.hintLine, { color: '#10b981' }]}>VERDE → toque</Text>
-          <Text style={[styles.hintLine, { color: '#ef4444' }]}>VERMELHO → não toque</Text>
+          <Text style={[styles.hintLine, { color: '#10b981' }]}>{t('sequence.hintGo')}</Text>
+          <Text style={[styles.hintLine, { color: '#ef4444' }]}>{t('sequence.hintNoGo')}</Text>
         </View>
       )}
 
@@ -386,9 +386,9 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       {showPenaltyOverlay && (
         <View style={[StyleSheet.absoluteFill, styles.penaltyOverlay]} pointerEvents="none">
           <Text style={styles.penaltyIcon}>❌</Text>
-          <Text style={styles.penaltyTitle}>Antecipou!</Text>
-          <Text style={styles.penaltyMs}>+150ms</Text>
-          <Text style={styles.penaltyContinue}>Toque para continuar</Text>
+          <Text style={styles.penaltyTitle}>{t('sequence.penaltyTitle')}</Text>
+          <Text style={styles.penaltyMs}>{t('sequence.penaltyMs')}</Text>
+          <Text style={styles.penaltyContinue}>{t('sequence.penaltyContinue')}</Text>
         </View>
       )}
 

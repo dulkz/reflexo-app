@@ -4,6 +4,8 @@ import {
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
@@ -12,18 +14,6 @@ import { ConquistasContent } from './Conquistas';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const DAY = 86_400_000;
-
-const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
-const DAYS_OF_WEEK = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-const MODE_LABELS: Record<ModeKey, string> = {
-  partida: 'Partida',
-  alvo: 'Alvo',
-  sequencia: 'Sequência',
-  radar: 'Radar',
-};
 
 const MODE_ICONS: Record<ModeKey, string> = {
   partida:   ICONS.modes.partida,
@@ -38,17 +28,26 @@ function dayStart(ts: number): number {
   return d.getTime();
 }
 
-function formatShortDate(ts: number): string {
-  const d = new Date(ts);
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+function formatShortDate(ts: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'pt-BR', {
+    day: 'numeric', month: 'short',
+  }).format(new Date(ts));
 }
 
-function formatRelativeDate(ts: number): string {
+function weekdayName(dayIdx: number, lang: string): string {
+  // Jan 1 2023 is a Sunday (dayIdx=0), so offset by dayIdx gives correct weekday
+  const d = new Date(2023, 0, 1 + dayIdx);
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'pt-BR', { weekday: 'short' }).format(d);
+}
+
+type TFunc = (key: string, opts?: Record<string, unknown>) => string;
+
+function formatRelativeDate(ts: number, t: TFunc, lang: string): string {
   const diff = Math.round((dayStart(Date.now()) - dayStart(ts)) / DAY);
-  if (diff === 0) return 'hoje';
-  if (diff === 1) return 'ontem';
-  if (diff < 7) return `há ${diff} dias`;
-  return formatShortDate(ts);
+  if (diff === 0) return t('dates.today');
+  if (diff === 1) return t('dates.yesterday');
+  if (diff < 7) return t('dates.daysAgo', { count: diff });
+  return formatShortDate(ts, lang);
 }
 
 // Best individual round/hit (= Melhor Tempo Reflexo). Falls back to session score if absent.
@@ -80,11 +79,11 @@ function computeTrend(scores: number[]): Trend {
   return 'flat';
 }
 
-const TREND_META: Record<Trend, { icon: string; label: string; color: string }> = {
-  up:      { icon: '↑', label: 'melhorando', color: '#10b981' },
-  flat:    { icon: '→', label: 'estável',    color: '#06b6d4' },
-  down:    { icon: '↓', label: 'piorando',   color: '#ef4444' },
-  unknown: { icon: '·', label: '—',          color: '#4a5a7b' },
+const TREND_META: Record<Trend, { icon: string; labelKey: string; color: string }> = {
+  up:      { icon: '↑', labelKey: 'history.trend.improving', color: '#10b981' },
+  flat:    { icon: '→', labelKey: 'history.trend.stable',    color: '#06b6d4' },
+  down:    { icon: '↓', labelKey: 'history.trend.declining', color: '#ef4444' },
+  unknown: { icon: '·', labelKey: '',                        color: '#4a5a7b' },
 };
 
 interface ModeCardProps {
@@ -95,6 +94,8 @@ interface ModeCardProps {
 }
 
 function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
+  const { t } = useTranslation();
+  const lang = i18n.language;
   const mc = MODE_COLORS[mode];
   const mSessions = sessions.filter(s => s.mode === mode);
 
@@ -168,27 +169,27 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
           <SvgXml xml={MODE_ICONS[mode]} width={24} height={24} />
         </View>
         <View style={{ flex: 1, gap: 4 }}>
-          <Text style={[styles.modeName, { color: mc.accent }]}>{MODE_LABELS[mode].toUpperCase()}</Text>
+          <Text style={[styles.modeName, { color: mc.accent }]}>{t(`history.filters.${mode}`).toUpperCase()}</Text>
           {data && lvl ? (
             <>
               <View style={styles.modeHeaderRow}>
                 <Text style={[styles.modeBest, { color: lvl.color }]}>{data.bestAvgMs} ms</Text>
-                <Text style={styles.modeBestSub}>média</Text>
+                <Text style={styles.modeBestSub}>{t('history.stats.avgLabel')}</Text>
                 <Text style={styles.modeBestDot}>·</Text>
                 <Text style={[styles.modeBestSecondary, { color: mc.accent }]}>{data.bestReflexMs} ms</Text>
-                <Text style={styles.modeBestSub}>melhor</Text>
+                <Text style={styles.modeBestSub}>{t('history.stats.bestLabel')}</Text>
               </View>
               <View style={styles.modeHeaderRow}>
                 <View style={[styles.levelMini, { backgroundColor: lvl.bg }]}>
-                  <Text style={[styles.levelMiniText, { color: lvl.color }]} numberOfLines={1}>{lvl.label}</Text>
+                  <Text style={[styles.levelMiniText, { color: lvl.color }]} numberOfLines={1}>{t(`levels.${lvl.labelKey}.label` as any)}</Text>
                 </View>
                 <Text style={[styles.trendBadge, { color: trendMeta.color }]}>
-                  {trendMeta.icon} {trendMeta.label}
+                  {trendMeta.icon} {trendMeta.labelKey ? t(trendMeta.labelKey) : '—'}
                 </Text>
               </View>
             </>
           ) : (
-            <Text style={styles.modeEmpty}>Nenhuma sessão registrada</Text>
+            <Text style={styles.modeEmpty}>{t('history.noSessions')}</Text>
           )}
         </View>
         <Text style={[styles.modeChevron, { color: mc.accent }]}>{expanded ? '▼' : '▶'}</Text>
@@ -197,15 +198,15 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
       {expanded && data && (
         <View style={styles.modeBody}>
           <View style={styles.modeRow}>
-            <Text style={styles.modeRowLabel}>Melhor Tempo Reflexo</Text>
+            <Text style={styles.modeRowLabel}>{t('history.bestTime')}</Text>
             <Text style={[styles.modeRowValue, { color: mc.accent }]}>{data.bestReflexMs} ms</Text>
           </View>
           <View style={styles.modeRow}>
-            <Text style={styles.modeRowLabel}>Média RT (melhor sessão)</Text>
+            <Text style={styles.modeRowLabel}>{t('history.stats.avgRtBest')}</Text>
             <Text style={[styles.modeRowValue, lvl && { color: lvl.color }]}>{data.bestAvgMs} ms</Text>
           </View>
           <View style={styles.modeRow}>
-            <Text style={styles.modeRowLabel}>Primeiro vs. atual</Text>
+            <Text style={styles.modeRowLabel}>{t('history.stats.firstVsCurrent')}</Text>
             <Text style={styles.modeRowValue}>
               {data.firstAvg} → <Text style={{ color: mc.accent }}>{data.latestAvg} ms</Text>
               <Text style={styles.modeRowSub}>{
@@ -218,34 +219,32 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
             </Text>
           </View>
           <View style={styles.modeRow}>
-            <Text style={styles.modeRowLabel}>Total de sessões</Text>
+            <Text style={styles.modeRowLabel}>{t('history.stats.totalSessions')}</Text>
             <Text style={styles.modeRowValue}>{data.total}</Text>
           </View>
           <View style={styles.modeRow}>
-            <Text style={styles.modeRowLabel}>Última sessão</Text>
-            <Text style={styles.modeRowValue}>{formatRelativeDate(data.latestDate)}</Text>
+            <Text style={styles.modeRowLabel}>{t('history.stats.lastSession')}</Text>
+            <Text style={styles.modeRowValue}>{formatRelativeDate(data.latestDate, t, lang)}</Text>
           </View>
           {data.bestDayIdx >= 0 && (
             <View style={styles.modeRow}>
-              <Text style={styles.modeRowLabel}>Melhor dia da semana</Text>
+              <Text style={styles.modeRowLabel}>{t('history.stats.bestDayOfWeek')}</Text>
               <Text style={styles.modeRowValue}>
-                {DAYS_OF_WEEK[data.bestDayIdx]}
+                {weekdayName(data.bestDayIdx, lang)}
                 <Text style={styles.modeRowSub}>  · {Math.round(data.bestDayAvg)} ms</Text>
               </Text>
             </View>
           )}
           {data.mostPlayedIdx >= 0 && data.mostPlayedCount > 0 && (
             <View style={styles.modeRow}>
-              <Text style={styles.modeRowLabel}>Dia mais jogado</Text>
+              <Text style={styles.modeRowLabel}>{t('history.stats.mostPlayedDay')}</Text>
               <Text style={styles.modeRowValue}>
-                {DAYS_OF_WEEK[data.mostPlayedIdx]}
-                <Text style={styles.modeRowSub}>  · {data.mostPlayedCount} sess.</Text>
+                {weekdayName(data.mostPlayedIdx, lang)}
+                <Text style={styles.modeRowSub}>  · {data.mostPlayedCount} {t('history.sessions')}</Text>
               </Text>
             </View>
           )}
-          <Text style={styles.modeFootnote}>
-            Melhor reflexo = rodada/hit individual mais rápido. Média RT = score da melhor sessão (com penalidades quando aplicável).
-          </Text>
+          <Text style={styles.modeFootnote}>{t('history.stats.footnote')}</Text>
         </View>
       )}
     </View>
@@ -258,6 +257,8 @@ interface Props {
 }
 
 export default function Historico({ sessions }: Props) {
+  const { t } = useTranslation();
+  const lang = i18n.language;
   const [expanded, setExpanded] = useState<Record<ModeKey, boolean>>({
     partida: false, alvo: false, sequencia: false, radar: false,
   });
@@ -311,7 +312,7 @@ export default function Historico({ sessions }: Props) {
         contentContainerStyle={[styles.scroll, { paddingTop: TOP + 24 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.pageTitle}>HISTÓRICO</Text>
+        <Text style={styles.pageTitle}>{t('history.pageTitle')}</Text>
 
         {/* ── 4 summary cards ── */}
         <View style={styles.summaryGrid}>
@@ -323,60 +324,62 @@ export default function Historico({ sessions }: Props) {
                   {bestRtSession.bestTime} ms
                 </Text>
                 <Text style={styles.sumSubtitle}>
-                  {MODE_LABELS[bestRtSession.mode]} · {formatRelativeDate(bestRtSession.date)}
+                  {t(`history.filters.${bestRtSession.mode}`)} · {formatRelativeDate(bestRtSession.date, t, lang)}
                 </Text>
               </>
             ) : (
               <Text style={[styles.sumVal, { color: '#4a5a7b' }]}>—</Text>
             )}
-            <Text style={styles.sumLbl}>MELHOR TEMPO REFLEXO</Text>
+            <Text style={styles.sumLbl}>{t('history.bestTime')}</Text>
           </View>
 
           <View style={styles.summaryCell}>
             {mostPlayed ? (
               <>
                 <Text style={[styles.sumVal, styles.sumValMd, { color: MODE_COLORS[mostPlayed].accent }]}>
-                  {MODE_LABELS[mostPlayed]}
+                  {t(`history.filters.${mostPlayed}`)}
                 </Text>
                 <Text style={styles.sumSubtitle}>
-                  {modeCounts[mostPlayed]} de {sessions.length} sessões
+                  {t('history.modeSessionCount', { count: modeCounts[mostPlayed], total: sessions.length })}
                 </Text>
               </>
             ) : (
               <Text style={[styles.sumVal, { color: '#4a5a7b' }]}>—</Text>
             )}
-            <Text style={styles.sumLbl}>MAIS JOGADO</Text>
+            <Text style={styles.sumLbl}>{t('history.mostPlayed')}</Text>
           </View>
 
           <View style={styles.summaryCell}>
             <Text style={[styles.sumVal, { color: streak > 0 ? '#f59e0b' : '#4a5a7b' }]}>
-              {streak} {streak === 1 ? 'dia' : 'dias'}
+              {streak}
             </Text>
             {streakStartTs ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                 <SvgXml xml={ACHIEVEMENT_ICONS.streak5} width={14} height={14} />
-                <Text style={styles.sumSubtitle}>desde {formatShortDate(streakStartTs)}</Text>
+                <Text style={styles.sumSubtitle}>{t('history.streakSince', { date: formatShortDate(streakStartTs, lang) })}</Text>
               </View>
             ) : streak === 1 ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                 <SvgXml xml={ACHIEVEMENT_ICONS.streak5} width={14} height={14} />
-                <Text style={styles.sumSubtitle}>desde hoje</Text>
+                <Text style={styles.sumSubtitle}>{t('history.streakSinceToday')}</Text>
               </View>
             ) : null}
-            <Text style={styles.sumLbl}>STREAK ATUAL</Text>
+            <Text style={styles.sumLbl}>{t('history.currentStreak')}</Text>
           </View>
 
           <View style={styles.summaryCell}>
             <Text style={styles.sumVal}>{sessions.length}</Text>
             <Text style={styles.sumSubtitle}>
-              {sessions.length > 0 ? `sessões em ${daysSinceFirst} dias` : 'nenhuma sessão'}
+              {sessions.length > 0
+                ? t('history.sessionsInDays', { s: sessions.length, d: daysSinceFirst })
+                : t('history.noSessionsShort')}
             </Text>
-            <Text style={styles.sumLbl}>TOTAL</Text>
+            <Text style={styles.sumLbl}>{t('history.total')}</Text>
           </View>
         </View>
 
         {/* ── Evolução por modo ── */}
-        <Text style={styles.sectionTitle}>EVOLUÇÃO POR MODO</Text>
+        <Text style={styles.sectionTitle}>{t('history.evolutionByMode')}</Text>
         {modes.map(m => (
           <ModeStatsCard
             key={m}
@@ -388,7 +391,7 @@ export default function Historico({ sessions }: Props) {
         ))}
 
         {/* ── Conquistas ── */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>CONQUISTAS</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('history.achievements')}</Text>
         <ConquistasContent sessions={sessions} showHeader={false} />
 
         <View style={{ height: 24 }} />

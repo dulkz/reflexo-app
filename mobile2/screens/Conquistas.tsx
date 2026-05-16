@@ -3,6 +3,8 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { buildUserStats } from '../config/archetypes';
@@ -13,8 +15,6 @@ import { ACHIEVEMENT_ICONS, RARITY_ICONS_SVG, UI_ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 const DAY = 86_400_000;
-
-const MONTH_ABBR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 const RARITY_ORDER: RarityKey[] = ['lendario', 'epico', 'raro', 'dificil', 'medio', 'comum'];
 const SECRET_COLOR = '#4a5a7b';
@@ -36,9 +36,10 @@ const GROUPED = (() => {
 
 const SECRET_TOTAL = ACHIEVEMENTS.filter(a => !!a.secret).length;
 
-function formatUnlockDate(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getDate()} ${MONTH_ABBR[d.getMonth()]} ${d.getFullYear()}`;
+function formatUnlockDate(iso: string, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'pt-BR', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  }).format(new Date(iso));
 }
 
 function computeStreak(sessions: SessionRecord[]): number {
@@ -65,6 +66,8 @@ interface ContentProps {
 }
 
 export function ConquistasContent({ sessions, showHeader = true }: ContentProps) {
+  const { t } = useTranslation();
+  const lang = i18n.language;
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const unlockedCount = useMemo(() => getUnlockedCount(stats), [stats]);
@@ -111,19 +114,21 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
     });
   }, [stats]);
 
+  const visibleTotal = ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats) || !!unlockDates[a.id]).length;
+
   return (
     <View>
       {showHeader && (
         <View style={styles.header}>
-          <Text style={styles.kicker}>CONQUISTAS</Text>
+          <Text style={styles.kicker}>{t('achievements.title')}</Text>
           <Text style={styles.count}>
-            {unlockedCount}/{ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats) || !!unlockDates[a.id]).length} desbloqueadas
+            {t('achievements.unlockedFraction', { count: unlockedCount, total: visibleTotal })}
           </Text>
         </View>
       )}
       {!showHeader && (
         <Text style={styles.embedCount}>
-          {unlockedCount}/{ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats) || !!unlockDates[a.id]).length} desbloqueadas
+          {t('achievements.unlockedFraction', { count: unlockedCount, total: visibleTotal })}
         </Text>
       )}
 
@@ -141,7 +146,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
               >
                 <View style={styles.accordionLabelRow}>
                   <SvgXml xml={RARITY_ICONS_SVG.desbloqueadas} width={18} height={18} />
-                  <Text style={[styles.accordionLabel, { color: '#f59e0b' }]}>DESBLOQUEADAS</Text>
+                  <Text style={[styles.accordionLabel, { color: '#f59e0b' }]}>{t('achievements.unlocked')}</Text>
                 </View>
                 <View style={styles.accordionRight}>
                   <Text style={[styles.accordionCount, { color: '#f59e0b' }]}>
@@ -163,14 +168,16 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                         style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor }]}
                       >
                         <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
-                          <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
+                          <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{t(`achievements.rarity.${a.rarity}` as any)}</Text>
                         </View>
                         <SvgXml xml={a.icon} width={28} height={28} />
                         <Text style={styles.name}>{a.name}</Text>
                         <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
                         <View style={[styles.progressBar, styles.progressBarDone]}>
                           <Text style={[styles.progressLabel, styles.progressLabelDone]}>
-                            {`✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`}
+                            {unlockDate
+                              ? t('achievements.unlockedOn', { date: formatUnlockDate(unlockDate, lang) })
+                              : t('achievements.unlockedNone')}
                           </Text>
                         </View>
                       </View>
@@ -204,12 +211,12 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                 <View style={styles.accordionLabelRow}>
                   <SvgXml xml={RARITY_ICONS[r]} width={18} height={18} style={{ opacity: allDone ? 0.5 : 1 }} />
                   <Text style={[styles.accordionLabel, { color: allDone ? cfg.cor + '99' : cfg.cor }]}>
-                    {cfg.label}
+                    {t(`achievements.rarity.${r}` as any)}
                   </Text>
                 </View>
                 <View style={styles.accordionRight}>
                   <Text style={[styles.accordionCount, { color: allDone ? cfg.cor + '99' : cfg.cor }]}>
-                    {allDone ? '✓ Todas conquistadas' : `${unlockedCount}/${nonSecretAll.length}`}
+                    {allDone ? t('achievements.allUnlocked') : t('achievements.progress', { current: unlockedCount, total: nonSecretAll.length })}
                   </Text>
                   {!allDone && (
                     <Text style={[styles.accordionArrow, { color: cfg.cor }]}>
@@ -226,7 +233,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                     style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor + '99', opacity: 0.65 }]}
                   >
                     <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
-                      <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
+                      <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{t(`achievements.rarity.${r}` as any)}</Text>
                     </View>
                     <SvgXml xml={a.icon} width={28} height={28} />
                     <Text style={styles.name}>{a.name}</Text>
@@ -257,11 +264,11 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
               >
                 <View style={styles.accordionLabelRow}>
                   <SvgXml xml={RARITY_ICONS_SVG.secretas} width={18} height={18} />
-                  <Text style={[styles.accordionLabel, { color: SECRET_COLOR }]}>SECRETAS</Text>
+                  <Text style={[styles.accordionLabel, { color: SECRET_COLOR }]}>{t('achievements.secret')}</Text>
                 </View>
                 <View style={styles.accordionRight}>
                   <Text style={[styles.accordionCount, { color: SECRET_COLOR }]}>
-                    {`${discoveredSecretsCount} descoberta${discoveredSecretsCount !== 1 ? 's' : ''} / ${SECRET_TOTAL} existem`}
+                    {t('achievements.secretSummary', { count: discoveredSecretsCount, total: SECRET_TOTAL })}
                   </Text>
                   <Text style={[styles.accordionArrow, { color: SECRET_COLOR }]}>
                     {isExpanded ? '▼' : '▶'}
@@ -273,7 +280,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                   {/* Descobertas — mostrar com nome e descrição reais */}
                   {discoveredSecrets.length > 0 && (
                     <View>
-                      <Text style={styles.discoveredLabel}>✓ DESCOBERTAS</Text>
+                      <Text style={styles.discoveredLabel}>{t('achievements.discovered')}</Text>
                       <View style={styles.grid}>
                         {discoveredSecrets.map(a => {
                           const cfg = RARITY_CONFIG[a.rarity];
@@ -285,10 +292,10 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                             >
                               <View style={{ flexDirection: 'row', gap: 4, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 2 }}>
                                 <View style={[styles.rarityBadge, { backgroundColor: SECRET_COLOR + '22', borderColor: SECRET_COLOR }]}>
-                                  <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>SECRETA</Text>
+                                  <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>{t('achievements.secret_badge')}</Text>
                                 </View>
                                 <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
-                                  <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{cfg.label}</Text>
+                                  <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{t(`achievements.rarity.${a.rarity}` as any)}</Text>
                                 </View>
                               </View>
                               <SvgXml xml={a.icon} width={28} height={28} />
@@ -296,7 +303,9 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                               <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
                               <View style={[styles.progressBar, styles.progressBarDone]}>
                                 <Text style={[styles.progressLabel, styles.progressLabelDone]}>
-                                  {`✓ Desbloqueada${unlockDate ? ` em ${formatUnlockDate(unlockDate)}` : ''}`}
+                                  {unlockDate
+                                    ? t('achievements.unlockedOn', { date: formatUnlockDate(unlockDate, lang) })
+                                    : t('achievements.unlockedNone')}
                                 </Text>
                               </View>
                             </View>
@@ -314,15 +323,15 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                           style={[styles.cell, { borderWidth: 1.5, borderColor: SECRET_COLOR + '66', opacity: 0.65 }]}
                         >
                           <View style={[styles.rarityBadge, { backgroundColor: SECRET_COLOR + '22', borderColor: SECRET_COLOR }]}>
-                            <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>SECRETA</Text>
+                            <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>{t('achievements.secret_badge')}</Text>
                           </View>
                           <SvgXml xml={ACHIEVEMENT_ICONS.streak100} width={28} height={28} />
                           <Text style={styles.name}>???</Text>
-                          <Text style={styles.desc} numberOfLines={2}>Conquista secreta — descubra jogando</Text>
+                          <Text style={styles.desc} numberOfLines={2}>{t('achievements.secretHint')}</Text>
                           <View style={styles.progressBar}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                               <SvgXml xml={UI_ICONS.lock} width={11} height={11} />
-                              <Text style={styles.progressLabel}>Bloqueada</Text>
+                              <Text style={styles.progressLabel}>{t('achievements.lockedState')}</Text>
                             </View>
                           </View>
                         </View>
@@ -330,9 +339,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                     </View>
                   ) : discoveredSecrets.length === 0 ? (
                     <View style={styles.secretHint}>
-                      <Text style={styles.secretHintText}>
-                        Jogue e descubra — algumas conquistas só aparecem quando você menos espera
-                      </Text>
+                      <Text style={styles.secretHintText}>{t('achievements.secretEmpty')}</Text>
                     </View>
                   ) : null}
                 </View>

@@ -3,6 +3,8 @@ import {
   View, Text, StyleSheet, ScrollView, Modal, TextInput,
   Platform, StatusBar as RNStatusBar, TouchableOpacity, Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
 import { SvgXml } from 'react-native-svg';
 import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
@@ -40,8 +42,18 @@ import { GROUP_COLOR } from '../config/ambitions';
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 const DAY = 86_400_000;
-const PT_MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const PT_MONTHS_LONG = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function shortMonthDay(ts: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'pt-BR', {
+    day: 'numeric', month: 'short',
+  }).format(new Date(ts));
+}
+
+function longMonth(ts: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'pt-BR', {
+    month: 'long',
+  }).format(new Date(ts));
+}
 
 interface Props {
   sessions: SessionRecord[];
@@ -85,13 +97,12 @@ function dayStart(ts: number) {
   const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime();
 }
 
-function formatRelDay(ts: number): string {
+function formatRelDay(ts: number, t: (k: string, o?: Record<string, unknown>) => string, lang: string): string {
   const diff = Math.round((dayStart(Date.now()) - dayStart(ts)) / DAY);
-  if (diff === 0) return 'hoje';
-  if (diff === 1) return 'ontem';
+  if (diff === 0) return t('dates.today');
+  if (diff === 1) return t('dates.yesterday');
   if (diff < 7) return `${diff}d`;
-  const d = new Date(ts);
-  return `${d.getDate()} ${PT_MONTHS[d.getMonth()]}`;
+  return shortMonthDay(ts, lang);
 }
 
 function computeStreak(sessions: SessionRecord[]): number {
@@ -109,16 +120,18 @@ function computeStreak(sessions: SessionRecord[]): number {
 
 // ── Mode card data ───────────────────────────────────────────────────────────
 
-const MODE_META: Record<ModeKey, { name: string; icon: string; sub: string }> = {
-  partida:   { name: 'MODO PARTIDA',   icon: ICONS.modes.partida,   sub: 'Reação simples visual' },
-  alvo:      { name: 'MODO ALVO',      icon: ICONS.modes.alvo,      sub: 'Velocidade + precisão' },
-  sequencia: { name: 'MODO SEQUÊNCIA', icon: ICONS.modes.sequencia, sub: 'Controle inibitório' },
-  radar:     { name: 'MODO RADAR',     icon: ICONS.modes.radar,     sub: 'Localização visual' },
+const MODE_ICONS_PERFIL: Record<ModeKey, string> = {
+  partida:   ICONS.modes.partida,
+  alvo:      ICONS.modes.alvo,
+  sequencia: ICONS.modes.sequencia,
+  radar:     ICONS.modes.radar,
 };
 
 // ── Bar chart ────────────────────────────────────────────────────────────────
 
-function BarChart({ sessions }: { sessions: SessionRecord[] }) {
+type TFn = (k: string, o?: Record<string, unknown>) => string;
+
+function BarChart({ sessions, t, lang }: { sessions: SessionRecord[]; t: TFn; lang: string }) {
   if (sessions.length < 2) return null;
 
   const scores = sessions.map(s => s.score);
@@ -150,20 +163,20 @@ function BarChart({ sessions }: { sessions: SessionRecord[] }) {
               <View style={[chart.bar, { height: barH, backgroundColor: mc.accent }]} />
               <View style={[chart.levelPill, { backgroundColor: lvl.bg }]}>
                 <Text style={[chart.levelText, { color: lvl.color }]} numberOfLines={1}>
-                  {lvl.label.split(' ')[0]}
+                  {t(`levels.${lvl.labelKey}.label` as any).split(' ')[0]}
                 </Text>
               </View>
-              <Text style={chart.dayLabel}>{formatRelDay(s.date)}</Text>
+              <Text style={chart.dayLabel}>{formatRelDay(s.date, t, lang)}</Text>
             </View>
           );
         })}
       </View>
       <Text style={chart.insight}>
         {improved
-          ? `↓ Melhorou ${Math.abs(delta)} ms nas últimas ${sessions.length} sessões`
+          ? t('profile.chart.improving', { delta: Math.abs(delta), n: sessions.length })
           : delta > 0
-          ? `↑ +${delta} ms — continue treinando para retomar o ritmo`
-          : 'Consistência perfeita nas últimas sessões'}
+          ? t('profile.chart.declining', { delta })
+          : t('profile.chart.consistent')}
       </Text>
     </View>
   );
@@ -194,6 +207,8 @@ const chart = StyleSheet.create({
 // ── Main component ───────────────────────────────────────────────────────────
 
 export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConquistas, onUpdateProfile, onClearData }: Props) {
+  const { t } = useTranslation();
+  const lang = i18n.language;
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
@@ -237,9 +252,8 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   const joinedLabel = useMemo(() => {
     if (sessions.length === 0) return null;
     const oldest = sessions[sessions.length - 1];
-    const d = new Date(oldest.date);
-    return PT_MONTHS_LONG[d.getMonth()];
-  }, [sessions]);
+    return longMonth(oldest.date, lang);
+  }, [sessions, lang]);
 
   // ── Journey data ─────────────────────────────────────────────────────────────
   const currentBestMs = useMemo(
@@ -389,8 +403,8 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             </View>
             <Text style={styles.identitySub}>
               {joinedLabel
-                ? `Jogando desde ${joinedLabel} · ${sessions.length !== 1 ? 'sessões' : 'sessão'}`
-                : 'Sem sessões ainda'}
+                ? t('profile.identity.playingSince', { month: joinedLabel })
+                : t('profile.identity.noSessions')}
             </Text>
           </View>
         </View>
@@ -400,7 +414,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           <View style={styles.archetypeHeader}>
             <SvgXml xml={archetype.icon} width={34} height={34} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.archetypeKicker}>ARQUÉTIPO ATUAL</Text>
+              <Text style={styles.archetypeKicker}>{t('profile.archetype')}</Text>
               <Text style={[styles.archetypeName, { color: archetype.color }]}>{archetype.name}</Text>
             </View>
           </View>
@@ -422,7 +436,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           const currentIdx = ARCHETYPE_CHAIN.findIndex(a => a.id === stats.archetypeId);
           return (
             <View style={styles.chainSection}>
-              <Text style={styles.sectionTitle}>EVOLUÇÃO</Text>
+              <Text style={styles.sectionTitle}>{t('profile.evolution')}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -465,7 +479,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
 
         {/* ── METAS DE LONGO PRAZO ── */}
         <View style={styles.ltSection}>
-          <Text style={styles.sectionTitle}>METAS DE LONGO PRAZO</Text>
+          <Text style={styles.sectionTitle}>{t('profile.longTermGoals')}</Text>
 
           {/* Próximo marco de velocidade */}
           {ambition && nextMilestone && !isBrainHealth &&
@@ -475,13 +489,13 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
               <View style={styles.ltCardTop}>
                 <SvgXml xml={ARCHETYPE_ICONS.ROCKET} width={22} height={22} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.ltKicker}>PRÓXIMO MARCO</Text>
+                  <Text style={styles.ltKicker}>{t('profile.nextMilestone')}</Text>
                   <Text style={styles.ltTitle}>{nextMilestone.label}</Text>
                   <Text style={styles.ltSub}>
-                    {`${ambition.name} · meta ${nextMilestone.ms} ms`}
+                    {`${ambition.name} · ${t('profile.goalMs', { ms: nextMilestone.ms })}`}
                     {currentBestMs <= nextMilestone.ms
-                      ? ' · ✓ Já atingido!'
-                      : ` · faltam ${currentBestMs - nextMilestone.ms} ms`}
+                      ? ` · ${t('profile.alreadyReached')}`
+                      : ` · ${t('profile.remaining', { delta: currentBestMs - nextMilestone.ms })}`}
                   </Text>
                 </View>
                 <Text style={styles.ltPct}>{Math.round(milestonePct * 100)}%</Text>
@@ -502,7 +516,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
               <View style={styles.ltCardTop}>
                 <SvgXml xml={nextAchievementInfo.a.icon} width={22} height={22} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.ltKicker}>PRÓXIMA CONQUISTA</Text>
+                  <Text style={styles.ltKicker}>{t('profile.nextAchievement')}</Text>
                   <Text style={styles.ltTitle}>{nextAchievementInfo.a.name}</Text>
                   <Text style={styles.ltSub}>{nextAchievementInfo.a.progress(stats)}</Text>
                 </View>
@@ -524,13 +538,13 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
               <View style={styles.ltCardTop}>
                 <SvgXml xml={nextDef.icon} width={24} height={24} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.ltKicker}>PRÓXIMO ARQUÉTIPO</Text>
+                  <Text style={styles.ltKicker}>{t('profile.nextArchetypeSection')}</Text>
                   <Text style={[styles.ltTitle, { color: nextDef.color }]}>{nextDef.name}</Text>
                   <Text style={styles.ltSub}>
-                    {archetype.targetCriteria.filter(c => c.done(stats)).length}
-                    {'/'}
-                    {archetype.targetCriteria.length}
-                    {' critérios concluídos'}
+                    {t('profile.criteriaDone', {
+                      done: archetype.targetCriteria.filter(c => c.done(stats)).length,
+                      total: archetype.targetCriteria.length,
+                    })}
                   </Text>
                 </View>
                 <Text style={styles.ltPct}>{Math.round(archetypePct * 100)}%</Text>
@@ -553,10 +567,10 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 onPress={() => setCompletedExpanded(prev => !prev)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.completedHeaderText}>✓ CONCLUÍDAS</Text>
+                <Text style={styles.completedHeaderText}>{t('profile.completed')}</Text>
                 <View style={styles.completedHeaderRight}>
                   <Text style={styles.completedHeaderCount}>
-                    {completedCount} conquistada{completedCount !== 1 ? 's' : ''}
+                    {t('profile.completedCount', { count: completedCount })}
                   </Text>
                   <Text style={styles.completedArrow}>
                     {completedExpanded ? '▼' : '▶'}
@@ -571,10 +585,10 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                       <View style={{ flex: 1 }}>
                         <Text style={styles.completedLabel}>{ms.milestone.label}</Text>
                         {ms.milestone.type !== 'qualitative' && ms.milestone.ms !== undefined && (
-                          <Text style={styles.completedSub}>{ms.milestone.ms} ms atingido</Text>
+                          <Text style={styles.completedSub}>{t('profile.msReached', { ms: ms.milestone.ms })}</Text>
                         )}
                       </View>
-                      <Text style={styles.completedTag}>MARCO</Text>
+                      <Text style={styles.completedTag}>{t('profile.milestone')}</Text>
                     </View>
                   ))}
                   {mostRecentUnlockedAch && (
@@ -586,7 +600,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                           {mostRecentUnlockedAch.description}
                         </Text>
                       </View>
-                      <Text style={styles.completedTag}>CONQUISTA</Text>
+                      <Text style={styles.completedTag}>{t('profile.achievement')}</Text>
                     </View>
                   )}
                   {pastArchetypes.map(pa => (
@@ -596,7 +610,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                         <Text style={styles.completedLabel}>{ARCHETYPES[pa.id].name}</Text>
                         <Text style={styles.completedSub}>{pa.tagline}</Text>
                       </View>
-                      <Text style={styles.completedTag}>ARQUÉTIPO</Text>
+                      <Text style={styles.completedTag}>{t('profile.archetypeLabel')}</Text>
                     </View>
                   ))}
                 </View>
@@ -609,7 +623,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {nextDef && archetype.targetCriteria.length > 0 && !reachedDestination && (
           <View style={styles.paraVirarCard}>
             <View style={styles.paraVirarHeader}>
-              <Text style={styles.paraVirarKicker}>PARA VIRAR</Text>
+              <Text style={styles.paraVirarKicker}>{t('profile.nextArchetype')}</Text>
               <View style={styles.paraVirarTarget}>
                 <SvgXml xml={nextDef.icon} width={24} height={24} />
                 <Text style={[styles.paraVirarName, { color: nextDef.color }]}>{nextDef.name}</Text>
@@ -644,7 +658,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                   {/* Pending by definition — it's the NEXT milestone not yet beaten */}
                 </View>
                 <Text style={styles.criterionLabel}>
-                  {`Bater próximo marco: ${nextMilestone.ms} ms`}
+                  {t('profile.beatNextMilestone', { ms: nextMilestone.ms })}
                   {currentBestMs !== null && (
                     <Text style={styles.criterionSuffix}>
                       {` (delta: ${currentBestMs - nextMilestone.ms} ms)`}
@@ -659,7 +673,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
               <View style={styles.destRow}>
                 <SvgXml xml={ACHIEVEMENT_ICONS.sniper} width={20} height={20} />
                 <Text style={[styles.destLabel, { color: ambitionGroupColor }]}>
-                  Seu destino: {destinationArch.label}
+                  {t('profile.destinationLabel', { name: destinationArch.label })}
                 </Text>
               </View>
             )}
@@ -667,10 +681,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         )}
 
         {/* ── Mode breakdown ── */}
-        <Text style={styles.sectionTitle}>POR MODO</Text>
+        <Text style={styles.sectionTitle}>{t('profile.byMode')}</Text>
         {modeBreakdown.map(m => {
           const mc = MODE_COLORS[m.key];
-          const meta = MODE_META[m.key];
           const displayScore = m.key === 'alvo' && m.bestAlvoRt !== null ? m.bestAlvoRt
                              : m.key === 'radar' && m.bestRadarRt !== null ? m.bestRadarRt
                              : m.best;
@@ -679,11 +692,11 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           return (
             <View key={m.key} style={styles.modeCard}>
               <View style={[styles.modeIconBox, { backgroundColor: mc.accent + '2a' }]}>
-                <SvgXml xml={meta.icon} width={28} height={28} />
+                <SvgXml xml={MODE_ICONS_PERFIL[m.key]} width={28} height={28} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={[styles.modeName, { color: mc.accent }]}>{meta.name}</Text>
-                <Text style={styles.modeSub}>{meta.sub}</Text>
+                <Text style={[styles.modeName, { color: mc.accent }]}>{t(`modes.${m.key}.name`)}</Text>
+                <Text style={styles.modeSub}>{t(`profile.modeDesc.${m.key}`)}</Text>
               </View>
               <View style={styles.modeRight}>
                 {displayScore !== null && lvl ? (
@@ -691,27 +704,27 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                     <Text style={[styles.modeScore, { color: lvl.color }]}>{displayScore} ms</Text>
                     <View style={[styles.modeLevelPill, { backgroundColor: lvl.bg }]}>
                       <Text style={[styles.modeLevelText, { color: lvl.color }]} numberOfLines={1}>
-                        {lvl.label}
+                        {t(`levels.${lvl.labelKey}.label` as any)}
                       </Text>
                     </View>
                     {m.key === 'alvo' && (
-                      <Text style={styles.modeExtra}>Melhor Tempo Reflexo</Text>
+                      <Text style={styles.modeExtra}>{t('profile.bestReflexTime')}</Text>
                     )}
                     {m.key === 'alvo' && m.bestAcc !== null && (
                       <Text style={styles.modeExtra}>{Math.round(m.bestAcc * 100)}% acc</Text>
                     )}
                     {m.key === 'sequencia' && m.lastFatigue !== null && m.lastFatigue !== undefined && (
-                      <Text style={styles.modeExtra}>{m.lastFatigue.toFixed(1)}% fadiga</Text>
+                      <Text style={styles.modeExtra}>{m.lastFatigue.toFixed(1)}% {t('profile.fatigue')}</Text>
                     )}
                     {m.key === 'radar' && (
-                      <Text style={[styles.modeExtra, { color: mc.accent }]}>Melhor Tempo Reflexo</Text>
+                      <Text style={[styles.modeExtra, { color: mc.accent }]}>{t('profile.bestReflexTime')}</Text>
                     )}
                     {m.key === 'radar' && m.bestAcc !== null && (
-                      <Text style={[styles.modeExtra, { color: mc.accent }]}>Precisão: {Math.round(m.bestAcc * 100)}%</Text>
+                      <Text style={[styles.modeExtra, { color: mc.accent }]}>{t('profile.accuracy')}: {Math.round(m.bestAcc * 100)}%</Text>
                     )}
                   </>
                 ) : (
-                  <Text style={styles.modeNone}>{m.count > 0 ? `${m.count} sess.` : '—'}</Text>
+                  <Text style={styles.modeNone}>{m.count > 0 ? t('profile.modeCount', { count: m.count }) : '—'}</Text>
                 )}
               </View>
             </View>
@@ -722,20 +735,20 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {last8.length >= 2 && (
           <>
             <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-              ÚLTIMAS {last8.length} SESSÕES
+              {t('profile.lastSessionsN', { n: last8.length })}
             </Text>
-            <BarChart sessions={last8} />
+            <BarChart sessions={last8} t={t} lang={lang} />
           </>
         )}
 
         {/* ── Achievements summary ── */}
-        <Text style={styles.sectionTitle}>CONQUISTAS</Text>
+        <Text style={styles.sectionTitle}>{t('profile.achievementsSummary')}</Text>
         <TouchableOpacity style={styles.achieveSummaryCard} onPress={onGoToConquistas} activeOpacity={0.8}>
           <View style={styles.achieveSummaryRow}>
             <Text style={styles.achieveSummaryCount}>
-              {unlockedCount}/{visibleAchievementTotal} desbloqueadas
+              {t('achievements.unlockedFraction', { count: unlockedCount, total: visibleAchievementTotal })}
             </Text>
-            <Text style={styles.achieveSummaryLink}>Ver todas →</Text>
+            <Text style={styles.achieveSummaryLink}>{t('profile.seeAll')}</Text>
           </View>
           <View style={styles.achieveProgressTrack}>
             <View style={[styles.achieveProgressFill, { flex: unlockedCount }]} />
@@ -746,11 +759,32 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {sessions.length === 0 && (
           <View style={styles.emptyState}>
             <SvgXml xml={UI_ICONS.emptyGame} width={48} height={48} />
-            <Text style={styles.emptyText}>
-              Complete sua primeira sessão para ver seu perfil evoluir!
-            </Text>
+            <Text style={styles.emptyText}>{t('profile.emptyProfile')}</Text>
           </View>
         )}
+
+        {/* ── IDIOMA ── */}
+        <View style={styles.languageSection}>
+          <Text style={styles.sectionTitle}>{t('profile.language')}</Text>
+          <View style={styles.languageRow}>
+            <TouchableOpacity
+              style={[styles.langBtn, lang === 'pt' && styles.langBtnActive]}
+              onPress={() => i18n.changeLanguage('pt')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.langFlag}>🇧🇷</Text>
+              <Text style={[styles.langLabel, lang === 'pt' && styles.langLabelActive]}>PT</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
+              onPress={() => i18n.changeLanguage('en')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.langFlag}>🇺🇸</Text>
+              <Text style={[styles.langLabel, lang === 'en' && styles.langLabelActive]}>EN</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* ── ZONA DE PERIGO ── */}
         <View style={styles.dangerZone}>
@@ -758,17 +792,17 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             style={styles.dangerButton}
             onPress={() => {
               Alert.alert(
-                'Limpar todos os dados',
-                'Tem certeza? Esta ação apaga todo o histórico, conquistas e progresso. Não pode ser desfeita.',
+                t('profile.clearDataConfirmTitle'),
+                t('profile.clearDataConfirmMessage'),
                 [
-                  { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Limpar tudo', style: 'destructive', onPress: onClearData },
+                  { text: t('common.cancel'), style: 'cancel' },
+                  { text: t('profile.clearDataBtn'), style: 'destructive', onPress: onClearData },
                 ],
               );
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.dangerButtonText}>Limpar todos os dados</Text>
+            <Text style={styles.dangerButtonText}>{t('profile.clearData')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -784,14 +818,14 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
       >
         <View style={styles.nameModalOverlay}>
           <View style={styles.nameModalCard}>
-            <Text style={styles.nameModalTitle}>EDITAR PERFIL</Text>
+            <Text style={styles.nameModalTitle}>{t('profile.editProfile')}</Text>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 4 }}>
-              <Text style={styles.editFieldLabel}>NOME</Text>
+              <Text style={styles.editFieldLabel}>{t('profile.name')}</Text>
               <TextInput
                 style={styles.nameModalInput}
                 value={nameInput}
                 onChangeText={setNameInput}
-                placeholder="Seu nome"
+                placeholder={t('profile.namePlaceholder')}
                 placeholderTextColor="#4a5a7b"
                 maxLength={30}
               />
@@ -802,9 +836,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 return (
                   <View style={{ marginTop: 18 }}>
                     <View style={styles.editAvatarHeader}>
-                      <Text style={styles.editFieldLabel}>AVATAR</Text>
+                      <Text style={styles.editFieldLabel}>{t('profile.avatar')}</Text>
                       <Text style={styles.avatarHeaderCount}>
-                        {unlockedAvatarCount}/{AVATARS.length} desbloqueados
+                        {t('profile.avatarCount', { count: unlockedAvatarCount, total: AVATARS.length })}
                       </Text>
                     </View>
                     <View style={styles.avatarGrid}>
@@ -853,7 +887,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 onPress={() => setEditingName(false)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.nameModalCancelText}>FECHAR</Text>
+                <Text style={styles.nameModalCancelText}>{t('common.close')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.nameModalSave}
@@ -865,7 +899,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.nameModalSaveText}>SALVAR</Text>
+                <Text style={styles.nameModalSaveText}>{t('profile.save')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1162,6 +1196,24 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 40, gap: 12 },
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', lineHeight: 20 },
+
+  // ── Language selector ─────────────────────────────────────────────────────
+  languageSection: { marginTop: 24, marginBottom: 4 },
+  languageRow: { flexDirection: 'row', gap: 10 },
+  langBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 16, paddingVertical: 10,
+    borderRadius: 10, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#111a2e',
+  },
+  langBtnActive: {
+    borderColor: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,0.12)',
+  },
+  langFlag: { fontSize: 18 },
+  langLabel: { fontSize: 13, fontWeight: '700', color: '#4a5a7b', letterSpacing: 0.5 },
+  langLabelActive: { color: '#3b82f6' },
 
   // ── Danger zone ───────────────────────────────────────────────────────────
   dangerZone: { marginTop: 24, alignItems: 'center' },

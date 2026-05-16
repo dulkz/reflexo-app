@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, Pressable, Animated, Alert,
   TouchableOpacity, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
 
@@ -23,6 +24,7 @@ interface Props {
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 export default function ModoPartida({ onComplete, onBack }: Props) {
+  const { t } = useTranslation();
   const [started, setStarted] = useState(false);
   const [showReady, setShowReady] = useState(false);
   const [gameState, setGameState] = useState<GameState>('ready');
@@ -99,14 +101,14 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
 
   const confirmAbort = useCallback(() => {
     Alert.alert(
-      'Deseja desistir?',
-      'O progresso desta sessão não será salvo.',
+      t('common.quitTitle'),
+      t('common.quitMessage'),
       [
-        { text: 'Continuar jogando', style: 'cancel' },
-        { text: 'Desistir', style: 'destructive', onPress: onBack },
+        { text: t('common.keepPlaying'), style: 'cancel' },
+        { text: t('common.quit'), style: 'destructive', onPress: onBack },
       ],
     );
-  }, [onBack]);
+  }, [onBack, t]);
 
   const handlePress = useCallback(() => {
     if (responded.current) return;
@@ -144,7 +146,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
         {renderDots()}
 
         <Text style={styles.roundLabel}>
-          RODADA <Text style={styles.roundNum}>{round}</Text>
+          {t('common.round')} <Text style={styles.roundNum}>{round}</Text>
           <Text style={styles.roundTotal}> / {TOTAL_ROUNDS}</Text>
         </Text>
 
@@ -152,8 +154,8 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
           <View style={styles.lastBox}>
             {lastResult.isFalseStart ? (
               <>
-                <Text style={styles.falseTag}>FALSA LARGADA</Text>
-                <Text style={styles.penaltyNote}>500 ms fixo</Text>
+                <Text style={styles.falseTag}>{t('match.falseStart')}</Text>
+                <Text style={styles.penaltyNote}>{t('match.penaltyFixed')}</Text>
               </>
             ) : (
               <>
@@ -168,15 +170,13 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
           </View>
         ) : (
           <View style={styles.instrBox}>
-            <Text style={styles.instrHint}>
-              Aguarde a tela escura — toque assim que o círculo verde aparecer
-            </Text>
-            <Text style={styles.instrWarn}>Tocar antes = falsa largada (500 ms fixo)</Text>
+            <Text style={styles.instrHint}>{t('match.waitHint')}</Text>
+            <Text style={styles.instrWarn}>{t('match.waitWarn')}</Text>
           </View>
         )}
 
         <TouchableOpacity style={styles.startBtn} onPress={startRound} activeOpacity={0.8}>
-          <Text style={styles.startBtnText}>INICIAR RODADA {round}</Text>
+          <Text style={styles.startBtnText}>{t('match.startRound', { round })}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -205,8 +205,8 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
       <View style={[styles.centeredFull, { pointerEvents: 'none' }]}>
         {isFalseStart ? (
           <>
-            <Text style={styles.falseStartBig}>FALSA{'\n'}LARGADA</Text>
-            <Text style={styles.penaltyBig}>500 ms fixo</Text>
+            <Text style={styles.falseStartBig}>{t('match.falseStart')}</Text>
+            <Text style={styles.penaltyBig}>{t('match.penaltyFixed')}</Text>
           </>
         ) : (
           <>
@@ -234,20 +234,18 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
-          <Text style={styles.introTitle}>MODO PARTIDA</Text>
-          <Text style={styles.introSub}>7 tentativas · reação simples</Text>
+          <Text style={styles.introTitle}>{t('match.title')}</Text>
+          <Text style={styles.introSub}>{t('match.subtitle')}</Text>
           <View style={styles.howToCard}>
-            <Text style={styles.howToTitle}>Como jogar</Text>
-            <Text style={styles.howToText}>
-              Aguarde a tela escurecer. Toque assim que o círculo verde aparecer. Quanto mais rápido, melhor.
-            </Text>
+            <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
+            <Text style={styles.howToText}>{t('match.howToText')}</Text>
           </View>
           <TouchableOpacity style={styles.introStartBtn} onPress={() => {
             setStarted(true);
             setShowReady(true);
             setTimeout(() => { setShowReady(false); startRound(); }, 1500);
           }} activeOpacity={0.8}>
-            <Text style={styles.introStartBtnText}>INICIAR</Text>
+            <Text style={styles.introStartBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -263,7 +261,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
 
       {showReady && (
         <View style={[styles.centeredFull, { pointerEvents: 'none' }]}>
-          <Text style={styles.readyBig}>READY</Text>
+          <Text style={styles.readyBig}>{t('match.ready')}</Text>
         </View>
       )}
 

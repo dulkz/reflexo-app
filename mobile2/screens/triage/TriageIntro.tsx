@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { ARCHETYPE_ICONS, ACHIEVEMENT_ICONS, MISSION_ICONS } from '../../assets/icons';
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function TriageIntro({ onNext, onDismiss }: Props) {
+  const { t } = useTranslation();
   return (
     <View style={styles.root}>
       {/* Progress dots (step 1 of 5) */}
@@ -34,31 +36,29 @@ export default function TriageIntro({ onNext, onDismiss }: Props) {
         <View style={styles.chipsRow}>
           <View style={styles.chipSport}>
             <SvgXml xml={ARCHETYPE_ICONS.VELOCISTA} width={16} height={16} />
-            <Text style={styles.chipTextSport}>150ms F1</Text>
+            <Text style={styles.chipTextSport}>{t('triage.intro.chip1')}</Text>
           </View>
           <View style={styles.chipBrain}>
             <SvgXml xml={ACHIEVEMENT_ICONS.semfadiga} width={16} height={16} />
-            <Text style={styles.chipTextBrain}>+40% atenção</Text>
+            <Text style={styles.chipTextBrain}>{t('triage.intro.chip2')}</Text>
           </View>
           <View style={styles.chipFit}>
             <SvgXml xml={MISSION_ICONS.muscle} width={16} height={16} />
-            <Text style={styles.chipTextFit}>Treinável</Text>
+            <Text style={styles.chipTextFit}>{t('triage.intro.chip3')}</Text>
           </View>
         </View>
 
-        <Text style={styles.title}>{'Bora traçar\nsua rota?'}</Text>
-        <Text style={styles.subtitle}>
-          Pilotos de F1 reagem em 150ms. Atletas olímpicos em 160ms. Onde você está? Vamos descobrir agora.
-        </Text>
+        <Text style={styles.title}>{t('triage.intro.title')}</Text>
+        <Text style={styles.subtitle}>{t('triage.intro.subtitle')}</Text>
       </View>
 
       {/* Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.btnPrimary} onPress={onNext} activeOpacity={0.8}>
-          <Text style={styles.btnPrimaryText}>BORA</Text>
+          <Text style={styles.btnPrimaryText}>{t('triage.intro.btnPrimary')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btnSecondary} onPress={onDismiss} activeOpacity={0.8}>
-          <Text style={styles.btnSecondaryText}>Agora não</Text>
+          <Text style={styles.btnSecondaryText}>{t('triage.intro.btnSecondary')}</Text>
         </TouchableOpacity>
       </View>
     </View>

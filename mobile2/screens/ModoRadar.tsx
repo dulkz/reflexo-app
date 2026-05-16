@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
   Animated, Platform, StatusBar as RNStatusBar, Dimensions,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
 
@@ -50,17 +51,18 @@ interface Props {
 }
 
 export default function ModoRadar({ onComplete, onBack }: Props) {
+  const { t } = useTranslation();
   const [gameState, setGameState] = useState<RadarState>('intro');
   const confirmAbort = useCallback(() => {
     Alert.alert(
-      'Deseja desistir?',
-      'O progresso desta sessão não será salvo.',
+      t('common.quitTitle'),
+      t('common.quitMessage'),
       [
-        { text: 'Continuar jogando', style: 'cancel' },
-        { text: 'Desistir', style: 'destructive', onPress: onBack },
+        { text: t('common.keepPlaying'), style: 'cancel' },
+        { text: t('common.quit'), style: 'destructive', onPress: onBack },
       ],
     );
-  }, [onBack]);
+  }, [onBack, t]);
   const [round, setRound] = useState(1);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -208,16 +210,14 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
           <View style={{ width: 32 }} />
         </View>
         <View style={styles.introContainer}>
-          <Text style={styles.introTitle}>MODO RADAR</Text>
-          <Text style={styles.introSub}>5 círculos em cruz · 15 rodadas</Text>
+          <Text style={styles.introTitle}>{t('radar.title')}</Text>
+          <Text style={styles.introSub}>{t('radar.subtitle')}</Text>
           <View style={styles.howToCard}>
-            <Text style={styles.howToTitle}>Como jogar</Text>
-            <Text style={styles.howToText}>
-              Os 5 círculos ficam visíveis o tempo todo. Um deles vai acender — toque nele o mais rápido possível. Toque no errado: +{MISS_PENALTY}ms de penalidade na média.
-            </Text>
+            <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
+            <Text style={styles.howToText}>{t('radar.howToText', { penalty: MISS_PENALTY })}</Text>
           </View>
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
-            <Text style={styles.startBtnText}>INICIAR</Text>
+            <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -228,11 +228,11 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
     <View style={styles.screen}>
       <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
         <Text style={styles.roundText}>
-          RODADA <Text style={styles.roundNum}>{round}</Text>
+          {t('common.round')} <Text style={styles.roundNum}>{round}</Text>
           <Text style={styles.roundTotal}> / {TOTAL_ROUNDS}</Text>
         </Text>
         <TouchableOpacity onPress={confirmAbort} style={styles.quitBtn} activeOpacity={0.7}>
-          <Text style={styles.quitText}>DESISTIR</Text>
+          <Text style={styles.quitText}>{t('radar.quitBtn')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -256,24 +256,24 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
 
       <View style={styles.hintArea}>
         {(gameState === 'initial_wait' || gameState === 'ready') && (
-          <Text style={styles.hintText}>aguarde...</Text>
+          <Text style={styles.hintText}>{t('radar.waitHint')}</Text>
         )}
         {gameState === 'signal' && (
-          <Text style={[styles.hintText, { color: RADAR_COLOR }]}>toque no círculo aceso</Text>
+          <Text style={[styles.hintText, { color: RADAR_COLOR }]}>{t('radar.tapHint')}</Text>
         )}
         {gameState === 'hit' && lastResult && (
           <View style={styles.feedbackRow}>
             <Text style={[styles.feedbackRt, { color: getLevelInfo(lastResult.rt).color }]}>
               {lastResult.rt} ms
             </Text>
-            <Text style={[styles.feedbackLabel, { color: '#10b981' }]}>✓ ACERTOU</Text>
+            <Text style={[styles.feedbackLabel, { color: '#10b981' }]}>{t('radar.hit')}</Text>
           </View>
         )}
         {gameState === 'miss' && (
-          <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>✗ ERROU</Text>
+          <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>{t('radar.miss')}</Text>
         )}
         {gameState === 'timeout' && (
-          <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>⏱ TIMEOUT</Text>
+          <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>{t('radar.timeout')}</Text>
         )}
       </View>
 

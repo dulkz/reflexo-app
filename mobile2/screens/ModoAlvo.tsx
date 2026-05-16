@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
   Animated, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
@@ -43,17 +44,18 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function ModoAlvo({ onComplete, onBack }: Props) {
+  const { t } = useTranslation();
   const [gameState, setGameState] = useState<AlvoState>('intro');
   const confirmAbort = useCallback(() => {
     Alert.alert(
-      'Deseja desistir?',
-      'O progresso desta sessão não será salvo.',
+      t('common.quitTitle'),
+      t('common.quitMessage'),
       [
-        { text: 'Continuar jogando', style: 'cancel' },
-        { text: 'Desistir', style: 'destructive', onPress: onBack },
+        { text: t('common.keepPlaying'), style: 'cancel' },
+        { text: t('common.quit'), style: 'destructive', onPress: onBack },
       ],
     );
-  }, [onBack]);
+  }, [onBack, t]);
   const [round, setRound] = useState(1);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [targetIdx, setTargetIdx] = useState(0);
@@ -199,16 +201,14 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
-          <Text style={styles.introTitle}>MODO ALVO</Text>
-          <Text style={styles.introSub}>4 círculos · 10 rodadas</Text>
+          <Text style={styles.introTitle}>{t('target.title')}</Text>
+          <Text style={styles.introSub}>{t('target.subtitle')}</Text>
           <View style={styles.howToCard}>
-            <Text style={styles.howToTitle}>Como jogar</Text>
-            <Text style={styles.howToText}>
-              Observe a cor indicada no topo. Toque no círculo dessa cor assim que aparecer. Erro = +150ms de penalidade.
-            </Text>
+            <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
+            <Text style={styles.howToText}>{t('target.howToText')}</Text>
           </View>
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
-            <Text style={styles.startBtnText}>INICIAR</Text>
+            <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -228,7 +228,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
         </TouchableOpacity>
         <View style={styles.progressInfo}>
           <Text style={styles.roundText}>
-            RODADA <Text style={styles.roundNum}>{round}</Text>
+            {t('common.round')} <Text style={styles.roundNum}>{round}</Text>
             <Text style={styles.roundTotal}> / {TOTAL_ROUNDS}</Text>
           </Text>
         </View>
@@ -240,7 +240,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
       {/* Waiting indicator — shown before first round and between rounds */}
       {(gameState === 'initial_wait' || gameState === 'ready') && (
         <View style={styles.hintArea}>
-          <Text style={styles.waitingHint}>aguarde o estímulo</Text>
+          <Text style={styles.waitingHint}>{t('target.waitHint')}</Text>
         </View>
       )}
 
@@ -258,10 +258,10 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
             {/* Badge during challenge; feedback icon+text during result states */}
             {gameState === 'challenge' ? (
               <View style={styles.badgeArea}>
-                <Text style={styles.hintLabel}>TOQUE NO CÍRCULO</Text>
+                <Text style={styles.hintLabel}>{t('target.tapCircle')}</Text>
                 <View style={[styles.hintBadge, { backgroundColor: targetColor.bg, borderColor: targetColor.color + '66' }]}>
                   <View style={[styles.hintDot, { backgroundColor: targetColor.color }]} />
-                  <Text style={[styles.hintColor, { color: targetColor.color }]}>{targetColor.key}</Text>
+                  <Text style={[styles.hintColor, { color: targetColor.color }]}>{t(`target.colors.${targetColor.key}`)}</Text>
                 </View>
               </View>
             ) : (
@@ -272,7 +272,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
                   height={64}
                 />
                 <Text style={[styles.feedbackWord, { color: gameState === 'correct' ? '#10b981' : '#ef4444' }]}>
-                  {gameState === 'correct' ? 'CORRETO!' : 'ERROU!'}
+                  {gameState === 'correct' ? t('target.correct') : t('target.wrong')}
                 </Text>
                 {gameState === 'correct' && lastResult && (
                   <Text style={[styles.feedbackRt, { color: getLevelInfo(lastResult.rt).color }]}>

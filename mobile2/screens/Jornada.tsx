@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { ACHIEVEMENT_ICONS, MISSION_ICONS } from '../assets/icons';
 import { SessionRecord } from '../utils/storage';
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateProfile }: Props) {
+  const { t } = useTranslation();
   const streak = useMemo(() => calculateStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak.current), [sessions, streak.current]);
 
@@ -122,23 +124,21 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
         contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.kicker}>JORNADA</Text>
+        <Text style={styles.kicker}>{t('journey.title')}</Text>
 
         {/* ── MINHA JORNADA ── */}
         {!userProfile.triageCompleted ? (
           <View style={styles.journeyCTA}>
-            <Text style={styles.journeyCTATitle}>Defina sua meta</Text>
-            <Text style={styles.journeyCTADesc}>
-              Escolha uma ambição e veja sua jornada personalizada em todas as telas.
-            </Text>
+            <Text style={styles.journeyCTATitle}>{t('journey.ctaTitle')}</Text>
+            <Text style={styles.journeyCTADesc}>{t('journey.ctaDesc')}</Text>
             <TouchableOpacity style={styles.journeyCTABtn} onPress={() => onOpenTriage(false)} activeOpacity={0.8}>
-              <Text style={styles.journeyCTABtnText}>DEFINIR MINHA META</Text>
+              <Text style={styles.journeyCTABtnText}>{t('journey.ctaBtn')}</Text>
             </TouchableOpacity>
           </View>
         ) : ambition ? (
           <View style={styles.journeySection}>
             <View style={styles.journeySectionHeader}>
-              <Text style={styles.sectionTitle}>MINHA JORNADA</Text>
+              <Text style={styles.sectionTitle}>{t('journey.myJourney')}</Text>
             </View>
             <View style={styles.journeyAmbitionRow}>
               <SvgXml xml={ambition.icon} width={26} height={26} />
@@ -146,13 +146,13 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                 {ambition.name}
               </Text>
               <TouchableOpacity onPress={() => onOpenTriage(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={styles.journeyChangeLink}>trocar meta</Text>
+                <Text style={styles.journeyChangeLink}>{t('journey.changeGoal')}</Text>
               </TouchableOpacity>
             </View>
             <Text style={styles.journeySummary}>
               {isBrainHealth
-                ? `Baseline: ${baselineMs ?? '—'} ms · ${beatenCount} de ${ambition.milestones.length} marcos conquistados`
-                : `Baseline: ${baselineMs ?? '—'} ms · Meta: ${ambition.finalMetaMs ?? '—'} ms · ${beatenCount} de ${ambition.milestones.length} marcos batidos`
+                ? t('journey.summaryBrain', { base: baselineMs ?? '—', beaten: beatenCount, total: ambition.milestones.length })
+                : t('journey.summaryGoal', { base: baselineMs ?? '—', goal: ambition.finalMetaMs ?? '—', beaten: beatenCount, total: ambition.milestones.length })
               }
             </Text>
             {baselineMs !== null && (
@@ -171,11 +171,11 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
             {/* Próximo marco (estado normal, não concluído) */}
             {!allBeaten && nextMilestone && nextMilestone.type !== 'qualitative' && nextMilestone.ms !== undefined && currentBestMs !== null && (
               <View style={styles.nextMilestoneRow}>
-                <Text style={styles.nextMilestoneLabel}>Próximo: {nextMilestone.label}</Text>
+                <Text style={styles.nextMilestoneLabel}>{t('journey.nextLabel', { label: nextMilestone.label })}</Text>
                 <Text style={[styles.nextMilestoneDelta, { color: ambitionGroupColor }]}>
                   {currentBestMs <= nextMilestone.ms
-                    ? '✓ atingido'
-                    : `faltam ${currentBestMs - nextMilestone.ms} ms`}
+                    ? t('journey.reached')
+                    : t('journey.remaining', { delta: currentBestMs - nextMilestone.ms })}
                 </Text>
               </View>
             )}
@@ -197,13 +197,9 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                     <View style={styles.completionHeader}>
                       <SvgXml xml={ACHIEVEMENT_ICONS.sniper} width={28} height={28} />
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.completionKicker}>JORNADA COMPLETA</Text>
+                        <Text style={styles.completionKicker}>{t('journey.complete')}</Text>
                         <Text style={styles.completionTitle}>
-                          Todos os marcos de{' '}
-                          <Text style={{ color: ambitionGroupColor }}>
-                            {ambition.name}
-                          </Text>
-                          {' '}batidos!
+                          {t('journey.allBeaten', { name: ambition.name })}
                         </Text>
                       </View>
                     </View>
@@ -221,16 +217,16 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                       activeOpacity={0.8}
                       disabled={starting}
                     >
-                      <Text style={styles.nextAmbitionBtnKicker}>INICIAR PRÓXIMO DESAFIO</Text>
+                      <Text style={styles.nextAmbitionBtnKicker}>{t('journey.startNextChallenge')}</Text>
                       <View style={styles.nextAmbitionBtnRow}>
                         <SvgXml xml={nextAmbition.icon} width={24} height={24} />
                         <View style={{ flex: 1 }}>
                           <Text style={[styles.nextAmbitionBtnName, { color: GROUP_COLOR[nextAmbition.group] }]}>
-                            {starting ? 'Iniciando…' : nextAmbition.name}
+                            {starting ? t('journey.starting') : nextAmbition.name}
                           </Text>
                           {nextAmbition.finalMetaMs !== null && (
                             <Text style={styles.nextAmbitionBtnMs}>
-                              Meta: {nextAmbition.finalMetaMs} ms
+                              {t('journey.goalMs', { ms: nextAmbition.finalMetaMs })}
                             </Text>
                           )}
                         </View>
@@ -244,10 +240,8 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                   /* ── Pináculo: sem próxima meta ── */
                   <View style={styles.completionPeak}>
                     <SvgXml xml={ACHIEVEMENT_ICONS.cem_sessoes} width={44} height={44} />
-                    <Text style={styles.completionPeakTitle}>Você atingiu o nível máximo!</Text>
-                    <Text style={styles.completionPeakSub}>
-                      Velocidade de reação do 1% mais rápido do mundo.{'\n'}Nenhum desafio restante.
-                    </Text>
+                    <Text style={styles.completionPeakTitle}>{t('journey.peakTitle')}</Text>
+                    <Text style={styles.completionPeakSub}>{t('journey.peakDesc')}</Text>
                   </View>
                 )}
               </Animated.View>
@@ -256,19 +250,18 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
         ) : null}
 
         {/* ── MISSÕES ── */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>MISSÕES</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('journey.missions')}</Text>
 
         {/* Diárias */}
         {dailyMissions.length > 0 && (
           <View style={styles.dailyCard}>
             <View style={styles.missionHeader}>
-              <Text style={styles.missionHeaderText}>OBJETIVO DO DIA</Text>
+              <Text style={styles.missionHeaderText}>{t('journey.dailyGoal')}</Text>
               <View style={styles.missionCount}>
                 <SvgXml xml={ACHIEVEMENT_ICONS.sniper} width={14} height={14} />
                 <Text style={{ fontSize: 11, color: doneDaily === dailyMissions.length ? '#10b981' : '#06b6d4' }}>
-                  {doneDaily}/{dailyMissions.length}
+                  {t('journey.dailyProgress', { done: doneDaily, total: dailyMissions.length })}
                 </Text>
-                <Text style={{ fontSize: 11, color: '#4a5a7b' }}>{' completos'}</Text>
               </View>
             </View>
             <View style={styles.missionProgressTrack}>
@@ -308,13 +301,12 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
         {weeklyMissions.length > 0 && (
           <View style={styles.weeklyCard}>
             <View style={styles.missionHeader}>
-              <Text style={styles.missionHeaderText}>MISSÃO DA SEMANA</Text>
+              <Text style={styles.missionHeaderText}>{t('journey.weeklyMission')}</Text>
               <View style={styles.missionCount}>
                 <SvgXml xml={MISSION_ICONS.clipboard} width={14} height={14} />
                 <Text style={{ fontSize: 11, color: doneWeekly === weeklyMissions.length ? '#10b981' : '#5b4fcf' }}>
-                  {doneWeekly}/{weeklyMissions.length}
+                  {t('journey.weeklyProgress', { done: doneWeekly, total: weeklyMissions.length })}
                 </Text>
-                <Text style={{ fontSize: 11, color: '#4a5a7b' }}>{' completas'}</Text>
               </View>
             </View>
             <View style={styles.missionProgressTrack}>
@@ -350,9 +342,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
 
         {dailyMissions.length === 0 && weeklyMissions.length === 0 && (
           <View style={styles.emptyMissions}>
-            <Text style={styles.emptyMissionsText}>
-              Complete sua primeira sessão para liberar missões.
-            </Text>
+            <Text style={styles.emptyMissionsText}>{t('journey.emptyMissions')}</Text>
           </View>
         )}
 

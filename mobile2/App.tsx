@@ -1,6 +1,7 @@
 import './i18n';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -92,6 +93,7 @@ export default function App() {
 }
 
 function AppInner() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('jogar');
   const [gameScreen, setGameScreen] = useState<GameScreen>('home');
@@ -772,16 +774,16 @@ function AppInner() {
                 <View style={styles.achieveToastKickerRow}>
                   {a.secret && <SvgXml xml={RARITY_ICONS_SVG.secretas} width={12} height={12} />}
                   <Text style={[styles.achieveToastKicker, { color: a.secret ? '#f59e0b' : rcfg.cor }]}>
-                    {a.secret ? 'SEGREDO REVELADO!' : 'CONQUISTA DESBLOQUEADA!'}
+                    {a.secret ? t('achievements.secretRevealed') : t('achievements.achievementUnlocked')}
                   </Text>
                 </View>
                 <View style={[styles.achieveToastBadge, { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor }]}>
-                  <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{rcfg.label}</Text>
+                  <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{t(`achievements.rarity.${a.rarity}` as any)}</Text>
                 </View>
                 <SvgXml xml={a.icon} width={28} height={28} />
                 <Text style={[styles.toastTitle, { color: '#fff' }]}>{a.name}</Text>
                 <Text style={styles.achieveToastDesc}>{a.description}</Text>
-                <Text style={styles.toastSub}>Toque para continuar</Text>
+                <Text style={styles.toastSub}>{t('achievements.tapToContinue')}</Text>
               </Animated.View>
             );
           })()}

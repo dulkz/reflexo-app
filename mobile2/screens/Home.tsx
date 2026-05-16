@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
@@ -42,35 +43,11 @@ interface Props {
   graceExpiryMs?: number | null;
 }
 
-const MODE_INFO = [
-  {
-    key: 'partida' as ModeKey,
-    name: 'MODO PARTIDA',
-    icon: ICONS.modes.partida,
-    desc: 'Reação simples visual · 7 tentativas',
-    sub: 'Top 5 de 7 — descarta as 2 piores',
-  },
-  {
-    key: 'alvo' as ModeKey,
-    name: 'MODO ALVO',
-    icon: ICONS.modes.alvo,
-    desc: '4 alvos simultâneos · 10 rodadas',
-    sub: 'Acerte o correto — penalidade por erro',
-  },
-  {
-    key: 'sequencia' as ModeKey,
-    name: 'MODO SEQUÊNCIA',
-    icon: ICONS.modes.sequencia,
-    desc: '20 sinais Go/NoGo · ~25% aleatório',
-    sub: 'Mede fadiga cognitiva e controle inibitório',
-  },
-  {
-    key: 'radar' as ModeKey,
-    name: 'MODO RADAR',
-    icon: ICONS.modes.radar,
-    desc: 'Localização visual · 15 rodadas',
-    sub: '5 círculos em cruz — toque no que acender',
-  },
+const MODE_INFO: { key: ModeKey; icon: string }[] = [
+  { key: 'partida',  icon: ICONS.modes.partida  },
+  { key: 'alvo',     icon: ICONS.modes.alvo     },
+  { key: 'sequencia',icon: ICONS.modes.sequencia },
+  { key: 'radar',    icon: ICONS.modes.radar    },
 ];
 
 export default function Home({
@@ -78,6 +55,7 @@ export default function Home({
   sessions, bestByMode, userProfile, onGoToPerfil, scrollRef,
   energyCounts = null, inGrace = false, graceExpiryMs = null,
 }: Props) {
+  const { t } = useTranslation();
   const bestAccByMode = useMemo(() => {
     const acc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
     for (const s of sessions) {
@@ -129,8 +107,8 @@ export default function Home({
       {/* ── Fixed header ── */}
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <View style={styles.headerLeft}>
-          <Text style={styles.reflexoSmall}>REFLEXO</Text>
-          <Text style={styles.greeting}>Olá, {userProfile.name || 'Atleta'}</Text>
+          <Text style={styles.reflexoSmall}>{t('home.appName')}</Text>
+          <Text style={styles.greeting}>{t('home.greeting', { name: userProfile.name || 'Atleta' })}</Text>
         </View>
         <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
           {(() => {
@@ -157,20 +135,20 @@ export default function Home({
             <Text style={[styles.streakNumber, { color: streakColor(streak.current) }]}>
               {streak.current}
             </Text>
-            <Text style={styles.streakLabel}>dias seguidos</Text>
+            <Text style={styles.streakLabel}>{t('home.streakDays')}</Text>
             {streak.playedToday ? (
               <View style={styles.streakBadgeDone}>
-                <Text style={styles.streakBadgeDoneText}>✓ hoje</Text>
+                <Text style={styles.streakBadgeDoneText}>{t('home.streakToday')}</Text>
               </View>
             ) : (
               <Animated.View style={[styles.streakBadgePulse, { opacity: pulseAnim }]}>
-                <Text style={styles.streakBadgePulseText}>⚡ jogue hoje</Text>
+                <Text style={styles.streakBadgePulseText}>{t('home.streakPlayToday')}</Text>
               </Animated.View>
             )}
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>MODOS DE JOGO</Text>
+        <Text style={styles.sectionTitle}>{t('home.modesTitle')}</Text>
 
         {MODE_INFO.map(m => {
           const best = bestByMode[m.key];
@@ -189,10 +167,10 @@ export default function Home({
             const h = Math.floor(msLeft / (60 * 60 * 1000));
             const min = Math.floor((msLeft % (60 * 60 * 1000)) / 60_000);
             const displayTime = h > 0 ? `${h}h` : min > 0 ? `${min}m` : '<1m';
-            energyBadgeText = `⚡ Grátis · expira em ${displayTime}`;
+            energyBadgeText = t('home.graceExpiring', { time: displayTime });
             energyBadgeStyle = styles.energyBadgeGrace;
           } else if (modeEnergy !== null) {
-            energyBadgeText = `⚡ ${modeEnergy}/${MAX_ENERGY_PER_MODE}`;
+            energyBadgeText = t('home.energyCount', { current: modeEnergy, max: MAX_ENERGY_PER_MODE });
             energyBadgeStyle = noEnergy ? styles.energyBadgeEmpty : styles.energyBadgeOk;
           }
 
@@ -209,8 +187,8 @@ export default function Home({
                 <View style={styles.modeTop}>
                   <SvgXml xml={m.icon} width={28} height={28} />
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.modeName, { color: mc.accent }]}>{m.name}</Text>
-                    <Text style={styles.modeDesc}>{m.desc}</Text>
+                    <Text style={[styles.modeName, { color: mc.accent }]}>{t(`modes.${m.key}.name`)}</Text>
+                    <Text style={styles.modeDesc}>{t(`modes.${m.key}.desc`)}</Text>
                   </View>
                   <Text style={[styles.modeArrow, { color: mc.accent }]}>›</Text>
                 </View>
@@ -221,14 +199,14 @@ export default function Home({
                   <View style={styles.modeBottom}>
                     <View style={{ flexShrink: 1 }}>
                       <Text style={styles.modeBestLabel}>
-                        {'Sua melhor: '}
+                        {t('home.yourBest')}
                         <Text style={[styles.modeBestMs, { color: lvl.color }]}>{best} ms</Text>
                         {bestAcc !== null
                           ? <Text style={styles.modeBestAcc}>{` · ${Math.round(bestAcc * 100)}%`}</Text>
                           : null}
                       </Text>
                       <Text style={styles.modeBestSubLabel}>
-                        {(m.key === 'alvo' || m.key === 'radar') ? 'Melhor Tempo Reflexo' : 'Média RT'}
+                        {(m.key === 'alvo' || m.key === 'radar') ? t('home.bestReflexTime') : t('home.avgRt')}
                       </Text>
                     </View>
                     <View style={styles.modeBottomRight}>
@@ -240,14 +218,14 @@ export default function Home({
                       <View style={[styles.levelPill, { backgroundColor: lvl.bg }]}>
                         <View style={[styles.levelDot, { backgroundColor: lvl.color }]} />
                         <Text style={[styles.levelPillText, { color: lvl.color }]} numberOfLines={1}>
-                          {lvl.label}
+                          {t(`levels.${lvl.labelKey}.label` as any)}
                         </Text>
                       </View>
                     </View>
                   </View>
                 ) : (
                   <View style={styles.modeBottom}>
-                    <Text style={styles.modeBestLabel}>Ainda não jogado</Text>
+                    <Text style={styles.modeBestLabel}>{t('home.notPlayed')}</Text>
                     <View style={styles.modeBottomRight}>
                       {energyBadgeText !== null && (
                         <Text style={[styles.energyBadge, energyBadgeStyle]} numberOfLines={1}>
@@ -255,7 +233,7 @@ export default function Home({
                         </Text>
                       )}
                       <View style={[styles.newPill, { borderColor: mc.accent + '66' }]}>
-                        <Text style={[styles.newPillText, { color: mc.accent }]}>NOVO</Text>
+                        <Text style={[styles.newPillText, { color: mc.accent }]}>{t('common.newBadge')}</Text>
                       </View>
                     </View>
                   </View>
@@ -269,17 +247,15 @@ export default function Home({
         <View style={styles.insightStrip}>
           <SvgXml xml={ACHIEVEMENT_ICONS.piloto} width={22} height={22} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.insightTitle}>Benchmark F1</Text>
-            <Text style={styles.insightBody}>
-              Pilotos de Fórmula 1 largam em 150–250 ms — testados em condições de corrida real.
-            </Text>
+            <Text style={styles.insightTitle}>{t('home.f1BenchmarkTitle')}</Text>
+            <Text style={styles.insightBody}>{t('home.f1BenchmarkBody')}</Text>
           </View>
         </View>
 
         <Text style={styles.footer}>
           {sessions.length > 0
-            ? `${sessions.length} sessão${sessions.length > 1 ? 'ões' : ''} registrada${sessions.length > 1 ? 's' : ''}`
-            : 'Baseado em benchmarks científicos de atletas de elite'}
+            ? t('home.sessionsCount', { count: sessions.length })
+            : t('home.noSessions')}
         </Text>
       </ScrollView>
     </View>

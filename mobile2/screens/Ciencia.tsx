@@ -4,6 +4,7 @@ import {
   Platform, StatusBar as RNStatusBar,
   StyleProp, TextStyle,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { ACHIEVEMENT_ICONS, ARCHETYPE_ICONS, MISSION_ICONS } from '../assets/icons';
 import { UserProfile } from '../types/user';
@@ -40,134 +41,28 @@ function SectionHeader({ kicker, headline }: { kicker: string; headline?: string
   );
 }
 
-// ── Data ──────────────────────────────────────────────────────────────────────
+// ── Static data (icons, sources, ranges — non-translatable parts) ─────────────
 
-const MECHS = [
-  {
-    num: '01',
-    title: 'Velocidade de Processamento',
-    desc: 'O tempo entre o estímulo e a resposta motora reflete a velocidade de condução neural — treinável com prática repetida.',
-    color: '#3b82f6',
-    icon: ACHIEVEMENT_ICONS.sub280,
-  },
-  {
-    num: '02',
-    title: 'Atenção Sustentada',
-    desc: 'Manter o foco por períodos prolongados sem lapso. O Modo Sequência mede isso diretamente via índice de fadiga.',
-    color: '#8b5cf6',
-    icon: ACHIEVEMENT_ICONS.sniper,
-  },
-  {
-    num: '03',
-    title: 'Controle Inibitório',
-    desc: 'Suprimir respostas automáticas. O paradigma Go/NoGo é o padrão-ouro clínico — usado em diagnóstico de TDAH.',
-    color: '#10b981',
-    icon: ACHIEVEMENT_ICONS.semfadiga,
-  },
+const BENCHMARK_STATIC = [
+  { icon: MISSION_ICONS.eye,        source: 'McLeod 1987 · Caprioli et al., 2023 (ATP)', range: '50–100 ms',  color: '#00f5ff' },
+  { icon: ARCHETYPE_ICONS.PILOTO,   source: 'Vienna Reaction Apparatus',                  range: '150–250 ms', color: '#10b981' },
+  { icon: MISSION_ICONS.boxing,     source: 'Loturco et al., 2015 · Seleção Brasileira',  range: '160–220 ms', color: '#10b981' },
+  { icon: MISSION_ICONS.tennis,     source: 'Journal of Sports Sciences, 2019',           range: '200–250 ms', color: '#3b82f6' },
+  { icon: ARCHETYPE_ICONS.VELOCISTA,source: 'Lipps et al., 2011 · Sprint start research', range: '170–200 ms', color: '#10b981' },
+  { icon: MISSION_ICONS.person,     source: 'Meta-análise · PMC, 2021',                   range: '200–300 ms', color: '#06b6d4' },
 ];
 
-const SCI_STATS = [
-  { stat: '25%', desc: 'de redução no risco de demência com treino cognitivo', fonte: 'Estudo ACTIVE · NIH', cor: '#10b981' },
-  { stat: '30%', desc: 'melhora na coordenação motora fina após 6 semanas de treino de reação', fonte: 'Willingham et al., 2002', cor: '#3b82f6' },
-  { stat: '40%', desc: 'melhora em atenção sustentada após 8 semanas de prática', fonte: 'Journal of Cognitive Enhancement', cor: '#8b5cf6' },
-  { stat: '300ms', desc: 'limiar onde o cérebro para de pensar e começa a executar automaticamente', fonte: 'Neuroscience of Action', cor: '#f59e0b' },
-  { stat: '10%', desc: 'declínio por década na velocidade de processamento sem treino ativo', fonte: 'Salthouse, 2004', cor: '#ef4444' },
-  { stat: '2×', desc: 'menor risco de acidentes de trânsito em pessoas com reação treinada', fonte: 'AAA Foundation, 2015', cor: '#06b6d4' },
+const CHOICE_BENCHMARK_STATIC = [
+  { icon: ACHIEVEMENT_ICONS.sniper,   source: 'Balakrishnan et al., 2014 · PMC',      range: '380–420 ms', color: '#10b981' },
+  { icon: MISSION_ICONS.muscle,       source: 'PMC, 2014 · Mental Chronometry',        range: '420–500 ms', color: '#3b82f6' },
+  { icon: MISSION_ICONS.silhouette,   source: 'Donders RT paradigm · Wikipedia',       range: '480–560 ms', color: '#06b6d4' },
+  { icon: MISSION_ICONS.diamond,      source: 'Mental Chronometry literature',          range: '550–700 ms', color: '#f59e0b' },
+  { icon: MISSION_ICONS.elder,        source: 'Mental Chronometry, Wikipedia',          range: '600–800 ms', color: '#ef4444' },
 ];
 
-const BENCHMARKS = [
-  {
-    icon: MISSION_ICONS.eye,
-    name: 'Antecipação visual de elite',
-    source: 'McLeod 1987 · Caprioli et al., 2023 (ATP)',
-    range: '50–100 ms',
-    level: 'SUPER-HUMANO',
-    color: '#00f5ff',
-  },
-  {
-    icon: ARCHETYPE_ICONS.PILOTO,
-    name: 'Piloto de F1 de ponta',
-    source: 'Vienna Reaction Apparatus',
-    range: '150–250 ms',
-    level: 'ELITE',
-    color: '#10b981',
-  },
-  {
-    icon: MISSION_ICONS.boxing,
-    name: 'Boxeador olímpico',
-    source: 'Loturco et al., 2015 · Seleção Brasileira',
-    range: '160–220 ms',
-    level: 'ELITE',
-    color: '#10b981',
-  },
-  {
-    icon: MISSION_ICONS.tennis,
-    name: 'Tenista ATP',
-    source: 'Journal of Sports Sciences, 2019',
-    range: '200–250 ms',
-    level: 'MUITO BOM',
-    color: '#3b82f6',
-  },
-  {
-    icon: ARCHETYPE_ICONS.VELOCISTA,
-    name: 'Velocista olímpico',
-    source: 'Lipps et al., 2011 · Sprint start research',
-    range: '170–200 ms',
-    level: 'ELITE',
-    color: '#10b981',
-  },
-  {
-    icon: MISSION_ICONS.person,
-    name: 'Adulto saudável (25–45)',
-    source: 'Meta-análise · PMC, 2021',
-    range: '200–300 ms',
-    level: 'BOM',
-    color: '#06b6d4',
-  },
-];
-
-const CHOICE_BENCHMARKS = [
-  {
-    icon: ACHIEVEMENT_ICONS.sniper,
-    name: 'Atleta de esporte de raquete',
-    source: 'Balakrishnan et al., 2014 · PMC',
-    range: '380–420 ms',
-    level: 'ELITE',
-    color: '#10b981',
-  },
-  {
-    icon: MISSION_ICONS.muscle,
-    name: 'Adulto jovem saudável (25–40)',
-    source: 'PMC, 2014 · Mental Chronometry',
-    range: '420–500 ms',
-    level: 'MUITO BOM',
-    color: '#3b82f6',
-  },
-  {
-    icon: MISSION_ICONS.silhouette,
-    name: 'Adulto médio (40–55)',
-    source: 'Donders RT paradigm · Wikipedia',
-    range: '480–560 ms',
-    level: 'BOM',
-    color: '#06b6d4',
-  },
-  {
-    icon: MISSION_ICONS.diamond,
-    name: 'Iniciando a jornada',
-    source: 'Mental Chronometry literature',
-    range: '550–700 ms',
-    level: 'ABAIXO',
-    color: '#f59e0b',
-  },
-  {
-    icon: MISSION_ICONS.elder,
-    name: 'Calibrando o ritmo',
-    source: 'Mental Chronometry, Wikipedia',
-    range: '600–800 ms',
-    level: 'DEVAGAR',
-    color: '#ef4444',
-  },
-];
+const MECH_COLORS = ['#3b82f6', '#8b5cf6', '#10b981'];
+const MECH_ICONS  = [ACHIEVEMENT_ICONS.sub280, ACHIEVEMENT_ICONS.sniper, ACHIEVEMENT_ICONS.semfadiga];
+const SCI_STAT_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
 
 const SOURCES = [
   'Coe et al. (2026). Advanced Cognitive Training for Independent and Vital Elderly (ACTIVE). Alzheimer\'s & Dementia. NIH.',
@@ -182,12 +77,13 @@ const SOURCES = [
 
 // ── Choice RT level helpers (mirrors Resultado.tsx thresholds) ────────────────
 
-function choiceLevelLabel(ms: number): string {
-  if (ms <= 420) return 'ELITE';
-  if (ms <= 500) return 'MUITO BOM';
-  if (ms <= 560) return 'BOM';
-  if (ms <= 700) return 'ABAIXO';
-  return 'DEVAGAR';
+// Returns a stable locale-independent key matching levels.ts labelKeys
+function choiceLevelKey(ms: number): string {
+  if (ms <= 420) return 'elite';
+  if (ms <= 500) return 'veryGood';
+  if (ms <= 560) return 'good';
+  if (ms <= 700) return 'building';
+  return 'warmingUp';
 }
 
 function choiceLevelColor(ms: number): string {
@@ -206,26 +102,24 @@ interface Props {
 }
 
 export default function Ciencia({ userProfile, sessions }: Props) {
+  const { t } = useTranslation();
+
   const goalBenchmarkName = userProfile.triageCompleted && userProfile.ambitionId
     ? getMetaBenchmark(userProfile.ambitionId)
     : null;
 
-  // Highlight color: use the elite_sport group color (these are always elite_sport ambitions)
   const goalHighlightColor = GROUP_COLOR['elite_sport'];
 
-  // Best simple-RT for visibility gate on ultra-rare benchmarks
   const bestPartidaRt = sessions.filter(s => s.mode === 'partida').reduce<number | null>(
     (best, s) => best === null || s.score < best ? s.score : best, null,
   );
 
-  // Alvo RT user data for "VOCÊ ESTÁ AQUI" badge
   const alvoSessions = sessions.filter(s => s.mode === 'alvo');
   const bestAlvoRt = alvoSessions.length > 0
     ? Math.min(...alvoSessions.map(s => s.score))
     : null;
   const lastAlvoRt = alvoSessions.length > 0 ? alvoSessions[0].score : null;
 
-  // Personalized recommendation
   const ambition = userProfile.triageCompleted && userProfile.ambitionId
     ? getAmbitionById(userProfile.ambitionId)
     : null;
@@ -233,11 +127,31 @@ export default function Ciencia({ userProfile, sessions }: Props) {
 
   type RecConfig = { times: number; mins: number; tagline: string };
   const rec: RecConfig = (() => {
-    if (!ambition) return { times: 3, mins: 3, tagline: 'É o que basta para manter o circuito ativo. Acima disso, ganho marginal. Abaixo, some rápido.' };
-    if (ambition.group === 'elite_sport') return { times: 5, mins: 5, tagline: 'você está competindo, consistência é tudo' };
-    if (ambition.group === 'brain_health') return { times: 3, mins: 3, tagline: 'o suficiente para manter o circuito ativo por décadas' };
-    return { times: 4, mins: 4, tagline: 'reação é habilidade, habilidade é treino' };
+    if (!ambition) return { times: 3, mins: 3, tagline: t('science.taglineDefault') };
+    if (ambition.group === 'elite_sport') return { times: 5, mins: 5, tagline: t('science.taglineElite') };
+    if (ambition.group === 'brain_health') return { times: 3, mins: 3, tagline: t('science.taglineBrain') };
+    return { times: 4, mins: 4, tagline: t('science.taglinePopulational') };
   })();
+
+  // i18n-resolved data arrays
+  const MECHS_DATA = (t('science.mechs', { returnObjects: true }) as Array<{ num: string; title: string; desc: string }>).map(
+    (m, i) => ({ ...m, color: MECH_COLORS[i], icon: MECH_ICONS[i] }),
+  );
+  const SCI_STATS_DATA = (t('science.stats', { returnObjects: true }) as Array<{ stat: string; desc: string; fonte: string }>).map(
+    (s, i) => ({ ...s, cor: SCI_STAT_COLORS[i] }),
+  );
+  const BENCHMARKS_DATA = (t('science.benchmarks', { returnObjects: true }) as Array<{ name: string; level: string }>).map(
+    (b, i) => ({ ...b, ...BENCHMARK_STATIC[i] }),
+  );
+  const CHOICE_BENCHMARKS_DATA = (t('science.choiceBenchmarks', { returnObjects: true }) as Array<{ name: string; level: string; levelKey: string }>).map(
+    (b, i) => ({ ...b, ...CHOICE_BENCHMARK_STATIC[i] }),
+  );
+
+  const freqDays = [
+    t('science.freqScheduleDayMon'),
+    t('science.freqScheduleDayWed'),
+    t('science.freqScheduleDayFri'),
+  ];
 
   return (
     <View style={styles.root}>
@@ -245,12 +159,12 @@ export default function Ciencia({ userProfile, sessions }: Props) {
         contentContainerStyle={[styles.scroll, { paddingTop: TOP + 20 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.pageTitle}>CIÊNCIA</Text>
+        <Text style={styles.pageTitle}>{t('science.title')}</Text>
 
         {/* ══ SEÇÃO 1 — SUA RECOMENDAÇÃO / A DOSE CERTA ══ */}
         <SectionHeader
-          kicker={isPersonalized ? 'SUA RECOMENDAÇÃO' : 'A DOSE CERTA'}
-          headline="Pouco, mas todo dia."
+          kicker={isPersonalized ? t('science.recKicker') : t('science.doseKicker')}
+          headline={t('science.headline1')}
         />
 
         <View style={styles.freqCard}>
@@ -261,31 +175,31 @@ export default function Ciencia({ userProfile, sessions }: Props) {
             </View>
           ) : (
             <View style={styles.freqBadge}>
-              <Text style={styles.freqBadgeText}>RECOMENDAÇÃO</Text>
+              <Text style={styles.freqBadgeText}>{t('science.recBadge')}</Text>
             </View>
           )}
           <View style={styles.freqMain}>
             <View style={styles.freqCol}>
               <Text style={styles.freqBig}>{rec.times}</Text>
-              <Text style={styles.freqColLabel}>SESSÕES</Text>
+              <Text style={styles.freqColLabel}>{t('science.sessions')}</Text>
             </View>
             <Text style={styles.freqTimes}>×</Text>
             <View style={styles.freqCol}>
               <Text style={styles.freqBig}>{rec.mins}</Text>
-              <Text style={styles.freqColLabel}>MINUTOS</Text>
+              <Text style={styles.freqColLabel}>{t('science.minutes')}</Text>
             </View>
           </View>
           <Text style={styles.freqContext}>
-            {`= ${rec.times * rec.mins} minutos semanais · menos de ${Math.ceil(rec.times * rec.mins / 7)} min por dia`}
+            {t('science.freqContext', { total: rec.times * rec.mins, daily: Math.ceil(rec.times * rec.mins / 7) })}
           </Text>
           <Text style={styles.freqRationale}>{rec.tagline}</Text>
         </View>
 
         {/* ══ FREQUÊNCIA IDEAL DE TREINO ══ */}
         <View style={styles.freqScheduleCard}>
-          <Text style={styles.freqScheduleHeader}>FREQUÊNCIA IDEAL DE TREINO</Text>
+          <Text style={styles.freqScheduleHeader}>{t('science.freqScheduleHeader')}</Text>
           <View style={styles.freqScheduleRow}>
-            {(['SEG', 'QUA', 'SEX'] as const).map(day => (
+            {freqDays.map(day => (
               <View key={day} style={styles.freqScheduleItem}>
                 <View style={styles.freqScheduleCircle} />
                 <Text style={styles.freqScheduleDay}>{day}</Text>
@@ -294,49 +208,49 @@ export default function Ciencia({ userProfile, sessions }: Props) {
             ))}
           </View>
           <Text style={styles.freqScheduleNote}>
-            3 sessões curtas/semana superam 1 sessão longa em retenção de ganho motor.
+            {t('science.freqScheduleNote')}
           </Text>
         </View>
 
         {/* ══ SEÇÃO 2 — QUEM REAGE MAIS RÁPIDO ══ */}
         <SectionHeader
-          kicker="PARA COLOCAR EM PERSPECTIVA"
-          headline="Quem reage mais rápido que você."
+          kicker={t('science.perspKicker')}
+          headline={t('science.perspHeadline')}
         />
 
-        <Text style={styles.benchGroupLabel}>PARTIDA E SEQUÊNCIA — ESCALA DE REFERÊNCIA</Text>
+        <Text style={styles.benchGroupLabel}>{t('science.benchGroupPartida')}</Text>
 
-        {BENCHMARKS.map(b => {
-          // Hide SUPER-HUMANO / IMPOSSÍVEL benchmark cards unless user has actually
-          // achieved that range (bestPartidaRt < 100ms). Avoids confusing aspirational
-          // reference for levels essentially no one reaches through normal play.
-          if (b.level === 'SUPER-HUMANO' || b.level === 'IMPOSSÍVEL') {
+        {BENCHMARKS_DATA.map((b, idx) => {
+          if (b.level === 'SUPER-HUMANO' || b.level === 'SUPER-HUMAN' || b.level === 'IMPOSSÍVEL') {
             if (bestPartidaRt === null || bestPartidaRt >= 100) return null;
           }
-          const isGoal = goalBenchmarkName !== null && b.name === goalBenchmarkName;
+          const isGoal = goalBenchmarkName !== null && BENCHMARK_STATIC[idx].source === BENCHMARK_STATIC[BENCHMARKS_DATA.findIndex(
+            (_, i) => BENCHMARK_STATIC[i].source === goalBenchmarkName,
+          )]?.source;
+          // simpler: match by original Portuguese name via index — goalBenchmarkName is the Portuguese name
+          const originalPtNames = ['Antecipação visual de elite','Piloto de F1 de ponta','Boxeador olímpico','Tenista ATP','Velocista olímpico','Adulto saudável (25–45)'];
+          const isGoalCard = goalBenchmarkName !== null && originalPtNames[idx] === goalBenchmarkName;
           return (
             <View
-              key={b.name}
+              key={idx}
               style={[
                 styles.benchCard,
-                { borderColor: isGoal ? goalHighlightColor + 'aa' : b.color + '2a' },
-                isGoal && { borderWidth: 2 },
+                { borderColor: isGoalCard ? goalHighlightColor + 'aa' : b.color + '2a' },
+                isGoalCard && { borderWidth: 2 },
               ]}
             >
               <View style={[styles.benchIconBox, { backgroundColor: b.color + '1a' }]}>
                 <SvgXml xml={b.icon} width={22} height={22} />
               </View>
-
               <View style={styles.benchInfo}>
-                {isGoal && (
+                {isGoalCard && (
                   <Text style={[styles.inlineBadge, { color: goalHighlightColor }]} numberOfLines={1}>
-                    ← sua meta
+                    {t('science.goalBadge')}
                   </Text>
                 )}
                 <Text style={styles.benchName}>{b.name}</Text>
                 <Text style={styles.benchSource}>{b.source}</Text>
               </View>
-
               <View style={styles.benchRight}>
                 <Text style={[styles.benchRange, { color: b.color }]}>{b.range}</Text>
                 <Text style={[styles.benchLevel, { color: b.color }]}>{b.level}</Text>
@@ -346,19 +260,17 @@ export default function Ciencia({ userProfile, sessions }: Props) {
         })}
 
         {/* ══ SEÇÃO 5b — MODO ALVO CHOICE RT ══ */}
-        <Text style={styles.benchGroupLabel}>MODO ALVO — ESCALA DE REFERÊNCIA</Text>
-        <Text style={styles.benchGroupSub}>
-          O Modo Alvo exige identificar a cor certa antes de reagir — por isso os tempos de referência são maiores.
-        </Text>
+        <Text style={styles.benchGroupLabel}>{t('science.benchGroupAlvo')}</Text>
+        <Text style={styles.benchGroupSub}>{t('science.benchGroupSub')}</Text>
 
-        {CHOICE_BENCHMARKS.map(b => {
-          const isYouHere = bestAlvoRt !== null && b.level === choiceLevelLabel(bestAlvoRt);
+        {CHOICE_BENCHMARKS_DATA.map((b, idx) => {
+          const isYouHere = bestAlvoRt !== null && b.levelKey === choiceLevelKey(bestAlvoRt);
           const showLastNote = isYouHere && lastAlvoRt !== null &&
-            choiceLevelLabel(lastAlvoRt) !== choiceLevelLabel(bestAlvoRt!);
+            choiceLevelKey(lastAlvoRt) !== choiceLevelKey(bestAlvoRt!);
           const youColor = bestAlvoRt !== null ? choiceLevelColor(bestAlvoRt) : b.color;
           return (
             <View
-              key={b.name}
+              key={idx}
               style={[
                 styles.benchCard,
                 { borderColor: isYouHere ? youColor + 'aa' : b.color + '2a' },
@@ -371,14 +283,14 @@ export default function Ciencia({ userProfile, sessions }: Props) {
               <View style={styles.benchInfo}>
                 {isYouHere && (
                   <Text style={[styles.inlineBadge, { color: youColor }]} numberOfLines={1}>
-                    ← você está aqui
+                    {t('science.youAreHere')}
                   </Text>
                 )}
                 <Text style={styles.benchName}>{b.name}</Text>
                 <Text style={styles.benchSource}>{b.source}</Text>
                 {showLastNote && (
                   <Text style={styles.lastSessionNote}>
-                    {`Última sessão: ${lastAlvoRt} ms · ${choiceLevelLabel(lastAlvoRt!)}`}
+                    {t('science.lastSession', { ms: lastAlvoRt, level: t(`levels.${choiceLevelKey(lastAlvoRt!)}.label` as any) })}
                   </Text>
                 )}
               </View>
@@ -392,25 +304,21 @@ export default function Ciencia({ userProfile, sessions }: Props) {
 
         {/* ══ SEÇÃO 4 — COMO FUNCIONA ══ */}
         <SectionHeader
-          kicker="COMO FUNCIONA"
-          headline="Treinar reação é treinar o cérebro."
+          kicker={t('science.howKicker')}
+          headline={t('science.howHeadline')}
         />
 
         <View style={styles.editorialBlock}>
-          <RichText style={styles.editorialPara}>
-            {'Quando você vê um sinal e responde em menos de **300 ms**, seu cérebro não está pensando — está **executando**. É um **reflexo cognitivo**: percepção visual, decisão e comando motor disparados em paralelo.'}
-          </RichText>
-          <RichText style={[styles.editorialPara, styles.editorialParaLast]}>
-            {'Esse **circuito é treinável**. E o efeito colateral bonito é que o mesmo sistema que acelera seu jogo mantém seu cérebro **ágil por décadas**.'}
-          </RichText>
+          <RichText style={styles.editorialPara}>{t('science.editorial1')}</RichText>
+          <RichText style={[styles.editorialPara, styles.editorialParaLast]}>{t('science.editorial2')}</RichText>
         </View>
 
         {/* ══ SEÇÃO 3 — POR QUE TREINAR REAÇÃO ══ */}
-        <SectionHeader kicker="POR QUE TREINAR REAÇÃO" />
+        <SectionHeader kicker={t('science.whyKicker')} />
 
         <View style={styles.sciGrid}>
-          {SCI_STATS.map(s => (
-            <View key={s.stat + s.fonte} style={[styles.sciCard, { borderColor: s.cor + '33' }]}>
+          {SCI_STATS_DATA.map((s, i) => (
+            <View key={i} style={[styles.sciCard, { borderColor: s.cor + '33' }]}>
               <Text style={[styles.sciStat, { color: s.cor }]}>{s.stat}</Text>
               <Text style={styles.sciDesc}>{s.desc}</Text>
               <Text style={styles.sciSource}>{s.fonte}</Text>
@@ -419,9 +327,9 @@ export default function Ciencia({ userProfile, sessions }: Props) {
         </View>
 
         {/* ══ SEÇÃO 5 — 3 MECANISMOS NEURAIS ══ */}
-        <SectionHeader kicker="3 MECANISMOS NEURAIS" />
+        <SectionHeader kicker={t('science.mechKicker')} />
 
-        {MECHS.map(m => (
+        {MECHS_DATA.map(m => (
           <View key={m.num} style={[styles.mechCard, { borderColor: m.color + '33' }]}>
             <View style={[styles.mechNum, { backgroundColor: m.color + '22' }]}>
               <Text style={[styles.mechNumText, { color: m.color }]}>{m.num}</Text>
@@ -440,24 +348,19 @@ export default function Ciencia({ userProfile, sessions }: Props) {
         <View style={styles.closingCard}>
           <SvgXml xml={ACHIEVEMENT_ICONS.semfadiga} width={28} height={28} style={{ marginTop: 2 }} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.closingBody}>
-              Não prometemos genialidade nem juventude eterna. Mas três minutos três vezes por semana mexem com um dos sistemas mais sensíveis ao tempo que existem no seu corpo.
-            </Text>
-            <Text style={styles.closingEmphasis}>Isso já vale a pena.</Text>
+            <Text style={styles.closingBody}>{t('science.closingBody')}</Text>
+            <Text style={styles.closingEmphasis}>{t('science.closingEmphasis')}</Text>
           </View>
         </View>
 
         {/* ══ DISCLAIMER TÉCNICO ══ */}
         <View style={styles.toneBox}>
           <SvgXml xml={MISSION_ICONS.bulb} width={18} height={18} />
-          <Text style={styles.toneText}>
-            Resultados refletem reação simples visual — diferente de decisões complexas.
-            Fatores como iluminação, sono e cafeína afetam o resultado.
-          </Text>
+          <Text style={styles.toneText}>{t('science.disclaimer')}</Text>
         </View>
 
         {/* ══ FONTES ══ */}
-        <Text style={styles.sourcesTitle}>FONTES</Text>
+        <Text style={styles.sourcesTitle}>{t('science.sourcesTitle')}</Text>
         {SOURCES.map(s => (
           <Text key={s} style={styles.source}>• {s}</Text>
         ))}

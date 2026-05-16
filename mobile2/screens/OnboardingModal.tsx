@@ -5,6 +5,7 @@ import {
   StatusBar as RNStatusBar,
   NativeSyntheticEvent, NativeScrollEvent,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Svg, {
   Circle, Polygon, Path, Rect,
   Defs, LinearGradient as SvgLinearGradient, Stop,
@@ -59,6 +60,16 @@ function hexPoints(cx: number, cy: number, r: number): string {
 // Screen 1 — Bem-vindo (cyan)
 // ─────────────────────────────────────────────────────────────────────────────
 
+function Screen1Subtitle() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Text style={styles.subtitle}>{t('onboarding.screen1.tagline')}</Text>
+      <Text style={styles.body}>{t('onboarding.screen1.body')}</Text>
+    </>
+  );
+}
+
 function Screen1() {
   const pulse = useRef(new Animated.Value(0)).current;
   const rotate = useRef(new Animated.Value(0)).current;
@@ -105,12 +116,7 @@ function Screen1() {
         <Text style={[styles.bigTitle, { color: COLORS.cyan, fontSize: 52, letterSpacing: -2 }]}>
           REFLEXO
         </Text>
-        <Text style={styles.subtitle}>
-          Velocidade de reação,{'\n'}medida com ciência.
-        </Text>
-        <Text style={styles.body}>
-          Descubra onde você está. Evolua com dados reais.
-        </Text>
+        <Screen1Subtitle />
       </View>
     </View>
   );
@@ -160,16 +166,24 @@ function Screen2() {
           </View>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.blue }]}>4 modos de treino</Text>
-
-        <View style={styles.modeCardsCol}>
-          <ModeCard color={COLORS.blue}    name="PARTIDA"   desc="Reação simples · 7 tentativas" />
-          <ModeCard color={COLORS.cyan2}   name="ALVO"      desc="Velocidade + precisão · 10 rodadas" />
-          <ModeCard color={COLORS.purple}  name="SEQUÊNCIA" desc="Controle inibitório · Go/NoGo" />
-          <ModeCard color={COLORS.amber}   name="RADAR"     desc="Localização visual · 7 rodadas" />
-        </View>
+        <Screen2Content />
       </View>
     </View>
+  );
+}
+
+function Screen2Content() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Text style={[styles.bigTitle, { color: COLORS.blue }]}>{t('onboarding.screen2.title')}</Text>
+      <View style={styles.modeCardsCol}>
+        <ModeCard color={COLORS.blue}   name={t('onboarding.screen2.partida')}   desc={t('onboarding.screen2.partida_desc')} />
+        <ModeCard color={COLORS.cyan2}  name={t('onboarding.screen2.alvo')}      desc={t('onboarding.screen2.alvo_desc')} />
+        <ModeCard color={COLORS.purple} name={t('onboarding.screen2.sequencia')} desc={t('onboarding.screen2.sequencia_desc')} />
+        <ModeCard color={COLORS.amber}  name={t('onboarding.screen2.radar')}     desc={t('onboarding.screen2.radar_desc')} />
+      </View>
+    </>
   );
 }
 
@@ -234,19 +248,24 @@ function Screen3() {
           </Animated.View>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.purple }]}>Tudo registrado.</Text>
-
-        <View style={styles.statsRow}>
-          <Stat color={COLORS.purple} value="17"  label="sessões" />
-          <Stat color={COLORS.purple} value="#"   label="streak" />
-          <Stat color={COLORS.purple} value="40+" label="conquistas" />
-        </View>
-
-        <Text style={styles.body}>
-          Quanto mais você joga, mais rico fica seu histórico.
-        </Text>
+        <Screen3Content />
       </View>
     </View>
+  );
+}
+
+function Screen3Content() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Text style={[styles.bigTitle, { color: COLORS.purple }]}>{t('onboarding.screen3.allTitle')}</Text>
+      <View style={styles.statsRow}>
+        <Stat color={COLORS.purple} value={t('onboarding.screen3.stat1')} label={t('onboarding.screen3.sessionLabel')} />
+        <Stat color={COLORS.purple} value="#" label={t('onboarding.screen3.streakLabel')} />
+        <Stat color={COLORS.purple} value={t('onboarding.screen3.stat2')} label={t('onboarding.screen3.stat3')} />
+      </View>
+      <Text style={styles.body}>{t('onboarding.screen3.body')}</Text>
+    </>
   );
 }
 
@@ -317,16 +336,22 @@ function Screen4({ visible }: { visible: boolean }) {
           </View>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.amber }]}>Uma meta só sua.</Text>
-        <Text style={styles.body}>
-          Após sua primeira sessão, fazemos uma triagem rápida.{' '}
-          Você escolhe onde quer chegar.
-        </Text>
-        <Text style={[styles.subtitle, { color: COLORS.amber, marginTop: 6 }]}>
-          A gente mostra o caminho.
-        </Text>
+        <Screen4Content />
       </View>
     </View>
+  );
+}
+
+function Screen4Content() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Text style={[styles.bigTitle, { color: COLORS.amber }]}>{t('onboarding.screen4.title')}</Text>
+      <Text style={styles.body}>{t('onboarding.screen4.body')}</Text>
+      <Text style={[styles.subtitle, { color: COLORS.amber, marginTop: 6 }]}>
+        {t('onboarding.screen4.cta')}
+      </Text>
+    </>
   );
 }
 
@@ -374,19 +399,26 @@ function Screen5({ onStart }: { onStart: () => void }) {
           </View>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.green }]}>Seu cérebro é treinável.</Text>
-
-        <View style={styles.sciCardsCol}>
-          <SciCard value="10–15%" label="melhora de RT em 4 semanas" />
-          <SciCard value="∞"      label="neuroplasticidade por repetição" />
-          <SciCard value="< 5min" label="por dia é o suficiente" />
-        </View>
-
-        <TouchableOpacity style={styles.startBtn} onPress={onStart} activeOpacity={0.85}>
-          <Text style={styles.startBtnText}>COMEÇAR</Text>
-        </TouchableOpacity>
+        <Screen5Content onStart={onStart} />
       </View>
     </View>
+  );
+}
+
+function Screen5Content({ onStart }: { onStart: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Text style={[styles.bigTitle, { color: COLORS.green }]}>{t('onboarding.screen5.title')}</Text>
+      <View style={styles.sciCardsCol}>
+        <SciCard value={t('onboarding.screen5.card1')} label={t('onboarding.screen5.card1Desc')} />
+        <SciCard value={t('onboarding.screen5.card2')} label={t('onboarding.screen5.card2Desc')} />
+        <SciCard value={t('onboarding.screen5.card3')} label={t('onboarding.screen5.card3Desc')} />
+      </View>
+      <TouchableOpacity style={styles.startBtn} onPress={onStart} activeOpacity={0.85}>
+        <Text style={styles.startBtnText}>{t('onboarding.continue')}</Text>
+      </TouchableOpacity>
+    </>
   );
 }
 
@@ -408,6 +440,7 @@ interface Props {
 }
 
 export default function OnboardingModal({ onComplete }: Props) {
+  const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(0);
   const swipeAnim = useRef(new Animated.Value(0)).current;
 
@@ -464,7 +497,7 @@ export default function OnboardingModal({ onComplete }: Props) {
           pointerEvents="none"
         >
           <Text style={[styles.swipeHintText, { color: hintColor }]}>
-            ← Deslize para avançar
+            {t('onboarding.swipeHint')}
           </Text>
         </Animated.View>
       )}

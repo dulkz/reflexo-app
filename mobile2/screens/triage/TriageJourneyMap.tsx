@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { getAmbitionById, GROUP_COLOR } from '../../config/ambitions';
 import JourneyMap from '../../components/JourneyMap';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: Props) {
+  const { t } = useTranslation();
   const ambition = getAmbitionById(ambitionId);
   if (!ambition) return null;
 
@@ -23,12 +25,12 @@ export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: P
     <View style={styles.root}>
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <View style={{ width: 60 }} />
-        <Text style={styles.headerTitle}>SUA JORNADA</Text>
+        <Text style={styles.headerTitle}>{t('triage.baseline.journeyTitle')}</Text>
         <View style={{ width: 60 }} />
       </View>
       <View style={styles.ambitionSubRow}>
         <SvgXml xml={ambition.icon} width={28} height={28} />
-        <Text style={styles.ambitionSubText}>Rumo a {ambition.name}</Text>
+        <Text style={styles.ambitionSubText}>{t('triage.baseline.headingTo', { name: ambition.name })}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -46,7 +48,7 @@ export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: P
           onPress={onFinish}
           activeOpacity={0.8}
         >
-          <Text style={styles.btnPrimaryText}>COMEÇAR A JOGAR</Text>
+          <Text style={styles.btnPrimaryText}>{t('triage.baseline.startPlaying')}</Text>
         </TouchableOpacity>
       </View>
     </View>

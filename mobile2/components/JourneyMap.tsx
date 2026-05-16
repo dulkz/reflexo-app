@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { getAmbition, getMilestonesState, MilestoneState } from '../utils/ambition';
 import { ACHIEVEMENT_ICONS } from '../assets/icons';
@@ -29,6 +30,7 @@ export default function JourneyMap({
   showYouAreHere,
   hideCompletionCard = false,
 }: Props) {
+  const { t } = useTranslation();
   const ambition = getAmbition(ambitionId);
   if (!ambition) return null;
 
@@ -74,16 +76,16 @@ export default function JourneyMap({
         <View style={[s.nodeContent, { paddingBottom: contentPb }]}>
           <Text style={[s.baselineLabel, compact && s.baselineLabelSm]}>
             {best !== null && best < baselineMs
-              ? `Ponto de partida: ${baselineMs} ms`
-              : `Baseline: ${baselineMs} ms`}
+              ? t('journey.baselineLabel', { ms: baselineMs })
+              : t('journey.baselineLabelDefault', { ms: baselineMs })}
           </Text>
           {pill && (
             <View style={s.youHerePill}>
-              <Text style={s.youHereText}>Você está aqui</Text>
+              <Text style={s.youHereText}>{t('journey.youAreHere')}</Text>
             </View>
           )}
           {best !== null && best !== baselineMs && (
-            <Text style={s.baselineBest}>Seu melhor atual: {best} ms</Text>
+            <Text style={s.baselineBest}>{t('journey.currentBest', { ms: best })}</Text>
           )}
         </View>
       </View>
@@ -148,11 +150,11 @@ export default function JourneyMap({
               {/* Current position pill: shown at first pending milestone when progress exists */}
               {isNext && !pill && best !== null && (
                 <View style={[s.youHerePill, { marginTop: 4 }]}>
-                  <Text style={s.youHereText}>Sua melhor: {best} ms</Text>
+                  <Text style={s.youHereText}>{t('journey.yourBestPill', { ms: best })}</Text>
                 </View>
               )}
               {isNext && deltaToNext !== null && deltaToNext > 0 && (
-                <Text style={s.deltaText}>faltam {deltaToNext} ms</Text>
+                <Text style={s.deltaText}>{t('journey.remaining', { delta: deltaToNext })}</Text>
               )}
             </View>
           </View>
@@ -162,24 +164,24 @@ export default function JourneyMap({
       {/* ── Footer card ── */}
       {!allBeaten && nextMilestone ? (
         <View style={[s.nextCard, compact && s.nextCardSm]}>
-          <Text style={s.nextCardKicker}>SEU PRÓXIMO ALVO</Text>
+          <Text style={s.nextCardKicker}>{t('journey.nextTarget')}</Text>
           <Text style={[s.nextCardLabel, compact && s.nextCardLabelSm]}>
             {nextMilestone.label}
           </Text>
           {deltaToNext !== null && deltaToNext > 0 && (
-            <Text style={s.nextCardDelta}>faltam {deltaToNext} ms</Text>
+            <Text style={s.nextCardDelta}>{t('journey.remaining', { delta: deltaToNext })}</Text>
           )}
         </View>
       ) : allBeaten && !hideCompletionCard ? (
         // Card estático — renderizado apenas quando o pai não fornece o seu próprio
         <View style={[s.nextCard, compact && s.nextCardSm]}>
-          <Text style={s.nextCardKicker}>JORNADA COMPLETA</Text>
+          <Text style={s.nextCardKicker}>{t('journey.complete')}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <SvgXml xml={ambition.icon} width={18} height={18} />
             <Text style={[s.nextCardLabel, compact && s.nextCardLabelSm]}>{ambition.name}</Text>
           </View>
           <Text style={[s.nextCardDelta, { color: '#10b981' }]}>
-            ✓ Todos os marcos batidos!
+            {t('journey.allMilestonesBeaten')}
           </Text>
         </View>
       ) : null}

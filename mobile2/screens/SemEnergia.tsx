@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Platform, StatusBar as RNStatusBar, Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { ModeKey, MODE_COLORS } from '../utils/levels';
 import {
   EnergyData, addEnergy,
@@ -17,13 +18,6 @@ import { ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
-// ── Texto por modo ────────────────────────────────────────────────────────────
-const MODE_LABEL: Record<ModeKey, string> = {
-  partida:   'MODO PARTIDA',
-  alvo:      'MODO ALVO',
-  sequencia: 'MODO SEQUÊNCIA',
-  radar:     'MODO RADAR',
-};
 const MODE_ICON: Record<ModeKey, string> = {
   partida:   ICONS.modes.partida,
   alvo:      ICONS.modes.alvo,
@@ -41,30 +35,28 @@ interface Props {
 }
 
 export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: Props) {
+  const { t } = useTranslation();
   const mc = MODE_COLORS[mode];
 
-  // ── Countdown ao próximo reset ──────────────────────────────────────────────
   const [countdown, setCountdown] = useState<TimeUntilReset>(getTimeUntilReset());
 
   useEffect(() => {
     const id = setInterval(() => {
-      const t = getTimeUntilReset();
-      setCountdown(t);
-      if (t.totalMs === 0) clearInterval(id);
+      const next = getTimeUntilReset();
+      setCountdown(next);
+      if (next.totalMs === 0) clearInterval(id);
     }, 1000);
     return () => clearInterval(id);
   }, []);
 
-  // ── Handlers de compra ──────────────────────────────────────────────────────
   const handleBuyPackage = useCallback(async (energies: number, label: string) => {
     if (!MONETIZATION_ENABLED) {
-      // Modo teste — simula compra instantânea
       Alert.alert(
-        '⚡ Modo teste',
-        `${energies} energias adicionadas a todos os modos (sem cobrança real).`,
+        t('energy.testModeTitle'),
+        t('energy.testModeEnergy', { energies }),
         [
           {
-            text: 'OK',
+            text: t('common.ok'),
             onPress: async () => {
               const updated = await addEnergy('all', energies, energyData);
               onEnergyAdded(updated);
@@ -73,21 +65,19 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
         ],
       );
     } else {
-      // TODO: Fase 2 — integrar Google Play Billing
-      Alert.alert('Em breve', `Compra de "${label}" será processada via Google Play.`);
+      Alert.alert(t('common.soon'), t('energy.comingSoonPackage', { label }));
     }
-  }, [energyData, onEnergyAdded]);
+  }, [energyData, onEnergyAdded, t]);
 
   const handleSubscribe = useCallback(async (label: string, price: string) => {
     if (!MONETIZATION_ENABLED) {
       Alert.alert(
-        '⚡ Modo teste',
-        `Assinatura "${label}" simulada — energia ilimitada ativada (sem cobrança real).`,
+        t('energy.testModeTitle'),
+        t('energy.testModeSubscription', { label }),
         [
           {
-            text: 'OK',
+            text: t('common.ok'),
             onPress: async () => {
-              // Adiciona energia grande para simular "ilimitado" no dia
               const updated = await addEnergy('all', 999, energyData);
               onEnergyAdded(updated);
             },
@@ -95,9 +85,9 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
         ],
       );
     } else {
-      Alert.alert('Em breve', `Assinatura "${label}" (${price}) via Google Play.`);
+      Alert.alert(t('common.soon'), t('energy.comingSoonSubscription', { label, price }));
     }
-  }, [energyData, onEnergyAdded]);
+  }, [energyData, onEnergyAdded, t]);
 
   return (
     <View style={styles.root}>
@@ -105,7 +95,7 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
       {/* ── Back button ── */}
       <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack} activeOpacity={0.7}>
-          <Text style={styles.backText}>← Voltar</Text>
+          <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -117,10 +107,9 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
         {/* ── Hero — ícone + título + contador ── */}
         <View style={styles.hero}>
           <SvgXml xml={MODE_ICON[mode]} width={54} height={54} style={{ marginBottom: 4 }} />
-          <Text style={[styles.heroMode, { color: mc.accent }]}>{MODE_LABEL[mode]}</Text>
-          <Text style={styles.heroTitle}>ENERGIA ESGOTADA</Text>
+          <Text style={[styles.heroMode, { color: mc.accent }]}>{t(`modes.${mode}.name`)}</Text>
+          <Text style={styles.heroTitle}>{t('energy.depleted')}</Text>
 
-          {/* ⚡ 0/5 em vermelho */}
           <View style={styles.energyBadge}>
             <Text style={styles.energyBadgeIcon}>⚡</Text>
             <Text style={styles.energyBadgeCount}>0</Text>
@@ -131,20 +120,20 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
 
         {/* ── Reset countdown ── */}
         <View style={styles.resetCard}>
-          <Text style={styles.resetLabel}>Energia repõe à meia-noite</Text>
+          <Text style={styles.resetLabel}>{t('energy.resetLabel')}</Text>
           <View style={styles.resetCountdownRow}>
             <Text style={styles.resetClockIcon}>🕛</Text>
             <Text style={styles.resetCountdown}>
               {formatResetCountdown(countdown)}
             </Text>
           </View>
-          <Text style={styles.resetSub}>Aguarde ou recarregue agora</Text>
+          <Text style={styles.resetSub}>{t('energy.resetSub')}</Text>
         </View>
 
         {/* ── Divisor ── */}
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>RECARREGAR AGORA</Text>
+          <Text style={styles.dividerText}>{t('energy.rechargeNow')}</Text>
           <View style={styles.dividerLine} />
         </View>
 
@@ -161,13 +150,13 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
               <View>
                 <Text style={styles.packageLabel}>{pkg.label}</Text>
                 <Text style={styles.packageDesc}>
-                  {pkg.energies} energias · todos os modos
+                  {t('energy.perModeDesc', { energies: pkg.energies })}
                 </Text>
               </View>
             </View>
             <View style={styles.packageRight}>
               <Text style={styles.packagePrice}>{pkg.price}</Text>
-              <Text style={styles.packageOnce}>única</Text>
+              <Text style={styles.packageOnce}>{t('energy.once')}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -177,13 +166,11 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
           <View style={styles.premiumHeader}>
             <Text style={styles.premiumCrown}>👑</Text>
             <View style={{ flex: 1 }}>
-              <Text style={styles.premiumTitle}>PREMIUM</Text>
-              <Text style={styles.premiumDesc}>
-                Energia ilimitada · Sem anúncios · Badge exclusivo
-              </Text>
+              <Text style={styles.premiumTitle}>{t('energy.premium')}</Text>
+              <Text style={styles.premiumDesc}>{t('energy.premiumDesc')}</Text>
             </View>
             <View style={styles.bestValueBadge}>
-              <Text style={styles.bestValueText}>MELHOR</Text>
+              <Text style={styles.bestValueText}>{t('energy.best')}</Text>
             </View>
           </View>
 
@@ -207,9 +194,7 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
 
         {/* ── Rodapé modo teste ── */}
         {!MONETIZATION_ENABLED && (
-          <Text style={styles.testModeLabel}>
-            ⚙ Modo teste ativo — compras simuladas sem cobrança
-          </Text>
+          <Text style={styles.testModeLabel}>{t('energy.testModeFooter')}</Text>
         )}
 
       </ScrollView>

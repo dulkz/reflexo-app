@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { ICONS, ACHIEVEMENT_ICONS, ARCHETYPE_ICONS, RARITY_ICONS_SVG, UI_ICONS } from '../assets/icons';
 import { getLevelInfo, computeScore, LEVELS, MODE_COLORS, ModeKey,
@@ -53,6 +54,7 @@ const CHOICE_SCALE_MAX = 900;
 // ALVO_LEVELS imported from levels.ts (replaces local CHOICE_LEVELS)
 
 function ChoiceScaleBar({ score }: { score: number }) {
+  const { t } = useTranslation();
   const pct = Math.min(1, Math.max(0, (score - CHOICE_SCALE_MIN) / (CHOICE_SCALE_MAX - CHOICE_SCALE_MIN)));
   const level = getChoiceRTLevel(score);
   return (
@@ -66,7 +68,7 @@ function ChoiceScaleBar({ score }: { score: number }) {
           );
         })}
         <View style={[sb.marker, { left: `${pct * 100}%` }]}>
-          <Text style={[sb.markerLabel, { color: level.color }]}>VOCÊ</Text>
+          <Text style={[sb.markerLabel, { color: level.color }]}>{t('result.youMarker')}</Text>
           <View style={[sb.markerLine, { backgroundColor: level.color }]} />
         </View>
       </View>
@@ -82,9 +84,10 @@ function ChoiceScaleBar({ score }: { score: number }) {
 // SEQ_LEVELS imported from levels.ts (< 220 Elite … > 550 Muito Devagar)
 
 function SeqScaleReference({ score }: { score: number }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.scaleBox}>
-      <Text style={styles.sectionTitle}>ESCALA DE REFERÊNCIA — SEQUÊNCIA</Text>
+      <Text style={styles.sectionTitle}>{t('result.scaleTitleSeq')}</Text>
       {SEQ_LEVELS.map((lvl, i) => {
         const isUser = score < lvl.maxMs && (i === 0 || score >= SEQ_LEVELS[i - 1].maxMs);
         const rangeStr = i === 0 ? `< ${lvl.maxMs} ms`
@@ -107,15 +110,15 @@ function SeqScaleReference({ score }: { score: number }) {
             <View style={{ flex: 1 }}>
               <View style={styles.scaleLabelRow}>
                 <Text style={[styles.scaleLabel, isUser && { color: lvl.color, fontWeight: '900', fontSize: 12 }]}>
-                  {lvl.label}
+                  {t(`levels.${lvl.labelKey}.label` as any)}
                 </Text>
                 {isUser && (
                   <View style={[styles.youBadge, { backgroundColor: lvl.color + '33', borderColor: lvl.color + '88' }]}>
-                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>◄ VOCÊ</Text>
+                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>{t('result.youBadge')}</Text>
                   </View>
                 )}
               </View>
-              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{lvl.desc}</Text>
+              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{t(`levels.${lvl.labelKey}.desc` as any)}</Text>
             </View>
             <Text style={[styles.scaleRange, isUser && { color: lvl.color, fontWeight: '800' }]}>{rangeStr}</Text>
           </View>
@@ -126,9 +129,10 @@ function SeqScaleReference({ score }: { score: number }) {
 }
 
 function ChoiceScaleReference({ score }: { score: number }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.scaleBox}>
-      <Text style={styles.sectionTitle}>ESCALA CHOICE RT — MODO ALVO</Text>
+      <Text style={styles.sectionTitle}>{t('result.scaleTitleAlvo')}</Text>
       {ALVO_LEVELS.map((lvl, i) => {
         const isUser = score < lvl.maxMs && (i === 0 || score >= ALVO_LEVELS[i - 1].maxMs);
         const rangeStr = i === 0 ? `< ${lvl.maxMs} ms`
@@ -151,15 +155,15 @@ function ChoiceScaleReference({ score }: { score: number }) {
             <View style={{ flex: 1 }}>
               <View style={styles.scaleLabelRow}>
                 <Text style={[styles.scaleLabel, isUser && { color: lvl.color, fontWeight: '900', fontSize: 12 }]}>
-                  {lvl.label}
+                  {t(`levels.${lvl.labelKey}.label` as any)}
                 </Text>
                 {isUser && (
                   <View style={[styles.youBadge, { backgroundColor: lvl.color + '33', borderColor: lvl.color + '88' }]}>
-                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>◄ VOCÊ</Text>
+                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>{t('result.youBadge')}</Text>
                   </View>
                 )}
               </View>
-              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{lvl.desc}</Text>
+              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{t(`levels.${lvl.labelKey}.desc` as any)}</Text>
             </View>
             <Text style={[styles.scaleRange, isUser && { color: lvl.color, fontWeight: '800' }]}>{rangeStr}</Text>
           </View>
@@ -170,6 +174,7 @@ function ChoiceScaleReference({ score }: { score: number }) {
 }
 
 function ScaleBar({ score }: { score: number }) {
+  const { t } = useTranslation();
   const pct = Math.min(1, Math.max(0, (score - SCALE_MIN) / (SCALE_MAX - SCALE_MIN)));
   const level = getLevelInfo(score);
   return (
@@ -183,7 +188,7 @@ function ScaleBar({ score }: { score: number }) {
           );
         })}
         <View style={[sb.marker, { left: `${pct * 100}%` }]}>
-          <Text style={[sb.markerLabel, { color: level.color }]}>VOCÊ</Text>
+          <Text style={[sb.markerLabel, { color: level.color }]}>{t('result.youMarker')}</Text>
           <View style={[sb.markerLine, { backgroundColor: level.color }]} />
         </View>
       </View>
@@ -227,6 +232,7 @@ const SEQ_SCALE_MIN = 150;
 const SEQ_SCALE_MAX = 600;
 
 function SeqScaleBar({ score }: { score: number }) {
+  const { t } = useTranslation();
   const pct = Math.min(1, Math.max(0, (score - SEQ_SCALE_MIN) / (SEQ_SCALE_MAX - SEQ_SCALE_MIN)));
   const level = getSeqLevel(score);
   return (
@@ -238,7 +244,7 @@ function SeqScaleBar({ score }: { score: number }) {
           return <View key={stop.ms} style={[sb.segment, { width: `${w}%`, backgroundColor: stop.color + '44' }]} />;
         })}
         <View style={[sb.marker, { left: `${pct * 100}%` }]}>
-          <Text style={[sb.markerLabel, { color: level.color }]}>VOCÊ</Text>
+          <Text style={[sb.markerLabel, { color: level.color }]}>{t('result.youMarker')}</Text>
           <View style={[sb.markerLine, { backgroundColor: level.color }]} />
         </View>
       </View>
@@ -265,6 +271,7 @@ const RADAR_SCALE_MIN = 200;
 const RADAR_SCALE_MAX = 700;
 
 function RadarScaleBar({ score }: { score: number }) {
+  const { t } = useTranslation();
   const pct = Math.min(1, Math.max(0, (score - RADAR_SCALE_MIN) / (RADAR_SCALE_MAX - RADAR_SCALE_MIN)));
   const level = getRadarLevel(score);
   return (
@@ -276,7 +283,7 @@ function RadarScaleBar({ score }: { score: number }) {
           return <View key={stop.ms} style={[sb.segment, { width: `${w}%`, backgroundColor: stop.color + '44' }]} />;
         })}
         <View style={[sb.marker, { left: `${pct * 100}%` }]}>
-          <Text style={[sb.markerLabel, { color: level.color }]}>VOCÊ</Text>
+          <Text style={[sb.markerLabel, { color: level.color }]}>{t('result.youMarker')}</Text>
           <View style={[sb.markerLine, { backgroundColor: level.color }]} />
         </View>
       </View>
@@ -292,9 +299,10 @@ function RadarScaleBar({ score }: { score: number }) {
 // ── Radar scale reference ─────────────────────────────────────────────────────
 
 function RadarScaleReference({ score }: { score: number }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.scaleBox}>
-      <Text style={styles.sectionTitle}>ESCALA DE REFERÊNCIA — RADAR</Text>
+      <Text style={styles.sectionTitle}>{t('result.scaleTitleRadar')}</Text>
       {RADAR_LEVELS.map((lvl, i) => {
         const isUser = score < lvl.maxMs && (i === 0 || score >= RADAR_LEVELS[i - 1].maxMs);
         const rangeStr = i === 0 ? `< ${lvl.maxMs} ms`
@@ -317,15 +325,15 @@ function RadarScaleReference({ score }: { score: number }) {
             <View style={{ flex: 1 }}>
               <View style={styles.scaleLabelRow}>
                 <Text style={[styles.scaleLabel, isUser && { color: lvl.color, fontWeight: '900', fontSize: 12 }]}>
-                  {lvl.label}
+                  {t(`levels.${lvl.labelKey}.label` as any)}
                 </Text>
                 {isUser && (
                   <View style={[styles.youBadge, { backgroundColor: lvl.color + '33', borderColor: lvl.color + '88' }]}>
-                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>◄ VOCÊ</Text>
+                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>{t('result.youBadge')}</Text>
                   </View>
                 )}
               </View>
-              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{lvl.desc}</Text>
+              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{t(`levels.${lvl.labelKey}.desc` as any)}</Text>
             </View>
             <Text style={[styles.scaleRange, isUser && { color: lvl.color, fontWeight: '800' }]}>{rangeStr}</Text>
           </View>
@@ -338,9 +346,10 @@ function RadarScaleReference({ score }: { score: number }) {
 // ── Scale reference list (Partida) ────────────────────────────────────────────
 
 function ScaleReference({ score }: { score: number }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.scaleBox}>
-      <Text style={styles.sectionTitle}>ESCALA DE REFERÊNCIA</Text>
+      <Text style={styles.sectionTitle}>{t('result.scaleTitle')}</Text>
       {LEVELS.map((lvl, i) => {
         const isUser = score < lvl.maxMs && (i === 0 || score >= LEVELS[i - 1].maxMs);
         // IMPOSSÍVEL (<50ms) and SUPER-HUMANO (<100ms) are hidden unless the user
@@ -370,15 +379,15 @@ function ScaleReference({ score }: { score: number }) {
             <View style={{ flex: 1 }}>
               <View style={styles.scaleLabelRow}>
                 <Text style={[styles.scaleLabel, isUser && { color: lvl.color, fontWeight: '900', fontSize: 12 }]}>
-                  {lvl.label}
+                  {t(`levels.${lvl.labelKey}.label` as any)}
                 </Text>
                 {isUser && (
                   <View style={[styles.youBadge, { backgroundColor: lvl.color + '33', borderColor: lvl.color + '88' }]}>
-                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>◄ VOCÊ</Text>
+                    <Text style={[styles.youBadgeText, { color: lvl.color }]}>{t('result.youBadge')}</Text>
                   </View>
                 )}
               </View>
-              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{lvl.desc}</Text>
+              <Text style={[styles.scaleDesc, isUser && { color: lvl.color + 'bb' }]}>{t(`levels.${lvl.labelKey}.desc` as any)}</Text>
             </View>
             <Text style={[styles.scaleRange, isUser && { color: lvl.color, fontWeight: '800' }]}>{rangeStr}</Text>
           </View>
@@ -397,6 +406,7 @@ interface JourneyCardProps {
 }
 
 function JourneyProgressCard({ sessions, userProfile, currentSessionScore }: JourneyCardProps) {
+  const { t } = useTranslation();
   if (!userProfile.triageCompleted || !userProfile.ambitionId) return null;
 
   const partidaSessions = sessions.filter(s => s.mode === 'partida');
@@ -446,28 +456,30 @@ function JourneyProgressCard({ sessions, userProfile, currentSessionScore }: Jou
     <View style={jc.wrapper}>
       <View style={jc.separator} />
       <View style={jc.card}>
-        <Text style={jc.label}>SUA JORNADA</Text>
+        <Text style={jc.label}>{t('result.yourJourney')}</Text>
         <View style={[jc.row, { marginBottom: 4 }]}>
           <SvgXml xml={RARITY_ICONS_SVG.desbloqueadas} width={16} height={16} />
           <Text style={jc.bestRow}>
-            {'Seu melhor: '}<Text style={jc.bestMs}>{currentBestMs} ms</Text>
+            {t('result.yourBestLabel')}<Text style={jc.bestMs}>{currentBestMs} ms</Text>
           </Text>
         </View>
         {isNewRecord && (
           <View style={[jc.recordBadge, jc.row]}>
             <SvgXml xml={UI_ICONS.celebrate} width={14} height={14} />
-            <Text style={jc.recordText}>NOVO RECORDE!</Text>
+            <Text style={jc.recordText}>{t('result.newRecord')}</Text>
           </View>
         )}
         {allBeaten ? (
           <View style={[jc.row, { marginBottom: 10 }]}>
             <SvgXml xml={ACHIEVEMENT_ICONS.piloto} width={14} height={14} />
-            <Text style={[jc.completeText, { marginBottom: 0 }]}>Jornada completa!</Text>
+            <Text style={[jc.completeText, { marginBottom: 0 }]}>{t('result.journeyComplete')}</Text>
           </View>
         ) : (
           <Text style={jc.nextMeta}>
             {nextMilestone && nextMilestone.type !== 'qualitative' && nextMilestone.ms !== undefined
-              ? `Próxima meta: ${nextMilestone.ms} ms${delta !== null ? ` — faltam ${delta} ms` : ''}`
+              ? (delta !== null
+                  ? t('result.nextGoalDelta', { ms: nextMilestone.ms, delta })
+                  : t('result.nextGoal', { ms: nextMilestone.ms }))
               : nextMilestone?.label ?? ''}
           </Text>
         )}
@@ -480,10 +492,11 @@ function JourneyProgressCard({ sessions, userProfile, currentSessionScore }: Jou
 }
 
 function TopReplayButton({ onPlayAgain }: { onPlayAgain: () => void }) {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity style={styles.topReplayBtn} onPress={onPlayAgain} activeOpacity={0.7}>
       <Text style={styles.topReplayIcon}>↻</Text>
-      <Text style={styles.topReplayText}>JOGAR NOVAMENTE</Text>
+      <Text style={styles.topReplayText}>{t('result.playAgainBtn')}</Text>
     </TouchableOpacity>
   );
 }
@@ -499,24 +512,25 @@ interface PartidaProps {
 }
 
 function PartidaResult({ times, onPlayAgain, onHome, sessions, userProfile }: PartidaProps) {
+  const { t } = useTranslation();
   const { score, bestTime, worst2Indices } = useMemo(() => computeScore(times), [times]);
   const level = getLevelInfo(score);
   const mc = MODE_COLORS.partida;
 
   const f1Msg = score < 150
-    ? 'Incrível — você está ACIMA do nível de piloto de F1!'
+    ? t('f1.above')
     : score < 200
-    ? 'Você está no nível dos melhores pilotos de F1!'
+    ? t('f1.top')
     : score < 250
-    ? 'Você está dentro da faixa de pilotos de F1.'
-    : `${Math.round(score - 200)} ms do nível de piloto de F1.`;
+    ? t('f1.within')
+    : t('f1.gap', { gap: Math.round(score - 200) });
 
   return (
     <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]} showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>MODO PARTIDA</Text>
+        <Text style={styles.heroLabel}>{t('modes.partida.name')}</Text>
         <Text style={[styles.heroScore, { color: level.color }]}>{score}</Text>
-        <Text style={styles.heroMs}>ms</Text>
+        <Text style={styles.heroMs}>{t('common.ms')}</Text>
         <LevelBadge level={level} />
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
@@ -528,43 +542,43 @@ function PartidaResult({ times, onPlayAgain, onHome, sessions, userProfile }: Pa
         <SvgXml xml={ARCHETYPE_ICONS.PILOTO} width={24} height={24} />
         <View style={{ flex: 1 }}>
           <Text style={styles.benchTitle}>{f1Msg}</Text>
-          <Text style={styles.benchSub}>Pilotos de F1 largam em 150–250 ms</Text>
+          <Text style={styles.benchSub}>{t('result.f1Sub')}</Text>
         </View>
       </View>
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={[styles.statVal, { color: level.color }]}>{score} ms</Text>
-          <Text style={styles.statLbl}>MÉDIA TOP 5</Text>
+          <Text style={styles.statLbl}>{t('result.partida.stat1')}</Text>
         </View>
         <View style={[styles.stat, styles.statMid]}>
           <Text style={[styles.statVal, { color: getLevelInfo(bestTime).color }]}>{bestTime} ms</Text>
-          <Text style={styles.statLbl}>MELHOR</Text>
+          <Text style={styles.statLbl}>{t('result.partida.stat2')}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statVal}>{times.length}</Text>
-          <Text style={styles.statLbl}>RODADAS</Text>
+          <Text style={styles.statLbl}>{t('result.roundList')}</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>TODAS AS RODADAS</Text>
-      <Text style={styles.sectionSub}>As 2 piores foram descartadas do score final</Text>
-      {times.map((t, i) => {
+      <Text style={styles.sectionTitle}>{t('result.allRounds')}</Text>
+      <Text style={styles.sectionSub}>{t('result.discardedNote')}</Text>
+      {times.map((rt, i) => {
         const isWorst = worst2Indices.has(i);
-        const isFalse = t === FALSE_START;
-        const lvl = isFalse ? null : getLevelInfo(t);
+        const isFalse = rt === FALSE_START;
+        const lvl = isFalse ? null : getLevelInfo(rt);
         return (
           <View key={i} style={[styles.row, isWorst && styles.rowWorst]}>
             <Text style={[styles.rowIdx, isWorst && styles.dim]}>{i + 1}</Text>
             <View style={{ flex: 1 }}>
               {isFalse ? (
-                <Text style={styles.falseText}>FALSA LARGADA</Text>
+                <Text style={styles.falseText}>{t('result.falseStart')}</Text>
               ) : (
-                <Text style={[styles.rowTime, { color: isWorst ? '#2d3a55' : lvl?.color }]}>{t} ms</Text>
+                <Text style={[styles.rowTime, { color: isWorst ? '#2d3a55' : lvl?.color }]}>{rt} ms</Text>
               )}
             </View>
             {isWorst ? (
-              <View style={styles.discardPill}><Text style={styles.discardText}>DESCARTADO</Text></View>
+              <View style={styles.discardPill}><Text style={styles.discardText}>{t('result.discarded')}</Text></View>
             ) : !isFalse && (
               <Text style={[styles.rowLevel, { color: lvl?.color }]}>{lvl?.label}</Text>
             )}
@@ -577,12 +591,12 @@ function PartidaResult({ times, onPlayAgain, onHome, sessions, userProfile }: Pa
       <JourneyProgressCard sessions={sessions} userProfile={userProfile} currentSessionScore={score} />
 
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
-        <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
+        <Text style={styles.btnPrimaryText}>{t('result.playAgainBtn')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.btnSecondary} onPress={onHome} activeOpacity={0.8}>
-        <Text style={styles.btnSecondaryText}>MENU PRINCIPAL</Text>
+        <Text style={styles.btnSecondaryText}>{t('result.mainMenu')}</Text>
       </TouchableOpacity>
-      <Text style={styles.methodNote}>Score = média das 5 melhores de 7 tentativas.</Text>
+      <Text style={styles.methodNote}>{t('result.methodPartida')}</Text>
     </ScrollView>
   );
 }
@@ -599,6 +613,7 @@ interface AlvoProps {
 }
 
 function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userProfile }: AlvoProps) {
+  const { t } = useTranslation();
   const level = getChoiceRTLevel(score);
   const mc = MODE_COLORS.alvo;
   const hitsAlvo = alvoResults.filter(r => r.correct);
@@ -615,19 +630,19 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
   const consistencyTarget = best + 100;
 
   const choiceBenchMsg = score <= 420
-    ? 'Você está no nível de atleta de alto rendimento!'
+    ? t('result.choiceBenchElite')
     : score <= 500
-    ? `${score - 420} ms do nível ELITE (atleta de alto rendimento)`
+    ? t('result.choiceBenchVeryGood', { delta: score - 420 })
     : score <= 560
-    ? `${score - 500} ms do nível MUITO BOM`
-    : `Continue treinando — próximo nível: ${score <= 700 ? 'BOM (até 560 ms)' : 'CONSTRUINDO (até 700 ms)'}`;
+    ? t('result.choiceBenchGood', { delta: score - 500 })
+    : t('result.choiceBenchLower', { next: score <= 700 ? 'BOM (até 560 ms)' : 'CONSTRUINDO (até 700 ms)' });
 
   return (
     <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]} showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>MODO ALVO</Text>
+        <Text style={styles.heroLabel}>{t('modes.alvo.name')}</Text>
         <Text style={[styles.heroScore, { color: level.color }]}>{score}</Text>
-        <Text style={styles.heroMs}>ms (penalizado)</Text>
+        <Text style={styles.heroMs}>{t('result.penalizedMs')}</Text>
         <View style={[styles.choiceBadge, { backgroundColor: level.bg, borderColor: level.color + '66' }]}>
           <Text style={[styles.choiceBadgeText, { color: level.color }]}>{level.label}</Text>
         </View>
@@ -639,15 +654,15 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
 
       {variation > 200 && (
         <View style={styles.consistencyCard}>
-          <Text style={styles.consistencyTitle}>Sua consistência é o próximo nível</Text>
+          <Text style={styles.consistencyTitle}>{t('result.consistencyTitle')}</Text>
           <Text style={styles.consistencyLine}>
-            {`Melhor rodada: ${best}ms · Pior rodada: ${worstRt}ms · Variação: ${variation}ms`}
+            {t('result.consistencyLine1', { best, worst: worstRt, var: variation })}
           </Text>
           <Text style={styles.consistencyLine}>
-            Seu cérebro já sabe reagir rápido — agora treine fazer isso sempre
+            {t('result.consistencyLine2')}
           </Text>
           <Text style={styles.consistencyMeta}>
-            {`Tente manter todas as rodadas abaixo de ${consistencyTarget}ms`}
+            {t('result.consistencyTarget', { target: consistencyTarget })}
           </Text>
         </View>
       )}
@@ -656,26 +671,26 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
         <SvgXml xml={ICONS.modes.alvo} width={24} height={24} />
         <View style={{ flex: 1 }}>
           <Text style={styles.benchTitle}>{choiceBenchMsg}</Text>
-          <Text style={styles.benchSub}>Choice RT · Identificação de cor sob pressão</Text>
+          <Text style={styles.benchSub}>{t('result.choiceRtSub')}</Text>
         </View>
       </View>
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={[styles.statVal, { color: mc.accent }]}>{accuracy}%</Text>
-          <Text style={styles.statLbl}>ACURÁCIA</Text>
+          <Text style={styles.statLbl}>{t('result.alvo.stat1')}</Text>
         </View>
         <View style={[styles.stat, styles.statMid]}>
           <Text style={[styles.statVal, { color: getChoiceRTLevel(avgRt).color }]}>{avgRt} ms</Text>
-          <Text style={styles.statLbl}>MÉDIA RT</Text>
+          <Text style={styles.statLbl}>{t('result.alvo.stat2')}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={[styles.statVal, { color: getChoiceRTLevel(best).color }]}>{best} ms</Text>
-          <Text style={styles.statLbl}>MELHOR</Text>
+          <Text style={styles.statLbl}>{t('result.best')}</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>RODADAS</Text>
+      <Text style={styles.sectionTitle}>{t('result.roundList')}</Text>
       {alvoResults.map((r, i) => (
         <View key={i} style={styles.row}>
           <Text style={styles.rowIdx}>{i + 1}</Text>
@@ -685,7 +700,7 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
             </Text>
           </View>
           <Text style={[styles.rowLevel, { color: r.correct ? '#10b981' : '#ef4444' }]}>
-            {r.correct ? '✓' : '✗'}
+            {r.correct ? t('result.hit') : t('result.miss')}
           </Text>
         </View>
       ))}
@@ -693,10 +708,10 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
       <ChoiceScaleReference score={score} />
 
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
-        <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
+        <Text style={styles.btnPrimaryText}>{t('result.playAgainBtn')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.btnSecondary} onPress={onHome} activeOpacity={0.8}>
-        <Text style={styles.btnSecondaryText}>MENU PRINCIPAL</Text>
+        <Text style={styles.btnSecondaryText}>{t('result.mainMenu')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -713,45 +728,46 @@ interface SeqProps {
 }
 
 function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqProps) {
+  const { t } = useTranslation();
   const { avgRt, accuracy, fatigueIndex, score, hits, misses, commissions, correctInhibits, noGoErrors, noGoAccuracy } = summary;
   const level = getSeqLevel(score);
   const mc = MODE_COLORS.sequencia;
   const accPct = Math.round(accuracy * 100);
-  const nogoCount = summary.trials.filter(t => t.signalType === 'nogo').length;
+  const nogoCount = summary.trials.filter(tr => tr.signalType === 'nogo').length;
   const inhibPct = Math.round((correctInhibits / Math.max(1, nogoCount)) * 100);
 
   const fatigueColor = fatigueIndex > 15 ? '#ef4444'
     : fatigueIndex > 5 ? '#f59e0b'
     : fatigueIndex < -5 ? '#10b981'
     : '#06b6d4';
-  const fatigueLabel = fatigueIndex > 15 ? 'FADIGA SIGNIFICATIVA'
-    : fatigueIndex > 5 ? 'LEVE FADIGA'
-    : fatigueIndex < -5 ? 'MELHORA PROGRESSIVA'
-    : 'ESTÁVEL';
+  const fatigueLabel = fatigueIndex > 15 ? t('result.fatigue.significant')
+    : fatigueIndex > 5 ? t('result.fatigue.light')
+    : fatigueIndex < -5 ? t('result.fatigue.improving')
+    : t('result.fatigue.stable');
 
   return (
     <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]} showsVerticalScrollIndicator={false}>
       {summary.suspiciousSpam && (
         <View style={styles.spamBanner}>
           <Text style={styles.spamBannerText}>
-            ⚠️ Detectamos toques muito rápidos nessa sessão — resultado não salvo.
+            {t('result.spamWarning')}
           </Text>
         </View>
       )}
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>MODO SEQUÊNCIA</Text>
+        <Text style={styles.heroLabel}>{t('modes.sequencia.name')}</Text>
         <Text style={[styles.heroScore, { color: level.color }]}>{score}</Text>
-        <Text style={styles.heroMs}>ms (score penalizado)</Text>
+        <Text style={styles.heroMs}>{t('result.penalizedMs')}</Text>
         <LevelBadge level={level} />
-        <Text style={styles.seqAvgRtLine}>Média Go limpa: {avgRt} ms</Text>
+        <Text style={styles.seqAvgRtLine}>{t('result.avgGoMs', { ms: avgRt })}</Text>
         <View style={styles.inhibRow}>
           <Text style={styles.inhibText}>
-            🧠 Controle inibitório: {noGoAccuracy}% · {noGoErrors} {noGoErrors === 1 ? 'erro' : 'erros'}
+            {t('result.inhibitionControl', { pct: noGoAccuracy, errors: noGoErrors })}
           </Text>
         </View>
         {(summary.earlyTapCount ?? 0) > 0 && (
           <Text style={styles.earlyTapLine}>
-            ❌ Antecipações: {summary.earlyTapCount} × +150ms
+            {t('result.earlyTaps', { count: summary.earlyTapCount })}
           </Text>
         )}
       </View>
@@ -769,64 +785,56 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
           </View>
         </View>
         <Text style={styles.fatigueDesc}>
-          Índice de fadiga: variação do RT entre a 1ª e 2ª metade da sessão.
+          {t('result.fatigue.desc')}
         </Text>
       </View>
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={[styles.statVal, { color: accPct >= 90 ? '#10b981' : '#f59e0b' }]}>{accPct}%</Text>
-          <Text style={styles.statLbl}>ACERTOS GO</Text>
+          <Text style={styles.statLbl}>{t('result.seqGoHits')}</Text>
         </View>
         <View style={[styles.stat, styles.statMid]}>
           <Text style={[styles.statVal, { color: inhibPct >= 80 ? '#8b5cf6' : '#ef4444' }]}>{inhibPct}%</Text>
-          <Text style={styles.statLbl}>INIBIÇÃO</Text>
+          <Text style={styles.statLbl}>{t('result.seqInhibition')}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={[styles.statVal, { color: commissions === 0 ? '#10b981' : '#ef4444' }]}>{commissions}</Text>
-          <Text style={styles.statLbl}>ERROS INIBIÇÃO</Text>
+          <Text style={styles.statLbl}>{t('result.sequencia.stat4')}</Text>
         </View>
       </View>
 
       <View style={styles.seqSummaryBox}>
         {[
-          { label: '✓ Hits (Go correto)', val: hits, color: '#10b981' },
-          { label: '✗ Misses (Go ignorado)', val: misses, color: '#ef4444' },
-          { label: '⚡ Erros de inibição (NoGo tocado)', val: commissions, color: '#f59e0b' },
-          { label: '🧠 Inibições corretas', val: correctInhibits, color: '#8b5cf6' },
+          { labelKey: 'result.seqSummaryHits', val: hits, color: '#10b981' },
+          { labelKey: 'result.seqSummaryMisses', val: misses, color: '#ef4444' },
+          { labelKey: 'result.seqSummaryErrors', val: commissions, color: '#f59e0b' },
+          { labelKey: 'result.seqSummaryInhibited', val: correctInhibits, color: '#8b5cf6' },
         ].map(r => (
-          <View key={r.label} style={styles.seqSumRow}>
-            <Text style={styles.seqSumLabel}>{r.label}</Text>
+          <View key={r.labelKey} style={styles.seqSumRow}>
+            <Text style={styles.seqSumLabel}>{t(r.labelKey)}</Text>
             <Text style={[styles.seqSumVal, { color: r.color }]}>{r.val}</Text>
           </View>
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>LINHA DO TEMPO</Text>
+      <Text style={styles.sectionTitle}>{t('result.timeline')}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
         <View style={styles.timeline}>
-          {summary.trials.map((t, i) => {
-            const ep = t.earlyPenalty ?? 0;
+          {summary.trials.map((tr, i) => {
+            const ep = tr.earlyPenalty ?? 0;
             const hasEarly = ep > 0;
-            // Any early tap = error → red regardless of final outcome.
-            // Scenario A: Go hit + early → red (anticipated = error even if hit)
-            // Scenario B: NoGo inhibit + early → red (early tap was an error)
-            // Scenario C: commission (± early) → always red
             const c = hasEarly ? '#ef4444'
-              : t.responseType === 'hit' ? '#10b981'
-              : t.responseType === 'correct_inhibit' ? '#8b5cf6'
+              : tr.responseType === 'hit' ? '#10b981'
+              : tr.responseType === 'correct_inhibit' ? '#8b5cf6'
               : '#ef4444';
-            // Base label per scenario, then append early annotation if applicable
-            // Scenario A: Go hit (± early)
-            // Scenario B: NoGo correct inhibit + early penalty only
-            // Scenario C: NoGo commission (± early)
             const baseLabel =
-              t.responseType === 'hit' ? `${t.rt}ms`
-              : t.responseType === 'miss' ? '400ms (timeout)'
-              : t.responseType === 'commission' ? '400ms (NoGo)'
-              : '—'; // correct_inhibit without early
-            const earlyLabel = t.responseType === 'correct_inhibit'
-              ? `+${ep}ms ⚡` // Scenario B: only early penalty
+              tr.responseType === 'hit' ? `${tr.rt}ms`
+              : tr.responseType === 'miss' ? '400ms (timeout)'
+              : tr.responseType === 'commission' ? '400ms (NoGo)'
+              : '—';
+            const earlyLabel = tr.responseType === 'correct_inhibit'
+              ? `+${ep}ms ⚡`
               : `${baseLabel} +${ep}⚡`;
             const label = hasEarly ? earlyLabel : baseLabel;
             return (
@@ -842,10 +850,10 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
       <SeqScaleReference score={score} />
 
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
-        <Text style={[styles.btnPrimaryText, { color: '#fff' }]}>JOGAR NOVAMENTE</Text>
+        <Text style={[styles.btnPrimaryText, { color: '#fff' }]}>{t('result.playAgainBtn')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.btnSecondary} onPress={onHome} activeOpacity={0.8}>
-        <Text style={styles.btnSecondaryText}>MENU PRINCIPAL</Text>
+        <Text style={styles.btnSecondaryText}>{t('result.mainMenu')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -861,6 +869,7 @@ interface RadarProps {
 }
 
 function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
+  const { t } = useTranslation();
   const level = getRadarLevel(score);
   const mc = MODE_COLORS.radar;
   const hits = radarResults.filter(r => r.hit);
@@ -872,9 +881,9 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
   return (
     <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: TOP + 16 }]} showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>MODO RADAR</Text>
+        <Text style={styles.heroLabel}>{t('modes.radar.name')}</Text>
         <Text style={[styles.heroScore, { color: level.color }]}>{score}</Text>
-        <Text style={styles.heroMs}>ms (média dos acertos)</Text>
+        <Text style={styles.heroMs}>{t('result.avgHitsMs')}</Text>
         <LevelBadge level={level} />
         <Text style={styles.levelDesc}>{level.desc}</Text>
       </View>
@@ -885,37 +894,37 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={[styles.statVal, { color: mc.accent }]}>{accuracy}%</Text>
-          <Text style={styles.statLbl}>ACURÁCIA</Text>
+          <Text style={styles.statLbl}>{t('result.radar.stat1')}</Text>
         </View>
         <View style={[styles.stat, styles.statMid]}>
           <Text style={[styles.statVal, { color: bestHit !== null ? getRadarLevel(bestHit).color : '#4a5a7b' }]}>
             {bestHit !== null ? `${bestHit} ms` : '—'}
           </Text>
-          <Text style={styles.statLbl}>MELHOR HIT</Text>
+          <Text style={styles.statLbl}>{t('result.radar.stat2')}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statVal}>{hits.length}/{radarResults.length}</Text>
-          <Text style={styles.statLbl}>ACERTOS</Text>
+          <Text style={styles.statLbl}>{t('result.radar.stat3')}</Text>
         </View>
       </View>
 
       {missCount > 0 && (
         <Text style={styles.earlyTapLine}>
-          ❌ Erros: {missCount} (+200ms avg)
+          {t('result.missErrors', { count: missCount })}
         </Text>
       )}
       {timeoutCount > 0 && (
         <Text style={styles.earlyTapLine}>
-          ⏱ {timeoutCount} timeout{timeoutCount > 1 ? 's' : ''} (sem toque a tempo)
+          {t('result.radarTimeouts', { count: timeoutCount })}
         </Text>
       )}
 
-      <Text style={styles.sectionTitle}>RODADAS</Text>
+      <Text style={styles.sectionTitle}>{t('result.roundList')}</Text>
       {radarResults.map((r, i) => {
-        const icon = r.hit ? '✓' : r.timeout ? '⏱' : '✗';
+        const icon = r.hit ? t('result.hit') : r.timeout ? t('result.timeout') : t('result.miss');
         const iconColor = r.hit ? '#10b981' : '#ef4444';
         const rtColor = r.hit ? getRadarLevel(r.rt).color : '#2d3a55';
-        const rtText = r.timeout ? '— timeout' : `${r.rt} ms`;
+        const rtText = r.timeout ? `— ${t('result.timeout')}` : `${r.rt} ms`;
         return (
           <View key={i} style={styles.row}>
             <Text style={styles.rowIdx}>{i + 1}</Text>
@@ -930,12 +939,12 @@ function RadarResult({ radarResults, score, onPlayAgain, onHome }: RadarProps) {
       <RadarScaleReference score={score} />
 
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: mc.accent }]} onPress={onPlayAgain} activeOpacity={0.8}>
-        <Text style={styles.btnPrimaryText}>JOGAR NOVAMENTE</Text>
+        <Text style={styles.btnPrimaryText}>{t('result.playAgainBtn')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.btnSecondary} onPress={onHome} activeOpacity={0.8}>
-        <Text style={styles.btnSecondaryText}>MENU PRINCIPAL</Text>
+        <Text style={styles.btnSecondaryText}>{t('result.mainMenu')}</Text>
       </TouchableOpacity>
-      <Text style={styles.methodNote}>Score = média dos RTs das rodadas com acerto.</Text>
+      <Text style={styles.methodNote}>{t('result.methodRadar')}</Text>
     </ScrollView>
   );
 }

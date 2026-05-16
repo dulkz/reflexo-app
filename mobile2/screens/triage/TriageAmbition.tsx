@@ -3,18 +3,13 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
-import { AMBITIONS, GROUP_LABELS, GROUP_COLOR, AmbitionGroup } from '../../config/ambitions';
+import { AMBITIONS, GROUP_COLOR, AmbitionGroup } from '../../config/ambitions';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 const GROUPS: AmbitionGroup[] = ['elite_sport', 'populational', 'brain_health'];
-
-const GROUP_SUBTITLES: Record<AmbitionGroup, string> = {
-  elite_sport:   'Compare seu reflexo com atletas profissionais medidos em laboratório.',
-  populational:  'Compare-se com a população geral — de todas as idades e perfis.',
-  brain_health:  'Sem competição. Foco em consistência e longevidade cognitiva.',
-};
 
 interface Props {
   initialAmbitionId: string | null;
@@ -23,6 +18,7 @@ interface Props {
 }
 
 export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string | null>(initialAmbitionId);
 
   return (
@@ -30,7 +26,7 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
       {/* Header */}
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Text style={styles.backText}>← Voltar</Text>
+          <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
         <View style={styles.dotsRow}>
           {[1, 2, 3, 4, 5].map(n => (
@@ -42,9 +38,9 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
 
       {/* Title */}
       <View style={styles.titleArea}>
-        <Text style={styles.title}>Até onde você quer chegar?</Text>
-        <Text style={styles.subtitle}>Sem pressão. Dá pra mudar depois.</Text>
-        <Text style={styles.chooseOne}>Escolha apenas uma meta</Text>
+        <Text style={styles.title}>{t('triage.ambition.title')}</Text>
+        <Text style={styles.subtitle}>{t('triage.ambition.subtitle')}</Text>
+        <Text style={styles.chooseOne}>{t('triage.ambition.chooseOne')}</Text>
       </View>
 
       {/* List */}
@@ -57,8 +53,8 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
           const color = GROUP_COLOR[group];
           return (
             <View key={group} style={styles.section}>
-              <Text style={[styles.groupLabel, { color }]}>{GROUP_LABELS[group]}</Text>
-              <Text style={styles.groupSubtitle}>{GROUP_SUBTITLES[group]}</Text>
+              <Text style={[styles.groupLabel, { color }]}>{t(`triage.ambition.groups.${group}`)}</Text>
+              <Text style={styles.groupSubtitle}>{t(`triage.ambition.groupSubtitles.${group}`)}</Text>
               {items.map(a => {
                 const isSelected = selected === a.id;
                 return (
@@ -77,7 +73,7 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
                       <Text style={[styles.cardName, isSelected && { color }]}>{a.name}</Text>
                     </View>
                     <Text style={styles.cardMs}>
-                      {a.finalMetaMs !== null ? `~${a.finalMetaMs} ms` : 'sem meta de ms'}
+                      {a.finalMetaMs !== null ? `~${a.finalMetaMs} ms` : t('triage.ambition.noMsTarget')}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -96,7 +92,7 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
           activeOpacity={selected ? 0.8 : 1}
         >
           <Text style={[styles.btnPrimaryText, !selected && styles.btnDisabledText]}>
-            CONTINUAR
+            {t('common.continue')}
           </Text>
         </TouchableOpacity>
       </View>

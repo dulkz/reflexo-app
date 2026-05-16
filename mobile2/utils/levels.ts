@@ -1,4 +1,5 @@
 export interface LevelInfo {
+  labelKey: string;
   label: string;
   desc: string;
   color: string;
@@ -6,16 +7,16 @@ export interface LevelInfo {
 }
 
 export const LEVELS: Array<LevelInfo & { maxMs: number }> = [
-  { maxMs: 50,       label: 'IMPOSSÍVEL',     color: '#ff0080', bg: 'rgba(255,0,128,0.15)',   desc: 'Abaixo de qualquer limite fisiológico humano' },
-  { maxMs: 100,      label: 'SUPER-HUMANO',   color: '#00f5ff', bg: 'rgba(0,245,255,0.15)',   desc: 'Abaixo do limite de reação visual humana' },
-  { maxMs: 150,      label: 'ELITE EXTREMO',  color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)',  desc: 'Velocistas olímpicos em partida auditiva' },
-  { maxMs: 200,      label: 'ELITE',          color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Pilotos de F1 de ponta · Top 5% da população' },
-  { maxMs: 250,      label: 'MUITO BOM',      color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Atletas profissionais · Tenistas ATP' },
-  { maxMs: 300,      label: 'BOM',            color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Reflexo funcional, base para evoluir' },
-  { maxMs: 350,      label: 'NA MÉDIA',       color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Linha de base populacional adulta' },
-  { maxMs: 400,      label: 'CONSTRUINDO',    color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'Todo treino começa aqui' },
-  { maxMs: 500,      label: 'AQUECENDO',      color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'O ritmo vai aumentar' },
-  { maxMs: Infinity, label: 'INICIANDO',      color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada sessão já muda isso' },
+  { maxMs: 50,       labelKey: 'impossible',   label: 'IMPOSSÍVEL',     color: '#ff0080', bg: 'rgba(255,0,128,0.15)',   desc: 'Abaixo de qualquer limite fisiológico humano' },
+  { maxMs: 100,      labelKey: 'superhuman',   label: 'SUPER-HUMANO',   color: '#00f5ff', bg: 'rgba(0,245,255,0.15)',   desc: 'Abaixo do limite de reação visual humana' },
+  { maxMs: 150,      labelKey: 'extremeElite', label: 'ELITE EXTREMO',  color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)',  desc: 'Velocistas olímpicos em partida auditiva' },
+  { maxMs: 200,      labelKey: 'elite',        label: 'ELITE',          color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Pilotos de F1 de ponta · Top 5% da população' },
+  { maxMs: 250,      labelKey: 'veryGood',     label: 'MUITO BOM',      color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Atletas profissionais · Tenistas ATP' },
+  { maxMs: 300,      labelKey: 'good',         label: 'BOM',            color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Reflexo funcional, base para evoluir' },
+  { maxMs: 350,      labelKey: 'average',      label: 'NA MÉDIA',       color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Linha de base populacional adulta' },
+  { maxMs: 400,      labelKey: 'building',     label: 'CONSTRUINDO',    color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'Todo treino começa aqui' },
+  { maxMs: 500,      labelKey: 'warmingUp',    label: 'AQUECENDO',      color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'O ritmo vai aumentar' },
+  { maxMs: Infinity, labelKey: 'starting',     label: 'INICIANDO',      color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada sessão já muda isso' },
 ];
 
 export function getLevelInfo(ms: number): LevelInfo {
@@ -43,39 +44,39 @@ export function computeScore(times: number[]): {
 // ── Per-mode level scales ──────────────────────────────────────────────────────
 
 export const ALVO_LEVELS: Array<LevelInfo & { maxMs: number }> = [
-  { maxMs: 380,      label: 'ELITE',       color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Atleta de alto rendimento' },
-  { maxMs: 450,      label: 'MUITO BOM',   color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Reflexo afiado' },
-  { maxMs: 520,      label: 'BOM',         color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Tempo de reação sólido' },
-  { maxMs: 600,      label: 'NA MÉDIA',    color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Ponto de partida normal' },
-  { maxMs: 700,      label: 'CONSTRUINDO', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'Todo treino começa aqui' },
-  { maxMs: 850,      label: 'AQUECENDO',   color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'O ritmo vai aumentar' },
-  { maxMs: Infinity, label: 'INICIANDO',   color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada sessão já muda isso' },
+  { maxMs: 380,      labelKey: 'elite',     label: 'ELITE',       color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Atleta de alto rendimento' },
+  { maxMs: 450,      labelKey: 'veryGood',  label: 'MUITO BOM',   color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Reflexo afiado' },
+  { maxMs: 520,      labelKey: 'good',      label: 'BOM',         color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Tempo de reação sólido' },
+  { maxMs: 600,      labelKey: 'average',   label: 'NA MÉDIA',    color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Ponto de partida normal' },
+  { maxMs: 700,      labelKey: 'building',  label: 'CONSTRUINDO', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'Todo treino começa aqui' },
+  { maxMs: 850,      labelKey: 'warmingUp', label: 'AQUECENDO',   color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'O ritmo vai aumentar' },
+  { maxMs: Infinity, labelKey: 'starting',  label: 'INICIANDO',   color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada sessão já muda isso' },
 ];
 export function getAlvoLevel(ms: number): LevelInfo {
   return ALVO_LEVELS.find(l => ms < l.maxMs) ?? ALVO_LEVELS[ALVO_LEVELS.length - 1];
 }
 
 export const SEQ_LEVELS: Array<LevelInfo & { maxMs: number }> = [
-  { maxMs: 220,      label: 'ELITE',          color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Atleta cognitivo de alto nível' },
-  { maxMs: 270,      label: 'MUITO BOM',      color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Adulto jovem treinado' },
-  { maxMs: 320,      label: 'BOM',            color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Controle inibitório natural' },
-  { maxMs: 380,      label: 'NA MÉDIA',       color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Nível médio da população geral' },
-  { maxMs: 450,      label: 'CONSTRUINDO',    color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'O controle inibitório está se formando' },
-  { maxMs: 550,      label: 'AQUECENDO',      color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'O foco vai se afiar' },
-  { maxMs: Infinity, label: 'INICIANDO',      color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada sessão treina inibição' },
+  { maxMs: 220,      labelKey: 'elite',     label: 'ELITE',          color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Atleta cognitivo de alto nível' },
+  { maxMs: 270,      labelKey: 'veryGood',  label: 'MUITO BOM',      color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Adulto jovem treinado' },
+  { maxMs: 320,      labelKey: 'good',      label: 'BOM',            color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Controle inibitório natural' },
+  { maxMs: 380,      labelKey: 'average',   label: 'NA MÉDIA',       color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Nível médio da população geral' },
+  { maxMs: 450,      labelKey: 'building',  label: 'CONSTRUINDO',    color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'O controle inibitório está se formando' },
+  { maxMs: 550,      labelKey: 'warmingUp', label: 'AQUECENDO',      color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'O foco vai se afiar' },
+  { maxMs: Infinity, labelKey: 'starting',  label: 'INICIANDO',      color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada sessão treina inibição' },
 ];
 export function getSeqLevel(ms: number): LevelInfo {
   return SEQ_LEVELS.find(l => ms < l.maxMs) ?? SEQ_LEVELS[SEQ_LEVELS.length - 1];
 }
 
 export const RADAR_LEVELS: Array<LevelInfo & { maxMs: number }> = [
-  { maxMs: 250,      label: 'ELITE',          color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Atleta de reação visual altamente treinado' },
-  { maxMs: 300,      label: 'MUITO BOM',      color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Coordenação visual afiada' },
-  { maxMs: 350,      label: 'BOM',            color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Localização visual consistente' },
-  { maxMs: 400,      label: 'NA MÉDIA',       color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Linha de base populacional' },
-  { maxMs: 500,      label: 'CONSTRUINDO',    color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'O mapa visual está se formando' },
-  { maxMs: 600,      label: 'AQUECENDO',      color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'A acuidade espacial vai crescer' },
-  { maxMs: Infinity, label: 'INICIANDO',      color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada rodada calibra o sistema' },
+  { maxMs: 250,      labelKey: 'elite',     label: 'ELITE',          color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Atleta de reação visual altamente treinado' },
+  { maxMs: 300,      labelKey: 'veryGood',  label: 'MUITO BOM',      color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Coordenação visual afiada' },
+  { maxMs: 350,      labelKey: 'good',      label: 'BOM',            color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Localização visual consistente' },
+  { maxMs: 400,      labelKey: 'average',   label: 'NA MÉDIA',       color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Linha de base populacional' },
+  { maxMs: 500,      labelKey: 'building',  label: 'CONSTRUINDO',    color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'O mapa visual está se formando' },
+  { maxMs: 600,      labelKey: 'warmingUp', label: 'AQUECENDO',      color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'A acuidade espacial vai crescer' },
+  { maxMs: Infinity, labelKey: 'starting',  label: 'INICIANDO',      color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada rodada calibra o sistema' },
 ];
 export function getRadarLevel(ms: number): LevelInfo {
   return RADAR_LEVELS.find(l => ms < l.maxMs) ?? RADAR_LEVELS[RADAR_LEVELS.length - 1];
