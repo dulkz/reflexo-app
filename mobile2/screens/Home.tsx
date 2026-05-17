@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useEffect, useState, RefObject } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Platform, StatusBar as RNStatusBar, Animated,
+  Platform, StatusBar as RNStatusBar, Animated, Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import i18n, { changeLanguage } from '../i18n';
 import { SvgXml } from 'react-native-svg';
 import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
@@ -56,6 +57,14 @@ export default function Home({
   energyCounts = null, inGrace = false, graceExpiryMs = null,
 }: Props) {
   const { t } = useTranslation();
+  const lang = i18n.language;
+
+  const handleLangChange = async (next: 'pt' | 'en') => {
+    if (i18n.language === next) return;
+    await changeLanguage(next);
+    Alert.alert(t('common.languageChangedTitle'), t('common.languageChangedMessage'));
+  };
+
   const bestAccByMode = useMemo(() => {
     const acc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
     for (const s of sessions) {
@@ -110,16 +119,34 @@ export default function Home({
           <Text style={styles.reflexoSmall}>{t('home.appName')}</Text>
           <Text style={styles.greeting}>{t('home.greeting', { name: userProfile.name || 'Atleta' })}</Text>
         </View>
-        <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
-          {(() => {
-            const av = (userProfile.selectedAvatar ?? 'initial') !== 'initial'
-              ? AVATARS.find(a => a.id === userProfile.selectedAvatar)
-              : null;
-            return av?.icon
-              ? <SvgXml xml={av.icon} width={42} height={42} />
-              : <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>;
-          })()}
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <View style={styles.langRow}>
+            <TouchableOpacity
+              style={[styles.langBtn, lang === 'pt' && styles.langBtnActive]}
+              onPress={() => handleLangChange('pt')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.langFlag}>🇧🇷</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
+              onPress={() => handleLangChange('en')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.langFlag}>🇺🇸</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
+            {(() => {
+              const av = (userProfile.selectedAvatar ?? 'initial') !== 'initial'
+                ? AVATARS.find(a => a.id === userProfile.selectedAvatar)
+                : null;
+              return av?.icon
+                ? <SvgXml xml={av.icon} width={42} height={42} />
+                : <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>;
+            })()}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ── Scrollable content ── */}
@@ -272,7 +299,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
-  headerLeft: { gap: 2 },
+  headerLeft: { gap: 2, flex: 1 },
+  headerRight: { alignItems: 'flex-end', gap: 6 },
   reflexoSmall: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 4 },
   greeting: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
   avatar: {
@@ -281,6 +309,20 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   avatarLetter: { fontSize: 17, fontWeight: '800', color: '#fff' },
+
+  // ── Compact language selector (header) ────────────────────────────────────
+  langRow: { flexDirection: 'row', gap: 4 },
+  langBtn: {
+    paddingHorizontal: 6, paddingVertical: 3,
+    borderRadius: 6, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#111a2e',
+  },
+  langBtnActive: {
+    borderColor: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,0.18)',
+  },
+  langFlag: { fontSize: 14, lineHeight: 16 },
 
   scroll: { paddingHorizontal: 20, paddingBottom: 8 },
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 12 },

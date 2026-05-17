@@ -16,7 +16,9 @@
     "ok": "OK",
     "soon": "Em breve",
     "noData": "Sem dados",
-    "close": "FECHAR"
+    "close": "FECHAR",
+    "languageChangedTitle": "Idioma alterado",
+    "languageChangedMessage": "Algumas mudanças podem precisar de um reinício do app para serem aplicadas em todas as telas."
   },
 
   "home": {

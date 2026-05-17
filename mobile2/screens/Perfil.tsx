@@ -4,7 +4,7 @@ import {
   Platform, StatusBar as RNStatusBar, TouchableOpacity, Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import i18n from '../i18n';
+import i18n, { changeLanguage } from '../i18n';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
 import { SvgXml } from 'react-native-svg';
 import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
@@ -209,6 +209,13 @@ const chart = StyleSheet.create({
 export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConquistas, onUpdateProfile, onClearData }: Props) {
   const { t } = useTranslation();
   const lang = i18n.language;
+
+  const handleLangChange = async (next: 'pt' | 'en') => {
+    if (i18n.language === next) return;
+    await changeLanguage(next);
+    Alert.alert(t('common.languageChangedTitle'), t('common.languageChangedMessage'));
+  };
+
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
@@ -406,6 +413,22 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 ? t('profile.identity.playingSince', { month: joinedLabel })
                 : t('profile.identity.noSessions')}
             </Text>
+          </View>
+          <View style={styles.identityLangRow}>
+            <TouchableOpacity
+              style={[styles.identityLangBtn, lang === 'pt' && styles.identityLangBtnActive]}
+              onPress={() => handleLangChange('pt')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.identityLangFlag}>🇧🇷</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.identityLangBtn, lang === 'en' && styles.identityLangBtnActive]}
+              onPress={() => handleLangChange('en')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.identityLangFlag}>🇺🇸</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -762,29 +785,6 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             <Text style={styles.emptyText}>{t('profile.emptyProfile')}</Text>
           </View>
         )}
-
-        {/* ── IDIOMA ── */}
-        <View style={styles.languageSection}>
-          <Text style={styles.sectionTitle}>{t('profile.language')}</Text>
-          <View style={styles.languageRow}>
-            <TouchableOpacity
-              style={[styles.langBtn, lang === 'pt' && styles.langBtnActive]}
-              onPress={() => i18n.changeLanguage('pt')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.langFlag}>🇧🇷</Text>
-              <Text style={[styles.langLabel, lang === 'pt' && styles.langLabelActive]}>PT</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
-              onPress={() => i18n.changeLanguage('en')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.langFlag}>🇺🇸</Text>
-              <Text style={[styles.langLabel, lang === 'en' && styles.langLabelActive]}>EN</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
         {/* ── ZONA DE PERIGO ── */}
         <View style={styles.dangerZone}>
@@ -1197,23 +1197,19 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', lineHeight: 20 },
 
-  // ── Language selector ─────────────────────────────────────────────────────
-  languageSection: { marginTop: 24, marginBottom: 4 },
-  languageRow: { flexDirection: 'row', gap: 10 },
-  langBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 16, paddingVertical: 10,
-    borderRadius: 10, borderWidth: 1,
+  // ── Compact language selector (identity area, top) ───────────────────────
+  identityLangRow: { flexDirection: 'row', gap: 4, alignSelf: 'flex-start' },
+  identityLangBtn: {
+    paddingHorizontal: 7, paddingVertical: 4,
+    borderRadius: 6, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     backgroundColor: '#111a2e',
   },
-  langBtnActive: {
+  identityLangBtnActive: {
     borderColor: '#3b82f6',
-    backgroundColor: 'rgba(59,130,246,0.12)',
+    backgroundColor: 'rgba(59,130,246,0.18)',
   },
-  langFlag: { fontSize: 18 },
-  langLabel: { fontSize: 13, fontWeight: '700', color: '#4a5a7b', letterSpacing: 0.5 },
-  langLabelActive: { color: '#3b82f6' },
+  identityLangFlag: { fontSize: 16, lineHeight: 18 },
 
   // ── Danger zone ───────────────────────────────────────────────────────────
   dangerZone: { marginTop: 24, alignItems: 'center' },

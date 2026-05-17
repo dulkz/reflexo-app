@@ -16,7 +16,9 @@
     "ok": "OK",
     "soon": "Coming soon",
     "noData": "No data",
-    "close": "CLOSE"
+    "close": "CLOSE",
+    "languageChangedTitle": "Language changed",
+    "languageChangedMessage": "Some changes may require restarting the app to take effect across all screens."
   },
 
   "home": {
