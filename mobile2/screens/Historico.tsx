@@ -254,9 +254,10 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
 interface Props {
   sessions: SessionRecord[];
   userProfile: UserProfile;
+  onUpdateProfile: (p: UserProfile) => void;
 }
 
-export default function Historico({ sessions }: Props) {
+export default function Historico({ sessions, userProfile, onUpdateProfile }: Props) {
   const { t } = useTranslation();
   const lang = i18n.language;
   const [expanded, setExpanded] = useState<Record<ModeKey, boolean>>({
@@ -392,7 +393,12 @@ export default function Historico({ sessions }: Props) {
 
         {/* ── Conquistas ── */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('history.achievements')}</Text>
-        <ConquistasContent sessions={sessions} showHeader={false} />
+        <ConquistasContent
+          sessions={sessions}
+          userProfile={userProfile}
+          onUpdateProfile={onUpdateProfile}
+          showHeader={false}
+        />
 
         <View style={{ height: 24 }} />
       </ScrollView>

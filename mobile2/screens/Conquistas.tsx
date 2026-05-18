@@ -1,14 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Pressable,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
+import { saveUserProfile } from '../utils/userProfile';
 import { buildUserStats } from '../config/archetypes';
-import { ACHIEVEMENTS, getUnlockedCount, RARITY_CONFIG, RarityKey } from '../config/achievements';
+import { ACHIEVEMENTS, Achievement, getUnlockedCount, RARITY_CONFIG, RarityKey } from '../config/achievements';
 import { loadUnlockedAchievements, saveUnlockedAchievements } from '../utils/storage';
 import { SvgXml } from 'react-native-svg';
 import { ACHIEVEMENT_ICONS, RARITY_ICONS_SVG, UI_ICONS } from '../assets/icons';
@@ -58,14 +59,17 @@ function computeStreak(sessions: SessionRecord[]): number {
 interface Props {
   sessions: SessionRecord[];
   userProfile: UserProfile;
+  onUpdateProfile: (p: UserProfile) => void;
 }
 
 interface ContentProps {
   sessions: SessionRecord[];
+  userProfile: UserProfile;
+  onUpdateProfile: (p: UserProfile) => void;
   showHeader?: boolean;
 }
 
-export function ConquistasContent({ sessions, showHeader = true }: ContentProps) {
+export function ConquistasContent({ sessions, userProfile, onUpdateProfile, showHeader = true }: ContentProps) {
   const { t } = useTranslation();
   const lang = i18n.language;
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
@@ -116,6 +120,25 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
 
   const visibleTotal = ACHIEVEMENTS.filter(a => !a.secret || a.unlocked(stats) || !!unlockDates[a.id]).length;
 
+  const [selectedForTitle, setSelectedForTitle] = useState<Achievement | null>(null);
+
+  const persistProfile = async (updated: UserProfile) => {
+    await saveUserProfile(updated);
+    onUpdateProfile(updated);
+  };
+
+  const handleEquipTitle = () => {
+    if (!selectedForTitle) return;
+    persistProfile({ ...userProfile, equippedTitle: selectedForTitle.id });
+    setSelectedForTitle(null);
+  };
+
+  const handleRemoveTitle = () => {
+    const { equippedTitle: _removed, ...rest } = userProfile;
+    persistProfile(rest);
+    setSelectedForTitle(null);
+  };
+
   return (
     <View>
       {showHeader && (
@@ -162,10 +185,16 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                   {unlockedSorted.map(a => {
                     const cfg = RARITY_CONFIG[a.rarity];
                     const unlockDate = unlockDates[a.id];
+                    const isEquipped = userProfile.equippedTitle === a.id;
                     return (
-                      <View
+                      <TouchableOpacity
                         key={a.id}
-                        style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor }]}
+                        style={[
+                          styles.cell,
+                          { borderWidth: isEquipped ? 2.5 : 1.5, borderColor: cfg.cor },
+                        ]}
+                        onPress={() => setSelectedForTitle(a)}
+                        activeOpacity={0.85}
                       >
                         <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
                           <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{t(`achievements.rarity.${a.rarity}` as any)}</Text>
@@ -180,7 +209,7 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
                               : t('achievements.unlockedNone')}
                           </Text>
                         </View>
-                      </View>
+                      </TouchableOpacity>
                     );
                   })}
                 </View>
@@ -348,15 +377,82 @@ export function ConquistasContent({ sessions, showHeader = true }: ContentProps)
           );
         })()}
 
+      {/* ══ MODAL — Equipar título ══ */}
+      <Modal
+        visible={selectedForTitle !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelectedForTitle(null)}
+      >
+        <Pressable style={styles.titleModalOverlay} onPress={() => setSelectedForTitle(null)}>
+          {selectedForTitle && (() => {
+            const cfg = RARITY_CONFIG[selectedForTitle.rarity];
+            const isEquipped = userProfile.equippedTitle === selectedForTitle.id;
+            return (
+              <Pressable style={styles.titleModalCard} onPress={() => {}}>
+                <View style={styles.titleModalIconWrap}>
+                  <SvgXml xml={selectedForTitle.icon} width={40} height={40} />
+                </View>
+                <Text style={styles.titleModalName}>{selectedForTitle.name}</Text>
+                <Text
+                  style={[
+                    styles.titleModalPreview,
+                    {
+                      color: cfg.cor,
+                      textShadowColor: cfg.cor,
+                      textShadowOffset: { width: 0, height: 0 },
+                      textShadowRadius: 8,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  ✦ {selectedForTitle.title} ✦
+                </Text>
+                <Text style={styles.titleModalHint}>{t('achievements.titleSubtitleHint')}</Text>
+                {isEquipped ? (
+                  <TouchableOpacity
+                    style={[styles.titleModalBtnPrimary, { backgroundColor: '#ef4444' }]}
+                    onPress={handleRemoveTitle}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.titleModalBtnPrimaryText}>{t('achievements.removeTitle')}</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.titleModalBtnPrimary, { backgroundColor: cfg.cor }]}
+                    onPress={handleEquipTitle}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.titleModalBtnPrimaryText}>{t('achievements.equipTitle')}</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={styles.titleModalBtnGhost}
+                  onPress={() => setSelectedForTitle(null)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.titleModalBtnGhostText}>{t('common.close')}</Text>
+                </TouchableOpacity>
+              </Pressable>
+            );
+          })()}
+        </Pressable>
+      </Modal>
+
     </View>
   );
 }
 
-export default function Conquistas({ sessions }: Props) {
+export default function Conquistas({ sessions, userProfile, onUpdateProfile }: Props) {
   return (
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <ConquistasContent sessions={sessions} showHeader />
+        <ConquistasContent
+          sessions={sessions}
+          userProfile={userProfile}
+          onUpdateProfile={onUpdateProfile}
+          showHeader
+        />
         <View style={{ height: 24 }} />
       </ScrollView>
     </View>
@@ -422,4 +518,46 @@ const styles = StyleSheet.create({
     borderColor: SECRET_COLOR + '33', padding: 16, marginBottom: 8,
   },
   secretHintText: { fontSize: 13, color: SECRET_COLOR, textAlign: 'center', lineHeight: 20 },
+
+  // ── Modal: equipar título ──────────────────────────────────────────────────
+  titleModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  titleModalCard: {
+    backgroundColor: '#111a2e',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+    alignItems: 'center',
+    gap: 10,
+  },
+  titleModalIconWrap: {
+    width: 56, height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1a2540',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  titleModalName: { fontSize: 18, fontWeight: '900', color: '#fff', textAlign: 'center' },
+  titleModalPreview: { fontSize: 16, fontWeight: '800', letterSpacing: 1, textAlign: 'center' },
+  titleModalHint: {
+    fontSize: 12, color: '#4a5a7b', textAlign: 'center',
+    marginTop: 2, marginBottom: 10,
+  },
+  titleModalBtnPrimary: {
+    alignSelf: 'stretch',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  titleModalBtnPrimaryText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
+  titleModalBtnGhost: {
+    alignSelf: 'stretch',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  titleModalBtnGhostText: { color: '#4a5a7b', fontSize: 13, fontWeight: '700' },
 });

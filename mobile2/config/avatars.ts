@@ -114,9 +114,18 @@ export const AVATARS: AvatarDef[] = [
   {
     id: 'fantasma',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="40" fill="#2d1b69"/><path d="M26 56V36c0-7.7 6.3-14 14-14s14 6.3 14 14v20l-4-4-4 4-4-4-4 4-4-4-4 4-4-4z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><circle cx="34" cy="38" r="2" fill="#fff"/><circle cx="46" cy="38" r="2" fill="#fff"/><path d="M36 46c1 1.5 2.5 2.5 4 2.5s3-1 4-2.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`,
-    name: 'Fantasma',
-    unlockCondition: 'Streak de 7 dias',
-    isUnlocked: (stats) => stats.streak >= 7,
+    name: 'O Retorno',
+    unlockCondition: 'Voltar a jogar após pausa de 7+ dias',
+    isUnlocked: (stats) => {
+      const sorted = [...stats.sessions].sort((a, b) => a.date - b.date);
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      for (let i = 0; i < sorted.length - 2; i++) {
+        if (sorted[i + 1].date - sorted[i].date > SEVEN_DAYS_MS) {
+          return true;
+        }
+      }
+      return false;
+    },
   },
   {
     id: 'chama',

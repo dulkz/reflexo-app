@@ -14,6 +14,7 @@ export interface UserProfile {
   // skip tracking: stop auto-offering after 3 dismissals
   triageSkipCount: number;
   selectedAvatar?: string;
+  equippedTitle?: string;
 }
 
 export function defaultUserProfile(): UserProfile {

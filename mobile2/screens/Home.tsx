@@ -10,6 +10,8 @@ import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { AVATARS } from '../config/avatars';
+import { ACHIEVEMENTS, RARITY_CONFIG } from '../config/achievements';
+import { buildUserStats } from '../config/archetypes';
 import { calculateStreak, streakColor } from '../utils/streak';
 import { MAX_ENERGY_PER_MODE } from '../config/monetization';
 import { ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
@@ -79,6 +81,14 @@ export default function Home({
 
   const streak = useMemo(() => calculateStreak(sessions), [sessions]);
 
+  const equippedAchievement = useMemo(() => {
+    if (!userProfile.equippedTitle) return null;
+    const ach = ACHIEVEMENTS.find(a => a.id === userProfile.equippedTitle);
+    if (!ach) return null;
+    const stats = buildUserStats(sessions, streak.current);
+    return ach.unlocked(stats) ? ach : null;
+  }, [userProfile.equippedTitle, sessions, streak.current]);
+
   // Tick a cada 60s para atualizar o countdown da graça no badge
   const [graceTick, setGraceTick] = useState(0);
   useEffect(() => {
@@ -118,6 +128,28 @@ export default function Home({
         <View style={styles.headerLeft}>
           <Text style={styles.reflexoSmall}>{t('home.appName')}</Text>
           <Text style={styles.greeting}>{t('home.greeting', { name: userProfile.name || 'Atleta' })}</Text>
+          {equippedAchievement && (() => {
+            const color = RARITY_CONFIG[equippedAchievement.rarity].cor;
+            return (
+              <View style={styles.titleRow}>
+                <SvgXml xml={equippedAchievement.icon} width={16} height={16} />
+                <Text
+                  style={[
+                    styles.titleText,
+                    {
+                      color,
+                      textShadowColor: color,
+                      textShadowOffset: { width: 0, height: 0 },
+                      textShadowRadius: 8,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  ✦ {equippedAchievement.title} ✦
+                </Text>
+              </View>
+            );
+          })()}
         </View>
         <View style={styles.headerRight}>
           <View style={styles.langRow}>
@@ -303,6 +335,8 @@ const styles = StyleSheet.create({
   headerRight: { alignItems: 'flex-end', gap: 6 },
   reflexoSmall: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 4 },
   greeting: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  titleText: { fontSize: 13, fontWeight: '800', letterSpacing: 1 },
   avatar: {
     width: 42, height: 42, borderRadius: 21,
     backgroundColor: '#1A6DB5',

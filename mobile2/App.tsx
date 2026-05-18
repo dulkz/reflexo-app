@@ -653,7 +653,7 @@ function AppInner() {
       {/* Screen content */}
       <View style={[styles.content, inGame && styles.contentFullscreen]}>
         {activeTab === 'jogar'      && renderGame()}
-        {activeTab === 'historico'  && <Historico sessions={sessions} userProfile={userProfile} />}
+        {activeTab === 'historico'  && <Historico sessions={sessions} userProfile={userProfile} onUpdateProfile={setUserProfile} />}
         {activeTab === 'ciencia'    && <Ciencia userProfile={userProfile} sessions={sessions} />}
         {activeTab === 'perfil'     && (
           <Perfil

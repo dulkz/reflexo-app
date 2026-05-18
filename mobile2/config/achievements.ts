@@ -15,6 +15,7 @@ export const RARITY_CONFIG: Record<RarityKey, { cor: string; label: string }> = 
 export interface Achievement {
   id: string;
   name: string;
+  title: string;
   icon: string;
   description: string;
   rarity: RarityKey;
@@ -38,6 +39,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sniper',
     name: 'Sniper',
+    title: 'Sniper',
     icon: ACHIEVEMENT_ICONS.sniper,
     description: '100% de precisão numa sessão de Alvo',
     rarity: 'dificil',
@@ -52,6 +54,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'rotina',
     name: 'Rotina',
+    title: 'Rotina',
     icon: ACHIEVEMENT_ICONS.rotina,
     description: '7 dias seguidos de treino',
     rarity: 'medio',
@@ -61,6 +64,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sub250',
     name: 'Abaixo de 250',
+    title: 'Reflexo Vivo',
     icon: ACHIEVEMENT_ICONS.sub250,
     description: 'Score < 250 ms no Modo Partida',
     rarity: 'dificil',
@@ -72,6 +76,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'f1level',
     name: 'Nível F1',
+    title: 'Nível F1',
     icon: ACHIEVEMENT_ICONS.f1level,
     description: 'Score < 200 ms no Modo Partida — zona dos pilotos de elite',
     rarity: 'epico',
@@ -83,6 +88,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'semfadiga',
     name: 'Sem Fadiga',
+    title: 'Sem Fadiga',
     icon: ACHIEVEMENT_ICONS.semfadiga,
     description: 'Fadiga < 5% em 5 sessões de Sequência',
     rarity: 'dificil',
@@ -98,6 +104,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'piloto',
     name: 'O Piloto',
+    title: 'O Piloto',
     icon: ACHIEVEMENT_ICONS.piloto,
     description: 'Alcançar o arquétipo PILOTO',
     rarity: 'epico',
@@ -107,6 +114,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'veterano',
     name: 'Veterano',
+    title: 'Veterano',
     icon: ACHIEVEMENT_ICONS.veterano,
     description: '50 sessões completadas',
     rarity: 'medio',
@@ -116,6 +124,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'madrugador',
     name: 'Madrugador',
+    title: 'Madrugador',
     icon: ACHIEVEMENT_ICONS.madrugador,
     description: '10 sessões antes das 8h',
     rarity: 'raro',
@@ -133,6 +142,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'o_apressado',
     name: 'O Apressado',
+    title: 'O Apressado',
     icon: ACHIEVEMENT_ICONS.o_apressado,
     description: 'Queimou a largada 3 vezes numa mesma sessão',
     rarity: 'comum',
@@ -148,6 +158,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'a_tartaruga',
     name: 'A Tartaruga',
+    title: 'A Tartaruga',
     icon: ACHIEVEMENT_ICONS.a_tartaruga,
     description: 'Score acima de 900 ms no Modo Partida',
     rarity: 'comum',
@@ -163,6 +174,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'mae_dina',
     name: 'Mãe Diná',
+    title: 'Mãe Diná',
     icon: ACHIEVEMENT_ICONS.mae_dina,
     description: 'Queimou a largada 5 vezes ou mais numa sessão — você viu o futuro',
     rarity: 'comum',
@@ -178,6 +190,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'o_dorminhoco',
     name: 'O Dorminhoco',
+    title: 'O Dorminhoco',
     icon: ACHIEVEMENT_ICONS.o_dorminhoco,
     description: 'Deixou 3 rodadas expirarem no Modo Alvo numa mesma sessão',
     rarity: 'comum',
@@ -195,6 +208,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'madrugada',
     name: 'Insônia Produtiva',
+    title: 'Insônia Produtiva',
     icon: ACHIEVEMENT_ICONS.madrugada,
     description: 'Completou uma sessão entre 3h e 5h da manhã',
     rarity: 'raro',
@@ -208,6 +222,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'hat_trick',
     name: 'Hat-Trick',
+    title: 'Hat-Trick',
     icon: ACHIEVEMENT_ICONS.hat_trick,
     description: 'Bateu seu recorde pessoal 3 sessões consecutivas de Partida',
     rarity: 'epico',
@@ -244,6 +259,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'maratona',
     name: 'Maratonista',
+    title: 'Maratonista',
     icon: ACHIEVEMENT_ICONS.maratona,
     description: 'Completou 10 sessões no mesmo dia',
     rarity: 'raro',
@@ -271,6 +287,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'primeira_sessao',
     name: 'Primeira Reação',
+    title: 'Novato',
     icon: ACHIEVEMENT_ICONS.primeira_sessao,
     description: 'Complete sua primeira sessão',
     rarity: 'comum',
@@ -280,6 +297,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'tres_modos',
     name: 'Triatleta',
+    title: 'Triatleta',
     icon: ACHIEVEMENT_ICONS.tres_modos,
     description: 'Jogue os 3 modos ao menos uma vez',
     rarity: 'comum',
@@ -296,6 +314,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sub300',
     name: 'Abaixo de 300ms',
+    title: 'Calibrado',
     icon: ACHIEVEMENT_ICONS.sub300,
     description: 'Score < 300ms no Modo Partida',
     rarity: 'comum',
@@ -307,6 +326,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'cinco_sessoes',
     name: 'Aquecendo',
+    title: 'Aquecendo',
     icon: ACHIEVEMENT_ICONS.cinco_sessoes,
     description: '5 sessões completadas',
     rarity: 'comum',
@@ -318,6 +338,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'dez_alvo',
     name: 'Atirador Frequente',
+    title: 'O Atirador',
     icon: ACHIEVEMENT_ICONS.dez_alvo,
     description: '10 sessões no Modo Alvo',
     rarity: 'medio',
@@ -327,6 +348,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sub280',
     name: 'Abaixo de 280ms',
+    title: 'Faísca',
     icon: ACHIEVEMENT_ICONS.sub280,
     description: 'Score < 280ms no Modo Partida',
     rarity: 'medio',
@@ -338,6 +360,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'streak5',
     name: 'Semana de Fogo',
+    title: 'Semana de Fogo',
     icon: ACHIEVEMENT_ICONS.streak5,
     description: '5 dias seguidos de treino',
     rarity: 'medio',
@@ -349,6 +372,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sub240',
     name: 'Abaixo de 240ms',
+    title: 'Velocidade Pura',
     icon: ACHIEVEMENT_ICONS.sub240,
     description: 'Score < 240ms no Modo Partida',
     rarity: 'dificil',
@@ -360,6 +384,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'precisao90',
     name: 'Olho de Águia',
+    title: 'Olho de Águia',
     icon: ACHIEVEMENT_ICONS.precisao90,
     description: '90% de precisão em 3 sessões de Alvo',
     rarity: 'dificil',
@@ -382,6 +407,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'seq10',
     name: 'Mestre da Sequência',
+    title: 'Mestre da Sequência',
     icon: ACHIEVEMENT_ICONS.seq10,
     description: '10 sessões no Modo Sequência',
     rarity: 'dificil',
@@ -391,6 +417,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'streak14',
     name: '2 Semanas Seguidas',
+    title: 'Ritmista',
     icon: ACHIEVEMENT_ICONS.streak14,
     description: '14 dias seguidos',
     rarity: 'dificil',
@@ -402,6 +429,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sub210',
     name: 'Zona de Elite',
+    title: 'Zona de Elite',
     icon: ACHIEVEMENT_ICONS.sub210,
     description: 'Score < 210ms',
     rarity: 'epico',
@@ -413,6 +441,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'cem_sessoes',
     name: 'Centenário',
+    title: 'Centenário',
     icon: ACHIEVEMENT_ICONS.cem_sessoes,
     description: '100 sessões completadas',
     rarity: 'raro',
@@ -422,6 +451,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'streak30',
     name: 'Mês Inteiro',
+    title: 'Obcecado',
     icon: ACHIEVEMENT_ICONS.streak30,
     description: '30 dias seguidos',
     rarity: 'raro',
@@ -431,6 +461,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'arquetipo_velocista',
     name: 'O Velocista',
+    title: 'O Velocista',
     icon: ACHIEVEMENT_ICONS.arquetipo_velocista,
     description: 'Alcançar o arquétipo VELOCISTA',
     rarity: 'raro',
@@ -442,6 +473,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sub180',
     name: 'Reflexo Humano Limite',
+    title: 'Na Fronteira',
     icon: ACHIEVEMENT_ICONS.sub180,
     description: 'Score < 180ms',
     rarity: 'epico',
@@ -453,6 +485,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sniper3x',
     name: 'Sniper em Série',
+    title: 'Sniper em Série',
     icon: ACHIEVEMENT_ICONS.sniper3x,
     description: '100% precisão no Alvo em 3 sessões',
     rarity: 'raro',
@@ -466,6 +499,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'duzentas_sessoes',
     name: 'Dedicação Total',
+    title: 'Dedicação Total',
     icon: ACHIEVEMENT_ICONS.duzentas_sessoes,
     description: '200 sessões completadas',
     rarity: 'epico',
@@ -475,6 +509,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'streak60',
     name: '2 Meses Seguidos',
+    title: 'O Buda',
     icon: ACHIEVEMENT_ICONS.streak60,
     description: '60 dias seguidos',
     rarity: 'epico',
@@ -486,6 +521,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sub160',
     name: 'Além do Humano',
+    title: 'De Outra Espécie',
     icon: ACHIEVEMENT_ICONS.sub160,
     description: 'Score < 160ms',
     rarity: 'lendario',
@@ -497,6 +533,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'quinhentas_sessoes',
     name: 'Lenda Viva',
+    title: 'Lenda Viva',
     icon: ACHIEVEMENT_ICONS.quinhentas_sessoes,
     description: '500 sessões completadas',
     rarity: 'lendario',
@@ -507,6 +544,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'iniciado_radar',
     name: 'Iniciado no Radar',
+    title: 'Focado',
     icon: ACHIEVEMENT_ICONS.iniciado_radar,
     description: 'Complete 5 sessões de Radar',
     rarity: 'comum',
@@ -519,6 +557,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'radar_afiado',
     name: 'Radar Afiado',
+    title: 'Radar Afiado',
     icon: ACHIEVEMENT_ICONS.radar_afiado,
     description: 'Score abaixo de 300ms em qualquer sessão de Radar',
     rarity: 'dificil',
@@ -531,6 +570,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'mestre_radar',
     name: 'Mestre do Radar',
+    title: 'Mestre do Radar',
     icon: ACHIEVEMENT_ICONS.mestre_radar,
     description: '100% de acurácia em 3 sessões consecutivas de Radar',
     rarity: 'epico',
@@ -566,6 +606,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sniper_radar',
     name: 'Sniper do Radar',
+    title: 'Sniper GOD',
     icon: ACHIEVEMENT_ICONS.sniper_radar,
     description: 'Score abaixo de 250ms em qualquer sessão de Radar',
     rarity: 'lendario',
@@ -580,6 +621,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'quadriatleta',
     name: 'Quadriatleta',
+    title: 'Quadriatleta',
     icon: ACHIEVEMENT_ICONS.quadriatleta,
     description: 'Jogue os 4 modos ao menos uma vez',
     rarity: 'raro',
@@ -598,6 +640,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'the_goat',
     name: 'The GOAT',
+    title: 'The GOAT',
     icon: ACHIEVEMENT_ICONS.the_goat,
     description: 'Complete todas as conquistas não-secretas do app.',
     rarity: 'lendario',
@@ -611,6 +654,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'streak100',
     name: '100 Dias',
+    title: 'Sr. Kaio',
     icon: ACHIEVEMENT_ICONS.streak100,
     description: '100 dias seguidos',
     rarity: 'lendario',
@@ -622,6 +666,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'the_flash',
     name: 'The Flash',
+    title: 'The Flash',
     icon: ACHIEVEMENT_ICONS.the_flash,
     description: 'Você reagiu em menos de 80ms. Isso é fisicamente impossível. Parabéns por alcançar o impossível.',
     rarity: 'lendario',

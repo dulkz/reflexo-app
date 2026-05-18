@@ -28,7 +28,7 @@ const DEST_BY_GROUP: Record<string, { id: string; label: string }> = {
   populational: { id: 'VELOCISTA',  label: 'O Velocista' },
   brain_health: { id: 'RESISTENTE', label: 'O Consistente' },
 };
-import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import { ACHIEVEMENTS, getUnlockedCount, RARITY_CONFIG } from '../config/achievements';
 import { ARCHETYPE_ICONS, UI_ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
 import { AVATARS } from '../config/avatars';
 import { saveUserProfile } from '../utils/userProfile';
@@ -221,6 +221,11 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const archetype = useMemo(() => getArchetypeFromStats(stats), [stats]);
+  const equippedAchievement = useMemo(() => {
+    if (!userProfile.equippedTitle) return null;
+    const ach = ACHIEVEMENTS.find(a => a.id === userProfile.equippedTitle);
+    return ach && ach.unlocked(stats) ? ach : null;
+  }, [userProfile.equippedTitle, stats]);
   const unlockedCount = useMemo(() => getUnlockedCount(stats), [stats]);
   // Excludes secret+locked from total so secret achievements aren't revealed in the counter
   const visibleAchievementTotal = useMemo(
@@ -408,6 +413,28 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 <SvgXml xml={UI_ICONS.edit} width={16} height={16} />
               </TouchableOpacity>
             </View>
+            {equippedAchievement && (() => {
+              const color = RARITY_CONFIG[equippedAchievement.rarity].cor;
+              return (
+                <View style={styles.titleRow}>
+                  <SvgXml xml={equippedAchievement.icon} width={16} height={16} />
+                  <Text
+                    style={[
+                      styles.titleText,
+                      {
+                        color,
+                        textShadowColor: color,
+                        textShadowOffset: { width: 0, height: 0 },
+                        textShadowRadius: 8,
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    ✦ {equippedAchievement.title} ✦
+                  </Text>
+                </View>
+              );
+            })()}
             <Text style={styles.identitySub}>
               {joinedLabel
                 ? t('profile.identity.playingSince', { month: joinedLabel })
@@ -919,6 +946,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   identityName: { fontSize: 26, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  titleText: { fontSize: 13, fontWeight: '800', letterSpacing: 1 },
   identitySub: { fontSize: 12, color: '#4a5a7b' },
   emojiAvatarLarge: {
     width: 72, height: 72, borderRadius: 36,

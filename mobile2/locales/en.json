@@ -450,6 +450,12 @@
     "secretRevealed": "SECRET REVEALED!",
     "achievementUnlocked": "ACHIEVEMENT UNLOCKED!",
     "tapToContinue": "Tap to continue",
+    "equipTitle": "Equip as Title",
+    "removeTitle": "Remove Title",
+    "titlePreview": "✦ {{name}} ✦ will appear below your name",
+    "titleSubtitleHint": "This title will appear below your name",
+    "titleEquipped": "Title equipped!",
+    "titleRemoved": "Title removed",
     "rarity": {
       "comum":    "COMMON",
       "medio":    "MEDIUM",
