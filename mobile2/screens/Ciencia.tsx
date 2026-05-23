@@ -101,7 +101,7 @@ interface Props {
   sessions: SessionRecord[];
 }
 
-export default function Ciencia({ userProfile, sessions }: Props) {
+export function CienciaContent({ userProfile, sessions, showTitle = true }: Props & { showTitle?: boolean }) {
   const { t } = useTranslation();
 
   const goalBenchmarkName = userProfile.triageCompleted && userProfile.ambitionId
@@ -154,12 +154,8 @@ export default function Ciencia({ userProfile, sessions }: Props) {
   ];
 
   return (
-    <View style={styles.root}>
-      <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: TOP + 20 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.pageTitle}>{t('science.title')}</Text>
+    <>
+      {showTitle && <Text style={styles.pageTitle}>{t('science.title')}</Text>}
 
         {/* ══ SEÇÃO 1 — SUA RECOMENDAÇÃO / A DOSE CERTA ══ */}
         <SectionHeader
@@ -364,7 +360,18 @@ export default function Ciencia({ userProfile, sessions }: Props) {
         {SOURCES.map(s => (
           <Text key={s} style={styles.source}>• {s}</Text>
         ))}
+    </>
+  );
+}
 
+export default function Ciencia(props: Props) {
+  return (
+    <View style={styles.root}>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingTop: TOP + 20 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <CienciaContent {...props} />
       </ScrollView>
     </View>
   );

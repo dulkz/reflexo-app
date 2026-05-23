@@ -6,12 +6,22 @@ export const ICONS = {
     radar: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><path d="M8.5 12a3.5 3.5 0 0 1 3.5-3.5"/><path d="M5 12a7 7 0 0 1 7-7"/><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/></svg>`,
   },
   nav: {
+    home: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M9.5 21v-6h5v6"/></svg>`,
+    missoes: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h10"/><path d="M10 12h10"/><path d="M10 18h10"/><path d="M3.5 6l1.2 1.2L7 5"/><path d="M3.5 12l1.2 1.2L7 11"/><path d="M3.5 18l1.2 1.2L7 17"/></svg>`,
     jornada: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="5.5" r="1.5"/><path d="M7 18C9.5 18 9.5 14 12 14s2.5 4 5 4"/><path d="M5.5 17C5.5 14.5 8.5 14.5 8.5 12s-3-2.5-3-5"/><path d="M17 5.5c-2.5 0-2.5 3-5 3s-2.5-3-5-3"/></svg>`,
     ciencia: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.25"/><circle cx="6" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/><circle cx="12" cy="3.5" r="1.25"/><path d="M10.4 10.4L7 7"/><path d="M13.6 10.4L17 7"/><path d="M10.4 13.6L7 17"/><path d="M13.6 13.6L17 17"/><path d="M12 9.75V5"/></svg>`,
     historico: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 4v15a1 1 0 0 0 1 1h16"/><path d="M7 16l4-5 3.5 3 5-7"/><path d="M17 7h2.5v2.5"/></svg>`,
     perfil: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.5" r="3"/><path d="M5 21c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M12.8 16l-1.8 2.6h2l-1.4 2.4"/></svg>`,
   },
   mark: `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" fill="none"><path d="M22 30V22h8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/><path d="M98 30V22h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/><path d="M22 90v8h8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/><path d="M98 90v8h-8" stroke="#FFFFFF" stroke-width="5" stroke-linecap="square"/><path d="M40 40h26c6 0 10 4 10 10s-4 10-10 10H50l24 20" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/><path d="M50 40v40" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square"/><path d="M82 38l-10 12" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/></svg>`,
+} as const;
+
+// ── Reward icons (Missões) ────────────────────────────────────────────────────
+// Daily missions reward Energy (teal bolt) · Weekly missions reward a Golden Ticket (amber).
+
+export const REWARD_ICONS = {
+  energy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 8 8-11h-6z"/></svg>`,
+  ticket: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M9.5 6.5v11"/></svg>`,
 } as const;
 
 // ── Archetype icons ───────────────────────────────────────────────────────────

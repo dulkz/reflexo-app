@@ -528,6 +528,22 @@
     "allMilestonesBeaten": "✓ Todos os marcos batidos!"
   },
 
+  "nav": {
+    "home": "Início",
+    "missoes": "Missões",
+    "perfil": "Perfil"
+  },
+
+  "missoes": {
+    "title": "MISSÕES",
+    "dailyRewardHint": "Cada missão concluída dá +1 energia",
+    "weeklyRewardHint": "Cada missão concluída dá um Ticket Dourado",
+    "energyReward": "+1 ENERGIA",
+    "energyEarned": "ENERGIA GANHA",
+    "ticketReward": "TICKET DOURADO",
+    "ticketEarned": "TICKET GANHO"
+  },
+
   "onboarding": {
     "skip": "pular introdução",
     "next": "Próximo →",

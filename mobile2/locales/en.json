@@ -528,6 +528,22 @@
     "allMilestonesBeaten": "✓ All milestones beaten!"
   },
 
+  "nav": {
+    "home": "Home",
+    "missoes": "Missions",
+    "perfil": "Profile"
+  },
+
+  "missoes": {
+    "title": "MISSIONS",
+    "dailyRewardHint": "Each completed mission grants +1 energy",
+    "weeklyRewardHint": "Each completed mission grants a Golden Ticket",
+    "energyReward": "+1 ENERGY",
+    "energyEarned": "ENERGY EARNED",
+    "ticketReward": "GOLDEN TICKET",
+    "ticketEarned": "TICKET EARNED"
+  },
+
   "onboarding": {
     "skip": "skip intro",
     "next": "Next →",

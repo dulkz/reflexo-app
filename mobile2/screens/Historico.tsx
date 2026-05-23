@@ -251,6 +251,27 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
   );
 }
 
+// Reusable "evolução por modo" card list — also embedded in the Perfil tab.
+export function HistoricoModeCards({ sessions }: { sessions: SessionRecord[] }) {
+  const [expanded, setExpanded] = useState<Record<ModeKey, boolean>>({
+    partida: false, alvo: false, sequencia: false, radar: false,
+  });
+  const modes: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
+  return (
+    <>
+      {modes.map(m => (
+        <ModeStatsCard
+          key={m}
+          mode={m}
+          sessions={sessions}
+          expanded={expanded[m]}
+          onToggle={() => setExpanded(prev => ({ ...prev, [m]: !prev[m] }))}
+        />
+      ))}
+    </>
+  );
+}
+
 interface Props {
   sessions: SessionRecord[];
   userProfile: UserProfile;
@@ -260,9 +281,6 @@ interface Props {
 export default function Historico({ sessions, userProfile, onUpdateProfile }: Props) {
   const { t } = useTranslation();
   const lang = i18n.language;
-  const [expanded, setExpanded] = useState<Record<ModeKey, boolean>>({
-    partida: false, alvo: false, sequencia: false, radar: false,
-  });
 
   const bestRtSession = useMemo(() => {
     if (sessions.length === 0) return null;
@@ -304,8 +322,6 @@ export default function Historico({ sessions, userProfile, onUpdateProfile }: Pr
     const oldest = sessions[sessions.length - 1].date;
     return Math.max(1, Math.round((Date.now() - oldest) / DAY) + 1);
   }, [sessions]);
-
-  const modes: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
 
   return (
     <View style={styles.root}>
@@ -381,15 +397,7 @@ export default function Historico({ sessions, userProfile, onUpdateProfile }: Pr
 
         {/* ── Evolução por modo ── */}
         <Text style={styles.sectionTitle}>{t('history.evolutionByMode')}</Text>
-        {modes.map(m => (
-          <ModeStatsCard
-            key={m}
-            mode={m}
-            sessions={sessions}
-            expanded={expanded[m]}
-            onToggle={() => setExpanded(prev => ({ ...prev, [m]: !prev[m] }))}
-          />
-        ))}
+        <HistoricoModeCards sessions={sessions} />
 
         {/* ── Conquistas ── */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('history.achievements')}</Text>

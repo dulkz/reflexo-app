@@ -14,14 +14,12 @@ import ModoAlvo, { RoundResult } from './screens/ModoAlvo';
 import ModoRadar, { RoundResult as RadarRound } from './screens/ModoRadar';
 import ModoSequencia, { SeqSummary } from './screens/ModoSequencia';
 import Resultado from './screens/Resultado';
-import Ciencia from './screens/Ciencia';
 import Perfil from './screens/Perfil';
-import Historico from './screens/Historico';
-import Jornada from './screens/Jornada';
+import Missoes from './screens/Missoes';
 import ArchetypeEvolution from './screens/ArchetypeEvolution';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingFlow from './screens/onboarding/OnboardingFlow';
-import { ModeKey, MODE_COLORS } from './utils/levels';
+import { ModeKey } from './utils/levels';
 import {
   SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
   loadHasPlayedFirstGame, saveHasPlayedFirstGame,
@@ -49,7 +47,7 @@ const RARITY_PRIORITY: Record<RarityKey, number> = {
 // Archetype progression order — used to detect a forward evolution (advancement only).
 const ARCHETYPE_ORDER = ['EXPLORADOR', 'EM_EVOLUCAO', 'RESISTENTE', 'ATIRADOR', 'VELOCISTA', 'PILOTO'];
 
-type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'jornada';
+type Tab = 'jogar' | 'missoes' | 'perfil';
 type GameScreen =
   | 'home'
   | 'partida'
@@ -61,16 +59,11 @@ type GameScreen =
   | 'resultado_sequencia'
   | 'resultado_radar';
 
-const FAB_SIZE      = 70;
-const TAB_BAR_HEIGHT = 52;
-
-const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
-  { key: 'jornada',  label: 'Jornada',   icon: ICONS.nav.jornada },
-  { key: 'ciencia',  label: 'Ciência',   icon: ICONS.nav.ciencia },
-];
-const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'historico', label: 'Histórico', icon: ICONS.nav.historico },
-  { key: 'perfil',    label: 'Perfil',    icon: ICONS.nav.perfil },
+// 3-tab navigation — Início (jogar) · Missões · Perfil. FAB removed.
+const TABS: { key: Tab; labelKey: string; icon: string }[] = [
+  { key: 'jogar',   labelKey: 'nav.home',    icon: ICONS.nav.home },
+  { key: 'missoes', labelKey: 'nav.missoes', icon: ICONS.nav.missoes },
+  { key: 'perfil',  labelKey: 'nav.perfil',  icon: ICONS.nav.perfil },
 ];
 
 export default function App() {
@@ -88,7 +81,6 @@ function AppInner() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('jogar');
   const [gameScreen, setGameScreen] = useState<GameScreen>('home');
-  const [modePickerVisible, setModePickerVisible] = useState(false);
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile());
   const [triageVisible, setTriageVisible] = useState(false);
@@ -663,91 +655,45 @@ function AppInner() {
 
       {/* Screen content */}
       <View style={[styles.content, inGame && styles.contentFullscreen]}>
-        {activeTab === 'jogar'      && renderGame()}
-        {activeTab === 'historico'  && <Historico sessions={sessions} userProfile={userProfile} onUpdateProfile={setUserProfile} />}
-        {activeTab === 'ciencia'    && <Ciencia userProfile={userProfile} sessions={sessions} />}
-        {activeTab === 'perfil'     && (
+        {activeTab === 'jogar'   && renderGame()}
+        {activeTab === 'missoes' && (
+          <Missoes
+            sessions={sessions}
+            userProfile={userProfile}
+            onOpenTriage={openTriageForEdit}
+          />
+        )}
+        {activeTab === 'perfil'  && (
           <Perfil
             sessions={sessions}
             userProfile={userProfile}
             onOpenTriage={openTriageForEdit}
-            onGoToConquistas={() => handleTabPress('historico')}
             onUpdateProfile={setUserProfile}
             onClearData={handleClearData}
           />
         )}
-        {activeTab === 'jornada' && (
-          <Jornada
-            sessions={sessions}
-            userProfile={userProfile}
-            onOpenTriage={openTriageForEdit}
-            onUpdateProfile={setUserProfile}
-          />
-        )}
       </View>
 
-      {/* Tab bar — hidden during active game */}
+      {/* Tab bar — 3 tabs, hidden during active game */}
       {!inGame && (
-        <>
-          <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
-            {LEFT_TABS.map(t => {
-              const active = activeTab === t.key;
-              return (
-                <TouchableOpacity
-                  key={t.key}
-                  style={styles.tabBtn}
-                  onPress={() => handleTabPress(t.key)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                    <SvgXml xml={t.icon.replace(/#FFFFFF/g, active ? '#3b82f6' : '#FFFFFF')} width={24} height={24} />
-                    <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-
-            {/* Spacer — keeps 5-column layout while FAB floats above */}
-            <View style={styles.fabSpacer} />
-
-            {RIGHT_TABS.map(t => {
-              const active = activeTab === t.key;
-              return (
-                <TouchableOpacity
-                  key={t.key}
-                  style={styles.tabBtn}
-                  onPress={() => handleTabPress(t.key)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                    <SvgXml xml={t.icon.replace(/#FFFFFF/g, active ? '#3b82f6' : '#FFFFFF')} width={24} height={24} />
-                    <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* FAB — position absolute sibling of tabBar, no overflow dependency */}
-          <View
-            style={[styles.fabContainer, { bottom: TAB_BAR_HEIGHT + Math.max(insets.bottom, 4) - FAB_SIZE / 2 }]}
-            pointerEvents="box-none"
-          >
-            <TouchableOpacity
-              style={styles.fab}
-              onPress={() => {
-                if (activeTab === 'jogar' && gameScreen === 'home') {
-                  setModePickerVisible(true);
-                } else {
-                  handleTabPress('jogar');
-                }
-              }}
-              activeOpacity={0.85}
-            >
-              <SvgXml xml={ICONS.mark} width={36} height={36} />
-            </TouchableOpacity>
-          </View>
-        </>
+        <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
+          {TABS.map(tab => {
+            const active = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={styles.tabBtn}
+                onPress={() => handleTabPress(tab.key)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
+                  <SvgXml xml={tab.icon.replace(/#FFFFFF/g, active ? '#3b82f6' : '#FFFFFF')} width={24} height={24} />
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t(tab.labelKey)}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       )}
 
       {/* Triage modal — fullscreen, covers tab bar */}
@@ -864,75 +810,6 @@ function AppInner() {
         </View>
       </Modal>
 
-      {/* Mode picker bottom sheet — opens when FAB is tapped while already on Home */}
-      <Modal
-        visible={modePickerVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModePickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modePickerOverlay}
-          onPress={() => setModePickerVisible(false)}
-          activeOpacity={1}
-        >
-          <TouchableOpacity activeOpacity={1} style={styles.modePickerSheet} onPress={() => { /* swallow taps inside sheet */ }}>
-            <View style={styles.modePickerHandle} />
-            <View style={styles.modePickerHeader}>
-              <Text style={styles.modePickerTitle}>ESCOLHA UM MODO</Text>
-              <TouchableOpacity
-                onPress={() => setModePickerVisible(false)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Text style={styles.modePickerClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            {([
-              { key: 'partida'   as ModeKey, name: 'PARTIDA',   desc: 'Reação simples · 7 tentativas',     icon: ICONS.modes.partida },
-              { key: 'alvo'      as ModeKey, name: 'ALVO',      desc: '4 alvos · 10 rodadas · escolha',    icon: ICONS.modes.alvo },
-              { key: 'sequencia' as ModeKey, name: 'SEQUÊNCIA', desc: '20 sinais Go/NoGo · inibição',      icon: ICONS.modes.sequencia },
-              { key: 'radar'     as ModeKey, name: 'RADAR',     desc: '5 círculos · localização visual',   icon: ICONS.modes.radar },
-            ]).map(m => {
-              const mc = MODE_COLORS[m.key];
-              // Badge de energia para o mode picker
-              const modeEnergy = energyCounts ? energyCounts[m.key] : null;
-              const noEnergy = !inGrace && modeEnergy !== null && modeEnergy <= 0;
-              const energyLabel = inGrace
-                ? '⚡ Grátis'
-                : modeEnergy !== null
-                  ? `⚡ ${modeEnergy}/5`
-                  : null;
-              return (
-                <TouchableOpacity
-                  key={m.key}
-                  style={[styles.modePickerCard, { borderColor: mc.accent + '66', backgroundColor: mc.bg }]}
-                  onPress={() => {
-                    setModePickerVisible(false);
-                    tryStartMode(m.key);
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <SvgXml xml={m.icon} width={28} height={28} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.modePickerName, { color: mc.accent }]}>{m.name}</Text>
-                    <Text style={styles.modePickerDesc}>{m.desc}</Text>
-                  </View>
-                  {energyLabel !== null && (
-                    <Text style={[
-                      styles.modePickerEnergy,
-                      noEnergy ? styles.modePickerEnergyEmpty : styles.modePickerEnergyOk,
-                    ]}>
-                      {energyLabel}
-                    </Text>
-                  )}
-                  <Text style={[styles.modePickerArrow, { color: mc.accent }]}>›</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-
       {/* Milestone beat toast — deferred while an evolution takeover is showing */}
       <Modal
         visible={milestoneBeat !== null && evolutionTo === null}
@@ -974,16 +851,16 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   contentFullscreen: { flex: 1 },
 
-  // ── FAB tab bar ──────────────────────────────────────────────────────────────
+  // ── Tab bar (3 tabs) ─────────────────────────────────────────────────────────
   tabBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-around',
     backgroundColor: '#0d1525',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
     paddingTop: 6,
   },
-  fabSpacer: { flex: 1 },
   tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 2 },
   tabItemCard: {
     alignItems: 'center',
@@ -1003,29 +880,6 @@ const styles = StyleSheet.create({
   },
   tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
   tabLabelActive: { color: '#3b82f6' },
-  fabContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 20,
-  },
-  fab: {
-    width: FAB_SIZE,
-    height: FAB_SIZE,
-    borderRadius: FAB_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f59e0b',
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,255,255,0.3)',
-    elevation: 0,
-    shadowColor: 'transparent',
-  },
-  fabIcon: {
-    fontSize: 32,
-    color: '#fff',
-  },
 
   // ── Triage prompt (first-game intercept) ─────────────────────────────────────
   triagePromptOverlay: {
@@ -1106,54 +960,5 @@ const styles = StyleSheet.create({
   achieveToastBadgeText: { fontSize: 11, fontWeight: '800', letterSpacing: 1 },
   achieveToastDesc: {
     fontSize: 13, color: '#7a8aa0', textAlign: 'center', lineHeight: 19,
-  },
-
-  // ── Mode picker bottom sheet ─────────────────────────────────────────────────
-  modePickerOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'flex-end',
-  },
-  modePickerSheet: {
-    backgroundColor: '#0f1729',
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 28,
-  },
-  modePickerHandle: {
-    alignSelf: 'center', width: 40, height: 4, borderRadius: 2,
-    backgroundColor: '#2a3a5a', marginBottom: 16,
-  },
-  modePickerHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  modePickerTitle: {
-    fontSize: 12, fontWeight: '800', color: '#7a8aa0', letterSpacing: 2.5,
-  },
-  modePickerClose: { fontSize: 18, color: '#4a5a7b', fontWeight: '700' },
-  modePickerCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderRadius: 14, borderWidth: 1,
-    paddingHorizontal: 16, paddingVertical: 16,
-    marginBottom: 10,
-  },
-  modePickerIcon: { fontSize: 28 },
-  modePickerName: { fontSize: 14, fontWeight: '900', letterSpacing: 1.5 },
-  modePickerDesc: { fontSize: 12, color: '#7a8aa0', marginTop: 2 },
-  modePickerArrow: { fontSize: 24, fontWeight: '300' },
-  modePickerEnergy: {
-    fontSize: 10, fontWeight: '700', letterSpacing: 0.5,
-    paddingHorizontal: 7, paddingVertical: 3,
-    borderRadius: 6, overflow: 'hidden',
-    marginRight: 2,
-  },
-  modePickerEnergyOk: {
-    color: '#3b82f6',
-    backgroundColor: 'rgba(59,130,246,0.12)',
-  },
-  modePickerEnergyEmpty: {
-    color: '#ef4444',
-    backgroundColor: 'rgba(239,68,68,0.12)',
   },
 });

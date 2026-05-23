@@ -38,6 +38,10 @@ import {
   getMilestonesState,
 } from '../utils/ambition';
 import { GROUP_COLOR } from '../config/ambitions';
+import JourneyMap from '../components/JourneyMap';
+import { CienciaContent } from './Ciencia';
+import { HistoricoModeCards } from './Historico';
+import { ConquistasContent } from './Conquistas';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -59,7 +63,6 @@ interface Props {
   sessions: SessionRecord[];
   userProfile: UserProfile;
   onOpenTriage: (editMode: boolean) => void;
-  onGoToConquistas: () => void;
   onUpdateProfile: (p: UserProfile) => void;
   onClearData: () => void;
 }
@@ -206,9 +209,14 @@ const chart = StyleSheet.create({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConquistas, onUpdateProfile, onClearData }: Props) {
+export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdateProfile, onClearData }: Props) {
   const { t } = useTranslation();
   const lang = i18n.language;
+
+  // Collapsible embedded sections (Histórico, Conquistas, Ciência)
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [achievementsExpanded, setAchievementsExpanded] = useState(false);
+  const [scienceExpanded, setScienceExpanded] = useState(false);
 
   const handleLangChange = async (next: 'pt' | 'en') => {
     if (i18n.language === next) return;
@@ -289,6 +297,11 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
 
   const beatenCount = useMemo(
     () => milestonesState.filter(s => s.status !== 'pendente').length,
+    [milestonesState],
+  );
+
+  const allBeaten = useMemo(
+    () => milestonesState.length > 0 && milestonesState.every(s => s.status !== 'pendente'),
     [milestonesState],
   );
 
@@ -489,6 +502,49 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             </View>
           )}
         </View>
+
+        {/* ── MINHA JORNADA (mapa + meta) ── */}
+        {!userProfile.triageCompleted ? (
+          <View style={styles.journeyCTA}>
+            <Text style={styles.journeyCTATitle}>{t('journey.ctaTitle')}</Text>
+            <Text style={styles.journeyCTADesc}>{t('journey.ctaDesc')}</Text>
+            <TouchableOpacity style={styles.journeyCTABtn} onPress={() => onOpenTriage(false)} activeOpacity={0.8}>
+              <Text style={styles.journeyCTABtnText}>{t('journey.ctaBtn')}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : ambition ? (
+          <View style={styles.journeySection}>
+            <View style={styles.journeySectionHeader}>
+              <Text style={styles.journeyKicker}>{t('journey.myJourney')}</Text>
+            </View>
+            <View style={styles.journeyAmbitionRow}>
+              <SvgXml xml={ambition.icon} width={22} height={22} />
+              <Text style={[styles.journeyAmbitionName, { color: ambitionGroupColor }]} numberOfLines={1}>
+                {ambition.name}
+              </Text>
+              <TouchableOpacity onPress={() => onOpenTriage(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.journeyChangeLink}>{t('journey.changeGoal')}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.journeySummary}>
+              {isBrainHealth
+                ? t('journey.summaryBrain', { base: baselineMs ?? '—', beaten: beatenCount, total: ambition.milestones.length })
+                : t('journey.summaryGoal', { base: baselineMs ?? '—', goal: ambition.finalMetaMs ?? '—', beaten: beatenCount, total: ambition.milestones.length })}
+            </Text>
+            {baselineMs !== null && (
+              <View style={styles.journeyMapWrap}>
+                <JourneyMap
+                  ambitionId={ambition.id}
+                  baselineMs={baselineMs}
+                  currentBestMs={currentBestMs}
+                  sessions={sessions}
+                  showYouAreHere
+                  hideCompletionCard={allBeaten}
+                />
+              </View>
+            )}
+          </View>
+        ) : null}
 
         {/* ── ARQUÉTIPOS — timeline de evolução (nó + conector) ── */}
         {(() => {
@@ -807,20 +863,54 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           </>
         )}
 
-        {/* ── Achievements summary ── */}
-        <Text style={styles.sectionTitle}>{t('profile.achievementsSummary')}</Text>
-        <TouchableOpacity style={styles.achieveSummaryCard} onPress={onGoToConquistas} activeOpacity={0.8}>
+        {/* ── HISTÓRICO — evolução por modo (colapsável) ── */}
+        <TouchableOpacity
+          style={[styles.collapseHeader, { marginTop: 20 }]}
+          onPress={() => setHistoryExpanded(p => !p)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.sectionTitle}>{t('history.evolutionByMode')}</Text>
+          <Text style={styles.collapseArrow}>{historyExpanded ? '▼' : '▶'}</Text>
+        </TouchableOpacity>
+        {historyExpanded && <HistoricoModeCards sessions={sessions} />}
+
+        {/* ── Achievements summary (toca para expandir lista completa) ── */}
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>{t('profile.achievementsSummary')}</Text>
+        <TouchableOpacity style={styles.achieveSummaryCard} onPress={() => setAchievementsExpanded(p => !p)} activeOpacity={0.8}>
           <View style={styles.achieveSummaryRow}>
             <Text style={styles.achieveSummaryCount}>
               {t('achievements.unlockedFraction', { count: unlockedCount, total: visibleAchievementTotal })}
             </Text>
-            <Text style={styles.achieveSummaryLink}>{t('profile.seeAll')}</Text>
+            <Text style={styles.achieveSummaryLink}>{achievementsExpanded ? t('common.close') : t('profile.seeAll')}</Text>
           </View>
           <View style={styles.achieveProgressTrack}>
             <View style={[styles.achieveProgressFill, { flex: unlockedCount }]} />
             <View style={{ flex: Math.max(0, visibleAchievementTotal - unlockedCount) }} />
           </View>
         </TouchableOpacity>
+        {achievementsExpanded && (
+          <View style={{ marginTop: 4 }}>
+            <ConquistasContent
+              sessions={sessions}
+              userProfile={userProfile}
+              onUpdateProfile={onUpdateProfile}
+              showHeader={false}
+            />
+          </View>
+        )}
+
+        {/* ── CIÊNCIA (colapsável) ── */}
+        <TouchableOpacity
+          style={[styles.collapseHeader, { marginTop: 20 }]}
+          onPress={() => setScienceExpanded(p => !p)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.sectionTitle}>{t('science.title')}</Text>
+          <Text style={styles.collapseArrow}>{scienceExpanded ? '▼' : '▶'}</Text>
+        </TouchableOpacity>
+        {scienceExpanded && (
+          <CienciaContent userProfile={userProfile} sessions={sessions} showTitle={false} />
+        )}
 
         {sessions.length === 0 && (
           <View style={styles.emptyState}>
@@ -1151,6 +1241,12 @@ const styles = StyleSheet.create({
 
   // ── Section title ─────────────────────────────────────────────────────────
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 10 },
+
+  // ── Collapsible embedded-section header ───────────────────────────────────
+  collapseHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  collapseArrow: { fontSize: 11, color: '#3a4a6b', marginBottom: 10 },
 
   // ── Mode cards ────────────────────────────────────────────────────────────
   modeCard: {
