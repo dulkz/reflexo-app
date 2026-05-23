@@ -4,10 +4,12 @@ import {
   TouchableOpacity, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SvgXml } from 'react-native-svg';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
 import { hapticImpactMedium } from '../utils/haptics';
 import { shake } from '../utils/animations';
+import { ICONS } from '../assets/icons';
 
 const TOTAL_ROUNDS = 7;
 const FALSE_START = 500;
@@ -245,6 +247,9 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
+          <View style={styles.introIcon}>
+            <SvgXml xml={ICONS.modes.partida} width={48} height={48} />
+          </View>
           <Text style={styles.introTitle}>{t('match.title')}</Text>
           <Text style={styles.introSub}>{t('match.subtitle')}</Text>
           <View style={styles.howToCard}>
@@ -415,7 +420,13 @@ const styles = StyleSheet.create({
   // ── Intro screen ─────────────────────────────────────────────────────────────
   introContainer: {
     flex: 1, paddingHorizontal: 24, paddingBottom: 40,
-    justifyContent: 'center', gap: 20,
+    justifyContent: 'center', gap: 18, alignItems: 'center',
+  },
+  introIcon: {
+    width: 84, height: 84, borderRadius: 42,
+    backgroundColor: 'rgba(59,130,246,0.10)',
+    borderWidth: 1, borderColor: 'rgba(59,130,246,0.25)',
+    alignItems: 'center', justifyContent: 'center',
   },
   introTitle: {
     fontSize: 32, fontWeight: '900', color: '#3b82f6',
@@ -425,15 +436,15 @@ const styles = StyleSheet.create({
     fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginTop: -12,
   },
   howToCard: {
-    backgroundColor: '#1a2a1a',
-    borderLeftWidth: 4, borderLeftColor: '#22c55e',
-    borderRadius: 12, padding: 16,
+    backgroundColor: 'rgba(59,130,246,0.06)',
+    borderWidth: 1, borderColor: 'rgba(59,130,246,0.20)',
+    borderRadius: 12, padding: 16, width: '100%',
   },
-  howToTitle: { fontSize: 13, fontWeight: '700', color: '#22c55e', letterSpacing: 0.5, marginBottom: 8 },
+  howToTitle: { fontSize: 13, fontWeight: '700', color: '#3b82f6', letterSpacing: 0.5, marginBottom: 8 },
   howToText: { fontSize: 14, color: '#cbd5e1', lineHeight: 20 },
   introStartBtn: {
     backgroundColor: '#3b82f6', borderRadius: 16,
-    paddingVertical: 18, alignItems: 'center',
+    paddingVertical: 18, alignItems: 'center', width: '100%',
   },
   introStartBtnText: {
     fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 2,

@@ -9,7 +9,7 @@ import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
 import { hapticError } from '../utils/haptics';
 import { shake } from '../utils/animations';
-import { RARITY_ICONS_SVG, UI_ICONS } from '../assets/icons';
+import { RARITY_ICONS_SVG, UI_ICONS, ICONS } from '../assets/icons';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -215,6 +215,9 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
+          <View style={styles.introIcon}>
+            <SvgXml xml={ICONS.modes.alvo} width={48} height={48} />
+          </View>
           <Text style={styles.introTitle}>{t('target.title')}</Text>
           <Text style={styles.introSub}>{t('target.subtitle')}</Text>
           <View style={styles.howToCard}>
@@ -401,11 +404,17 @@ const styles = StyleSheet.create({
   circleX: { fontSize: 44, fontWeight: '900', color: 'rgba(255,255,255,0.92)' },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
+  introIcon: {
+    width: 84, height: 84, borderRadius: 42, alignSelf: 'center',
+    backgroundColor: 'rgba(6,182,212,0.10)',
+    borderWidth: 1, borderColor: 'rgba(6,182,212,0.25)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+  },
   introTitle: { fontSize: 34, fontWeight: '900', color: '#06b6d4', letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
   howToCard: {
-    backgroundColor: '#0f1f2a',
-    borderLeftWidth: 4, borderLeftColor: '#06b6d4',
+    backgroundColor: 'rgba(6,182,212,0.06)',
+    borderWidth: 1, borderColor: 'rgba(6,182,212,0.20)',
     borderRadius: 12, padding: 16, marginBottom: 28,
   },
   howToTitle: { fontSize: 13, fontWeight: '700', color: '#06b6d4', letterSpacing: 0.5, marginBottom: 8 },

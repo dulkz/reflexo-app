@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { playSfx } from '../utils/sfx';
 import { hapticError, hapticLight } from '../utils/haptics';
 import { shake } from '../utils/animations';
+import { SvgXml } from 'react-native-svg';
+import { ICONS } from '../assets/icons';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
   Animated, Platform, StatusBar as RNStatusBar,
@@ -324,6 +326,9 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
           </TouchableOpacity>
         </View>
         <View style={styles.introContainer}>
+          <View style={styles.introIcon}>
+            <SvgXml xml={ICONS.modes.sequencia} width={48} height={48} />
+          </View>
           <Text style={styles.introTitle}>{t('sequence.title')}</Text>
           <Text style={styles.introSub}>{t('sequence.subtitle')}</Text>
           <View style={styles.howToCard}>
@@ -455,14 +460,20 @@ const styles = StyleSheet.create({
   hintLine: { fontSize: 13, fontWeight: '700', letterSpacing: 1 },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
+  introIcon: {
+    width: 84, height: 84, borderRadius: 42, alignSelf: 'center',
+    backgroundColor: 'rgba(139,92,246,0.10)',
+    borderWidth: 1, borderColor: 'rgba(139,92,246,0.25)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+  },
   introTitle: { fontSize: 30, fontWeight: '900', color: '#8b5cf6', letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
   howToCard: {
-    backgroundColor: '#1a1a2e',
-    borderLeftWidth: 4, borderLeftColor: '#a855f7',
+    backgroundColor: 'rgba(139,92,246,0.06)',
+    borderWidth: 1, borderColor: 'rgba(139,92,246,0.20)',
     borderRadius: 12, padding: 16, marginBottom: 28,
   },
-  howToTitle: { fontSize: 13, fontWeight: '700', color: '#a855f7', letterSpacing: 0.5, marginBottom: 8 },
+  howToTitle: { fontSize: 13, fontWeight: '700', color: '#8b5cf6', letterSpacing: 0.5, marginBottom: 8 },
   howToText: { fontSize: 14, color: '#cbd5e1', lineHeight: 20 },
   startBtn: { backgroundColor: '#8b5cf6', borderRadius: 14, paddingVertical: 18, alignItems: 'center' },
   startBtnText: { fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 2 },

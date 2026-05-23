@@ -8,6 +8,8 @@ import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
 import { hapticError } from '../utils/haptics';
 import { shake } from '../utils/animations';
+import { SvgXml } from 'react-native-svg';
+import { ICONS } from '../assets/icons';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -218,6 +220,9 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
           <View style={{ width: 32 }} />
         </View>
         <View style={styles.introContainer}>
+          <View style={styles.introIcon}>
+            <SvgXml xml={ICONS.modes.radar} width={48} height={48} />
+          </View>
           <Text style={styles.introTitle}>{t('radar.title')}</Text>
           <Text style={styles.introSub}>{t('radar.subtitle')}</Text>
           <View style={styles.howToCard}>
@@ -431,11 +436,17 @@ const styles = StyleSheet.create({
   circleX: { fontSize: 40, fontWeight: '900', color: '#ef4444', lineHeight: 44 },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
+  introIcon: {
+    width: 84, height: 84, borderRadius: 42, alignSelf: 'center',
+    backgroundColor: 'rgba(245,158,11,0.10)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+  },
   introTitle: { fontSize: 34, fontWeight: '900', color: RADAR_COLOR, letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
   howToCard: {
-    backgroundColor: '#1a1a0f',
-    borderLeftWidth: 4, borderLeftColor: '#f59e0b',
+    backgroundColor: 'rgba(245,158,11,0.06)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.20)',
     borderRadius: 12, padding: 16, marginBottom: 28,
   },
   howToTitle: { fontSize: 13, fontWeight: '700', color: '#f59e0b', letterSpacing: 0.5, marginBottom: 8 },
