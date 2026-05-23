@@ -14,6 +14,7 @@ import { ACHIEVEMENTS, RARITY_CONFIG } from '../config/achievements';
 import { buildUserStats, ARCHETYPES } from '../config/archetypes';
 import { calculateStreak, streakColor } from '../utils/streak';
 import { MAX_ENERGY_PER_MODE } from '../config/monetization';
+import { hasInfiniteEnergy } from '../utils/energy';
 import { ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -286,7 +287,11 @@ export default function Home({
           const noEnergy = !inGrace && modeEnergy !== null && modeEnergy <= 0;
           let energyBadgeText: string | null = null;
           let energyBadgeStyle: object = styles.energyBadgeOk;
-          if (inGrace && graceExpiryMs !== null) {
+          if (hasInfiniteEnergy()) {
+            // Assinante Premium — energia infinita (∞ em vez do contador)
+            energyBadgeText = t('home.energyInfinite');
+            energyBadgeStyle = styles.energyBadgeOk;
+          } else if (inGrace && graceExpiryMs !== null) {
             void graceTick; // força re-render quando tick muda
             const msLeft = Math.max(0, graceExpiryMs - Date.now());
             const h = Math.floor(msLeft / (60 * 60 * 1000));

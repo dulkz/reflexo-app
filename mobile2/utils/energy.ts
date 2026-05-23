@@ -1,6 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ModeKey } from './levels';
-import { GRACE_PERIOD_DAYS, MAX_ENERGY_PER_MODE } from '../config/monetization';
+import { GRACE_PERIOD_DAYS, MAX_ENERGY_PER_MODE, PREMIUM_ACTIVE } from '../config/monetization';
+
+// Assinante Premium → energia infinita (sem consumo, badge mostra ∞).
+export function hasInfiniteEnergy(): boolean {
+  return PREMIUM_ACTIVE;
+}
 
 // ── Chaves — NÃO incluídas no clearUserData() ───────────────────────────────
 export const ENERGY_KEY        = 'reflexo_energy_v1';
@@ -143,6 +148,7 @@ export function hasEnergy(
   data: EnergyData,
   installDate: number | null,
 ): boolean {
+  if (hasInfiniteEnergy()) return true;
   if (installDate !== null && isInGracePeriod(installDate)) return true;
   return data.counts[mode] > 0;
 }

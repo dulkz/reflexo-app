@@ -28,7 +28,7 @@ import {
 } from './utils/storage';
 import {
   EnergyData, loadEnergy, consumeEnergy, addEnergy,
-  ensureInstallDate, isInGracePeriod,
+  ensureInstallDate, isInGracePeriod, hasInfiniteEnergy,
 } from './utils/energy';
 import SemEnergia from './screens/SemEnergia';
 import { UserProfile, defaultUserProfile } from './types/user';
@@ -317,11 +317,11 @@ function AppInner() {
       return;
     }
 
-    const inGrace = isInGracePeriod(installDate);
+    // Premium → energia infinita; período de graça → grátis. Em ambos não consome.
+    const unlimited = hasInfiniteEnergy() || isInGracePeriod(installDate);
 
-    if (inGrace || energyData.counts[mode] > 0) {
-      // Tem acesso — consome energia (exceto no período de graça)
-      if (!inGrace) {
+    if (unlimited || energyData.counts[mode] > 0) {
+      if (!unlimited) {
         const updated = await consumeEnergy(mode, energyData);
         setEnergyData(updated);
       }

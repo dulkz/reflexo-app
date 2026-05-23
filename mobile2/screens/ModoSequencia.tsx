@@ -11,7 +11,7 @@ import {
   Animated, Platform, StatusBar as RNStatusBar, ScrollView,
 } from 'react-native';
 
-const TOTAL_SIGNALS = 10;
+const TOTAL_SIGNALS = 15;
 const MIN_INTERVAL = 1000;
 const MAX_INTERVAL = 2200;
 const SIGNAL_DURATION = 1400;

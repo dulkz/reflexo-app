@@ -39,6 +39,7 @@
     "noSessions": "Based on scientific benchmarks from elite athletes",
     "graceExpiring": "⚡ Free · expires in {{time}}",
     "energyCount": "⚡ {{current}}/{{max}}",
+    "energyInfinite": "⚡ ∞",
     "ctaEyebrow": "NEXT SESSION",
     "ctaLabel": "TRAIN NOW",
     "ctaSub": "Reaction mode · start here",
@@ -62,7 +63,7 @@
     },
     "sequencia": {
       "name": "SEQUENCE MODE",
-      "desc": "20 Go/NoGo signals · ~25% random",
+      "desc": "15 Go/NoGo signals · ~25% random",
       "sub": "Measures cognitive fatigue and inhibitory control"
     },
     "radar": {
@@ -87,7 +88,7 @@
   "target": {
     "title": "TARGET MODE",
     "subtitle": "4 circles · 10 rounds",
-    "howToText": "Watch the indicated color at the top. Tap the circle of that color as soon as it appears. Wrong tap = +150ms penalty.",
+    "howToText": "Read the indicated color and tap the correct circle. Wrong tap = +150ms penalty.",
     "tapCircle": "TAP THE CIRCLE",
     "waitHint": "wait for the stimulus",
     "correct": "CORRECT!",
@@ -102,7 +103,7 @@
 
   "sequence": {
     "title": "SEQUENCE MODE",
-    "subtitle": "20 signals · Go / NoGo",
+    "subtitle": "15 signals · Go / NoGo",
     "howToText": "Tap only on GREEN signals (Go). Ignore the red ones (No-Go). Control the impulse to tap everything.",
     "prepare": "GET READY",
     "hintGo": "GREEN → tap",
@@ -552,7 +553,7 @@
     },
     "alvo": {
       "prompt": "TAP THE GREEN",
-      "text": "Read the indicated color and tap the correct circle. Wrong tap = +200ms."
+      "text": "Read the indicated color and tap the correct circle. Wrong tap = +150ms."
     },
     "sequencia": {
       "go": "GO — tap fast",

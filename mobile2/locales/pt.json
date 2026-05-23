@@ -39,6 +39,7 @@
     "noSessions": "Baseado em benchmarks científicos de atletas de elite",
     "graceExpiring": "⚡ Grátis · expira em {{time}}",
     "energyCount": "⚡ {{current}}/{{max}}",
+    "energyInfinite": "⚡ ∞",
     "ctaEyebrow": "PRÓXIMA SESSÃO",
     "ctaLabel": "TREINAR AGORA",
     "ctaSub": "Modo Partida · comece por aqui",
@@ -62,7 +63,7 @@
     },
     "sequencia": {
       "name": "MODO SEQUÊNCIA",
-      "desc": "20 sinais Go/NoGo · ~25% aleatório",
+      "desc": "15 sinais Go/NoGo · ~25% aleatório",
       "sub": "Mede fadiga cognitiva e controle inibitório"
     },
     "radar": {
@@ -87,7 +88,7 @@
   "target": {
     "title": "MODO ALVO",
     "subtitle": "4 círculos · 10 rodadas",
-    "howToText": "Observe a cor indicada no topo. Toque no círculo dessa cor assim que aparecer. Erro = +150ms de penalidade.",
+    "howToText": "Leia a cor indicada e toque no círculo correto. Toque errado = +150ms de penalidade.",
     "tapCircle": "TOQUE NO CÍRCULO",
     "waitHint": "aguarde o estímulo",
     "correct": "CORRETO!",
@@ -102,7 +103,7 @@
 
   "sequence": {
     "title": "MODO SEQUÊNCIA",
-    "subtitle": "20 sinais · Go / NoGo",
+    "subtitle": "15 sinais · Go / NoGo",
     "howToText": "Toque apenas nos sinais VERDES (Go). Ignore os vermelhos (No-Go). Controle o impulso de tocar em tudo.",
     "prepare": "PREPARE-SE",
     "hintGo": "VERDE → toque",
@@ -552,7 +553,7 @@
     },
     "alvo": {
       "prompt": "TOQUE O VERDE",
-      "text": "Leia a cor indicada e toque no círculo correto. Toque errado = +200ms."
+      "text": "Leia a cor indicada e toque no círculo correto. Toque errado = +150ms."
     },
     "sequencia": {
       "go": "GO — toque rápido",
