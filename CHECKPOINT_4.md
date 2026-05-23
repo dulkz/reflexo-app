@@ -1,12 +1,12 @@
-# CHECKPOINT 4 — GRUPO 4 (Design novo) — PARCIAL
+# CHECKPOINT 4 — GRUPO 4 (Design novo) — COMPLETO
 
 Branch: feat/goal-redesign-final
 Data: 2026-05-23
 TypeScript: npx tsc --noEmit → 0 erros (validado após cada sub-item)
 
-Status: PARCIAL — itens de maior valor concluídos; polimento visual de 3 telas
-grandes documentado para a próxima sessão (ver SESSAO_HANDOFF.md). Os requisitos
-FUNCIONAIS do grupo já estão atendidos (ver "Já presente / verificado").
+Status: COMPLETO — todos os itens do grupo concluídos e commitados. As 3 telas
+grandes restantes (Resultado, Missões, Perfil) receberam o polimento visual nesta
+sessão (commits f84633b, d221311, 2c15ec7).
 
 ## Concluído nesta sessão (commitado)
 
@@ -55,16 +55,33 @@ reflexo-home-v2.html:
 - Missões — cartões com progresso X/Y JÁ renderizam em Jornada.tsx. → Falta o
   polimento visual (barras de progresso + CTA inline) seguindo reflexo-missoes.html.
 
-## Pendente (polimento visual — próxima sessão, ver SESSAO_HANDOFF.md)
+## Polimento visual das 3 telas — concluído nesta sessão
 
-- Resultado (50KB): aplicar reflexo-pos-partida.html (Bebas/DM Sans, layout dos
-  blocos, badges de penalidade discriminada). Lógica já completa.
-- Missões/Jornada (21KB): aplicar reflexo-missoes.html (meta banner, seções
-  Hoje/Semana, barras de progresso por card, CTA "Jogar agora →").
-- Perfil (59KB): aplicar reflexo-perfil.html (refino visual da timeline já
-  existente). 
+### 4a. Resultado — commit f84633b (reflexo-pos-partida.html)
+- Lista de rodadas do Alvo com penalidade DISCRIMINADA: tempo real + pílula
+  "+150" + total; timeouts identificados separadamente do toque errado.
+- Números de rodada maiores (fontWeight 900, 20px) com unidade "ms" sutil.
+- Nota explicativa da penalidade no topo da lista; cards/espaçamento refinados.
+- Sem alteração no cálculo de score/penalidade. +1 chave i18n result.alvoPenaltyNote.
 
-## Próximo — GRUPO 5 (Animação de evolução de arquétipo)
+### 4b. Missões/Jornada — commit d221311 (reflexo-missoes.html)
+- Banner de meta roxo no topo das missões (meta + distância em ms + editar→triage).
+- Rótulos "Hoje" / "Semana" acima dos cards diário/semanal.
+- Card de lore roxo no fim (neuroplasticidade · intervalos de 48h).
+- +6 chaves i18n journey.*; lógica de missões preservada.
+
+### 4c. Perfil — commit 2c15ec7 (reflexo-perfil.html)
+- Timeline de arquétipos redesenhada (nó+conector): círculos done(✓)/active(◉)/
+  locked(○) + conectores; cor ativa = cor do arquétipo atual.
+- Card de arquétipo: barra de accent no topo + indicador "próximo →".
+- +1 chave i18n profile.nextShort. Detecção/progresso de arquétipo intactos.
+
+Decisão de paleta: as 3 telas seguiram a paleta navy já estabelecida no app
+(#0b1220 / #111a2e / #10b981 / #8b5cf6 / MODE_COLORS), usada na Home redesenhada,
+em vez dos hex exatos dos mocks — coerência visual entre telas. Estrutura/layout
+seguiram os mocks HTML.
+
+## Próximo — GRUPO 5 (Animação de evolução de arquétipo) — EM ANDAMENTO
 reflexo-arquetipo-evolucao.html — modal disparado quando o arquétipo muda
 (flash branco + Haptics.Heavy → avatar scale → nome letra-a-letra → partículas
 → contador XP → CTA). Os utils/haptics.ts e utils/animations.ts criados aqui já
