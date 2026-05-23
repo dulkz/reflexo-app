@@ -402,7 +402,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       {/* Anticipation penalty overlay */}
       {showPenaltyOverlay && (
         <View style={[StyleSheet.absoluteFill, styles.penaltyOverlay]} pointerEvents="none">
-          <Text style={styles.penaltyIcon}>❌</Text>
+          <Text style={styles.penaltyIcon}>✕</Text>
           <Text style={styles.penaltyTitle}>{t('sequence.penaltyTitle')}</Text>
           <Text style={styles.penaltyMs}>{t('sequence.penaltyMs')}</Text>
           <Text style={styles.penaltyContinue}>{t('sequence.penaltyContinue')}</Text>
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center',
     zIndex: 100,
   },
-  penaltyIcon: { fontSize: 48, marginBottom: 8 },
+  penaltyIcon: { fontSize: 48, marginBottom: 8, color: '#ef4444', fontWeight: '900' },
   penaltyTitle: { fontSize: 28, fontWeight: '900', color: '#ef4444', letterSpacing: 1 },
   penaltyMs: { fontSize: 20, fontWeight: '800', color: '#f59e0b', marginTop: 6 },
   penaltyContinue: { fontSize: 13, color: '#4a5a7b', marginTop: 14, letterSpacing: 0.5 },

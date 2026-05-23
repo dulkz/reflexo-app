@@ -856,8 +856,8 @@ function SeqResult({ summary, onPlayAgain, onHome, sessions, userProfile }: SeqP
               : tr.responseType === 'commission' ? '400ms (NoGo)'
               : '—';
             const earlyLabel = tr.responseType === 'correct_inhibit'
-              ? `+${ep}ms ⚡`
-              : `${baseLabel} +${ep}⚡`;
+              ? `+${ep}ms`
+              : `${baseLabel} +${ep}`;
             const label = hasEarly ? earlyLabel : baseLabel;
             return (
               <View key={i} style={styles.timelineDot}>

@@ -3,15 +3,28 @@
 ## Visão geral
 App de treino de reflexo e tempo de reação. Atualmente local (AsyncStorage). Próximas fases introduzem social, competição e monetização.
 
-## Fase 1 — Polimento (em andamento)
+## Fase 1 — Polimento (concluída)
 - [x] Escalas próprias por modo
 - [x] Penalidades corretas no Modo Sequência
 - [x] Sistema de Energia (UX + simulação)
 - [x] Ícones SVG e avatares
 - [x] Aba Jornada com meta e missões
-- [ ] Substituir emojis restantes (arquétipos, conquistas, missões)
+- [x] Substituir emojis restantes (arquétipos, conquistas, missões já em SVG;
+      pictogramas coloridos 🧠/❌/⚠️/⚡-NoGo removidos ou unificados ao glifo ✕/✗)
+- [x] Versão em inglês (i18n PT/EN completo)
 - [ ] Ícone launcher final
-- [ ] Versão em inglês
+
+### Redesign aprovado pelo conselho (concluído — feat/goal-redesign-final)
+- [x] GRUPO 1 — bugs críticos (splash, missões, jornada, resultado por rodada,
+      rodadas por modo, 6 arquétipos no Perfil)
+- [x] GRUPO 2 — bugs de arquitetura (streak unificado, timing Sequência, Radar
+      nos arquétipos)
+- [x] GRUPO 3 — intro 5 telas + onboarding ativo OB1–OB4
+- [x] GRUPO 4 — design novo das telas (Home, Missões, Perfil, Resultado, aberturas
+      e estados de erro dos 4 modos)
+- [x] GRUPO 5 — animação de evolução de arquétipo (takeover full-screen)
+- [x] GRUPO 6 — housekeeping (emojis, ROADMAP, CLAUDE.md, VERSAO_FINAL.md)
+- Pendências conhecidas: ver VERSAO_FINAL.md
 
 ## Fase 2 — Social e Ranking
 
