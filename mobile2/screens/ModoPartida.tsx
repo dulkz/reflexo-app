@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Animated, Alert,
-  TouchableOpacity, Platform, StatusBar as RNStatusBar,
+  TouchableOpacity, Platform, StatusBar as RNStatusBar, ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
@@ -10,6 +10,7 @@ import { playSfx } from '../utils/sfx';
 import { hapticImpactMedium } from '../utils/haptics';
 import { shake } from '../utils/animations';
 import { ICONS } from '../assets/icons';
+import ModeTutorial from '../components/ModeTutorial';
 
 const TOTAL_ROUNDS = 7;
 const FALSE_START = 500;
@@ -246,7 +247,11 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
             <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.introContainer}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40, justifyContent: 'center' }}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.introIcon}>
             <SvgXml xml={ICONS.modes.partida} width={48} height={48} />
           </View>
@@ -256,6 +261,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
             <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
             <Text style={styles.howToText}>{t('match.howToText')}</Text>
           </View>
+          <ModeTutorial modeKey="partida" />
           <TouchableOpacity style={styles.introStartBtn} onPress={() => {
             setStarted(true);
             setShowReady(true);
@@ -263,7 +269,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
           }} activeOpacity={0.8}>
             <Text style={styles.introStartBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }

@@ -544,6 +544,26 @@
     "ticketEarned": "TICKET GANHO"
   },
 
+  "tutorial": {
+    "dontShowAgain": "não mostrar novamente",
+    "partida": {
+      "line1": "Aguarde o círculo acender.",
+      "line2": "Toque o mais rápido possível."
+    },
+    "alvo": {
+      "prompt": "TOQUE O VERDE",
+      "text": "Leia a cor indicada e toque no círculo correto. Toque errado = +200ms."
+    },
+    "sequencia": {
+      "go": "GO — toque rápido",
+      "nogo": "NO-GO — não toque",
+      "text": "Toque apenas nos sinais verdes. Ignore os vermelhos. 25% são armadilhas."
+    },
+    "radar": {
+      "text": "Toque no círculo que acender. 5 posições possíveis."
+    }
+  },
+
   "onboarding": {
     "skip": "pular introdução",
     "next": "Próximo →",

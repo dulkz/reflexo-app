@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
-  Animated, Platform, StatusBar as RNStatusBar,
+  Animated, Platform, StatusBar as RNStatusBar, ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
@@ -10,6 +10,7 @@ import { playSfx } from '../utils/sfx';
 import { hapticError } from '../utils/haptics';
 import { shake } from '../utils/animations';
 import { RARITY_ICONS_SVG, UI_ICONS, ICONS } from '../assets/icons';
+import ModeTutorial from '../components/ModeTutorial';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -214,7 +215,11 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
             <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.introContainer}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40, justifyContent: 'center' }}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.introIcon}>
             <SvgXml xml={ICONS.modes.alvo} width={48} height={48} />
           </View>
@@ -224,10 +229,11 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
             <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
             <Text style={styles.howToText}>{t('target.howToText')}</Text>
           </View>
+          <ModeTutorial modeKey="alvo" />
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
             <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }

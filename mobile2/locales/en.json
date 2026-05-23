@@ -544,6 +544,26 @@
     "ticketEarned": "TICKET EARNED"
   },
 
+  "tutorial": {
+    "dontShowAgain": "don't show again",
+    "partida": {
+      "line1": "Wait for the circle to light up.",
+      "line2": "Tap as fast as you can."
+    },
+    "alvo": {
+      "prompt": "TAP THE GREEN",
+      "text": "Read the indicated color and tap the correct circle. Wrong tap = +200ms."
+    },
+    "sequencia": {
+      "go": "GO — tap fast",
+      "nogo": "NO-GO — don't tap",
+      "text": "Tap only the green signals. Ignore the red ones. 25% are traps."
+    },
+    "radar": {
+      "text": "Tap the circle that lights up. 5 possible positions."
+    }
+  },
+
   "onboarding": {
     "skip": "skip intro",
     "next": "Next →",

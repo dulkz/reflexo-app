@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
-  Animated, Platform, StatusBar as RNStatusBar, Dimensions,
+  Animated, Platform, StatusBar as RNStatusBar, Dimensions, ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { getLevelInfo } from '../utils/levels';
@@ -10,6 +10,7 @@ import { hapticError } from '../utils/haptics';
 import { shake } from '../utils/animations';
 import { SvgXml } from 'react-native-svg';
 import { ICONS } from '../assets/icons';
+import ModeTutorial from '../components/ModeTutorial';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -219,7 +220,11 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
           </TouchableOpacity>
           <View style={{ width: 32 }} />
         </View>
-        <View style={styles.introContainer}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40, justifyContent: 'center' }}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.introIcon}>
             <SvgXml xml={ICONS.modes.radar} width={48} height={48} />
           </View>
@@ -229,10 +234,11 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
             <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
             <Text style={styles.howToText}>{t('radar.howToText', { penalty: MISS_PENALTY })}</Text>
           </View>
+          <ModeTutorial modeKey="radar" />
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
             <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }

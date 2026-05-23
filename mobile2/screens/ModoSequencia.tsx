@@ -5,9 +5,10 @@ import { hapticError, hapticLight } from '../utils/haptics';
 import { shake } from '../utils/animations';
 import { SvgXml } from 'react-native-svg';
 import { ICONS } from '../assets/icons';
+import ModeTutorial from '../components/ModeTutorial';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
-  Animated, Platform, StatusBar as RNStatusBar,
+  Animated, Platform, StatusBar as RNStatusBar, ScrollView,
 } from 'react-native';
 
 const TOTAL_SIGNALS = 10;
@@ -325,7 +326,11 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
             <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.introContainer}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40, justifyContent: 'center' }}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.introIcon}>
             <SvgXml xml={ICONS.modes.sequencia} width={48} height={48} />
           </View>
@@ -335,10 +340,11 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
             <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
             <Text style={styles.howToText}>{t('sequence.howToText')}</Text>
           </View>
+          <ModeTutorial modeKey="sequencia" />
           <TouchableOpacity style={styles.startBtn} onPress={startGame} activeOpacity={0.8}>
             <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }
