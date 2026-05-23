@@ -691,19 +691,41 @@ function AlvoResult({ alvoResults, score, onPlayAgain, onHome, sessions, userPro
       </View>
 
       <Text style={styles.sectionTitle}>{t('result.roundList')}</Text>
-      {alvoResults.map((r, i) => (
-        <View key={i} style={styles.row}>
-          <Text style={styles.rowIdx}>{i + 1}</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.rowTime, { color: r.correct ? getChoiceRTLevel(r.rt).color : '#ef4444' }]}>
-              {r.rt} ms {!r.correct && `(+150 → ${r.penalizedRt} ms)`}
+      <Text style={styles.sectionSub}>{t('result.alvoPenaltyNote')}</Text>
+      {alvoResults.map((r, i) => {
+        const penalty = r.penalizedRt - r.rt;
+        const isTimeout = !r.correct && penalty <= 0;
+        return (
+          <View key={i} style={styles.row}>
+            <Text style={styles.rowIdx}>{i + 1}</Text>
+            <View style={styles.rowMid}>
+              {r.correct ? (
+                <Text style={[styles.rowTime, { color: getChoiceRTLevel(r.rt).color }]}>
+                  {r.rt}<Text style={styles.rowUnit}> ms</Text>
+                </Text>
+              ) : isTimeout ? (
+                <Text style={[styles.rowTime, { color: '#ef4444' }]}>
+                  {t('result.timeout')}
+                </Text>
+              ) : (
+                <View style={styles.penaltyRow}>
+                  <Text style={styles.rowReal}>{r.rt}<Text style={styles.rowRealUnit}> ms</Text></Text>
+                  <View style={styles.penaltyPill}>
+                    <Text style={styles.penaltyPillText}>+{penalty}</Text>
+                  </View>
+                  <Text style={styles.penaltyEq}>=</Text>
+                  <Text style={[styles.rowTime, { color: '#ef4444' }]}>
+                    {r.penalizedRt}<Text style={styles.rowUnit}> ms</Text>
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Text style={[styles.rowLevel, { color: r.correct ? '#10b981' : '#ef4444' }]}>
+              {r.correct ? t('result.hit') : isTimeout ? t('result.timeout') : t('result.miss')}
             </Text>
           </View>
-          <Text style={[styles.rowLevel, { color: r.correct ? '#10b981' : '#ef4444' }]}>
-            {r.correct ? t('result.hit') : t('result.miss')}
-          </Text>
-        </View>
-      ))}
+        );
+      })}
 
       <ChoiceScaleReference score={score} />
 
@@ -1033,15 +1055,29 @@ const styles = StyleSheet.create({
 
   row: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#111a2e', borderRadius: 10,
-    paddingVertical: 11, paddingHorizontal: 14,
-    marginBottom: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: '#111a2e', borderRadius: 12,
+    paddingVertical: 12, paddingHorizontal: 14,
+    marginBottom: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
   },
   rowWorst: { backgroundColor: '#0d1525', borderColor: '#111a2e' },
   rowIdx: { width: 22, fontSize: 12, fontWeight: '600', color: '#4a5a7b' },
+  rowMid: { flex: 1 },
   dim: { color: '#2d3a55' },
-  rowTime: { fontSize: 17, fontWeight: '800' },
+  rowTime: { fontSize: 20, fontWeight: '900', letterSpacing: -0.5 },
+  rowUnit: { fontSize: 11, fontWeight: '700', color: '#4a5a7b', letterSpacing: 0 },
   rowLevel: { fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+
+  // ── Discriminated penalty (real + penalty = total) ──────────────────────────
+  penaltyRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  rowReal: { fontSize: 14, fontWeight: '700', color: '#7a8aa0' },
+  rowRealUnit: { fontSize: 10, fontWeight: '700', color: '#4a5a7b' },
+  penaltyPill: {
+    backgroundColor: 'rgba(239,68,68,0.14)', borderRadius: 6,
+    paddingHorizontal: 7, paddingVertical: 2,
+    borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
+  },
+  penaltyPillText: { fontSize: 11, fontWeight: '800', color: '#ef4444', letterSpacing: 0.3 },
+  penaltyEq: { fontSize: 13, fontWeight: '700', color: '#4a5a7b' },
   falseText: { fontSize: 15, fontWeight: '800', color: '#ef4444' },
   discardPill: { backgroundColor: '#1a2540', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3 },
   discardText: { fontSize: 9, fontWeight: '700', color: '#2d3a55', letterSpacing: 1 },

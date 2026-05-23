@@ -247,6 +247,7 @@
     "mainMenu": "MAIN MENU",
     "discarded": "DISCARDED",
     "discardedNote": "The 2 worst were discarded from the final score",
+    "alvoPenaltyNote": "Wrong taps add +150 ms to the real time",
     "youMarker": "YOU",
     "youBadge": "◄ YOU",
     "scaleTitle": "REFERENCE SCALE",

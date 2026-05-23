@@ -247,6 +247,7 @@
     "errors": "ERROS",
     "discarded": "DESCARTADO",
     "discardedNote": "As 2 piores foram descartadas do score final",
+    "alvoPenaltyNote": "Toques errados somam +150 ms ao tempo real",
     "youMarker": "VOCÊ",
     "youBadge": "◄ VOCÊ",
     "scaleTitle": "ESCALA DE REFERÊNCIA",
