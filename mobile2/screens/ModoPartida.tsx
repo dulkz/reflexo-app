@@ -6,6 +6,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
+import { hapticImpactMedium } from '../utils/haptics';
+import { shake } from '../utils/animations';
 
 const TOTAL_ROUNDS = 7;
 const FALSE_START = 500;
@@ -42,6 +44,7 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
   const circleOpacity = useRef(new Animated.Value(0)).current;
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
+  const shakeX = useRef(new Animated.Value(0)).current; // false-start error circle shake
 
   useEffect(() => () => {
     if (delayTimer.current) clearTimeout(delayTimer.current);
@@ -50,8 +53,9 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
 
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
-    flashOpacity.setValue(0.55);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 700, useNativeDriver: true }).start();
+    // Error flash per spec: red opacity 0.14 / 200ms. Success flash stays softer.
+    flashOpacity.setValue(red ? 0.14 : 0.45);
+    Animated.timing(flashOpacity, { toValue: 0, duration: red ? 200 : 500, useNativeDriver: true }).start();
   }, [flashOpacity]);
 
   const recordResult = useCallback((time: number, isFalseStart: boolean) => {
@@ -65,6 +69,10 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
     const newTimes = [...times, time];
     setTimes(newTimes);
     flash(isFalseStart);
+    if (isFalseStart) {
+      hapticImpactMedium();        // Impact.Medium — minor timing error
+      shake(shakeX, 6, 400);       // shake only the error circle, ±6px / 400ms
+    }
     setGameState('done');
 
     advanceTimer.current = setTimeout(() => {
@@ -205,6 +213,9 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
       <View style={[styles.centeredFull, { pointerEvents: 'none' }]}>
         {isFalseStart ? (
           <>
+            <Animated.View style={[styles.errCircle, { transform: [{ translateX: shakeX }] }]}>
+              <Text style={styles.errX}>✕</Text>
+            </Animated.View>
             <Text style={styles.falseStartBig}>{t('match.falseStart')}</Text>
             <Text style={styles.penaltyBig}>{t('match.penaltyFixed')}</Text>
           </>
@@ -391,6 +402,15 @@ const styles = StyleSheet.create({
     letterSpacing: 2, textAlign: 'center', lineHeight: 46,
   },
   penaltyBig: { fontSize: 28, fontWeight: '700', color: '#FF7777', marginTop: 16 },
+
+  errCircle: {
+    width: 140, height: 140, borderRadius: 70,
+    backgroundColor: 'rgba(255,68,68,0.12)',
+    borderWidth: 2, borderColor: '#FF4444',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 24,
+  },
+  errX: { fontSize: 56, fontWeight: '900', color: '#FF4444', lineHeight: 60 },
 
   // ── Intro screen ─────────────────────────────────────────────────────────────
   introContainer: {

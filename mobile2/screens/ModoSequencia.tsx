@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { playSfx } from '../utils/sfx';
+import { hapticError, hapticLight } from '../utils/haptics';
+import { shake } from '../utils/animations';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
   Animated, Platform, StatusBar as RNStatusBar,
@@ -99,6 +101,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
   const circleScale = useRef(new Animated.Value(0)).current;
+  const screenShakeX = useRef(new Animated.Value(0)).current; // full-screen shake on NoGo tap
 
   useEffect(() => () => {
     if (signalTimer.current) clearTimeout(signalTimer.current);
@@ -115,7 +118,8 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
 
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
-    flashOpacity.setValue(0.4);
+    // Sequência error flash is intense per spec: red opacity 0.20 / 250ms.
+    flashOpacity.setValue(red ? 0.20 : 0.35);
     Animated.timing(flashOpacity, { toValue: 0, duration: 250, useNativeDriver: true }).start();
   }, [flashOpacity]);
 
@@ -263,8 +267,16 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     const newTrials = [...trials, result];
     setTrials(newTrials);
     setLastResponse(responseType);
-    if (responseType === 'hit') playSfx('hit');
-    else if (responseType === 'commission') playSfx('miss');
+    if (responseType === 'hit') {
+      playSfx('hit');
+    } else if (responseType === 'commission') {
+      // NoGo tapped — biggest cognitive error: whole screen shakes (±8px/500ms),
+      // Notification.Error + a light second pulse 200ms later.
+      playSfx('miss');
+      hapticError();
+      shake(screenShakeX, 8, 500);
+      setTimeout(() => hapticLight(), 200);
+    }
     flash(responseType === 'commission');
     setGameState('feedback');
     setTimeout(() => scheduleNext(signalIdx + 1, newTrials), 400);
@@ -336,7 +348,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   }
 
   return (
-    <View style={styles.screen}>
+    <Animated.View style={[styles.screen, { transform: [{ translateX: screenShakeX }] }]}>
       <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
         <TouchableOpacity onPress={confirmAbort} style={styles.backBtn}>
           <Text style={styles.backText}>←</Text>
@@ -400,7 +412,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
           { backgroundColor: flashIsRed.current ? '#ef4444' : '#10b981', opacity: flashOpacity },
         ]}
       />
-    </View>
+    </Animated.View>
   );
 }
 

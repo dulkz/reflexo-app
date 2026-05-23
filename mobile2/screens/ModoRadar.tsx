@@ -6,6 +6,10 @@ import {
 import { useTranslation } from 'react-i18next';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
+import { hapticError } from '../utils/haptics';
+import { shake } from '../utils/animations';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const TOTAL_ROUNDS = 15;
 const SIGNAL_TIMEOUT = 1500;
@@ -83,6 +87,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
   const missPenaltyOpacity = useRef(new Animated.Value(0)).current;
+  const shakeX = useRef(new Animated.Value(0)).current; // wrong-circle shake
 
   useEffect(() => () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
@@ -93,8 +98,9 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
 
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
-    flashOpacity.setValue(0.4);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 600, useNativeDriver: true }).start();
+    // Error flash per spec: red opacity 0.14 / 200ms. Success flash softer.
+    flashOpacity.setValue(red ? 0.14 : 0.45);
+    Animated.timing(flashOpacity, { toValue: 0, duration: red ? 200 : 500, useNativeDriver: true }).start();
   }, [flashOpacity]);
 
   const advance = useCallback((newResults: RoundResult[], delay: number) => {
@@ -188,6 +194,8 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
     } else {
       missCount.current += 1;
       playSfx('miss');
+      hapticError();              // Notification.Error — wrong location
+      shake(shakeX, 6, 400);     // shake the wrong circle only
       setGameState('miss');
       flash(true);
       missPenaltyOpacity.setValue(0);
@@ -285,6 +293,8 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
             const isCorrectFlash = gameState === 'hit' && i === activeIdx;
             const isWrongPress = gameState === 'miss' && pressedIdx === i;
             const isMissedTarget = gameState === 'timeout' && i === activeIdx;
+            // On a wrong tap, reveal where the user *should* have tapped (faint amber).
+            const isShouldHaveTapped = gameState === 'miss' && i === activeIdx;
             const left = OFFSET + c.dx;
             const top = OFFSET + c.dy;
 
@@ -294,9 +304,15 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
                 backgroundColor: isCorrectFlash ? '#10b981' : RADAR_COLOR,
                 borderColor: isCorrectFlash ? '#10b981' : RADAR_COLOR,
               };
+            } else if (isShouldHaveTapped) {
+              visualStyle = {
+                backgroundColor: 'rgba(245,158,11,0.12)',
+                borderColor: RADAR_COLOR,
+                opacity: 0.5,
+              };
             } else if (isWrongPress || isMissedTarget) {
               visualStyle = {
-                backgroundColor: 'transparent',
+                backgroundColor: 'rgba(239,68,68,0.10)',
                 borderColor: '#ef4444',
               };
             } else {
@@ -307,17 +323,19 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
             }
 
             return (
-              <Pressable
+              <AnimatedPressable
                 key={i}
-                style={({ pressed }) => [
+                style={[
                   styles.circleBase,
                   { left, top },
                   visualStyle,
-                  { opacity: pressed ? 0.7 : 1 },
+                  isWrongPress && { transform: [{ translateX: shakeX }] },
                 ]}
                 onPressIn={() => handleCirclePress(i)}
                 disabled={gameState !== 'signal'}
-              />
+              >
+                {isWrongPress && <Text style={styles.circleX}>✕</Text>}
+              </AnimatedPressable>
             );
           })}
         </View>
@@ -407,7 +425,10 @@ const styles = StyleSheet.create({
     height: CIRCLE_SIZE,
     borderRadius: CIRCLE_SIZE / 2,
     borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  circleX: { fontSize: 40, fontWeight: '900', color: '#ef4444', lineHeight: 44 },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
   introTitle: { fontSize: 34, fontWeight: '900', color: RADAR_COLOR, letterSpacing: 3, textAlign: 'center', marginBottom: 6 },

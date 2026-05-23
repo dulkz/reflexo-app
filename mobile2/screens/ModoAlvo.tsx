@@ -7,7 +7,11 @@ import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
+import { hapticError } from '../utils/haptics';
+import { shake } from '../utils/animations';
 import { RARITY_ICONS_SVG, UI_ICONS } from '../assets/icons';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const TOTAL_ROUNDS = 10;
 const ERROR_PENALTY = 150;
@@ -61,6 +65,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
   const [targetIdx, setTargetIdx] = useState(0);
   const [colorOrder, setColorOrder] = useState([0, 1, 2, 3]);
   const [lastResult, setLastResult] = useState<RoundResult | null>(null);
+  const [wrongColorIdx, setWrongColorIdx] = useState<number | null>(null);
 
   const signalTime = useRef(0);
   const responded = useRef(false);
@@ -74,6 +79,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
 
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
+  const shakeX = useRef(new Animated.Value(0)).current; // wrong-circle shake
 
   useEffect(() => () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
@@ -121,8 +127,9 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
 
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
-    flashOpacity.setValue(0.45);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 600, useNativeDriver: true }).start();
+    // Error flash per spec: red opacity 0.14 / 200ms. Success flash softer.
+    flashOpacity.setValue(red ? 0.14 : 0.45);
+    Animated.timing(flashOpacity, { toValue: 0, duration: red ? 200 : 500, useNativeDriver: true }).start();
   }, [flashOpacity]);
 
   const startChallenge = useCallback(() => {
@@ -130,6 +137,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
     const newOrder = shuffle([0, 1, 2, 3]);
     setTargetIdx(newTarget);
     setColorOrder(newOrder);
+    setWrongColorIdx(null);
     responded.current = false;
     setGameState('challenge'); // signalTime captured in useEffect after this render
   }, []);
@@ -156,7 +164,13 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
     setLastResult(result);
     const newResults = [...results, result];
     setResults(newResults);
-    if (correct) playSfx('hit');
+    if (correct) {
+      playSfx('hit');
+    } else {
+      setWrongColorIdx(pressedColorIdx); // isolate the wrong circle for ring + ✕ + shake
+      hapticError();                     // Notification.Error — decision error
+      shake(shakeX, 6, 400);
+    }
     flash(!correct);
     setGameState(correct ? 'correct' : 'wrong');
 
@@ -281,20 +295,27 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
                 )}
               </View>
             )}
-            {/* Grid — dimmed during feedback states */}
-            <View style={[styles.grid, (gameState === 'correct' || gameState === 'wrong') && styles.gridDimmed]}>
+            {/* Grid — wrong circle highlighted (ring + ✕ + shake); others dim on feedback */}
+            <View style={styles.grid}>
               {colorOrder.map((colorIdx) => {
                 const c = CIRCLE_COLORS[colorIdx];
+                const isWrong = gameState === 'wrong' && colorIdx === wrongColorIdx;
+                const dimmed = (gameState === 'correct' || gameState === 'wrong') && !isWrong;
                 return (
-                  <Pressable
+                  <AnimatedPressable
                     key={colorIdx}
-                    style={({ pressed }) => [
+                    style={[
                       styles.circle,
-                      { backgroundColor: c.color, opacity: pressed ? 0.7 : 1 },
+                      { backgroundColor: c.color },
+                      dimmed && styles.circleDimmed,
+                      isWrong && styles.circleWrong,
+                      isWrong && { transform: [{ translateX: shakeX }] },
                     ]}
                     onPressIn={() => handleCirclePress(colorIdx)}
                     disabled={gameState !== 'challenge'}
-                  />
+                  >
+                    {isWrong && <Text style={styles.circleX}>✕</Text>}
+                  </AnimatedPressable>
                 );
               })}
             </View>
@@ -363,15 +384,21 @@ const styles = StyleSheet.create({
   gridInner: { flexDirection: 'column', alignItems: 'center', gap: 24 },
   badgeArea: { alignItems: 'center' },
   grid: { width: 280, height: 280, flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
-  gridDimmed: { opacity: 0.3 },
   circle: {
     width: 124, height: 124, borderRadius: 62,
+    alignItems: 'center', justifyContent: 'center',
     elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5,
     shadowRadius: 12,
   },
+  circleDimmed: { opacity: 0.3 },
+  circleWrong: {
+    borderWidth: 3, borderColor: '#ef4444',
+    shadowColor: '#ef4444', shadowOpacity: 0.6, shadowRadius: 16,
+  },
+  circleX: { fontSize: 44, fontWeight: '900', color: 'rgba(255,255,255,0.92)' },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
   introTitle: { fontSize: 34, fontWeight: '900', color: '#06b6d4', letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
