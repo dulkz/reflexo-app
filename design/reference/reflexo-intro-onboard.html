@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Intro + Onboarding Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0:#0D0F14; --bg1:#161B24; --bg2:#1E2533; --bg3:#252D3E;
+    --green:#4AFFA3; --green-dim:rgba(74,255,163,0.10); --green-border:rgba(74,255,163,0.22);
+    --purple:#7B6EF6; --purple-dim:rgba(123,110,246,0.12); --purple-border:rgba(123,110,246,0.25);
+    --amber:#FFB547; --amber-dim:rgba(255,181,71,0.11); --amber-border:rgba(255,181,71,0.22);
+    --cyan:#4AFFA3;
+    --text0:#EDF0F7; --text1:#8892A4; --text2:#4A5268;
+    --border:rgba(255,255,255,0.06); --border-mid:rgba(255,255,255,0.10);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:#060709;
+    font-family:'DM Sans',sans-serif;
+    padding:48px 24px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:64px;
+  }
+
+  /* ── Section header ── */
+  .sec-header {
+    text-align:center;
+    margin-bottom:0;
+    width:100%;
+    max-width:900px;
+  }
+  .sec-eyebrow {
+    font-size:10px;
+    font-family:'Space Mono',monospace;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text2);
+    margin-bottom:6px;
+  }
+  .sec-title {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:28px;
+    color:var(--text0);
+    letter-spacing:.5px;
+    margin-bottom:6px;
+  }
+  .sec-sub {
+    font-size:13px;
+    color:var(--text1);
+    line-height:1.6;
+    max-width:520px;
+    margin:0 auto;
+  }
+  .verdict-pill {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border-radius:20px;
+    padding:5px 14px;
+    font-size:11px;
+    font-family:'Space Mono',monospace;
+    font-weight:600;
+    margin-top:10px;
+  }
+  .keep { background:rgba(74,255,163,0.10); border:1px solid rgba(74,255,163,0.25); color:#4AFFA3; }
+  .rebuild { background:rgba(255,87,87,0.10); border:1px solid rgba(255,87,87,0.25); color:#FF5757; }
+  .refine { background:rgba(255,181,71,0.10); border:1px solid rgba(255,181,71,0.25); color:#FFB547; }
+
+  /* ── Phone row ── */
+  .phone-row {
+    display:flex;
+    gap:20px;
+    align-items:flex-start;
+    justify-content:center;
+    flex-wrap:wrap;
+    width:100%;
+    max-width:1100px;
+  }
+
+  .phone-wrap { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .phone-label {
+    font-size:9px;
+    font-family:'Space Mono',monospace;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text2);
+  }
+  .phone-verdict {
+    font-size:10px;
+    font-family:'Space Mono',monospace;
+    padding:3px 10px;
+    border-radius:10px;
+    font-weight:600;
+  }
+
+  .phone {
+    width:200px;
+    background:var(--bg0);
+    border-radius:28px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 20px 40px rgba(0,0,0,0.8);
+    position:relative;
+  }
+  .phone-screen {
+    min-height:360px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 16px 20px;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* Navigation — BOTTOM, corrected */
+  .nav-bottom {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    width:100%;
+    margin-top:auto;
+  }
+  .dots {
+    display:flex;
+    gap:5px;
+    align-items:center;
+  }
+  .dot {
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.15);
+  }
+  .dot.active {
+    width:18px;
+    border-radius:3px;
+    background:var(--green);
+  }
+  .next-btn {
+    width:100%;
+    background:var(--green);
+    border-radius:10px;
+    padding:12px;
+    text-align:center;
+    font-family:'DM Sans',sans-serif;
+    font-size:13px;
+    font-weight:700;
+    color:#081400;
+    cursor:pointer;
+  }
+  .skip-link {
+    font-size:10px;
+    color:var(--text2);
+    font-family:'Space Mono',monospace;
+    margin-top:2px;
+  }
+
+  /* Illustrations */
+  .illus { display:flex; align-items:center; justify-content:center; flex:1; }
+
+  /* Typography */
+  .slide-title {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:26px;
+    color:var(--text0);
+    letter-spacing:.5px;
+    text-align:center;
+    line-height:1.1;
+    margin-bottom:4px;
+  }
+  .slide-sub {
+    font-size:11px;
+    color:var(--text1);
+    text-align:center;
+    line-height:1.5;
+  }
+  .slide-body { width:100%; }
+
+  /* Stat rows */
+  .stat-row {
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:5px;
+  }
+  .stat-key { font-size:10px; color:var(--text1); }
+  .stat-val { font-size:13px; font-weight:700; font-family:'Space Mono',monospace; }
+
+  /* Mode list */
+  .mode-item {
+    background:var(--bg1);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+    margin-bottom:4px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .mode-dot { width:4px; height:28px; border-radius:2px; flex-shrink:0; }
+  .mode-name { font-size:11px; font-weight:700; color:var(--text0); }
+  .mode-desc { font-size:9px; color:var(--text1); }
+
+  /* Arquétipo reveal */
+  .arq-reveal {
+    background:var(--purple-dim);
+    border:1px solid var(--purple-border);
+    border-radius:12px;
+    padding:14px;
+    text-align:center;
+    width:100%;
+  }
+  .arq-avatar-wrap {
+    width:52px; height:52px;
+    border-radius:50%;
+    overflow:hidden;
+    margin:0 auto 8px;
+    border:2px solid var(--purple-border);
+  }
+  .arq-eyebrow { font-size:9px; font-family:'Space Mono',monospace; letter-spacing:.1em; color:var(--text2); text-transform:uppercase; margin-bottom:3px; }
+  .arq-name { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--purple); margin-bottom:4px; }
+  .arq-desc { font-size:10px; color:var(--text1); line-height:1.5; }
+
+  /* Mini game */
+  .minigame-area {
+    width:90px; height:90px;
+    border-radius:50%;
+    background:var(--bg2);
+    border:2px solid var(--border-mid);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .minigame-inner {
+    width:40px; height:40px;
+    border-radius:50%;
+    background:var(--green);
+  }
+  .minigame-ring {
+    position:absolute;
+    inset:-8px;
+    border-radius:50%;
+    border:1.5px dashed rgba(74,255,163,0.3);
+  }
+  .result-ms {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:36px;
+    color:var(--green);
+    line-height:1;
+  }
+  .result-label { font-size:10px; color:var(--text1); font-family:'Space Mono',monospace; }
+
+  /* ── Annotation cards ── */
+  .ann-col {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    width:100%;
+    max-width:900px;
+  }
+  .ann-card {
+    background:rgba(255,255,255,0.03);
+    border:0.5px solid rgba(255,255,255,0.06);
+    border-radius:10px;
+    padding:10px 14px;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+  .ann-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+  .ann-text { font-size:12px; color:var(--text1); line-height:1.55; }
+  .ann-text strong { color:var(--text0); }
+
+  /* Divider */
+  .page-div {
+    width:100%;
+    max-width:900px;
+    height:1px;
+    background:rgba(255,255,255,0.05);
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     PARTE 1 — AS 5 TELAS INTRO
+     Veredicto: manter T1, refinar T4+T5, reconstruir T2+T3
+════════════════════════════════════════ -->
+
+<div class="sec-header">
+  <div class="sec-eyebrow">Parte 1 — Splash intro (5 telas atuais)</div>
+  <div class="sec-title">Veredicto do conselho</div>
+  <div class="sec-sub">As telas de intro têm valor — criam contexto emocional antes do app. O problema não é a existência delas, é a navegação no topo, a inconsistência visual e a falta de âncora cromática.</div>
+</div>
+
+<div class="phone-row">
+
+  <!-- T1 — MANTER COM AJUSTE -->
+  <div class="phone-wrap">
+    <div class="phone-label">Tela 1 · Marca</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:linear-gradient(180deg,#0A1A1A 0%,#0D0F14 100%);">
+        <!-- Skip top-right -->
+        <div style="width:100%;display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <span style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">pular</span>
+        </div>
+        <!-- Illustration -->
+        <div class="illus">
+          <svg width="90" height="90" viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="40" r="38" stroke="#4AFFA3" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <circle cx="40" cy="40" r="26" stroke="#4AFFA3" stroke-width="1.5"/>
+            <circle cx="40" cy="40" r="14" fill="rgba(74,255,163,0.15)" stroke="#4AFFA3" stroke-width="1.5"/>
+            <circle cx="40" cy="40" r="4" fill="#4AFFA3"/>
+            <line x1="40" y1="2" x2="40" y2="10" stroke="#4AFFA3" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="40" y1="70" x2="40" y2="78" stroke="#4AFFA3" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="2" y1="40" x2="10" y2="40" stroke="#4AFFA3" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="70" y1="40" x2="78" y2="40" stroke="#4AFFA3" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="slide-body" style="margin-bottom:12px;">
+          <div class="slide-title" style="color:#4AFFA3;font-size:30px;margin-bottom:6px;">REFLEXO</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text0);text-align:center;margin-bottom:4px;">Velocidade de reação,<br>medida com ciência.</div>
+          <div class="slide-sub">Descubra onde você está.<br>Evolua com dados reais.</div>
+        </div>
+        <div class="nav-bottom">
+          <div class="dots">
+            <div class="dot active"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="next-btn">Próximo →</div>
+          <div class="skip-link">pular introdução</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(74,255,163,0.10);color:#4AFFA3;border:1px solid rgba(74,255,163,0.25);">✓ manter + ajustar nav</div>
+  </div>
+
+  <!-- T2 — RECONSTRUIR -->
+  <div class="phone-wrap">
+    <div class="phone-label">Tela 2 · Ciência (nova)</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:var(--bg0);">
+        <div style="width:100%;display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <span style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">pular</span>
+        </div>
+        <div class="illus">
+          <!-- Brain wave illustration -->
+          <svg width="130" height="60" viewBox="0 0 130 60" fill="none">
+            <path d="M0 30 C10 10 20 50 30 30 C40 10 50 50 60 30 C70 10 80 50 90 30 C100 10 110 50 120 30 C125 20 128 25 130 30" stroke="#4AFFA3" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M0 38 C15 28 25 48 40 38 C55 28 65 48 80 38 C95 28 105 48 120 38 C124 34 127 36 130 38" stroke="rgba(74,255,163,0.3)" stroke-width="1" stroke-linecap="round" fill="none"/>
+            <circle cx="60" cy="30" r="4" fill="#4AFFA3"/>
+            <line x1="60" y1="26" x2="60" y2="10" stroke="#4AFFA3" stroke-width="1" stroke-dasharray="2 2"/>
+            <text x="62" y="9" fill="#4AFFA3" font-size="8" font-family="monospace">~250ms</text>
+          </svg>
+        </div>
+        <div class="slide-body" style="margin-bottom:12px;">
+          <div class="slide-title" style="font-size:22px;margin-bottom:6px;">Seu cérebro é treinável.</div>
+          <div class="stat-row">
+            <span class="stat-key">melhora em 4 semanas</span>
+            <span class="stat-val" style="color:#4AFFA3;">10–15%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">minutos por dia</span>
+            <span class="stat-val" style="color:#4AFFA3;">&lt;5min</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">base científica</span>
+            <span class="stat-val" style="color:#4AFFA3;">neuroplast.</span>
+          </div>
+        </div>
+        <div class="nav-bottom">
+          <div class="dots">
+            <div class="dot"></div>
+            <div class="dot active"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="next-btn">Próximo →</div>
+          <div class="skip-link">pular introdução</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(255,87,87,0.10);color:#FF5757;border:1px solid rgba(255,87,87,0.25);">↺ reconstruir (era T5)</div>
+  </div>
+
+  <!-- T3 — RECONSTRUIR -->
+  <div class="phone-wrap">
+    <div class="phone-label">Tela 3 · Meta (nova)</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:var(--bg0);">
+        <div style="width:100%;display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <span style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">pular</span>
+        </div>
+        <div class="illus">
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="20" r="10" stroke="#FFB547" stroke-width="2"/>
+            <circle cx="40" cy="20" r="4" fill="#FFB547"/>
+            <line x1="40" y1="30" x2="40" y2="50" stroke="#FFB547" stroke-width="1.5"/>
+            <circle cx="40" cy="55" r="2" fill="rgba(255,181,71,0.4)"/>
+            <circle cx="40" cy="62" r="8" stroke="#FFB547" stroke-width="2"/>
+            <circle cx="40" cy="62" r="3" fill="#FFB547"/>
+          </svg>
+        </div>
+        <div class="slide-body" style="margin-bottom:12px;">
+          <div class="slide-title" style="color:#FFB547;font-size:22px;margin-bottom:5px;">Uma meta só sua.</div>
+          <div class="slide-sub" style="margin-bottom:8px;">Após sua primeira sessão, fazemos uma triagem rápida. Você escolhe onde quer chegar.</div>
+          <div style="background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:8px;padding:8px 10px;text-align:center;">
+            <div style="font-size:10px;color:var(--amber);font-family:'Space Mono',monospace;font-weight:700;">A gente mostra o caminho.</div>
+          </div>
+        </div>
+        <div class="nav-bottom">
+          <div class="dots">
+            <div class="dot"></div><div class="dot"></div>
+            <div class="dot active" style="background:#FFB547;"></div>
+            <div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="next-btn" style="background:#FFB547;">Próximo →</div>
+          <div class="skip-link">pular introdução</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(255,87,87,0.10);color:#FF5757;border:1px solid rgba(255,87,87,0.25);">↺ reconstruir (era T4)</div>
+  </div>
+
+  <!-- T4 — RECONSTRUIR: modos compactos -->
+  <div class="phone-wrap">
+    <div class="phone-label">Tela 4 · Modos (nova)</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:var(--bg0);">
+        <div style="width:100%;display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <span style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">pular</span>
+        </div>
+        <div style="width:100%;margin-bottom:8px;">
+          <div class="slide-title" style="font-size:20px;margin-bottom:4px;text-align:left;">4 formas de treinar.</div>
+          <div style="font-size:10px;color:var(--text1);margin-bottom:10px;">Cada modo treina uma habilidade diferente.</div>
+          <div class="mode-item">
+            <div class="mode-dot" style="background:#3b82f6;"></div>
+            <div><div class="mode-name">Partida</div><div class="mode-desc">Reação simples · 7 tentativas</div></div>
+          </div>
+          <div class="mode-item">
+            <div class="mode-dot" style="background:#06b6d4;"></div>
+            <div><div class="mode-name">Alvo</div><div class="mode-desc">Velocidade + precisão · 10 rodadas</div></div>
+          </div>
+          <div class="mode-item">
+            <div class="mode-dot" style="background:#8b5cf6;"></div>
+            <div><div class="mode-name">Sequência</div><div class="mode-desc">Controle inibitório · Go/NoGo</div></div>
+          </div>
+          <div class="mode-item">
+            <div class="mode-dot" style="background:#f59e0b;"></div>
+            <div><div class="mode-name">Radar</div><div class="mode-desc">Localização visual · 7 rodadas</div></div>
+          </div>
+        </div>
+        <div class="nav-bottom">
+          <div class="dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot active"></div>
+            <div class="dot"></div>
+          </div>
+          <div class="next-btn">Próximo →</div>
+          <div class="skip-link">pular introdução</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(255,181,71,0.10);color:#FFB547;border:1px solid rgba(255,181,71,0.25);">~ reposicionar + compactar</div>
+  </div>
+
+  <!-- T5 — NOVA: Arquétipo reveal -->
+  <div class="phone-wrap">
+    <div class="phone-label">Tela 5 · Arquétipo (nova)</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:var(--bg0);">
+        <div style="width:100%;display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <span style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">pular</span>
+        </div>
+        <div class="illus" style="flex-direction:column;gap:8px;">
+          <div style="font-size:11px;color:var(--text1);text-align:center;">Você começa como</div>
+          <div class="arq-reveal">
+            <div class="arq-avatar-wrap">
+              <svg width="52" height="52" viewBox="0 0 80 80" fill="none">
+                <circle cx="40" cy="40" r="40" fill="#1e3a5f"/>
+                <circle cx="30" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+                <circle cx="50" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+                <path d="M30 33l4-4h12l4 4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M39 42h2" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="arq-eyebrow">Arquétipo inicial</div>
+            <div class="arq-name">O Explorador</div>
+            <div class="arq-desc">Descobrindo seu perfil de reflexo. Cada sessão revela mais sobre como seu cérebro responde.</div>
+          </div>
+        </div>
+        <div class="slide-body" style="margin:10px 0;">
+          <div class="slide-sub">Evolua para O Atirador, O Velocista e além — cada arquétipo é uma identidade conquistada.</div>
+        </div>
+        <div class="nav-bottom">
+          <div class="dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot active"></div>
+          </div>
+          <div class="next-btn" style="font-size:14px;letter-spacing:.05em;">COMEÇAR →</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(123,110,246,0.10);color:#7B6EF6;border:1px solid rgba(123,110,246,0.25);">★ nova — arquétipo reveal</div>
+  </div>
+
+</div><!-- /phone-row -->
+
+<!-- Annotations -->
+<div class="ann-col">
+  <div class="ann-card">
+    <div class="ann-icon">↕</div>
+    <div class="ann-text"><strong>Navegação movida para baixo em todas as telas.</strong> "Próximo →" como botão explícito substitui "Deslize para continuar" no topo. Dots de paginação acima do botão, na zona do polegar. Botão "pular introdução" pequeno e sem destaque no topo direito — para quem retorna ao app.</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-icon">🎨</div>
+    <div class="ann-text"><strong>Verde #4AFFA3 como âncora cromática constante.</strong> T3 (meta) usa âmbar como sotaque temático — único desvio intencional, pois a meta tem um clima mais pessoal. T5 (arquétipo) usa roxo — associação com identidade, consistente com o sistema do app.</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-icon">↺</div>
+    <div class="ann-text"><strong>Reordem: T2 original (4 modos) vai para T4. T5 original (ciência) vai para T2.</strong> Lógica narrativa nova: marca → por que funciona → sua meta → como funciona → quem você é. Emoção antes de features.</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-icon">★</div>
+    <div class="ann-text"><strong>T5 é nova — revela o arquétipo "O Explorador".</strong> É o momento de identidade que nenhum concorrente tem. O usuário não apenas começa a usar o app — ele vira algo. O COMEÇAR aqui é um comprometimento, não apenas uma ação.</div>
+  </div>
+</div>
+
+<div class="page-div"></div>
+
+<!-- ══════════════════════════════════════
+     PARTE 2 — ONBOARDING OFICIAL
+     O que acontece depois de COMEÇAR
+════════════════════════════════════════ -->
+
+<div class="sec-header">
+  <div class="sec-eyebrow">Parte 2 — Onboarding oficial</div>
+  <div class="sec-title">Após COMEÇAR — ativação real</div>
+  <div class="sec-sub">O onboarding oficial não é informativo — é ativo. O usuário joga antes de configurar qualquer coisa. O "aha moment" acontece nos primeiros 60 segundos.</div>
+</div>
+
+<div class="phone-row">
+
+  <!-- OB1: Primeira partida -->
+  <div class="phone-wrap">
+    <div class="phone-label">OB1 · Primeira partida</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:#080C10;justify-content:center;gap:16px;">
+        <div style="font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.12em;color:var(--text2);text-transform:uppercase;text-align:center;">Modo Partida · teste rápido</div>
+        <!-- Game target -->
+        <div class="minigame-area">
+          <div class="minigame-ring"></div>
+          <div class="minigame-inner"></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:13px;font-weight:600;color:var(--text0);margin-bottom:4px;">Toque quando ficar verde</div>
+          <div style="font-size:11px;color:var(--text1);">3 tentativas · sem pressão</div>
+        </div>
+        <!-- Progress dots -->
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <div style="width:28px;height:4px;border-radius:2px;background:var(--green);"></div>
+          <div style="width:28px;height:4px;border-radius:2px;background:var(--bg3);"></div>
+          <div style="width:28px;height:4px;border-radius:2px;background:var(--bg3);"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text2);text-align:center;">1 de 3</div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(74,255,163,0.10);color:#4AFFA3;border:1px solid rgba(74,255,163,0.25);">Ação imediata</div>
+  </div>
+
+  <!-- OB2: Resultado + primeiro número -->
+  <div class="phone-wrap">
+    <div class="phone-label">OB2 · Seu primeiro número</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:#080C10;justify-content:center;gap:12px;">
+        <div style="text-align:center;">
+          <div style="font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.12em;color:var(--text2);text-transform:uppercase;margin-bottom:8px;">Seu primeiro reflexo</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--green);line-height:1;">284</div>
+          <div style="font-size:12px;color:var(--text1);font-family:'Space Mono',monospace;margin-bottom:12px;">milissegundos</div>
+          <div style="background:var(--green-dim);border:1px solid var(--green-border);border-radius:10px;padding:8px 14px;display:inline-block;">
+            <div style="font-size:11px;color:var(--green);font-weight:600;">Acima da média humana</div>
+            <div style="font-size:10px;color:var(--text1);margin-top:2px;">média: 250–300 ms</div>
+          </div>
+        </div>
+        <div style="background:var(--purple-dim);border:1px solid var(--purple-border);border-radius:10px;padding:10px 12px;width:100%;">
+          <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--purple);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">O que isso significa</div>
+          <div style="font-size:11px;color:var(--text1);line-height:1.5;">Seu córtex pré-frontal processou o estímulo em 284ms. Com treino, esse número vai cair.</div>
+        </div>
+        <div style="width:100%;">
+          <div class="next-btn">Ver meu arquétipo →</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(74,255,163,0.10);color:#4AFFA3;border:1px solid rgba(74,255,163,0.25);">Momento "aha"</div>
+  </div>
+
+  <!-- OB3: Arquétipo confirmado -->
+  <div class="phone-wrap">
+    <div class="phone-label">OB3 · Arquétipo confirmado</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:var(--bg0);justify-content:center;gap:12px;">
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--text1);margin-bottom:6px;">Baseado no seu resultado</div>
+          <div class="arq-reveal" style="margin-bottom:0;">
+            <div class="arq-avatar-wrap">
+              <svg width="52" height="52" viewBox="0 0 80 80" fill="none">
+                <circle cx="40" cy="40" r="40" fill="#1e3a5f"/>
+                <circle cx="30" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+                <circle cx="50" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+                <path d="M30 33l4-4h12l4 4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M39 42h2" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="arq-eyebrow">Seu arquétipo</div>
+            <div class="arq-name">O Explorador</div>
+            <div class="arq-desc">284ms · descobrindo seu potencial. Treine 3x por semana para evoluir.</div>
+          </div>
+        </div>
+        <!-- Next archetype preview -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;width:100%;display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">
+            <svg width="32" height="32" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="40" fill="#164e63"/>
+              <circle cx="40" cy="40" r="14" stroke="#fff" stroke-width="2.5"/>
+              <circle cx="40" cy="40" r="6" stroke="#fff" stroke-width="2.5"/>
+              <circle cx="40" cy="40" r="1.5" fill="#fff"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;text-transform:uppercase;">Próximo</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text0);">O Iniciante</div>
+          </div>
+          <div style="margin-left:auto;font-size:11px;color:var(--green);">→</div>
+        </div>
+        <div style="width:100%;">
+          <div class="next-btn">Definir minha meta →</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(123,110,246,0.10);color:#7B6EF6;border:1px solid rgba(123,110,246,0.25);">Identidade criada</div>
+  </div>
+
+  <!-- OB4: Definir meta -->
+  <div class="phone-wrap">
+    <div class="phone-label">OB4 · Sua meta</div>
+    <div class="phone">
+      <div class="phone-screen" style="background:var(--bg0);gap:10px;">
+        <div style="width:100%;padding-top:4px;">
+          <div style="font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:4px;">Último passo</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text0);margin-bottom:2px;">O que você quer melhorar?</div>
+          <div style="font-size:11px;color:var(--text1);">Isso personaliza suas missões.</div>
+        </div>
+        <!-- Options -->
+        <div style="width:100%;display:flex;flex-direction:column;gap:6px;flex:1;">
+          <div style="background:var(--green-dim);border:1.5px solid var(--green-border);border-radius:10px;padding:10px 12px;cursor:pointer;">
+            <div style="font-size:12px;font-weight:600;color:var(--green);">⚡ Velocidade de reação</div>
+            <div style="font-size:10px;color:var(--text1);margin-top:2px;">Reagir mais rápido a estímulos</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;">
+            <div style="font-size:12px;font-weight:600;color:var(--text0);">🎯 Precisão e foco</div>
+            <div style="font-size:10px;color:var(--text1);margin-top:2px;">Acertar mais, errar menos</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;">
+            <div style="font-size:12px;font-weight:600;color:var(--text0);">🧠 Controle cognitivo</div>
+            <div style="font-size:10px;color:var(--text1);margin-top:2px;">Inibir respostas automáticas</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;">
+            <div style="font-size:12px;font-weight:600;color:var(--text0);">📊 Ver minha evolução</div>
+            <div style="font-size:10px;color:var(--text1);margin-top:2px;">Acompanhar progresso com dados</div>
+          </div>
+        </div>
+        <div style="width:100%;padding-bottom:4px;">
+          <div class="next-btn">Entrar no Reflexo →</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-verdict" style="background:rgba(255,181,71,0.10);color:#FFB547;border:1px solid rgba(255,181,71,0.25);">Comprometimento</div>
+  </div>
+
+</div><!-- /phone-row -->
+
+<!-- Onboarding annotations -->
+<div class="ann-col">
+  <div class="ann-card">
+    <div class="ann-icon">▶</div>
+    <div class="ann-text"><strong>OB1 — Jogo antes de configuração.</strong> O usuário joga 3 toques de Modo Partida imediatamente após COMEÇAR. Sem formulário, sem pergunta, sem tutorial. A primeira interação é o produto em si. Taxa de ativação D0 deve subir significativamente.</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-icon">284</div>
+    <div class="ann-text"><strong>OB2 — O número real é o hook.</strong> Ver "284 ms" com contexto ("acima da média humana") em menos de 60 segundos de uso é o momento "aha". O lore snippet explicando o córtex pré-frontal aparece aqui — quando o usuário acabou de vivenciar exatamente o que está sendo explicado.</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-icon">◉</div>
+    <div class="ann-text"><strong>OB3 — Arquétipo baseado em performance real.</strong> "O Explorador" não é arbitrário — é derivado do resultado de 284ms. O usuário sente que o app o conhece, mesmo sendo o primeiro uso. O preview do próximo arquétipo ("O Iniciante") cria a primeira meta antes mesmo de sair do onboarding.</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-icon">☑</div>
+    <div class="ann-text"><strong>OB4 — Pergunta de comprometimento no lugar certo.</strong> A meta é definida após o usuário já ter jogado, visto seu resultado e recebido seu arquétipo. O comprometimento é mais genuíno porque é informado. A opção selecionada personaliza as missões da semana — o usuário vê consequência imediata da escolha.</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-icon">→</div>
+    <div class="ann-text"><strong>Fluxo completo:</strong> Intro (5 telas, passivo, marca) → COMEÇAR → OB1 (joga) → OB2 (vê resultado + ciência) → OB3 (recebe arquétipo) → OB4 (define meta) → Home. Total estimado: 90–120 segundos. O usuário entra no app com número real, identidade e meta — não apenas com entusiasmo.</div>
+  </div>
+</div>
+
+</body>
+</html>

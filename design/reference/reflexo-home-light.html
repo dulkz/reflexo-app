@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Home Light Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #E8EAF0;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 48px 24px;
+    gap: 56px;
+    flex-wrap: wrap;
+  }
+
+  /* ── DARK PHONE ── */
+  .dark {
+    --bg0: #0D0F14;
+    --bg1: #161B24;
+    --bg2: #1E2533;
+    --green: #4AFFA3;
+    --green-dim: rgba(74,255,163,0.10);
+    --green-border: rgba(74,255,163,0.22);
+    --purple: #7B6EF6;
+    --purple-dim: rgba(123,110,246,0.12);
+    --purple-border: rgba(123,110,246,0.25);
+    --amber: #FFB547;
+    --amber-dim: rgba(255,181,71,0.12);
+    --text0: #EDF0F7;
+    --text1: #8892A4;
+    --text2: #4A5268;
+    --border: rgba(255,255,255,0.06);
+    --border-mid: rgba(255,255,255,0.10);
+    --cta-bg: #4AFFA3;
+    --cta-text: #081400;
+    --cta-sub: rgba(0,0,0,0.45);
+    --shell-bg: #060709;
+    --shell-border: rgba(255,255,255,0.07);
+    --tabbar-bg: #161B24;
+    --tab-active: #4AFFA3;
+    --tab-inactive: #4A5268;
+    --streak-bg: rgba(255,181,71,0.12);
+    --streak-border: rgba(255,181,71,0.20);
+    --streak-color: #FFB547;
+  }
+
+  /* ── LIGHT PHONE ── */
+  .light {
+    --bg0: #F5F7FA;
+    --bg1: #FFFFFF;
+    --bg2: #ECEEF5;
+    --green: #0A8A4F;
+    --green-dim: rgba(10,138,79,0.08);
+    --green-border: rgba(10,138,79,0.20);
+    --purple: #5B4FD4;
+    --purple-dim: rgba(91,79,212,0.08);
+    --purple-border: rgba(91,79,212,0.18);
+    --amber: #B56A00;
+    --amber-dim: rgba(181,106,0,0.08);
+    --text0: #0E1117;
+    --text1: #4A5268;
+    --text2: #8892A4;
+    --border: rgba(0,0,0,0.07);
+    --border-mid: rgba(0,0,0,0.12);
+    --cta-bg: #0A8A4F;
+    --cta-text: #FFFFFF;
+    --cta-sub: rgba(255,255,255,0.65);
+    --shell-bg: #D0D4DF;
+    --shell-border: rgba(0,0,0,0.10);
+    --tabbar-bg: #FFFFFF;
+    --tab-active: #0A8A4F;
+    --tab-inactive: #8892A4;
+    --streak-bg: rgba(181,106,0,0.08);
+    --streak-border: rgba(181,106,0,0.18);
+    --streak-color: #B56A00;
+  }
+
+  .phone {
+    width: 355px;
+    background: var(--bg0);
+    border-radius: 48px;
+    overflow: hidden;
+    border: 1px solid var(--shell-border);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.20), 0 0 0 8px rgba(0,0,0,0.04);
+  }
+
+  .notch {
+    width: 110px; height: 26px;
+    background: var(--shell-bg);
+    border-radius: 0 0 18px 18px;
+    margin: 0 auto;
+  }
+
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 24px 4px;
+    font-size: 11px; color: var(--text2);
+    font-family: 'Space Mono', monospace;
+    margin-top: -26px;
+  }
+
+  /* ── Shared components ── */
+  .header {
+    padding: 14px 20px 10px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .brand { font-size: 10px; letter-spacing: 0.14em; color: var(--text2); font-family: 'Space Mono', monospace; text-transform: uppercase; margin-bottom: 2px; }
+  .greeting { font-size: 22px; font-weight: 700; color: var(--text0); letter-spacing: -0.3px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--purple-dim); border: 1.5px solid var(--purple-border); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--purple); }
+
+  .streak { margin: 0 20px 14px; display: inline-flex; align-items: center; gap: 7px; background: var(--streak-bg); border: 1px solid var(--streak-border); border-radius: 24px; padding: 5px 12px 5px 8px; }
+  .streak-icon { font-size: 13px; }
+  .streak-text { font-size: 11px; font-weight: 600; color: var(--streak-color); font-family: 'Space Mono', monospace; }
+  .streak-badge { font-size: 10px; background: var(--green-dim); color: var(--green); border-radius: 10px; padding: 2px 7px; font-weight: 700; border: 1px solid var(--green-border); }
+
+  .cta-hero {
+    margin: 0 20px 12px;
+    background: var(--cta-bg);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; position: relative; overflow: hidden;
+  }
+  .cta-hero::before { content: ''; position: absolute; top: -24px; right: -24px; width: 90px; height: 90px; background: rgba(255,255,255,0.08); border-radius: 50%; }
+  .cta-eyebrow { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--cta-sub); text-transform: uppercase; margin-bottom: 3px; }
+  .cta-label { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: var(--cta-text); letter-spacing: 0.5px; line-height: 1; }
+  .cta-sub-text { font-size: 11px; color: var(--cta-sub); margin-top: 3px; }
+  .cta-play { width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .cta-play svg { width: 18px; height: 18px; fill: var(--cta-text); margin-left: 2px; }
+
+  .arq-card { margin: 0 20px 12px; background: var(--bg1); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; position: relative; overflow: hidden; }
+  .arq-accent { position: absolute; top: 0; left: 0; right: 0; height: 1.5px; background: var(--purple); opacity: 0.6; }
+  .arq-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 9px; }
+  .arq-eyebrow { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; margin-bottom: 2px; }
+  .arq-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--purple); letter-spacing: 0.5px; }
+  .arq-next-label { font-size: 10px; color: var(--text2); text-align: right; margin-bottom: 1px; }
+  .arq-next-val { font-size: 11px; font-weight: 600; color: var(--green); text-align: right; }
+  .arq-track { background: var(--bg2); border-radius: 3px; height: 4px; margin-bottom: 8px; overflow: hidden; }
+  .arq-fill { height: 4px; border-radius: 3px; background: var(--purple); width: 50%; }
+  .arq-hint { font-size: 12px; color: var(--text1); line-height: 1.5; }
+  .arq-hint strong { color: var(--text0); font-weight: 600; }
+
+  .stats { margin: 0 20px 12px; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  .stat { background: var(--bg1); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; }
+  .stat-val { font-size: 24px; font-weight: 700; line-height: 1; margin-bottom: 3px; font-family: 'Space Mono', monospace; }
+  .stat-unit { font-size: 11px; color: var(--text2); font-weight: 400; }
+  .stat-lbl { font-size: 11px; color: var(--text2); }
+
+  .lore { margin: 0 20px 12px; background: var(--purple-dim); border: 1px solid var(--purple-border); border-radius: 12px; padding: 11px 13px; display: flex; gap: 9px; align-items: flex-start; }
+  .lore-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); flex-shrink: 0; margin-top: 4px; }
+  .lore-text { font-size: 12px; color: var(--text1); line-height: 1.55; }
+  .lore-text strong { color: var(--purple); font-weight: 500; }
+
+  .section-hd { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 7px; }
+  .section-title { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.12em; color: var(--text2); text-transform: uppercase; }
+  .section-link { font-size: 12px; color: var(--green); }
+
+  .mission-card { margin: 0 20px 12px; background: var(--bg1); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .mission-hd { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  .mission-title { font-size: 13px; font-weight: 600; color: var(--text0); }
+  .mission-badge { font-size: 11px; font-family: 'Space Mono', monospace; background: var(--green-dim); border: 1px solid var(--green-border); border-radius: 8px; padding: 2px 8px; color: var(--green); }
+  .mission-item { display: flex; align-items: center; gap: 11px; padding: 10px 14px; }
+  .mission-item + .mission-item { border-top: 1px solid var(--border); }
+  .m-icon { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .m-text { flex: 1; font-size: 12px; color: var(--text1); }
+  .m-prog { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--text2); }
+
+  .modos-scroll { display: flex; gap: 8px; padding: 0 20px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; }
+  .modos-scroll::-webkit-scrollbar { display: none; }
+  .modo { background: var(--bg1); border: 1px solid var(--border); border-radius: 13px; padding: 11px 13px; flex-shrink: 0; width: 120px; }
+  .modo.active { border-color: var(--green-border); }
+  .modo-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-bottom: 7px; }
+  .modo-name { font-size: 12px; font-weight: 700; color: var(--text0); margin-bottom: 2px; }
+  .modo-stat { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--text1); margin-bottom: 5px; }
+  .modo-pill { display: inline-block; font-size: 9px; font-weight: 700; font-family: 'Space Mono', monospace; padding: 2px 6px; border-radius: 4px; }
+
+  .tabbar { background: var(--tabbar-bg); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 10px 0 28px; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .tab svg { width: 21px; height: 21px; stroke: var(--tab-inactive); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.active svg { stroke: var(--tab-active); }
+  .tab-lbl { font-size: 10px; color: var(--tab-inactive); font-weight: 500; }
+  .tab.active .tab-lbl { color: var(--tab-active); }
+  .tab-play { width: 50px; height: 50px; background: var(--cta-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -16px; flex-shrink: 0; }
+  .tab-play svg { width: 20px; height: 20px; fill: var(--cta-text); stroke: none; margin-left: 3px; }
+
+  /* ── Labels ── */
+  .col-label {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* ── Comparison table ── */
+  .compare {
+    width: 100%;
+    max-width: 720px;
+    margin: 40px auto 0;
+    background: rgba(255,255,255,0.5);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .compare-hd {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1fr;
+    background: rgba(0,0,0,0.04);
+    padding: 10px 20px;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #8892A4;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1fr;
+    padding: 11px 20px;
+    font-size: 12px;
+    color: #4A5268;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    align-items: center;
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row .att { color: #0E1117; font-weight: 500; }
+  .yes { color: #0A8A4F; font-weight: 600; font-family: 'Space Mono', monospace; font-size: 11px; }
+  .no  { color: #8892A4; font-family: 'Space Mono', monospace; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div style="display:flex; flex-direction:column; align-items:center; width:100%; max-width:900px;">
+
+  <!-- Two phones side by side -->
+  <div style="display:flex; gap:40px; align-items:flex-start; flex-wrap:wrap; justify-content:center; margin-bottom:40px;">
+
+    <!-- DARK -->
+    <div>
+      <p class="col-label" style="color:#4AFFA3;">Dark mode</p>
+      <div class="phone dark">
+        <div class="notch"></div>
+        <div class="statusbar"><span>15:53</span><span>48%</span></div>
+        <div>
+          <div class="header">
+            <div><div class="brand">Reflexo</div><div class="greeting">Bom dia, Lfc</div></div>
+            <div class="avatar">L</div>
+          </div>
+          <div class="streak">
+            <span class="streak-icon">🔥</span>
+            <span class="streak-text">1 dia</span>
+            <span class="streak-badge">✓ hoje</span>
+          </div>
+          <div class="cta-hero">
+            <div>
+              <div class="cta-eyebrow">Próxima sessão</div>
+              <div class="cta-label">Treinar agora</div>
+              <div class="cta-sub-text">Modo Partida · fase atual</div>
+            </div>
+            <div class="cta-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          </div>
+          <div class="arq-card">
+            <div class="arq-accent"></div>
+            <div class="arq-top">
+              <div><div class="arq-eyebrow">Arquétipo atual</div><div class="arq-name">O Atirador</div></div>
+              <div><div class="arq-next-label">próximo</div><div class="arq-next-val">O Velocista →</div></div>
+            </div>
+            <div class="arq-track"><div class="arq-fill"></div></div>
+            <div class="arq-hint">Chegue a <strong>abaixo de 220 ms</strong> no Partida. Você está a 56 ms.</div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="stat-val" style="color:#4AFFA3;">249<span class="stat-unit">ms</span></div><div class="stat-lbl">melhor hoje</div></div>
+            <div class="stat"><div class="stat-val" style="color:#7B6EF6;">−47<span class="stat-unit">ms</span></div><div class="stat-lbl">últimas 8 sessões</div></div>
+          </div>
+          <div class="lore">
+            <div class="lore-dot"></div>
+            <div class="lore-text"><strong>Neurociência:</strong> seu córtex pré-frontal processa estímulos em ~250 ms. Você já chegou em 249 ms.</div>
+          </div>
+          <div class="section-hd"><span class="section-title">Missão do dia</span><span class="section-link">ver semana →</span></div>
+          <div class="mission-card">
+            <div class="mission-hd"><span class="mission-title">Objetivo</span><span class="mission-badge">1/2</span></div>
+            <div class="mission-item">
+              <div class="m-icon" style="background:var(--purple-dim);">⏸</div>
+              <div class="m-text">Jogue Modo Sequência</div>
+              <div class="m-prog">0/1</div>
+            </div>
+            <div class="mission-item">
+              <div class="m-icon" style="background:var(--amber-dim);">📡</div>
+              <div class="m-text">Jogue Modo Radar</div>
+              <div class="m-prog">0/1</div>
+            </div>
+          </div>
+          <div class="section-hd"><span class="section-title">Modos</span></div>
+          <div class="modos-scroll">
+            <div class="modo active">
+              <div class="modo-icon" style="background:var(--green-dim);">⚡</div>
+              <div class="modo-name">Partida</div>
+              <div class="modo-stat">249 ms</div>
+              <span class="modo-pill" style="background:var(--green-dim);color:var(--green);">BOM</span>
+            </div>
+            <div class="modo">
+              <div class="modo-icon" style="background:var(--green-dim);">🎯</div>
+              <div class="modo-name">Alvo</div>
+              <div class="modo-stat">420 ms</div>
+              <span class="modo-pill" style="background:var(--green-dim);color:var(--green);">MUITO BOM</span>
+            </div>
+            <div class="modo">
+              <div class="modo-icon" style="background:var(--purple-dim);">⏸</div>
+              <div class="modo-name">Sequência</div>
+              <div class="modo-stat" style="color:var(--text2);">não jogado</div>
+              <span class="modo-pill" style="background:var(--purple-dim);color:var(--purple);">NOVO</span>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab active"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tab-lbl">Home</span></div>
+            <div class="tab"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tab-lbl">Missões</span></div>
+            <div class="tab"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="tab-lbl">Perfil</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIGHT -->
+    <div>
+      <p class="col-label" style="color:#0A8A4F;">Light mode</p>
+      <div class="phone light">
+        <div class="notch"></div>
+        <div class="statusbar"><span>15:53</span><span>48%</span></div>
+        <div>
+          <div class="header">
+            <div><div class="brand">Reflexo</div><div class="greeting">Bom dia, Lfc</div></div>
+            <div class="avatar">L</div>
+          </div>
+          <div class="streak">
+            <span class="streak-icon">🔥</span>
+            <span class="streak-text">1 dia</span>
+            <span class="streak-badge">✓ hoje</span>
+          </div>
+          <div class="cta-hero">
+            <div>
+              <div class="cta-eyebrow">Próxima sessão</div>
+              <div class="cta-label">Treinar agora</div>
+              <div class="cta-sub-text">Modo Partida · fase atual</div>
+            </div>
+            <div class="cta-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          </div>
+          <div class="arq-card">
+            <div class="arq-accent"></div>
+            <div class="arq-top">
+              <div><div class="arq-eyebrow">Arquétipo atual</div><div class="arq-name">O Atirador</div></div>
+              <div><div class="arq-next-label">próximo</div><div class="arq-next-val">O Velocista →</div></div>
+            </div>
+            <div class="arq-track"><div class="arq-fill"></div></div>
+            <div class="arq-hint">Chegue a <strong>abaixo de 220 ms</strong> no Partida. Você está a 56 ms.</div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="stat-val" style="color:#0A8A4F;">249<span class="stat-unit">ms</span></div><div class="stat-lbl">melhor hoje</div></div>
+            <div class="stat"><div class="stat-val" style="color:#5B4FD4;">−47<span class="stat-unit">ms</span></div><div class="stat-lbl">últimas 8 sessões</div></div>
+          </div>
+          <div class="lore">
+            <div class="lore-dot"></div>
+            <div class="lore-text"><strong>Neurociência:</strong> seu córtex pré-frontal processa estímulos em ~250 ms. Você já chegou em 249 ms.</div>
+          </div>
+          <div class="section-hd"><span class="section-title">Missão do dia</span><span class="section-link">ver semana →</span></div>
+          <div class="mission-card">
+            <div class="mission-hd"><span class="mission-title">Objetivo</span><span class="mission-badge">1/2</span></div>
+            <div class="mission-item">
+              <div class="m-icon" style="background:var(--purple-dim);">⏸</div>
+              <div class="m-text">Jogue Modo Sequência</div>
+              <div class="m-prog">0/1</div>
+            </div>
+            <div class="mission-item">
+              <div class="m-icon" style="background:var(--amber-dim);">📡</div>
+              <div class="m-text">Jogue Modo Radar</div>
+              <div class="m-prog">0/1</div>
+            </div>
+          </div>
+          <div class="section-hd"><span class="section-title">Modos</span></div>
+          <div class="modos-scroll">
+            <div class="modo active">
+              <div class="modo-icon" style="background:var(--green-dim);">⚡</div>
+              <div class="modo-name">Partida</div>
+              <div class="modo-stat">249 ms</div>
+              <span class="modo-pill" style="background:var(--green-dim);color:var(--green);">BOM</span>
+            </div>
+            <div class="modo">
+              <div class="modo-icon" style="background:var(--green-dim);">🎯</div>
+              <div class="modo-name">Alvo</div>
+              <div class="modo-stat">420 ms</div>
+              <span class="modo-pill" style="background:var(--green-dim);color:var(--green);">MUITO BOM</span>
+            </div>
+            <div class="modo">
+              <div class="modo-icon" style="background:var(--purple-dim);">⏸</div>
+              <div class="modo-name">Sequência</div>
+              <div class="modo-stat" style="color:var(--text2);">não jogado</div>
+              <span class="modo-pill" style="background:var(--purple-dim);color:var(--purple);">NOVO</span>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab active"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tab-lbl">Home</span></div>
+            <div class="tab"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tab-lbl">Missões</span></div>
+            <div class="tab"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="tab-lbl">Perfil</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Comparison table -->
+  <div class="compare">
+    <div class="compare-hd">
+      <span>Atributo</span>
+      <span style="text-align:center;">Dark</span>
+      <span style="text-align:center;">Light</span>
+    </div>
+    <div class="compare-row">
+      <span class="att">Energia / alertness visual</span>
+      <span class="yes" style="text-align:center;">Alta</span>
+      <span class="yes" style="text-align:center;">Média-alta</span>
+    </div>
+    <div class="compare-row">
+      <span class="att">Legibilidade sob luz solar</span>
+      <span class="no" style="text-align:center;">Fraca</span>
+      <span class="yes" style="text-align:center;">Ótima</span>
+    </div>
+    <div class="compare-row">
+      <span class="att">Conforto em sessões longas</span>
+      <span class="yes" style="text-align:center;">Alto</span>
+      <span class="no" style="text-align:center;">Médio</span>
+    </div>
+    <div class="compare-row">
+      <span class="att">Adequação ao tema (reflexo, performance)</span>
+      <span class="yes" style="text-align:center;">Muito alta</span>
+      <span class="yes" style="text-align:center;">Alta</span>
+    </div>
+    <div class="compare-row">
+      <span class="att">Diferenciação de mercado</span>
+      <span class="yes" style="text-align:center;">Alta</span>
+      <span class="no" style="text-align:center;">Baixa</span>
+    </div>
+    <div class="compare-row">
+      <span class="att">Acessibilidade (contraste WCAG)</span>
+      <span class="yes" style="text-align:center;">Passa</span>
+      <span class="yes" style="text-align:center;">Passa</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

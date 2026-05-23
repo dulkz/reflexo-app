@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Design System Consolidado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0:#0D0F14; --bg1:#161B24; --bg2:#1E2533; --bg3:#252D3E;
+    --green:#4AFFA3; --green-dim:rgba(74,255,163,0.10); --green-border:rgba(74,255,163,0.22);
+    --purple:#7B6EF6; --purple-dim:rgba(123,110,246,0.12); --purple-border:rgba(123,110,246,0.25);
+    --amber:#FFB547; --amber-dim:rgba(255,181,71,0.11); --amber-border:rgba(255,181,71,0.22);
+    --cyan:#06b6d4; --cyan-dim:rgba(6,182,212,0.10); --cyan-border:rgba(6,182,212,0.22);
+    --blue:#3b82f6; --blue-dim:rgba(59,130,246,0.10);
+    --red:#FF5757; --red-dim:rgba(255,87,87,0.10);
+    --text0:#EDF0F7; --text1:#8892A4; --text2:#4A5268;
+    --border:rgba(255,255,255,0.06); --border-mid:rgba(255,255,255,0.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:#060709;
+    font-family:'DM Sans',sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:48px 32px;
+    gap:28px;
+    flex-wrap:wrap;
+  }
+
+  /* ── Phone shell ── */
+  .phone{
+    width:340px;
+    background:var(--bg0);
+    border-radius:44px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 0 0 7px rgba(255,255,255,0.02),0 50px 100px rgba(0,0,0,0.95);
+    display:flex;
+    flex-direction:column;
+  }
+  .notch{width:100px;height:24px;background:#060709;border-radius:0 0 16px 16px;margin:0 auto;}
+  .statusbar{display:flex;justify-content:space-between;padding:6px 22px 4px;font-size:10px;color:var(--text2);font-family:'Space Mono',monospace;margin-top:-24px;}
+
+  /* ── Tab bar ── */
+  .tabbar{background:var(--bg1);border-top:1px solid var(--border);display:flex;align-items:center;padding:9px 0 24px;margin-top:auto;}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
+  .tab svg{width:22px;height:22px;}
+  .tab-lbl{font-size:9px;color:var(--text2);font-weight:500;}
+  .tab.active .tab-lbl{color:var(--green);}
+
+  /* ── Shared ── */
+  .scroll{padding:12px 18px 0;flex:1;overflow:hidden;}
+  .sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+  .sec-title{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.12em;color:var(--text2);text-transform:uppercase;}
+  .sec-link{font-size:11px;color:var(--green);}
+  .prog-wrap{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+  .prog-fill{height:3px;border-radius:2px;}
+  .card{background:var(--bg1);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;}
+
+  /* ── Screen label ── */
+  .screen-lbl{text-align:center;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:10px;}
+
+  /* ══════════════════════════════
+     HOME
+  ══════════════════════════════ */
+  .home-header{padding:14px 18px 10px;display:flex;justify-content:space-between;align-items:flex-start;}
+  .brand{font-size:9px;letter-spacing:.14em;color:var(--text2);font-family:'Space Mono',monospace;text-transform:uppercase;margin-bottom:2px;}
+  .greeting{font-size:21px;font-weight:700;color:var(--text0);letter-spacing:-.3px;}
+  .avatar-sm{width:34px;height:34px;border-radius:50%;background:var(--purple-dim);border:1.5px solid var(--purple-border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--purple);}
+
+  .streak-pill{margin:0 18px 12px;display:inline-flex;align-items:center;gap:6px;background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:20px;padding:4px 10px 4px 7px;}
+  .streak-text{font-size:11px;font-weight:600;color:var(--amber);font-family:'Space Mono',monospace;}
+  .streak-badge{font-size:9px;background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);border-radius:8px;padding:1px 6px;font-weight:700;}
+
+  .cta-hero{margin:0 18px 10px;background:var(--green);border-radius:16px;padding:17px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;position:relative;overflow:hidden;}
+  .cta-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,0.07);border-radius:50%;}
+  .cta-eyebrow{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;color:rgba(0,0,0,.4);text-transform:uppercase;margin-bottom:2px;}
+  .cta-label{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#081400;letter-spacing:.5px;line-height:1;}
+  .cta-sub{font-size:10px;color:rgba(0,0,0,.4);margin-top:2px;}
+  .cta-play{width:44px;height:44px;background:rgba(0,0,0,.10);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+  .arq-card{margin:0 18px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:13px 15px;position:relative;overflow:hidden;}
+  .arq-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:var(--purple);opacity:.7;}
+  .arq-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+  .arq-eyebrow{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:2px;}
+  .arq-name{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--purple);letter-spacing:.5px;}
+  .arq-hint{font-size:11px;color:var(--text1);line-height:1.5;}
+  .arq-hint strong{color:var(--text0);font-weight:600;}
+
+  .stats-row{margin:0 18px 10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+  .stat{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:11px 13px;}
+  .stat-val{font-size:22px;font-weight:700;line-height:1;margin-bottom:3px;font-family:'Space Mono',monospace;}
+  .stat-unit{font-size:10px;color:var(--text2);font-weight:400;}
+  .stat-lbl{font-size:10px;color:var(--text2);}
+
+  .lore{margin:0 18px 10px;background:var(--purple-dim);border:1px solid var(--purple-border);border-radius:11px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;}
+  .lore-dot{width:5px;height:5px;border-radius:50%;background:var(--purple);flex-shrink:0;margin-top:4px;}
+  .lore-text{font-size:11px;color:var(--text1);line-height:1.5;}
+  .lore-text strong{color:var(--purple);font-weight:500;}
+
+  .modos-scroll{display:flex;gap:7px;padding:0 18px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;}
+  .modos-scroll::-webkit-scrollbar{display:none;}
+  .modo{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:10px 12px;flex-shrink:0;width:116px;}
+  .modo.active{border-color:var(--green-border);}
+  .modo-icon-wrap{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;}
+  .modo-name{font-size:11px;font-weight:700;color:var(--text0);margin-bottom:2px;}
+  .modo-stat{font-size:10px;font-family:'Space Mono',monospace;color:var(--text1);margin-bottom:4px;}
+  .modo-pill{display:inline-block;font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 5px;border-radius:4px;}
+
+  /* ══════════════════════════════
+     MISSÕES
+  ══════════════════════════════ */
+  .miss-header{padding:14px 18px 4px;display:flex;justify-content:space-between;align-items:flex-start;}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text0);letter-spacing:.5px;}
+
+  .meta-banner{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:11px 13px;margin-bottom:12px;display:flex;align-items:center;gap:11px;}
+  .meta-icon{width:34px;height:34px;border-radius:9px;background:var(--purple-dim);border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .meta-label{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:2px;}
+  .meta-value{font-size:12px;font-weight:600;color:var(--purple);}
+  .meta-sub{font-size:10px;color:var(--text1);}
+  .meta-edit{font-size:10px;color:var(--text2);padding:3px 7px;border:.5px solid var(--border-mid);border-radius:5px;flex-shrink:0;}
+
+  .missao{background:var(--bg1);border:1px solid var(--border);border-radius:13px;margin-bottom:7px;overflow:hidden;}
+  .missao-main{display:flex;align-items:center;gap:10px;padding:12px 13px;}
+  .missao-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .missao-title{font-size:12px;font-weight:600;color:var(--text0);margin-bottom:1px;}
+  .missao-sub{font-size:10px;color:var(--text1);}
+  .missao-prog{font-size:11px;font-family:'Space Mono',monospace;color:var(--text1);}
+  .missao-cta{border-top:1px solid var(--border);padding:8px 13px;display:flex;align-items:center;justify-content:space-between;}
+  .missao-cta-label{font-size:10px;color:var(--text1);}
+  .missao-cta-btn{font-size:10px;font-weight:600;padding:4px 9px;border-radius:6px;}
+  .missao.done{opacity:.55;}
+  .missao.done .missao-title{text-decoration:line-through;color:var(--text1);}
+  .check-circle{width:18px;height:18px;border-radius:50%;background:var(--green-dim);border:1.5px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--green);font-weight:700;flex-shrink:0;}
+  .week-header{background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;}
+  .week-title-txt{font-size:12px;font-weight:600;color:var(--text0);}
+  .week-dots{display:flex;gap:4px;}
+  .wdot{width:7px;height:7px;border-radius:50%;}
+
+  /* ══════════════════════════════
+     PERFIL
+  ══════════════════════════════ */
+  .hero-perfil{padding:14px 18px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+  .avatar-lg{width:50px;height:50px;border-radius:50%;flex-shrink:0;background:var(--purple-dim);border:2px solid var(--purple-border);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--purple);}
+  .hero-name{font-size:18px;font-weight:700;color:var(--text0);letter-spacing:-.2px;}
+  .hero-since{font-size:10px;color:var(--text2);font-family:'Space Mono',monospace;margin-top:1px;}
+  .streak-big{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--amber);line-height:1;}
+  .streak-lbl-sm{font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
+
+  .arq-block-p{background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:8px;position:relative;overflow:hidden;}
+  .arq-block-p::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:var(--purple);opacity:.7;}
+
+  .arq-avatar{display:flex;gap:12px;align-items:center;margin-bottom:10px;}
+  .arq-avatar-img{width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;}
+
+  .tl{display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+  .tl::-webkit-scrollbar{display:none;}
+  .tl-item{display:flex;align-items:center;flex-shrink:0;}
+  .tl-node{display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .tl-circle{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;}
+  .tl-circle.done{background:var(--green-dim);border:1.5px solid var(--green);color:var(--green);}
+  .tl-circle.active{background:var(--purple-dim);border:2px solid var(--purple);color:var(--purple);}
+  .tl-circle.locked{background:var(--bg2);border:1.5px solid var(--border-mid);color:var(--text2);}
+  .tl-label{font-size:8px;color:var(--text2);font-family:'Space Mono',monospace;white-space:nowrap;max-width:44px;text-align:center;overflow:hidden;text-overflow:ellipsis;}
+  .tl-label.active{color:var(--purple);}
+  .tl-line{width:16px;height:1.5px;background:var(--border-mid);flex-shrink:0;margin-bottom:12px;}
+  .tl-line.done{background:var(--green);opacity:.4;}
+
+  .objetivo{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:7px;}
+  .obj-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+  .obj-eyebrow{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.08em;color:var(--text2);text-transform:uppercase;margin-bottom:2px;}
+  .obj-title{font-size:12px;font-weight:600;color:var(--text0);}
+  .obj-pct{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green);}
+  .obj-sub{font-size:10px;color:var(--text1);margin-bottom:7px;}
+
+  .modo-stat-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+  .modo-stat-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .modo-stat-name{font-size:11px;font-weight:700;color:var(--text0);margin-bottom:1px;}
+  .modo-stat-sub{font-size:10px;color:var(--text1);}
+  .modo-best{font-size:15px;font-weight:700;font-family:'Space Mono',monospace;line-height:1;}
+  .modo-avg{font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;margin-top:1px;}
+  .modo-badge-sm{display:inline-block;font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:1px 5px;border-radius:3px;margin-top:2px;}
+
+  .conquistas-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:7px;}
+  .conq-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .conq-title{font-size:12px;font-weight:600;color:var(--text0);}
+  .conq-link{font-size:11px;color:var(--green);}
+  .conq-row{display:flex;gap:5px;flex-wrap:wrap;}
+  .conq-pill{display:flex;align-items:center;gap:4px;font-size:10px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:16px;border:1px solid var(--border-mid);color:var(--text1);}
+  .conq-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+
+  .ciencia-card{background:var(--purple-dim);border:1px solid var(--purple-border);border-radius:12px;padding:11px 13px;margin-bottom:12px;display:flex;gap:9px;align-items:flex-start;}
+  .ciencia-dot{width:5px;height:5px;border-radius:50%;background:var(--purple);flex-shrink:0;margin-top:4px;}
+  .ciencia-label{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;color:var(--purple);text-transform:uppercase;margin-bottom:2px;}
+  .ciencia-title{font-size:12px;font-weight:600;color:var(--text0);margin-bottom:1px;}
+  .ciencia-sub{font-size:10px;color:var(--text1);}
+  .ciencia-link{font-size:10px;color:var(--purple);margin-top:4px;display:block;}
+
+  /* ══════════════════════════════
+     PÓS-PARTIDA
+  ══════════════════════════════ */
+  .result-hero{background:var(--bg1);padding:22px 22px 18px;text-align:center;border-bottom:1px solid var(--border);}
+  .result-mode{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);margin-bottom:5px;}
+  .result-number{font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:1;letter-spacing:2px;color:var(--green);}
+  .result-unit{font-family:'Space Mono',monospace;font-size:12px;color:var(--text1);margin-bottom:10px;}
+  .result-badge{display:inline-block;font-size:11px;font-weight:700;font-family:'Space Mono',monospace;letter-spacing:.06em;padding:5px 14px;border-radius:16px;background:var(--green-dim);border:1px solid var(--green-border);color:var(--green);}
+
+  .vs-row{display:flex;justify-content:center;gap:20px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg0);}
+  .vs-item{text-align:center;}
+  .vs-val{font-size:16px;font-weight:700;font-family:'Space Mono',monospace;line-height:1;margin-bottom:2px;}
+  .vs-lbl{font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
+  .vs-divider{width:1px;background:var(--border-mid);}
+  .vs-delta-val{font-size:13px;font-weight:700;font-family:'Space Mono',monospace;color:var(--green);}
+  .vs-delta-lbl{font-size:8px;color:var(--text2);font-family:'Space Mono',monospace;text-transform:uppercase;margin-top:2px;}
+
+  .arq-prog-card{background:var(--bg1);border:1px solid var(--border);border-radius:13px;padding:11px 13px;margin-bottom:7px;position:relative;overflow:hidden;}
+  .arq-prog-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:var(--purple);opacity:.6;}
+  .arq-prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .arq-prog-lbl{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:1px;}
+  .arq-prog-title{font-size:12px;font-weight:600;color:var(--text0);}
+  .arq-prog-pct{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--purple);}
+  .arq-prog-sub{font-size:10px;color:var(--text1);margin-bottom:7px;}
+
+  .xp-row{display:flex;gap:7px;margin-bottom:7px;}
+  .xp-card{flex:1;background:var(--bg1);border:1px solid var(--border);border-radius:11px;padding:10px 12px;text-align:center;}
+  .xp-val{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;margin-bottom:2px;}
+  .xp-lbl{font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.05em;}
+
+  .historico-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:7px;}
+  .hist-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .hist-title{font-size:11px;font-weight:600;color:var(--text0);}
+  .hist-trend{font-size:10px;font-family:'Space Mono',monospace;color:var(--green);}
+  .bars{display:flex;gap:4px;align-items:flex-end;height:36px;}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .bar{width:100%;border-radius:2px 2px 0 0;}
+  .bar-val{font-size:7px;font-family:'Space Mono',monospace;color:var(--text2);}
+
+  .cta-primary{background:var(--green);border-radius:13px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:7px;}
+  .cta-primary-label{font-family:'Bebas Neue',sans-serif;font-size:20px;color:#081400;letter-spacing:.5px;}
+  .cta-primary-sub{font-size:10px;color:rgba(0,0,0,.4);margin-top:1px;}
+  .cta-primary-icon{width:32px;height:32px;background:rgba(0,0,0,.10);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .cta-secondary{background:var(--bg1);border:1px solid var(--border);border-radius:11px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:7px;}
+  .cta-sec-label{font-size:12px;font-weight:600;color:var(--text0);}
+  .cta-sec-sub{font-size:10px;color:var(--text1);margin-top:1px;}
+  .cta-sec-arrow{font-size:14px;color:var(--text2);}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HOME ══════════════ -->
+<div>
+  <p class="screen-lbl">Home</p>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+    <div class="home-header">
+      <div><div class="brand">Reflexo</div><div class="greeting">Bom dia, Lfc</div></div>
+      <div class="avatar-sm">L</div>
+    </div>
+
+    <div class="streak-pill">
+      <span style="font-size:13px;">🔥</span>
+      <span class="streak-text">1 dia</span>
+      <span class="streak-badge">✓ hoje</span>
+    </div>
+
+    <div class="cta-hero">
+      <div>
+        <div class="cta-eyebrow">Próxima sessão</div>
+        <div class="cta-label">Treinar agora</div>
+        <div class="cta-sub">Modo Partida · fase atual</div>
+      </div>
+      <div class="cta-play">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#081400"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+    </div>
+
+    <div class="arq-card">
+      <div class="arq-top">
+        <div><div class="arq-eyebrow">Arquétipo atual</div><div class="arq-name">O Atirador</div></div>
+        <div style="text-align:right;"><div style="font-size:9px;color:var(--text2);margin-bottom:2px;">próximo</div><div style="font-size:11px;font-weight:600;color:var(--green);">O Velocista →</div></div>
+      </div>
+      <div class="prog-wrap" style="margin-bottom:7px;"><div class="prog-fill" style="width:50%;background:var(--purple);"></div></div>
+      <div class="arq-hint">Chegue a <strong>abaixo de 220 ms</strong> no Partida. Você está a 56 ms.</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-val" style="color:var(--green);">249<span class="stat-unit">ms</span></div><div class="stat-lbl">melhor hoje</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--purple);">−47<span class="stat-unit">ms</span></div><div class="stat-lbl">últimas 8 sessões</div></div>
+    </div>
+
+    <div class="lore">
+      <div class="lore-dot"></div>
+      <div class="lore-text"><strong>Neurociência:</strong> seu córtex pré-frontal processa estímulos em ~250 ms. Você chegou em 249 ms.</div>
+    </div>
+
+    <!-- Modos com ícones reais -->
+    <div class="sec-hd" style="padding:0 18px;"><span class="sec-title">Modos</span></div>
+    <div class="modos-scroll">
+      <div class="modo active">
+        <div class="modo-icon-wrap" style="background:var(--blue-dim);">
+          <!-- partida.svg -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/></svg>
+        </div>
+        <div class="modo-name">Partida</div>
+        <div class="modo-stat">249 ms</div>
+        <span class="modo-pill" style="background:var(--green-dim);color:var(--green);">BOM</span>
+      </div>
+      <div class="modo">
+        <div class="modo-icon-wrap" style="background:var(--cyan-dim);">
+          <!-- alvo.svg -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/><path d="M12 1.5v3"/><path d="M12 19.5v3"/><path d="M1.5 12h3"/><path d="M19.5 12h3"/></svg>
+        </div>
+        <div class="modo-name">Alvo</div>
+        <div class="modo-stat">420 ms</div>
+        <span class="modo-pill" style="background:var(--green-dim);color:var(--green);">MUITO BOM</span>
+      </div>
+      <div class="modo">
+        <div class="modo-icon-wrap" style="background:var(--purple-dim);">
+          <!-- sequencia.svg -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5" fill="#8b5cf6"/><circle cx="15" cy="12" r="5"/></svg>
+        </div>
+        <div class="modo-name">Sequência</div>
+        <div class="modo-stat" style="color:var(--text2);">não jogado</div>
+        <span class="modo-pill" style="background:var(--purple-dim);color:var(--purple);">NOVO</span>
+      </div>
+      <div class="modo">
+        <div class="modo-icon-wrap" style="background:var(--amber-dim);">
+          <!-- radar.svg -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><path d="M8.5 12a3.5 3.5 0 0 1 3.5-3.5"/><path d="M5 12a7 7 0 0 1 7-7"/><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/></svg>
+        </div>
+        <div class="modo-name">Radar</div>
+        <div class="modo-stat" style="color:var(--text2);">não jogado</div>
+        <span class="modo-pill" style="background:var(--amber-dim);color:var(--amber);">NOVO</span>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab active">
+        <!-- jornada.svg adaptado para Home -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4AFFA3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="5.5" r="1.5"/><path d="M7 18C9.5 18 9.5 14 12 14s2.5 4 5 4"/><path d="M5.5 17C5.5 14.5 8.5 14.5 8.5 12s-3-2.5-3-5"/><path d="M17 5.5c-2.5 0-2.5 3-5 3s-2.5-3-5-3"/></svg>
+        <span class="tab-lbl" style="color:var(--green);">Home</span>
+      </div>
+      <div class="tab">
+        <!-- achievements.svg para Missões -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5268" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v1a3 3 0 0 0 3 3"/><path d="M17 6h3v1a3 3 0 0 1-3 3"/><path d="M10 14v3h4v-3"/><path d="M8 20h8"/><path d="M12 17v3"/></svg>
+        <span class="tab-lbl">Missões</span>
+      </div>
+      <div class="tab">
+        <!-- perfil.svg -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5268" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.5" r="3"/><path d="M5 21c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M12.8 16l-1.8 2.6h2l-1.4 2.4"/></svg>
+        <span class="tab-lbl">Perfil</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MISSÕES ══════════════ -->
+<div>
+  <p class="screen-lbl">Missões</p>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+    <div class="miss-header">
+      <div class="page-title">Missões</div>
+      <div style="text-align:right;padding-top:4px;"><div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;">Esta semana</div><div style="font-size:11px;font-weight:600;color:var(--green);font-family:'Space Mono',monospace;">1 / 3 completas</div></div>
+    </div>
+
+    <div class="scroll">
+      <div class="meta-banner">
+        <div class="meta-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7B6EF6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/><path d="M12 1.5v3"/><path d="M12 19.5v3"/><path d="M1.5 12h3"/><path d="M19.5 12h3"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="meta-label">Sua meta</div>
+          <div class="meta-value">Chegar a 220 ms</div>
+          <div class="meta-sub">Modo Partida · 56 ms de distância</div>
+        </div>
+        <div class="meta-edit">editar</div>
+      </div>
+
+      <div class="sec-hd"><span class="sec-title">Hoje</span><span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--text2);">0 / 2</span></div>
+
+      <div class="missao">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:var(--purple-dim);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5" fill="#8b5cf6"/><circle cx="15" cy="12" r="5"/></svg>
+          </div>
+          <div style="flex:1;"><div class="missao-title">Jogue Modo Sequência</div><div class="missao-sub">Controle inibitório · 20 sinais</div></div>
+          <div class="missao-prog">0/1</div>
+        </div>
+        <div class="missao-cta">
+          <span class="missao-cta-label">Não jogado hoje</span>
+          <span class="missao-cta-btn" style="background:var(--purple-dim);color:var(--purple);">Jogar →</span>
+        </div>
+      </div>
+
+      <div class="missao">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:var(--amber-dim);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><path d="M8.5 12a3.5 3.5 0 0 1 3.5-3.5"/><path d="M5 12a7 7 0 0 1 7-7"/><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/></svg>
+          </div>
+          <div style="flex:1;"><div class="missao-title">Jogue Modo Radar</div><div class="missao-sub">Localização visual · 8 rodadas</div></div>
+          <div class="missao-prog">0/1</div>
+        </div>
+        <div class="missao-cta">
+          <span class="missao-cta-label">Não jogado hoje</span>
+          <span class="missao-cta-btn" style="background:var(--amber-dim);color:var(--amber);">Jogar →</span>
+        </div>
+      </div>
+
+      <div class="sec-hd" style="margin-top:4px;"><span class="sec-title">Semana</span><span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--green);">1 / 3</span></div>
+
+      <div class="week-header">
+        <div class="week-title-txt">Progresso semanal</div>
+        <div class="week-dots">
+          <div class="wdot" style="background:var(--green);"></div>
+          <div class="wdot" style="background:var(--bg3);border:1px solid var(--border-mid);"></div>
+          <div class="wdot" style="background:var(--bg3);border:1px solid var(--border-mid);"></div>
+        </div>
+      </div>
+
+      <div class="missao done">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:var(--cyan-dim);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>
+          </div>
+          <div style="flex:1;"><div class="missao-title">Jogue 5 sessões de Alvo</div><div class="missao-sub">Concluído segunda-feira</div></div>
+          <div class="check-circle">✓</div>
+        </div>
+      </div>
+
+      <div class="missao">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:var(--blue-dim);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/></svg>
+          </div>
+          <div style="flex:1;"><div class="missao-title">Jogue os 4 modos esta semana</div><div class="missao-sub">Partida e Alvo concluídos</div></div>
+          <div class="missao-prog">2/4</div>
+        </div>
+        <div style="padding:0 13px 9px;"><div class="prog-wrap"><div class="prog-fill" style="width:50%;background:var(--green);"></div></div></div>
+        <div class="missao-cta">
+          <span class="missao-cta-label">Faltam Sequência e Radar</span>
+          <span class="missao-cta-btn" style="background:var(--green-dim);color:var(--green);">Continuar →</span>
+        </div>
+      </div>
+
+      <div class="lore">
+        <div class="lore-dot"></div>
+        <div class="lore-text"><strong>Por que 3 sessões/semana?</strong> Intervalos de 48h maximizam consolidação do aprendizado motor.</div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5268" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="5.5" r="1.5"/><path d="M7 18C9.5 18 9.5 14 12 14s2.5 4 5 4"/><path d="M5.5 17C5.5 14.5 8.5 14.5 8.5 12s-3-2.5-3-5"/><path d="M17 5.5c-2.5 0-2.5 3-5 3s-2.5-3-5-3"/></svg>
+        <span class="tab-lbl">Home</span>
+      </div>
+      <div class="tab active">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4AFFA3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v1a3 3 0 0 0 3 3"/><path d="M17 6h3v1a3 3 0 0 1-3 3"/><path d="M10 14v3h4v-3"/><path d="M8 20h8"/><path d="M12 17v3"/></svg>
+        <span class="tab-lbl" style="color:var(--green);">Missões</span>
+      </div>
+      <div class="tab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5268" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.5" r="3"/><path d="M5 21c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M12.8 16l-1.8 2.6h2l-1.4 2.4"/></svg>
+        <span class="tab-lbl">Perfil</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PERFIL ══════════════ -->
+<div>
+  <p class="screen-lbl">Perfil</p>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+    <div class="hero-perfil">
+      <!-- Avatar: atirador SVG inline -->
+      <div style="width:50px;height:50px;border-radius:50%;overflow:hidden;flex-shrink:0;">
+        <svg width="50" height="50" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="40" fill="#164e63"/><circle cx="40" cy="40" r="14" stroke="#fff" stroke-width="2.5"/><circle cx="40" cy="40" r="6" stroke="#fff" stroke-width="2.5"/><circle cx="40" cy="40" r="1.5" fill="#fff"/><path d="M40 20v6" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M40 54v6" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M20 40h6" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M54 40h6" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div class="hero-name">Lfc</div>
+        <div class="hero-since">desde maio · 9 sessões</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="streak-big">1</div>
+        <div class="streak-lbl-sm">dia seguido</div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <div class="arq-block-p">
+        <div class="arq-top" style="margin-bottom:8px;">
+          <div><div class="arq-eyebrow">Arquétipo atual</div><div class="arq-name">O Atirador</div></div>
+          <div style="text-align:right;"><div style="font-size:9px;color:var(--text2);margin-bottom:2px;">próximo</div><div style="font-size:11px;font-weight:600;color:var(--green);">O Velocista →</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--text1);line-height:1.5;margin-bottom:8px;">Precisão cirúrgica no Alvo. Foca na velocidade do Partida para chegar ao Elite.</div>
+        <div style="display:flex;gap:5px;margin-bottom:10px;">
+          <span style="font-size:9px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:5px;background:var(--purple-dim);border:1px solid var(--purple-border);color:var(--purple);">Precisão 100% Alvo</span>
+          <span style="font-size:9px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:5px;background:var(--purple-dim);border:1px solid var(--purple-border);color:var(--purple);">8 sessões Alvo</span>
+        </div>
+        <!-- Timeline com avatares -->
+        <div class="tl">
+          <div class="tl-item"><div class="tl-node"><div class="tl-circle done">✓</div><div class="tl-label">Explorador</div></div><div class="tl-line done"></div></div>
+          <div class="tl-item"><div class="tl-node"><div class="tl-circle done">✓</div><div class="tl-label">Resistente</div></div><div class="tl-line done"></div></div>
+          <div class="tl-item"><div class="tl-node"><div class="tl-circle active">◉</div><div class="tl-label active">Atirador</div></div><div class="tl-line"></div></div>
+          <div class="tl-item"><div class="tl-node">
+            <div class="tl-circle locked" style="overflow:hidden;padding:0;">
+              <svg width="24" height="24" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="40" fill="#1e1b4b"/><path d="M44 22L28 44h10l-4 14 16-22H40l4-14z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" fill="none"/></svg>
+            </div>
+            <div class="tl-label">Velocista</div>
+          </div></div>
+        </div>
+      </div>
+
+      <div class="objetivo">
+        <div class="obj-top"><div><div class="obj-eyebrow">Próxima conquista</div><div class="obj-title">Atirador Frequente</div></div><div class="obj-pct">80%</div></div>
+        <div class="obj-sub">8 / 10 sessões no Alvo</div>
+        <div class="prog-wrap"><div class="prog-fill" style="width:80%;background:var(--green);"></div></div>
+      </div>
+
+      <div class="objetivo">
+        <div class="obj-top"><div><div class="obj-eyebrow">Próximo arquétipo</div><div class="obj-title" style="color:var(--purple);">O Velocista</div></div><div class="obj-pct" style="color:var(--purple);">50%</div></div>
+        <div class="obj-sub">Partida &lt; 220 ms · Precisão &gt; 90%</div>
+        <div class="prog-wrap"><div class="prog-fill" style="width:50%;background:var(--purple);"></div></div>
+      </div>
+
+      <div class="sec-hd" style="margin-top:4px;"><span class="sec-title">Performance por modo</span></div>
+
+      <div class="modo-stat-card">
+        <div class="modo-stat-icon" style="background:var(--blue-dim);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/></svg>
+        </div>
+        <div style="flex:1;"><div class="modo-stat-name">Partida</div><div class="modo-stat-sub">Reação simples visual</div></div>
+        <div style="text-align:right;"><div class="modo-best" style="color:var(--green);">249<span style="font-size:9px;color:var(--text2);">ms</span></div><div class="modo-avg">méd 276 ms</div><div class="modo-badge-sm" style="background:var(--green-dim);color:var(--green);">BOM</div></div>
+      </div>
+
+      <div class="modo-stat-card">
+        <div class="modo-stat-icon" style="background:var(--cyan-dim);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/><path d="M12 1.5v3"/><path d="M12 19.5v3"/><path d="M1.5 12h3"/><path d="M19.5 12h3"/></svg>
+        </div>
+        <div style="flex:1;"><div class="modo-stat-name">Alvo</div><div class="modo-stat-sub">Velocidade + precisão</div></div>
+        <div style="text-align:right;"><div class="modo-best" style="color:var(--green);">420<span style="font-size:9px;color:var(--text2);">ms</span></div><div class="modo-avg">méd 563 ms</div><div class="modo-badge-sm" style="background:var(--green-dim);color:var(--green);">MUITO BOM</div></div>
+      </div>
+
+      <div class="conquistas-card">
+        <div class="conq-top"><div class="conq-title">7 / 36 desbloqueadas</div><div class="conq-link">ver todas →</div></div>
+        <div class="prog-wrap" style="margin-bottom:8px;"><div class="prog-fill" style="width:19%;background:var(--amber);"></div></div>
+        <div class="conq-row">
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--amber);"></div>Lendário 0/5</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--red);"></div>Épico 0/7</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--green);"></div>Raro 1/6</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--purple);"></div>Difícil 2/8</div>
+        </div>
+      </div>
+
+      <div class="ciencia-card">
+        <div class="ciencia-dot"></div>
+        <div>
+          <div class="ciencia-label">Arquivo de ciência</div>
+          <div class="ciencia-title">3 artigos desbloqueados</div>
+          <div class="ciencia-sub">Córtex pré-frontal · Neuroplasticidade · Tempo de reação</div>
+          <span class="ciencia-link">explorar arquivo →</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5268" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="5.5" r="1.5"/><path d="M7 18C9.5 18 9.5 14 12 14s2.5 4 5 4"/><path d="M5.5 17C5.5 14.5 8.5 14.5 8.5 12s-3-2.5-3-5"/><path d="M17 5.5c-2.5 0-2.5 3-5 3s-2.5-3-5-3"/></svg>
+        <span class="tab-lbl">Home</span>
+      </div>
+      <div class="tab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5268" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v1a3 3 0 0 0 3 3"/><path d="M17 6h3v1a3 3 0 0 1-3 3"/><path d="M10 14v3h4v-3"/><path d="M8 20h8"/><path d="M12 17v3"/></svg>
+        <span class="tab-lbl">Missões</span>
+      </div>
+      <div class="tab active">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4AFFA3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.5" r="3"/><path d="M5 21c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M12.8 16l-1.8 2.6h2l-1.4 2.4"/></svg>
+        <span class="tab-lbl" style="color:var(--green);">Perfil</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PÓS-PARTIDA ══════════════ -->
+<div>
+  <p class="screen-lbl">Pós-partida</p>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+    <div class="result-hero">
+      <div class="result-mode">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="9"/><path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/></svg>
+        Modo Partida · resultado
+      </div>
+      <div class="result-number">249</div>
+      <div class="result-unit">milissegundos</div>
+      <div class="result-badge">Novo recorde pessoal ↑</div>
+    </div>
+
+    <div class="vs-row">
+      <div class="vs-item"><div class="vs-val" style="color:var(--green);">249</div><div class="vs-lbl">agora</div></div>
+      <div class="vs-divider"></div>
+      <div style="text-align:center;"><div class="vs-delta-val">−27 ms</div><div class="vs-delta-lbl">vs. anterior</div></div>
+      <div class="vs-divider"></div>
+      <div class="vs-item"><div class="vs-val" style="color:var(--text1);">276</div><div class="vs-lbl">anterior</div></div>
+    </div>
+
+    <div class="scroll">
+      <div class="arq-prog-card">
+        <div class="arq-prog-top">
+          <div><div class="arq-prog-lbl">Rumo a — O Velocista</div><div class="arq-prog-title">Partida abaixo de 220 ms</div></div>
+          <div class="arq-prog-pct">50%</div>
+        </div>
+        <div class="arq-prog-sub">Você está em 249 ms — faltam 29 ms para evoluir</div>
+        <div class="prog-wrap"><div class="prog-fill" style="width:50%;background:var(--purple);"></div></div>
+      </div>
+
+      <div class="xp-row">
+        <div class="xp-card"><div class="xp-val" style="color:var(--amber);">+120</div><div class="xp-lbl">XP ganho</div></div>
+        <div class="xp-card"><div class="xp-val" style="color:var(--amber);">🔥1</div><div class="xp-lbl">dia seguido</div></div>
+        <div class="xp-card"><div class="xp-val" style="color:var(--green);">7</div><div class="xp-lbl">tentativas</div></div>
+      </div>
+
+      <div class="historico-card">
+        <div class="hist-hd"><span class="hist-title">Últimas 8 sessões</span><span class="hist-trend">↓ −47 ms</span></div>
+        <div class="bars">
+          <div class="bar-wrap"><div class="bar" style="height:18px;background:var(--bg3);"></div><div class="bar-val">652</div></div>
+          <div class="bar-wrap"><div class="bar" style="height:22px;background:var(--bg3);"></div><div class="bar-val">581</div></div>
+          <div class="bar-wrap"><div class="bar" style="height:26px;background:var(--bg3);"></div><div class="bar-val">563</div></div>
+          <div class="bar-wrap"><div class="bar" style="height:24px;background:var(--bg3);"></div><div class="bar-val">591</div></div>
+          <div class="bar-wrap"><div class="bar" style="height:21px;background:var(--bg3);"></div><div class="bar-val">613</div></div>
+          <div class="bar-wrap"><div class="bar" style="height:23px;background:var(--bg3);"></div><div class="bar-val">605</div></div>
+          <div class="bar-wrap"><div class="bar" style="height:28px;background:rgba(74,255,163,0.2);"></div><div class="bar-val" style="color:var(--green);">276</div></div>
+          <div class="bar-wrap"><div class="bar" style="height:36px;background:var(--green);"></div><div class="bar-val" style="color:var(--green);">249</div></div>
+        </div>
+      </div>
+
+      <div class="lore">
+        <div class="lore-dot"></div>
+        <div class="lore-text"><strong>Você treinou isso:</strong> seu córtex pré-frontal processou 7 estímulos em sequência. Cada sessão fortalece conexões sinápticas de decisão rápida. <span style="color:var(--purple);cursor:pointer;">ler mais →</span></div>
+      </div>
+
+      <div class="cta-primary">
+        <div><div class="cta-primary-label">Jogar de novo</div><div class="cta-primary-sub">Modo Partida · mesmas configurações</div></div>
+        <div class="cta-primary-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="#081400"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+      </div>
+      <div class="cta-secondary">
+        <div><div class="cta-sec-label">Próximo modo</div><div class="cta-sec-sub">Modo Alvo · missão pendente</div></div>
+        <div class="cta-sec-arrow">→</div>
+      </div>
+      <div class="cta-secondary" style="margin-bottom:0;">
+        <div><div class="cta-sec-label">Ver evolução completa</div><div class="cta-sec-sub">Perfil · progresso no arquétipo</div></div>
+        <div class="cta-sec-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

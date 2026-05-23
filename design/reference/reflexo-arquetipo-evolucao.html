@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Evolução de Arquétipo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#080B10; --bg1:#0F1520; --bg2:#1A2030; --bg3:#252D3E;
+  --green:#4AFFA3; --green-dim:rgba(74,255,163,0.10); --green-border:rgba(74,255,163,0.22);
+  --purple:#7B6EF6; --purple-dim:rgba(123,110,246,0.12); --purple-border:rgba(123,110,246,0.25);
+  --amber:#FFB547; --amber-dim:rgba(255,181,71,0.12);
+  --text0:#EDF0F7; --text1:#8892A4; --text2:#4A5268;
+  --border:rgba(255,255,255,0.06); --border-mid:rgba(255,255,255,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:#040608;
+  font-family:'DM Sans',sans-serif;
+  padding:48px 24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:56px;
+}
+
+/* ── Section ── */
+.sec-hd{text-align:center;max-width:560px;}
+.sec-eyebrow{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);margin-bottom:6px;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text0);letter-spacing:.5px;margin-bottom:6px;}
+.sec-sub{font-size:13px;color:var(--text1);line-height:1.6;}
+
+/* ── Storyboard frames row ── */
+.frames-row{display:flex;gap:12px;align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%;max-width:1100px;}
+.frame-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.frame-label{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);}
+.frame-timing{font-size:9px;font-family:'Space Mono',monospace;color:var(--amber);}
+
+.frame{
+  width:180px;
+  height:340px;
+  background:var(--bg0);
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,0.07);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+/* Particle dots */
+.particles{position:absolute;inset:0;pointer-events:none;}
+.p{position:absolute;border-radius:50%;background:var(--green);opacity:0;}
+
+/* Ring burst */
+.ring-burst{
+  position:absolute;
+  border-radius:50%;
+  border:1.5px solid var(--green);
+  opacity:0;
+}
+
+/* Avatar wrapper */
+.av-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+.av-ring-outer{position:absolute;border-radius:50%;border:1.5px solid;opacity:.25;}
+.av-ring-inner{position:absolute;border-radius:50%;border:1px dashed;opacity:.15;}
+.av-circle{border-radius:50%;overflow:hidden;position:relative;z-index:2;}
+
+/* Labels inside frame */
+.frame-inner{display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 16px;width:100%;}
+.eyebrow-sm{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);}
+.arq-name-lg{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;line-height:1.1;text-align:center;}
+.arq-desc-sm{font-size:10px;color:var(--text1);text-align:center;line-height:1.5;}
+.xp-pill{background:var(--amber-dim);border:1px solid rgba(255,181,71,0.25);border-radius:12px;padding:4px 12px;font-size:10px;font-family:'Space Mono',monospace;color:var(--amber);font-weight:700;}
+.criteria-row{display:flex;flex-direction:column;gap:4px;width:100%;}
+.crit{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--green);}
+.crit-dot{width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.next-preview{background:rgba(255,255,255,0.04);border:0.5px solid var(--border-mid);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;width:100%;}
+.next-av{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;}
+.next-info{}
+.next-label{font-size:8px;color:var(--text2);font-family:'Space Mono',monospace;text-transform:uppercase;}
+.next-name{font-size:11px;font-weight:600;color:var(--text0);}
+
+/* Progress bar in frame */
+.prog-track{width:100%;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.prog-fill{height:3px;border-radius:2px;}
+
+/* Flash overlay */
+.flash{position:absolute;inset:0;background:var(--green);opacity:0;z-index:10;pointer-events:none;}
+
+/* Glow bg */
+.glow-bg{position:absolute;width:200px;height:200px;border-radius:50%;opacity:0;filter:blur(40px);pointer-events:none;}
+
+/* CTA share */
+.share-btn{width:calc(100% - 24px);background:rgba(255,255,255,0.06);border:0.5px solid var(--border-mid);border-radius:8px;padding:9px;text-align:center;font-size:10px;font-family:'Space Mono',monospace;color:var(--text1);margin:0 12px;}
+
+/* Arrow between frames */
+.arrow-sep{display:flex;align-items:center;padding-top:140px;color:var(--text2);font-size:18px;}
+
+/* ── Interactive demo phone ── */
+.demo-section{display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;justify-content:center;width:100%;max-width:900px;}
+.demo-phone{
+  width:300px;
+  height:560px;
+  background:var(--bg0);
+  border-radius:36px;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 40px 80px rgba(0,0,0,0.9);
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{transform:scale(0.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes ringExpand{from{transform:scale(0.3);opacity:0.8}to{transform:scale(2.5);opacity:0}}
+@keyframes particleFly{0%{transform:translate(0,0) scale(1);opacity:0.8}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
+@keyframes flash{0%{opacity:0}15%{opacity:0.35}100%{opacity:0}}
+@keyframes glowPulse{0%,100%{opacity:0.15}50%{opacity:0.35}}
+@keyframes avatarReveal{0%{transform:scale(0.7) rotate(-5deg);opacity:0}60%{transform:scale(1.05) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+@keyframes nameSlam{0%{transform:scaleX(1.4) scaleY(0.7);opacity:0}60%{transform:scaleX(0.95) scaleY(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes ringPing{0%{transform:scale(1);opacity:0.6}100%{transform:scale(2);opacity:0}}
+@keyframes confettiDrop{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(80px) rotate(360deg);opacity:0}}
+
+.running .flash{animation:flash 0.6s ease-out forwards;}
+.running .glow-bg{animation:glowPulse 2s ease-in-out 0.5s infinite;}
+
+/* Spec table */
+.spec-table{width:100%;max-width:620px;border-collapse:collapse;}
+.spec-table th{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);padding:8px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);}
+.spec-table td{font-size:12px;color:var(--text1);padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.04);line-height:1.5;}
+.spec-table td:first-child{font-family:'Space Mono',monospace;color:var(--amber);white-space:nowrap;}
+.spec-table td:nth-child(2){color:var(--text0);font-weight:500;}
+
+/* Annotation */
+.ann{background:rgba(255,255,255,0.025);border:0.5px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px 14px;display:flex;gap:10px;margin-bottom:6px;}
+.ann-ico{font-size:13px;flex-shrink:0;margin-top:1px;}
+.ann-txt{font-size:12px;color:var(--text1);line-height:1.55;}
+.ann-txt strong{color:var(--text0);}
+.anns{width:100%;max-width:760px;display:flex;flex-direction:column;}
+
+.divider{width:100%;max-width:900px;height:1px;background:rgba(255,255,255,0.04);}
+</style>
+</head>
+<body>
+
+<!-- ══════ STORYBOARD ══════ -->
+<div class="sec-hd">
+  <div class="sec-eyebrow">Evolução de arquétipo — storyboard</div>
+  <div class="sec-title">O momento mais importante do produto</div>
+  <div class="sec-sub">6 frames · duração total ~3.2 segundos · acontece uma vez a cada evolução de arquétipo</div>
+</div>
+
+<div class="frames-row">
+
+  <!-- F1: Trigger — critérios atingidos -->
+  <div class="frame-wrap">
+    <div class="frame-label">Frame 1</div>
+    <div class="frame-timing">0ms — trigger</div>
+    <div class="frame" style="background:var(--bg0);">
+      <div class="frame-inner">
+        <div class="eyebrow-sm" style="color:var(--green);">Objetivo alcançado</div>
+        <div class="av-wrap">
+          <div class="av-ring-outer" style="width:100px;height:100px;border-color:var(--green);"></div>
+          <div class="av-ring-inner" style="width:116px;height:116px;border-color:var(--green);"></div>
+          <div class="av-circle" style="width:72px;height:72px;">
+            <svg width="72" height="72" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="40" fill="#1e3a5f"/>
+              <circle cx="30" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+              <circle cx="50" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+              <path d="M30 33l4-4h12l4 4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M39 42h2" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="criteria-row">
+          <div class="crit"><div class="crit-dot"></div>5 sessões de Partida ✓</div>
+          <div class="crit"><div class="crit-dot"></div>Média abaixo de 300ms ✓</div>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" style="width:100%;background:var(--green);"></div>
+        </div>
+        <div style="font-size:9px;color:var(--green);font-family:'Space Mono',monospace;">100% — pronto para evoluir</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-sep">›</div>
+
+  <!-- F2: Flash branco -->
+  <div class="frame-wrap">
+    <div class="frame-label">Frame 2</div>
+    <div class="frame-timing">300ms — flash</div>
+    <div class="frame" style="background:var(--bg0);">
+      <!-- Flash overlay -->
+      <div style="position:absolute;inset:0;background:var(--green);opacity:0.28;z-index:5;"></div>
+      <!-- Ring burst -->
+      <div style="position:absolute;width:160px;height:160px;border-radius:50%;border:2px solid var(--green);opacity:0.4;transform:scale(1.4);"></div>
+      <div style="position:absolute;width:100px;height:100px;border-radius:50%;border:2px solid var(--green);opacity:0.6;"></div>
+      <div class="frame-inner" style="position:relative;z-index:6;">
+        <div class="av-circle" style="width:72px;height:72px;filter:brightness(2);">
+          <svg width="72" height="72" viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="40" r="40" fill="#1e3a5f"/>
+            <circle cx="30" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+            <circle cx="50" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-sep">›</div>
+
+  <!-- F3: Avatar novo aparece -->
+  <div class="frame-wrap">
+    <div class="frame-label">Frame 3</div>
+    <div class="frame-timing">600ms — reveal</div>
+    <div class="frame" style="background:var(--bg0);">
+      <!-- Glow bg -->
+      <div style="position:absolute;width:180px;height:180px;border-radius:50%;background:var(--purple);opacity:0.12;filter:blur(30px);"></div>
+      <!-- Particles scattered -->
+      <div style="position:absolute;width:5px;height:5px;border-radius:50%;background:var(--green);top:60px;left:40px;opacity:0.7;"></div>
+      <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:var(--green);top:80px;right:35px;opacity:0.5;"></div>
+      <div style="position:absolute;width:4px;height:4px;border-radius:50%;background:var(--amber);top:50px;right:50px;opacity:0.6;"></div>
+      <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:var(--green);bottom:100px;left:45px;opacity:0.5;"></div>
+      <div style="position:absolute;width:5px;height:5px;border-radius:50%;background:var(--purple);bottom:120px;right:40px;opacity:0.6;"></div>
+
+      <div class="frame-inner">
+        <div class="eyebrow-sm">Evoluindo para</div>
+        <!-- New avatar — iniciante -->
+        <div class="av-wrap">
+          <div class="av-ring-outer" style="width:110px;height:110px;border-color:var(--purple);opacity:0.4;"></div>
+          <div class="av-ring-inner" style="width:128px;height:128px;border-color:var(--purple);opacity:0.2;"></div>
+          <div class="av-circle" style="width:80px;height:80px;box-shadow:0 0 32px rgba(123,110,246,0.4);">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="40" fill="#166534"/>
+              <path d="M40 54V36" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M40 38c-6 0-10-4-10-10 6 0 10 4 10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M40 42c6 0 10-4 10-10-6 0-10 4-10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M32 54h16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="arq-name-lg" style="color:var(--purple);font-size:28px;opacity:0.6;">O Iniciante</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-sep">›</div>
+
+  <!-- F4: Nome slam + partículas -->
+  <div class="frame-wrap">
+    <div class="frame-label">Frame 4</div>
+    <div class="frame-timing">900ms — slam</div>
+    <div class="frame" style="background:var(--bg0);">
+      <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:var(--purple);opacity:0.18;filter:blur(35px);"></div>
+      <!-- Ring pings -->
+      <div style="position:absolute;width:110px;height:110px;border-radius:50%;border:1.5px solid var(--purple);opacity:0.3;transform:scale(1.6);"></div>
+      <div style="position:absolute;width:110px;height:110px;border-radius:50%;border:1px solid var(--green);opacity:0.2;transform:scale(2.0);"></div>
+      <!-- Particles -->
+      <div style="position:absolute;width:6px;height:6px;border-radius:50%;background:var(--green);top:48px;left:28px;opacity:0.9;"></div>
+      <div style="position:absolute;width:4px;height:4px;border-radius:50%;background:var(--amber);top:38px;right:32px;opacity:0.8;"></div>
+      <div style="position:absolute;width:5px;height:5px;border-radius:50%;background:var(--purple);top:70px;right:24px;opacity:0.7;"></div>
+      <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:var(--green);bottom:88px;left:30px;opacity:0.6;"></div>
+      <div style="position:absolute;width:4px;height:4px;border-radius:50%;background:var(--amber);bottom:100px;right:28px;opacity:0.7;"></div>
+      <div style="position:absolute;width:6px;height:6px;border-radius:50%;background:var(--green);top:55px;left:50%;opacity:0.8;"></div>
+
+      <div class="frame-inner">
+        <div style="height:8px;"></div>
+        <div class="av-wrap">
+          <div class="av-ring-outer" style="width:110px;height:110px;border-color:var(--purple);opacity:0.5;"></div>
+          <div class="av-circle" style="width:84px;height:84px;box-shadow:0 0 40px rgba(123,110,246,0.5);">
+            <svg width="84" height="84" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="40" fill="#166534"/>
+              <path d="M40 54V36" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M40 38c-6 0-10-4-10-10 6 0 10 4 10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M40 42c6 0 10-4 10-10-6 0-10 4-10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M32 54h16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <!-- NAME SLAM -->
+        <div class="arq-name-lg" style="color:var(--purple);font-size:30px;letter-spacing:1px;">O INICIANTE</div>
+        <div class="xp-pill">+500 XP</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-sep">›</div>
+
+  <!-- F5: Info + critérios do próximo -->
+  <div class="frame-wrap">
+    <div class="frame-label">Frame 5</div>
+    <div class="frame-timing">1600ms — contexto</div>
+    <div class="frame" style="background:var(--bg0);">
+      <div style="position:absolute;width:160px;height:160px;border-radius:50%;background:var(--purple);opacity:0.1;filter:blur(28px);"></div>
+      <div class="frame-inner">
+        <div class="av-wrap" style="margin-bottom:2px;">
+          <div class="av-circle" style="width:64px;height:64px;box-shadow:0 0 20px rgba(123,110,246,0.35);">
+            <svg width="64" height="64" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="40" fill="#166534"/>
+              <path d="M40 54V36" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M40 38c-6 0-10-4-10-10 6 0 10 4 10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M40 42c6 0 10-4 10-10-6 0-10 4-10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M32 54h16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="eyebrow-sm">Arquétipo atual</div>
+        <div class="arq-name-lg" style="color:var(--purple);font-size:22px;">O Iniciante</div>
+        <div class="arq-desc-sm">Crescendo a cada treino. Consistência é seu maior diferencial agora.</div>
+        <div class="next-preview">
+          <div class="next-av">
+            <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="40" fill="#7f1d1d"/>
+              <path d="M40 22l-12 4v14c0 8 6 14 12 16 6-2 12-8 12-16V26l-12-4z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M35 39l4 4 7-7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="next-info">
+            <div class="next-label">Próximo</div>
+            <div class="next-name">O Resistente →</div>
+          </div>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" style="width:0%;background:var(--purple);"></div>
+        </div>
+        <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">0% — jornada recomeça</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-sep">›</div>
+
+  <!-- F6: CTA continuar -->
+  <div class="frame-wrap">
+    <div class="frame-label">Frame 6</div>
+    <div class="frame-timing">2400ms — CTA</div>
+    <div class="frame" style="background:var(--bg0);">
+      <div style="position:absolute;width:160px;height:160px;border-radius:50%;background:var(--purple);opacity:0.08;filter:blur(24px);"></div>
+      <div class="frame-inner" style="gap:8px;">
+        <div class="av-wrap">
+          <div class="av-circle" style="width:64px;height:64px;">
+            <svg width="64" height="64" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="40" fill="#166534"/>
+              <path d="M40 54V36" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M40 38c-6 0-10-4-10-10 6 0 10 4 10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M40 42c6 0 10-4 10-10-6 0-10 4-10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M32 54h16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="arq-name-lg" style="color:var(--purple);font-size:20px;">O Iniciante</div>
+        <div class="xp-pill">+500 XP desbloqueados</div>
+        <div style="font-size:10px;color:var(--text1);text-align:center;line-height:1.5;padding:0 4px;">Você treinou seu córtex pré-frontal consistentemente. Próximo: O Resistente.</div>
+        <!-- CTA buttons -->
+        <div style="width:100%;background:var(--green);border-radius:9px;padding:11px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:15px;color:#081400;letter-spacing:.5px;">Continuar treinando →</div>
+        <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;cursor:pointer;">compartilhar conquista</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /frames-row -->
+
+<div class="divider"></div>
+
+<!-- ══════ DEMO INTERATIVO ══════ -->
+<div class="sec-hd">
+  <div class="sec-eyebrow">Demo interativo</div>
+  <div class="sec-title">Toque para ver a animação</div>
+  <div class="sec-sub">Simulação da sequência completa em tempo real. Clique no botão dentro do telefone.</div>
+</div>
+
+<div class="demo-section">
+  <div class="demo-phone" id="demo">
+    <!-- State 0: pre-evolution -->
+    <div id="state-pre" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;width:100%;position:relative;z-index:2;">
+      <div style="font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;">Modo Partida concluído</div>
+
+      <!-- Current avatar -->
+      <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;width:110px;height:110px;border-radius:50%;border:1.5px solid var(--green);opacity:0.25;"></div>
+        <div style="position:absolute;width:126px;height:126px;border-radius:50%;border:1px dashed var(--green);opacity:0.15;"></div>
+        <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;">
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="40" r="40" fill="#1e3a5f"/>
+            <circle cx="30" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+            <circle cx="50" cy="42" r="9" stroke="#fff" stroke-width="2.5"/>
+            <path d="M30 33l4-4h12l4 4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M39 42h2" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:var(--text2);font-family:'Space Mono',monospace;margin-bottom:3px;">Arquétipo atual</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green);letter-spacing:.5px;">O Explorador</div>
+      </div>
+
+      <!-- Progress at 100% -->
+      <div style="width:100%;background:rgba(74,255,163,0.08);border:1px solid rgba(74,255,163,0.2);border-radius:10px;padding:10px 14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="font-size:10px;color:var(--text1);">Rumo ao Iniciante</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--green);">100%</div>
+        </div>
+        <div style="width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+          <div style="width:100%;height:4px;border-radius:2px;background:var(--green);"></div>
+        </div>
+        <div style="font-size:9px;color:var(--green);font-family:'Space Mono',monospace;margin-top:4px;">5 sessões ✓ · média 287ms ✓</div>
+      </div>
+
+      <!-- Trigger button -->
+      <button onclick="runAnimation()" style="width:100%;background:var(--green);border:none;border-radius:11px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:17px;color:#081400;letter-spacing:.8px;cursor:pointer;">Evoluir arquétipo ↑</button>
+    </div>
+
+    <!-- Animation layers -->
+    <div id="anim-flash" style="position:absolute;inset:0;background:var(--green);opacity:0;z-index:20;pointer-events:none;border-radius:36px;transition:opacity 0.1s;"></div>
+
+    <div id="anim-content" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px 24px;z-index:15;">
+      <!-- Glow -->
+      <div id="anim-glow" style="position:absolute;width:240px;height:240px;border-radius:50%;background:var(--purple);opacity:0;filter:blur(50px);transition:opacity 0.8s;"></div>
+
+      <!-- Particles -->
+      <div id="particles-container" style="position:absolute;inset:0;pointer-events:none;"></div>
+
+      <!-- Ring pings -->
+      <div id="ring1" style="position:absolute;width:130px;height:130px;border-radius:50%;border:1.5px solid var(--purple);opacity:0;transition:all 0.8s;"></div>
+      <div id="ring2" style="position:absolute;width:130px;height:130px;border-radius:50%;border:1px solid var(--green);opacity:0;transition:all 1s 0.2s;"></div>
+
+      <!-- New avatar -->
+      <div id="anim-avatar" style="position:relative;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0.6);transition:opacity 0.4s,transform 0.5s;">
+        <div id="anim-av-ring" style="position:absolute;width:120px;height:120px;border-radius:50%;border:1.5px solid var(--purple);opacity:0.5;"></div>
+        <div style="width:90px;height:90px;border-radius:50%;overflow:hidden;box-shadow:0 0 40px rgba(123,110,246,0.5);">
+          <svg width="90" height="90" viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="40" r="40" fill="#166534"/>
+            <path d="M40 54V36" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M40 38c-6 0-10-4-10-10 6 0 10 4 10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M40 42c6 0 10-4 10-10-6 0-10 4-10 10z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M32 54h16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Name -->
+      <div id="anim-name" style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--purple);letter-spacing:2px;opacity:0;transform:scaleX(1.3) scaleY(0.7);transition:opacity 0.3s,transform 0.4s;text-align:center;">O INICIANTE</div>
+
+      <!-- XP pill -->
+      <div id="anim-xp" style="background:var(--amber-dim);border:1px solid rgba(255,181,71,0.3);border-radius:14px;padding:5px 16px;font-size:12px;font-family:'Space Mono',monospace;color:var(--amber);font-weight:700;opacity:0;transform:translateY(10px);transition:opacity 0.3s,transform 0.3s;">+500 XP</div>
+
+      <!-- Context -->
+      <div id="anim-ctx" style="opacity:0;transform:translateY(12px);transition:opacity 0.4s,transform 0.4s;text-align:center;width:100%;">
+        <div style="font-size:11px;color:var(--text1);line-height:1.6;margin-bottom:10px;">Crescendo a cada treino. Consistência é seu maior diferencial agora.</div>
+        <div style="background:rgba(255,255,255,0.04);border:0.5px solid var(--border-mid);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;">
+            <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="40" fill="#7f1d1d"/>
+              <path d="M40 22l-12 4v14c0 8 6 14 12 16 6-2 12-8 12-16V26l-12-4z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M35 39l4 4 7-7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:8px;color:var(--text2);font-family:'Space Mono',monospace;text-transform:uppercase;">Próximo</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text0);">O Resistente →</div>
+          </div>
+        </div>
+        <button onclick="resetAnimation()" style="width:100%;background:var(--green);border:none;border-radius:11px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:16px;color:#081400;letter-spacing:.8px;cursor:pointer;">Continuar treinando →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spec table -->
+  <div>
+    <div style="font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:12px;">Especificação de timing</div>
+    <table class="spec-table">
+      <tr><th>Tempo</th><th>Evento</th><th>Easing / Notas</th></tr>
+      <tr><td>0ms</td><td>Trigger confirmado</td><td>Vibração háptica leve (impact.light)</td></tr>
+      <tr><td>100ms</td><td>Flash verde tela inteira</td><td>opacity 0→0.35→0, 400ms ease-out</td></tr>
+      <tr><td>300ms</td><td>Avatar antigo some</td><td>scale 1→0.5, opacity 1→0, 200ms</td></tr>
+      <tr><td>500ms</td><td>Glow de fundo aparece</td><td>opacity 0→0.18, 600ms ease-in</td></tr>
+      <tr><td>600ms</td><td>Avatar novo entra</td><td>scale 0.6→1, spring (tension 60, friction 8)</td></tr>
+      <tr><td>700ms</td><td>Ring pings expandem</td><td>scale 1→2.2, opacity 0.6→0, 700ms ease-out</td></tr>
+      <tr><td>900ms</td><td>Nome slam</td><td>scaleX 1.3→1 scaleY 0.7→1, 350ms spring</td></tr>
+      <tr><td>1000ms</td><td>Partículas voam</td><td>12 dots, direções aleatórias, 800ms</td></tr>
+      <tr><td>1100ms</td><td>+XP pill sobe</td><td>translateY 10→0, opacity 0→1, 300ms</td></tr>
+      <tr><td>1300ms</td><td>Vibração háptica forte</td><td>impact.heavy — o "peso" da conquista</td></tr>
+      <tr><td>1600ms</td><td>Contexto + próximo arq.</td><td>translateY 12→0, opacity 0→1, 400ms</td></tr>
+      <tr><td>2400ms</td><td>CTA "Continuar" aparece</td><td>fade in 300ms — não pressa</td></tr>
+      <tr><td>∞</td><td>Usuário toca Continuar</td><td>Retorna à Home com novo arquétipo</td></tr>
+    </table>
+    <div style="margin-top:10px;font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;">Duração total: ~2.4s até o CTA aparecer<br>Haptic: light em 0ms · heavy em 1300ms</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Annotations -->
+<div class="anns">
+  <div class="ann"><div class="ann-ico">⚡</div><div class="ann-txt"><strong>Flash no início, não confetti.</strong> Confetti é genérico — qualquer app usa. O flash de tela verde elétrico é uma assinatura visual única do Reflexo, consistente com a cor de performance do design system. É visceral e rápido, não decorativo.</div></div>
+  <div class="ann"><div class="ann-ico">💜</div><div class="ann-txt"><strong>Avatar novo entra com roxo, não verde.</strong> O verde é ação. O roxo é identidade. A evolução de arquétipo é um momento de identidade — por isso o glow, os anéis e o nome usam roxo. O verde volta no CTA "Continuar treinando", que é ação.</div></div>
+  <div class="ann"><div class="ann-ico">📳</div><div class="ann-txt"><strong>Dois momentos hápticos.</strong> Impact leve no trigger (0ms) — sinal de que algo especial está acontecendo. Impact forte no slam do nome (1300ms) — o peso da conquista. Háptico duplo cria memória física do momento, não só visual.</div></div>
+  <div class="ann"><div class="ann-ico">⏭</div><div class="ann-txt"><strong>CTA só aparece em 2.4s.</strong> Não há pressa para sair da tela. O usuário precisa de tempo para absorver a evolução. Se o CTA aparecesse em 500ms, o momento seria desperdiçado. 2.4s é o tempo mínimo para o cérebro consolidar o que viu.</div></div>
+  <div class="ann"><div class="ann-ico">→</div><div class="ann-txt"><strong>Próximo arquétipo visível antes de sair.</strong> O frame 5 mostra "O Resistente" como destino imediato. O usuário sai da tela de evolução já sabendo para onde vai — o loop de motivação recomeça antes de voltar à Home.</div></div>
+</div>
+
+<script>
+function createParticle(container) {
+  const p = document.createElement('div');
+  const size = Math.random() * 5 + 3;
+  const colors = ['#4AFFA3','#7B6EF6','#FFB547','#4AFFA3'];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  const angle = Math.random() * 360;
+  const dist = 80 + Math.random() * 80;
+  const tx = Math.cos(angle * Math.PI/180) * dist;
+  const ty = Math.sin(angle * Math.PI/180) * dist;
+  p.style.cssText = `
+    position:absolute;width:${size}px;height:${size}px;border-radius:50%;
+    background:${color};opacity:0;
+    left:calc(50% - ${size/2}px);top:calc(50% - ${size/2}px);
+    --tx:${tx}px;--ty:${ty}px;
+  `;
+  container.appendChild(p);
+  setTimeout(() => {
+    p.style.transition = `transform ${0.6 + Math.random()*0.4}s ease-out, opacity ${0.8}s ease-out`;
+    p.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
+    p.style.opacity = '0.9';
+    setTimeout(() => p.style.opacity = '0', 100);
+  }, 10);
+  setTimeout(() => p.remove(), 1000);
+}
+
+function runAnimation() {
+  const pre = document.getElementById('state-pre');
+  const content = document.getElementById('anim-content');
+  const flash = document.getElementById('anim-flash');
+  const glow = document.getElementById('anim-glow');
+  const avatar = document.getElementById('anim-avatar');
+  const name = document.getElementById('anim-name');
+  const xp = document.getElementById('anim-xp');
+  const ctx = document.getElementById('anim-ctx');
+  const ring1 = document.getElementById('ring1');
+  const ring2 = document.getElementById('ring2');
+  const particles = document.getElementById('particles-container');
+
+  // Flash
+  flash.style.opacity = '0.35';
+  setTimeout(() => flash.style.transition = 'opacity 0.4s', 10);
+  setTimeout(() => flash.style.opacity = '0', 120);
+
+  // Hide pre state
+  setTimeout(() => { pre.style.display = 'none'; }, 200);
+
+  // Show content
+  setTimeout(() => {
+    content.style.display = 'flex';
+  }, 300);
+
+  // Glow
+  setTimeout(() => { glow.style.opacity = '0.18'; }, 500);
+
+  // Avatar
+  setTimeout(() => {
+    avatar.style.opacity = '1';
+    avatar.style.transform = 'scale(1)';
+  }, 600);
+
+  // Ring pings
+  setTimeout(() => {
+    ring1.style.opacity = '0.5';
+    ring1.style.transform = 'scale(2.0)';
+    ring1.style.opacity = '0';
+  }, 700);
+  setTimeout(() => {
+    ring2.style.opacity = '0.3';
+    ring2.style.transform = 'scale(2.4)';
+    ring2.style.opacity = '0';
+  }, 900);
+
+  // Name slam
+  setTimeout(() => {
+    name.style.opacity = '1';
+    name.style.transform = 'scaleX(1) scaleY(1)';
+  }, 900);
+
+  // Particles
+  setTimeout(() => {
+    for (let i = 0; i < 16; i++) {
+      setTimeout(() => createParticle(particles), i * 30);
+    }
+  }, 950);
+
+  // XP
+  setTimeout(() => {
+    xp.style.opacity = '1';
+    xp.style.transform = 'translateY(0)';
+  }, 1100);
+
+  // Context
+  setTimeout(() => {
+    ctx.style.opacity = '1';
+    ctx.style.transform = 'translateY(0)';
+  }, 1700);
+}
+
+function resetAnimation() {
+  const pre = document.getElementById('state-pre');
+  const content = document.getElementById('anim-content');
+  const flash = document.getElementById('anim-flash');
+  const glow = document.getElementById('anim-glow');
+  const avatar = document.getElementById('anim-avatar');
+  const name = document.getElementById('anim-name');
+  const xp = document.getElementById('anim-xp');
+  const ctx = document.getElementById('anim-ctx');
+  const ring1 = document.getElementById('ring1');
+  const ring2 = document.getElementById('ring2');
+
+  content.style.display = 'none';
+  flash.style.opacity = '0';
+  flash.style.transition = '';
+  glow.style.opacity = '0';
+  avatar.style.opacity = '0';
+  avatar.style.transform = 'scale(0.6)';
+  avatar.style.transition = '';
+  setTimeout(() => { avatar.style.transition = 'opacity 0.4s,transform 0.5s'; }, 50);
+  name.style.opacity = '0';
+  name.style.transform = 'scaleX(1.3) scaleY(0.7)';
+  xp.style.opacity = '0';
+  xp.style.transform = 'translateY(10px)';
+  ctx.style.opacity = '0';
+  ctx.style.transform = 'translateY(12px)';
+  ring1.style.opacity = '0';
+  ring1.style.transform = 'scale(1)';
+  ring2.style.opacity = '0';
+  ring2.style.transform = 'scale(1)';
+
+  pre.style.display = 'flex';
+}
+</script>
+</body>
+</html>
