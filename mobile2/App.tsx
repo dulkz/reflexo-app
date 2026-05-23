@@ -18,6 +18,7 @@ import Ciencia from './screens/Ciencia';
 import Perfil from './screens/Perfil';
 import Historico from './screens/Historico';
 import Jornada from './screens/Jornada';
+import ArchetypeEvolution from './screens/ArchetypeEvolution';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingFlow from './screens/onboarding/OnboardingFlow';
 import { ModeKey, MODE_COLORS } from './utils/levels';
@@ -44,6 +45,9 @@ import { ICONS, ARCHETYPE_ICONS, RARITY_ICONS_SVG } from './assets/icons';
 const RARITY_PRIORITY: Record<RarityKey, number> = {
   lendario: 6, epico: 5, raro: 4, dificil: 3, medio: 2, comum: 1,
 };
+
+// Archetype progression order — used to detect a forward evolution (advancement only).
+const ARCHETYPE_ORDER = ['EXPLORADOR', 'EM_EVOLUCAO', 'RESISTENTE', 'ATIRADOR', 'VELOCISTA', 'PILOTO'];
 
 type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'jornada';
 type GameScreen =
@@ -91,6 +95,8 @@ function AppInner() {
   const [triageEditMode, setTriageEditMode] = useState(false);
   const [milestoneBeat, setMilestoneBeat] = useState<string | null>(null);
   const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
+  // Archetype evolution takeover — set to the new archetype id when the user advances
+  const [evolutionTo, setEvolutionTo] = useState<string | null>(null);
   const toastAnim = useRef(new Animated.Value(0)).current;
   const achieveAnim = useRef(new Animated.Value(0)).current;
   const pendingMilestoneRef = useRef<string | null>(null);
@@ -222,6 +228,14 @@ function AppInner() {
     const sortedAchievements = [...newlyUnlocked].sort(
       (a, b) => RARITY_PRIORITY[b.rarity] - RARITY_PRIORITY[a.rarity],
     );
+
+    // ── Archetype evolution detection (advancement only) ──────────────────────
+    // prevStats/updatedStats already exclude invalidForAchievements sessions, so a
+    // discarded session can't trigger a phantom evolution.
+    const prevArchIdx = ARCHETYPE_ORDER.indexOf(prevStats.archetypeId);
+    const newArchIdx = ARCHETYPE_ORDER.indexOf(updatedStats.archetypeId);
+    const evolved = newArchIdx > prevArchIdx && newArchIdx > 0;
+    if (evolved) setEvolutionTo(updatedStats.archetypeId);
 
     // ── Milestone beat detection ──────────────────────────────────────────────
     let beatenLabel: string | null = null;
@@ -751,9 +765,9 @@ function AppInner() {
         />
       </Modal>
 
-      {/* Achievement unlocked toast */}
+      {/* Achievement unlocked toast — deferred while an evolution takeover is showing */}
       <Modal
-        visible={achievementQueue.length > 0}
+        visible={achievementQueue.length > 0 && evolutionTo === null}
         transparent
         animationType="fade"
         onRequestClose={() => setAchievementQueue(prev => prev.slice(1))}
@@ -919,9 +933,9 @@ function AppInner() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Milestone beat toast */}
+      {/* Milestone beat toast — deferred while an evolution takeover is showing */}
       <Modal
-        visible={milestoneBeat !== null}
+        visible={milestoneBeat !== null && evolutionTo === null}
         transparent
         animationType="fade"
         onRequestClose={() => setMilestoneBeat(null)}
@@ -938,6 +952,18 @@ function AppInner() {
             <Text style={styles.toastSub}>Toque para continuar</Text>
           </Animated.View>
         </TouchableOpacity>
+      </Modal>
+
+      {/* Archetype evolution takeover — the most important moment; covers everything */}
+      <Modal
+        visible={evolutionTo !== null}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setEvolutionTo(null)}
+      >
+        {evolutionTo !== null && (
+          <ArchetypeEvolution toId={evolutionTo} onContinue={() => setEvolutionTo(null)} />
+        )}
       </Modal>
     </View>
   );

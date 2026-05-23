@@ -17,3 +17,13 @@ export function hapticError(): void {
 export function hapticLight(): void {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
 }
+
+/** Heavy impact — the "weight" of a big moment (archetype evolution flash). */
+export function hapticHeavy(): void {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+}
+
+/** Success notification — celebratory beat (archetype evolution particles). */
+export function hapticSuccess(): void {
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+}

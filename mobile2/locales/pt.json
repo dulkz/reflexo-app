@@ -369,6 +369,14 @@
     "since": "desde"
   },
 
+  "evolution": {
+    "eyebrow": "EVOLUÇÃO DE ARQUÉTIPO",
+    "xp": "+{{xp}} XP",
+    "next": "Próximo",
+    "maxReached": "Nível máximo atingido",
+    "continue": "Continuar treinando"
+  },
+
   "profile": {
     "title": "PERFIL",
     "editProfile": "EDITAR PERFIL",
