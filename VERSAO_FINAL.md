@@ -5,7 +5,9 @@ Branch: feat/goal-redesign-final
 TypeScript: `npx tsc --noEmit` → 0 erros (rodar de dentro de mobile2/)
 App principal: mobile2/ (NUNCA mobile/)
 
-Documento de fechamento do redesign aprovado pelo conselho (GRUPOS 1–6).
+Documento de fechamento do redesign aprovado pelo conselho (GRUPOS 1–6) + segunda
+leva de mudanças (GRUPOS 7–9: navegação 3 tabs, tutoriais de modo, correções pontuais).
+Checkpoints por grupo: CHECKPOINT_1..5.md e CHECKPOINT_7..9.md (raiz do repo).
 
 ---
 
@@ -58,6 +60,35 @@ Documento de fechamento do redesign aprovado pelo conselho (GRUPOS 1–6).
 - CLAUDE.md: nota de Estado Final + checklist marcado.
 - VERSAO_FINAL.md criado.
 
+### GRUPO 7 — Navegação: 3 tabs (CHECKPOINT_7.md)
+- App.tsx: 5 tabs → 3 tabs (**Início · Missões · Perfil**). FAB laranja e mode picker
+  bottom sheet removidos por completo (modos seguem acessíveis pelos cards da Home).
+- Nova tela `screens/Missoes.tsx`: meta pessoal no topo + missões diárias (rótulo de
+  recompensa **Energia**) + semanais (rótulo **Ticket Dourado**), reusando
+  dailyMissions.ts/missions.ts.
+- Perfil virou hub: incorpora **MINHA JORNADA** (mapa + meta via JourneyMap),
+  **HISTÓRICO — evolução por modo** (colapsável), **CIÊNCIA** (colapsável) e a lista
+  completa de **Conquistas** (expandida inline pelo card-resumo).
+- Refatoração de reuso: `Ciencia` exporta `CienciaContent`; `Historico` exporta
+  `HistoricoModeCards`. Jornada/Ciencia/Historico **não foram deletadas** — apenas
+  deixaram de ser tabs.
+- i18n: blocos `nav` e `missoes` (PT/EN).
+
+### GRUPO 8 — Tutoriais dos modos (CHECKPOINT_8.md)
+- `components/ModeTutorial.tsx` (adaptado p/ TS da referência JS): tutorial animado por
+  modo, primeira abertura, "não mostrar novamente" em AsyncStorage
+  (`mode_tutorial_seen_{modeKey}`), respeita reduce-motion, sem emojis (dedo = touch dot).
+- Integrado antes do botão INICIAR nos 4 modos; o intro virou ScrollView (evita corte).
+- i18n: bloco `tutorial` (PT/EN).
+
+### GRUPO 9 — Correções pontuais (CHECKPOINT_9.md)
+- Sequência: **10 → 15 sinais** (25% NoGo mantido); descrições "20"→"15" (PT/EN).
+- **Energia infinita para assinantes**: `PREMIUM_ACTIVE` em monetization.ts +
+  `hasInfiniteEnergy()` em energy.ts; Home mostra **∞**; `tryStartMode` não consome
+  energia quando premium. Flag default `false` (sem impacto em produção).
+- Alvo: texto → "Leia a cor indicada e toque no círculo correto" (PT/EN).
+- Penalidade do Alvo unificada em **+150ms** (valor real do código) em tutorial e textos.
+
 ---
 
 ## 2. Decisões de design relevantes
@@ -82,6 +113,12 @@ Documento de fechamento do redesign aprovado pelo conselho (GRUPOS 1–6).
 - Glow da animação de evolução é um círculo translúcido (RN não tem blur nativo) —
   aproximação do filter:blur do mock.
 - Validação só por tsc — não houve execução em device/emulador nesta sessão.
+- **Recompensas das missões (Grupo 7) são exibidas, mas não concedidas ainda**: a tela
+  Missões mostra que diárias dão Energia e semanais dão Ticket Dourado, porém não há
+  sistema de "claim"/persistência de tickets nem evento de concessão. Implementar a
+  concessão efetiva (com estado de resgate p/ não duplicar) é mecânica futura.
+- `PREMIUM_ACTIVE` é uma flag manual em monetization.ts; quando houver Google Play
+  Billing, derivar do estado real da assinatura.
 
 ---
 
@@ -96,10 +133,15 @@ Documento de fechamento do redesign aprovado pelo conselho (GRUPOS 1–6).
 ---
 
 ## 5. Mapa rápido de arquivos-chave
-- App.tsx — state machine + addSession (disparo de evolução) + modais.
-- screens/Home.tsx, Resultado.tsx, Jornada.tsx, Perfil.tsx — telas redesenhadas.
+- App.tsx — state machine + 3 tabs (Início/Missões/Perfil) + addSession + modais.
+- screens/Home.tsx, Resultado.tsx, Perfil.tsx — telas redesenhadas (Perfil = hub).
+- screens/Missoes.tsx — tab Missões (meta + diárias/semanais com recompensas) (GRUPO 7).
+- screens/{Jornada,Ciencia,Historico}.tsx — não são mais tabs; Ciencia exporta
+  CienciaContent, Historico exporta HistoricoModeCards (embutidos no Perfil).
+- components/ModeTutorial.tsx — tutoriais animados por modo (GRUPO 8).
 - screens/ArchetypeEvolution.tsx — animação de evolução (GRUPO 5).
-- screens/Modo{Partida,Alvo,Sequencia,Radar}.tsx — gameplays + estados de erro.
+- screens/Modo{Partida,Alvo,Sequencia,Radar}.tsx — gameplays + estados de erro + tutorial.
 - config/archetypes.ts — detecção e catálogo dos arquétipos (canônico).
+- config/monetization.ts — PREMIUM_ACTIVE; utils/energy.ts — hasInfiniteEnergy().
 - utils/haptics.ts (impactMedium/error/light/heavy/success) + utils/animations.ts (shake).
-- locales/pt.json + en.json — i18n (namespaces home, result, journey, profile, evolution…).
+- locales/pt.json + en.json — i18n (namespaces nav, missoes, tutorial, home, journey…).

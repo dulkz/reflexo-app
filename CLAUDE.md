@@ -153,7 +153,7 @@ Referência: reflexo-arquetipo-evolucao.html
 
 Partida: 7 rodadas, descarta 2 piores, score = média das 5 melhores. Jitter 1000-4000ms. Queimada +300ms.
 Alvo: 10 rodadas, choice RT por cor, grid 2x2, prompt TOQUE O [COR]. Toque errado +200ms. Timeout 1500ms.
-Sequência: 10 rodadas, Go/NoGo, 75% Go, 25% NoGo vermelho. Antecipado +150ms. NoGo tocado +200ms + haptic duplo.
+Sequência: 15 rodadas, Go/NoGo, 75% Go, 25% NoGo vermelho. Antecipado +150ms. NoGo tocado +200ms + haptic duplo.
 Radar: 15 rodadas, 5 círculos em cruz, 1 acende por rodada. Toque errado +200ms. Timeout 1500ms.
 
 ---
