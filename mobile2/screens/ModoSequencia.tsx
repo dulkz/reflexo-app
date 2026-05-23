@@ -6,7 +6,7 @@ import {
   Animated, Platform, StatusBar as RNStatusBar,
 } from 'react-native';
 
-const TOTAL_SIGNALS = 20;
+const TOTAL_SIGNALS = 10;
 const MIN_INTERVAL = 1000;
 const MAX_INTERVAL = 2200;
 const SIGNAL_DURATION = 1400;
@@ -141,7 +141,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       fatigueIndex = Math.round(((avgLast - avgFirst) / avgFirst) * 100);
     }
 
-    // Score: avg RT contribution per round (all 20 signals participate):
+    // Score: avg RT contribution per round (all TOTAL_SIGNALS signals participate):
     //
     //   Scenario A — Go + hit:             realRt + earlyPenalty (if any)
     //   Scenario B — NoGo + correct inhibit + earlyPenalty: earlyPenalty only enters avg

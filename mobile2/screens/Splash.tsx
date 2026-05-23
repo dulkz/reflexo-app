@@ -14,6 +14,9 @@ const HOLD_MS    = 2200; // static hold after scan before onAnimationComplete
 // 7 letters × ~28px + 6 gaps × 8px ≈ 280px total → half = 140px
 const TEXT_HALF_W = 140;
 
+// Width of the animated horizontal bar that grows beneath the name
+const BAR_W = 200;
+
 const { width: W, height: H } = Dimensions.get('window');
 const CX = W / 2;
 // REFLEXO is the upper portion of the text block (REFLEXO + subtitle ~88px total)
@@ -36,6 +39,7 @@ export default function Splash({ onAnimationComplete }: Props) {
   const containerScale  = useRef(new Animated.Value(1)).current;
   const scanX           = useRef(new Animated.Value(-TEXT_HALF_W)).current;
   const scanOpacity     = useRef(new Animated.Value(0)).current;
+  const barScaleX       = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const entryAnims = letterAnims.map(({ opacity, translateX }) =>
@@ -70,6 +74,8 @@ export default function Splash({ onAnimationComplete }: Props) {
         ]),
         Animated.timing(subtitleOpacity, { toValue: 1, duration: PULSE_MS, useNativeDriver: true }),
         scanAnim,
+        // Horizontal bar grows from center out, synced with the scan sweep
+        Animated.timing(barScaleX, { toValue: 1, duration: SCAN_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       ]),
       Animated.delay(HOLD_MS),
     ]).start(() => onAnimationComplete());
@@ -99,6 +105,7 @@ export default function Splash({ onAnimationComplete }: Props) {
         <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity }]}>
           velocidade de reação
         </Animated.Text>
+        <Animated.View style={[styles.bar, { transform: [{ scaleX: barScaleX }] }]} />
       </Animated.View>
 
       {/* Scan glow — sits in an absoluteFill overlay, moves over the text */}
@@ -127,6 +134,7 @@ const styles = StyleSheet.create({
   row:  { flexDirection: 'row', alignItems: 'center' },
   letter: { fontSize: 48, fontWeight: '700', color: '#fff', letterSpacing: 8 },
   subtitle: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginTop: 14, letterSpacing: 1 },
+  bar: { width: BAR_W, height: 3, borderRadius: 2, backgroundColor: '#3b82f6', marginTop: 16 },
 
   // Scan group: starts at CX - TEXT_HALF_W (left edge), moves to CX + TEXT_HALF_W
   // left: CX - 4  →  group center sits on CX at translateX = 0
