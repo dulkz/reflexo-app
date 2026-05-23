@@ -36,6 +36,7 @@ import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
 import { preloadSounds, playSfx } from './utils/sfx';
+import { calculateStreak } from './utils/streak';
 import { ACHIEVEMENTS, Achievement, RARITY_CONFIG, RarityKey } from './config/achievements';
 import { buildUserStats } from './config/archetypes';
 import { ICONS, ARCHETYPE_ICONS, RARITY_ICONS_SVG } from './assets/icons';
@@ -43,20 +44,6 @@ import { ICONS, ARCHETYPE_ICONS, RARITY_ICONS_SVG } from './assets/icons';
 const RARITY_PRIORITY: Record<RarityKey, number> = {
   lendario: 6, epico: 5, raro: 4, dificil: 3, medio: 2, comum: 1,
 };
-
-function computeStreakFromSessions(sessions: SessionRecord[]): number {
-  if (sessions.length === 0) return 0;
-  const DAY = 86_400_000;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  let s = 0;
-  for (let i = 0; i < sessions.length; i++) {
-    const d = new Date(sessions[i].date); d.setHours(0, 0, 0, 0);
-    const diff = Math.round((today.getTime() - d.getTime()) / DAY);
-    if (diff === s) s++;
-    else if (diff > s) break;
-  }
-  return s;
-}
 
 type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'jornada';
 type GameScreen =
@@ -217,7 +204,7 @@ function AppInner() {
 
     // ── Pre-session achievement snapshot ──────────────────────────────────────
     const prevValid = sessions.filter(s => !s.invalidForAchievements);
-    const prevStreak = computeStreakFromSessions(prevValid);
+    const prevStreak = calculateStreak(prevValid).current;
     const prevStats = buildUserStats(prevValid, prevStreak);
     const prevUnlocked = new Set(ACHIEVEMENTS.filter(a => a.unlocked(prevStats)).map(a => a.id));
 
@@ -227,7 +214,7 @@ function AppInner() {
 
     // ── Achievement detection ─────────────────────────────────────────────────
     const updatedValid = updated.filter(s => !s.invalidForAchievements);
-    const updatedStreak = computeStreakFromSessions(updatedValid);
+    const updatedStreak = calculateStreak(updatedValid).current;
     const updatedStats = buildUserStats(updatedValid, updatedStreak);
     const newlyUnlocked = ACHIEVEMENTS.filter(
       a => !prevUnlocked.has(a.id) && a.unlocked(updatedStats),

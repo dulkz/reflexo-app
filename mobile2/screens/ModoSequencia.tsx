@@ -116,7 +116,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
     flashOpacity.setValue(0.4);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 500, useNativeDriver: true }).start();
+    Animated.timing(flashOpacity, { toValue: 0, duration: 250, useNativeDriver: true }).start();
   }, [flashOpacity]);
 
   const computeSummary = useCallback((allTrials: TrialResult[]): SeqSummary => {

@@ -45,6 +45,7 @@ function detectArchetypeId(
   alvoSessions: number,
   seqSessions: number,
   avgFatigue: number | null,
+  radarPlayed: boolean,
 ): string {
   if (totalSessions < 3) return 'EXPLORADOR';
 
@@ -52,7 +53,7 @@ function detectArchetypeId(
   const preciseEnough = bestAlvoAcc !== null && bestAlvoAcc >= 0.95;
   const resistantEnough = seqSessions >= 5 && avgFatigue !== null && avgFatigue < 3;
 
-  if (fastEnough && preciseEnough && resistantEnough) return 'PILOTO';
+  if (fastEnough && preciseEnough && resistantEnough && radarPlayed) return 'PILOTO';
   if (fastEnough && bestAlvoAcc !== null && bestAlvoAcc >= 0.85) return 'VELOCISTA';
   if (bestAlvoAcc !== null && bestAlvoAcc >= 0.92 && alvoSessions >= 5) return 'ATIRADOR';
   if (seqSessions >= 5 && avgFatigue !== null && avgFatigue < 5) return 'RESISTENTE';
@@ -87,6 +88,7 @@ export function buildUserStats(sessions: SessionRecord[], streak: number): UserS
     alvoSessions,
     seqSessions,
     avgFatigue,
+    bestScore.radar !== null,
   );
 
   return {
@@ -275,6 +277,12 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
         label: 'Fadiga média < 3%',
         dynamicSuffix: (s) => s.avgFatigueSeq !== null ? ` (atual: ${s.avgFatigueSeq.toFixed(1)}%)` : '',
         done: (s) => s.avgFatigueSeq !== null && s.avgFatigueSeq < 3,
+      },
+      {
+        id: 'playRadar',
+        label: 'Jogar Modo Radar (4º modo)',
+        dynamicSuffix: (s) => s.bestScoreByMode.radar !== null ? ' ✓' : '',
+        done: (s) => s.bestScoreByMode.radar !== null,
       },
     ],
   },
