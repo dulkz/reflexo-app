@@ -252,7 +252,37 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
         {/* ── MISSÕES ── */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('journey.missions')}</Text>
 
+        {/* Meta pessoal — banner roxo que contextualiza as missões */}
+        {userProfile.triageCompleted && ambition && (() => {
+          const metaDistance = !isBrainHealth && ambition.finalMetaMs != null && currentBestMs != null
+            ? Math.max(0, currentBestMs - ambition.finalMetaMs)
+            : null;
+          const subText = isBrainHealth
+            ? t('journey.summaryBrain', { base: baselineMs ?? '—', beaten: beatenCount, total: ambition.milestones.length })
+            : metaDistance !== null && metaDistance > 0
+            ? t('journey.metaDistance', { delta: metaDistance })
+            : t('journey.metaReached');
+          return (
+            <TouchableOpacity style={styles.metaBanner} onPress={() => onOpenTriage(true)} activeOpacity={0.85}>
+              <View style={styles.metaIcon}>
+                <SvgXml xml={ambition.icon} width={22} height={22} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.metaLabel}>{t('journey.yourGoalLabel')}</Text>
+                <Text style={[styles.metaValue, { color: ambitionGroupColor }]} numberOfLines={1}>{ambition.name}</Text>
+                <Text style={styles.metaSub} numberOfLines={1}>{subText}</Text>
+              </View>
+              <View style={styles.metaEdit}>
+                <Text style={styles.metaEditText}>{t('journey.changeGoal')}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })()}
+
         {/* Diárias */}
+        {dailyMissions.length > 0 && (
+          <Text style={styles.missionGroupLabel}>{t('journey.today')}</Text>
+        )}
         {dailyMissions.length > 0 && (
           <View style={styles.dailyCard}>
             <View style={styles.missionHeader}>
@@ -299,6 +329,9 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
 
         {/* Semanais */}
         {weeklyMissions.length > 0 && (
+          <Text style={styles.missionGroupLabel}>{t('journey.thisWeek')}</Text>
+        )}
+        {weeklyMissions.length > 0 && (
           <View style={styles.weeklyCard}>
             <View style={styles.missionHeader}>
               <Text style={styles.missionHeaderText}>{t('journey.weeklyMission')}</Text>
@@ -343,6 +376,17 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
         {dailyMissions.length === 0 && weeklyMissions.length === 0 && (
           <View style={styles.emptyMissions}>
             <Text style={styles.emptyMissionsText}>{t('journey.emptyMissions')}</Text>
+          </View>
+        )}
+
+        {/* Lore contextual — por que treinar com intervalos */}
+        {(dailyMissions.length > 0 || weeklyMissions.length > 0) && (
+          <View style={styles.loreCard}>
+            <View style={styles.loreDot} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.loreTitle}>{t('journey.loreTitle')}</Text>
+              <Text style={styles.loreBody}>{t('journey.loreBody')}</Text>
+            </View>
           </View>
         )}
 
@@ -447,6 +491,44 @@ const styles = StyleSheet.create({
   completionPeakSub: {
     fontSize: 12, color: '#4a5a7b', textAlign: 'center', lineHeight: 18, marginTop: 2,
   },
+
+  // ── Meta pessoal banner ───────────────────────────────────────────────────
+  metaBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.25)',
+    paddingHorizontal: 14, paddingVertical: 14, marginBottom: 16,
+  },
+  metaIcon: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: 'rgba(139,92,246,0.12)',
+    borderWidth: 1, borderColor: 'rgba(139,92,246,0.25)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  metaLabel: { fontSize: 9, fontWeight: '800', color: '#3a4a6b', letterSpacing: 2, marginBottom: 3 },
+  metaValue: { fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },
+  metaSub: { fontSize: 11, color: '#7a8aa0', marginTop: 1 },
+  metaEdit: {
+    paddingHorizontal: 9, paddingVertical: 5, borderRadius: 7,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  metaEditText: { fontSize: 11, color: '#7a8aa0', fontWeight: '600' },
+
+  // ── Group label (Hoje / Semana) ──────────────────────────────────────────
+  missionGroupLabel: {
+    fontSize: 10, fontWeight: '800', color: '#4a5a7b', letterSpacing: 2,
+    textTransform: 'uppercase', marginBottom: 8, marginTop: 2,
+  },
+
+  // ── Lore card ─────────────────────────────────────────────────────────────
+  loreCard: {
+    flexDirection: 'row', gap: 10, alignItems: 'flex-start',
+    backgroundColor: 'rgba(139,92,246,0.10)', borderRadius: 12, borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.25)', padding: 14, marginTop: 6,
+  },
+  loreDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#8b5cf6', marginTop: 6 },
+  loreTitle: { fontSize: 12, fontWeight: '700', color: '#a78bfa', marginBottom: 4 },
+  loreBody: { fontSize: 12, color: '#7a8aa0', lineHeight: 18 },
 
   // ── Mission cards ────────────────────────────────────────────────────────
   dailyCard: {
