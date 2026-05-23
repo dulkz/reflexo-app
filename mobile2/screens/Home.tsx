@@ -11,7 +11,7 @@ import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { AVATARS } from '../config/avatars';
 import { ACHIEVEMENTS, RARITY_CONFIG } from '../config/achievements';
-import { buildUserStats } from '../config/archetypes';
+import { buildUserStats, ARCHETYPES } from '../config/archetypes';
 import { calculateStreak, streakColor } from '../utils/streak';
 import { MAX_ENERGY_PER_MODE } from '../config/monetization';
 import { ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
@@ -80,6 +80,23 @@ export default function Home({
   }, [sessions]);
 
   const streak = useMemo(() => calculateStreak(sessions), [sessions]);
+
+  // ── Archetype identity (surfaced on Home per redesign) ──────────────────────
+  const archInfo = useMemo(() => {
+    const stats = buildUserStats(sessions, streak.current);
+    const arch = ARCHETYPES[stats.archetypeId] ?? ARCHETYPES.EXPLORADOR;
+    const next = arch.nextId ? ARCHETYPES[arch.nextId] : null;
+    const criteria = arch.targetCriteria;
+    const doneCount = criteria.filter(c => c.done(stats)).length;
+    const progress = criteria.length > 0 ? doneCount / criteria.length : 1;
+    const firstUnmet = criteria.find(c => !c.done(stats));
+    const hint = firstUnmet
+      ? `${firstUnmet.label}${firstUnmet.dynamicSuffix?.(stats) ?? ''}`
+      : null;
+    return { arch, next, progress, hint };
+  }, [sessions, streak.current]);
+
+  const totalSessions = sessions.length;
 
   const equippedAchievement = useMemo(() => {
     if (!userProfile.equippedTitle) return null;
@@ -187,14 +204,13 @@ export default function Home({
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Streak block ── */}
+        {/* ── Streak pill ── */}
         {streak.current >= 1 && (
-          <View style={styles.streakCard}>
-            <SvgXml xml={getStreakSvg(streak.current)} width={22} height={22} />
-            <Text style={[styles.streakNumber, { color: streakColor(streak.current) }]}>
-              {streak.current}
+          <View style={styles.streakPill}>
+            <SvgXml xml={getStreakSvg(streak.current)} width={16} height={16} />
+            <Text style={[styles.streakPillText, { color: streakColor(streak.current) }]}>
+              {streak.current} {t('home.streakDays')}
             </Text>
-            <Text style={styles.streakLabel}>{t('home.streakDays')}</Text>
             {streak.playedToday ? (
               <View style={styles.streakBadgeDone}>
                 <Text style={styles.streakBadgeDoneText}>{t('home.streakToday')}</Text>
@@ -206,6 +222,56 @@ export default function Home({
             )}
           </View>
         )}
+
+        {/* ── CTA dominante — Treinar agora ── */}
+        <TouchableOpacity style={styles.ctaHero} onPress={onStartPartida} activeOpacity={0.9}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.ctaEyebrow}>{t('home.ctaEyebrow')}</Text>
+            <Text style={styles.ctaLabel}>{t('home.ctaLabel')}</Text>
+            <Text style={styles.ctaSub}>{t('home.ctaSub')}</Text>
+          </View>
+          <View style={styles.ctaPlay}>
+            <Text style={styles.ctaPlayIcon}>▶</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* ── Arquétipo — identidade na Home ── */}
+        <TouchableOpacity style={styles.arqCard} onPress={onGoToPerfil} activeOpacity={0.85}>
+          <View style={styles.arqAccent} />
+          <View style={styles.arqTop}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.arqEyebrow}>{t('home.archetypeCurrent')}</Text>
+              <Text style={styles.arqName}>{archInfo.arch.name}</Text>
+            </View>
+            {archInfo.next && (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.arqNextLabel}>{t('home.archetypeNext')}</Text>
+                <Text style={styles.arqNextVal}>{archInfo.next.name} →</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.arqTrack}>
+            <View style={[styles.arqFill, { width: `${Math.round(archInfo.progress * 100)}%` }]} />
+          </View>
+          <Text style={styles.arqHint}>{archInfo.hint ?? t('home.archetypeMaxed')}</Text>
+        </TouchableOpacity>
+
+        {/* ── Stats 2-col ── */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>
+              <Text style={styles.statValGreen}>{bestByMode.partida ?? '—'}</Text>
+              {bestByMode.partida != null && <Text style={styles.statUnit}> ms</Text>}
+            </Text>
+            <Text style={styles.statLbl}>{t('home.statBestReflex')}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>
+              <Text style={styles.statValPurple}>{totalSessions}</Text>
+            </Text>
+            <Text style={styles.statLbl}>{t('home.statSessions')}</Text>
+          </View>
+        </View>
 
         <Text style={styles.sectionTitle}>{t('home.modesTitle')}</Text>
 
@@ -380,6 +446,67 @@ const styles = StyleSheet.create({
   },
   streakBadgePulseText: { fontSize: 11, color: '#f59e0b', fontWeight: '700' },
 
+  // ── Streak pill (compact) ──────────────────────────────────────────────────
+  streakPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.22)',
+    borderRadius: 22, paddingLeft: 10, paddingRight: 8, paddingVertical: 5,
+    marginBottom: 14,
+  },
+  streakPillText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
+
+  // ── CTA hero ──────────────────────────────────────────────────────────────
+  ctaHero: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#10b981', borderRadius: 18,
+    paddingVertical: 18, paddingHorizontal: 20, marginBottom: 14,
+  },
+  ctaEyebrow: {
+    fontSize: 10, fontWeight: '800', letterSpacing: 1.5,
+    color: 'rgba(6,18,12,0.55)', marginBottom: 3,
+  },
+  ctaLabel: { fontSize: 26, fontWeight: '900', color: '#06120c', letterSpacing: 0.5, lineHeight: 28 },
+  ctaSub: { fontSize: 12, color: 'rgba(6,18,12,0.6)', marginTop: 3, fontWeight: '600' },
+  ctaPlay: {
+    width: 50, height: 50, borderRadius: 25,
+    backgroundColor: 'rgba(0,0,0,0.14)',
+    alignItems: 'center', justifyContent: 'center', marginLeft: 12,
+  },
+  ctaPlayIcon: { fontSize: 18, color: '#06120c', marginLeft: 3 },
+
+  // ── Arquétipo card ─────────────────────────────────────────────────────────
+  arqCard: {
+    backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    padding: 16, marginBottom: 14, overflow: 'hidden',
+  },
+  arqAccent: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+    backgroundColor: '#8b5cf6',
+  },
+  arqTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
+  arqEyebrow: { fontSize: 10, fontWeight: '700', color: '#4a5a7b', letterSpacing: 1.5, marginBottom: 3 },
+  arqName: { fontSize: 20, fontWeight: '900', color: '#8b5cf6', letterSpacing: 0.5 },
+  arqNextLabel: { fontSize: 10, color: '#4a5a7b', marginBottom: 2 },
+  arqNextVal: { fontSize: 12, fontWeight: '700', color: '#10b981' },
+  arqTrack: { height: 4, borderRadius: 3, backgroundColor: '#0b1220', overflow: 'hidden', marginBottom: 8 },
+  arqFill: { height: 4, borderRadius: 3, backgroundColor: '#8b5cf6' },
+  arqHint: { fontSize: 12, color: '#7a8aa0', lineHeight: 18 },
+
+  // ── Stats 2-col ────────────────────────────────────────────────────────────
+  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  statCard: {
+    flex: 1, backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 16, paddingVertical: 14,
+  },
+  statVal: { fontSize: 26, fontWeight: '900', letterSpacing: -0.5, marginBottom: 4 },
+  statValGreen: { color: '#10b981' },
+  statValPurple: { color: '#8b5cf6' },
+  statUnit: { fontSize: 12, color: '#4a5a7b', fontWeight: '600' },
+  statLbl: { fontSize: 11, color: '#4a5a7b' },
+
   modeCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     flexDirection: 'row', marginBottom: 10, overflow: 'hidden',
@@ -435,12 +562,12 @@ const styles = StyleSheet.create({
 
   insightStrip: {
     flexDirection: 'row', gap: 12, alignItems: 'flex-start',
-    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: 16, marginTop: 4, marginBottom: 16,
+    backgroundColor: 'rgba(139,92,246,0.10)', borderRadius: 12, borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.25)', padding: 16, marginTop: 4, marginBottom: 16,
   },
   insightIcon: { fontSize: 22 },
-  insightTitle: { fontSize: 12, fontWeight: '700', color: '#fff', marginBottom: 4 },
-  insightBody: { fontSize: 12, color: '#4a5a7b', lineHeight: 18 },
+  insightTitle: { fontSize: 12, fontWeight: '700', color: '#cbd5e1', marginBottom: 4 },
+  insightBody: { fontSize: 12, color: '#7a8aa0', lineHeight: 18 },
 
   footer: { fontSize: 11, color: '#2d3a55', textAlign: 'center', marginBottom: 4 },
 });

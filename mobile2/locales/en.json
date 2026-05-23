@@ -38,7 +38,15 @@
     "sessionsCount_other": "{{count}} sessions recorded",
     "noSessions": "Based on scientific benchmarks from elite athletes",
     "graceExpiring": "⚡ Free · expires in {{time}}",
-    "energyCount": "⚡ {{current}}/{{max}}"
+    "energyCount": "⚡ {{current}}/{{max}}",
+    "ctaEyebrow": "NEXT SESSION",
+    "ctaLabel": "TRAIN NOW",
+    "ctaSub": "Reaction mode · start here",
+    "archetypeCurrent": "CURRENT ARCHETYPE",
+    "archetypeNext": "next",
+    "archetypeMaxed": "Max level reached — you're elite.",
+    "statBestReflex": "best reflex",
+    "statSessions": "total sessions"
   },
 
   "modes": {

@@ -38,7 +38,15 @@
     "sessionsCount_other": "{{count}} sessões registradas",
     "noSessions": "Baseado em benchmarks científicos de atletas de elite",
     "graceExpiring": "⚡ Grátis · expira em {{time}}",
-    "energyCount": "⚡ {{current}}/{{max}}"
+    "energyCount": "⚡ {{current}}/{{max}}",
+    "ctaEyebrow": "PRÓXIMA SESSÃO",
+    "ctaLabel": "TREINAR AGORA",
+    "ctaSub": "Modo Partida · comece por aqui",
+    "archetypeCurrent": "ARQUÉTIPO ATUAL",
+    "archetypeNext": "próximo",
+    "archetypeMaxed": "Nível máximo atingido — você é elite.",
+    "statBestReflex": "melhor reflexo",
+    "statSessions": "sessões totais"
   },
 
   "modes": {
