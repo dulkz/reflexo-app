@@ -504,15 +504,31 @@
   },
 
   "onboarding": {
-    "swipeHint": "Swipe to continue →",
-    "continue": "LET'S GO",
-    "screen1": {
-      "subtitle": "reaction speed",
+    "skip": "skip intro",
+    "next": "Next →",
+    "start": "LET'S GO →",
+    "t1": {
+      "title": "REFLEXO",
       "tagline": "Reaction speed,\nmeasured with science.",
       "body": "Discover where you stand. Evolve with real data."
     },
-    "screen2": {
-      "title": "4 training modes",
+    "t2": {
+      "title": "Your brain is trainable.",
+      "stat1Label": "improvement in 4 weeks",
+      "stat1Val": "10–15%",
+      "stat2Label": "minutes per day",
+      "stat2Val": "<5min",
+      "stat3Label": "scientific basis",
+      "stat3Val": "neuroplast."
+    },
+    "t3": {
+      "title": "A goal that's yours.",
+      "body": "After your first session, we run a quick baseline. You choose where you want to go.",
+      "box": "We'll show you the way."
+    },
+    "t4": {
+      "title": "4 ways to train.",
+      "subtitle": "Each mode trains a different skill.",
       "partida": "REACTION",
       "partida_desc": "Simple reaction · 7 attempts",
       "alvo": "TARGET",
@@ -520,32 +536,49 @@
       "sequencia": "SEQUENCE",
       "sequencia_desc": "Inhibitory control · Go/NoGo",
       "radar": "RADAR",
-      "radar_desc": "Visual location · 7 rounds"
+      "radar_desc": "Visual location · 15 rounds"
     },
-    "screen3": {
-      "title": "REAL BENCHMARKS",
-      "allTitle": "Everything tracked.",
-      "stat1": "17",
-      "sessionLabel": "sessions",
-      "streakLabel": "streak",
-      "stat2": "40+",
-      "stat3": "achievements",
-      "body": "The more you play, the richer your history gets."
+    "t5": {
+      "kicker": "You start as",
+      "eyebrow": "Starting archetype",
+      "name": "The Explorer",
+      "desc": "Discovering your reflex profile. Each session reveals more about how your brain responds.",
+      "footer": "Evolve into The Marksman, The Sprinter and beyond — each archetype is an earned identity."
     },
-    "screen4": {
-      "title": "Your own goal.",
-      "subtitle": "From your baseline to your goal",
-      "body": "After your first session, we run a quick baseline. You choose where you want to go.",
-      "cta": "We'll show you the way."
-    },
-    "screen5": {
-      "title": "Your brain is trainable.",
-      "card1": "10–15%",
-      "card1Desc": "improvement in 4 weeks",
-      "card2": "∞",
-      "card2Desc": "neuroplasticity through repetition",
-      "card3": "<5min",
-      "card3Desc": "per day is enough"
+    "ob": {
+      "progress": "{{cur}} of {{total}}",
+      "tooEarly": "Too early!",
+      "ob1": {
+        "kicker": "REACTION MODE · QUICK TEST",
+        "tapWhenGreen": "Tap when it turns green",
+        "sub": "3 attempts · no pressure",
+        "wait": "wait…",
+        "tapNow": "TAP!",
+        "startBtn": "START TEST"
+      },
+      "ob2": {
+        "kicker": "YOUR FIRST REFLEX",
+        "unit": "milliseconds",
+        "ctxElite": "Elite reflex",
+        "ctxFast": "Well above average",
+        "ctxAvg": "Around the human average",
+        "ctxNear": "Near the human average",
+        "ctxSlow": "Plenty of room to improve",
+        "ctxSub": "human average: 250–300 ms",
+        "loreTitle": "WHAT THIS MEANS",
+        "lore": "Your prefrontal cortex processed the stimulus in {{rt}} ms. With training, that number will drop.",
+        "cta": "See my archetype →"
+      },
+      "ob3": {
+        "kicker": "Based on your result",
+        "eyebrow": "Your archetype",
+        "desc": "{{rt}} ms · discovering your potential. Train 3x a week to evolve.",
+        "nextLabel": "NEXT",
+        "cta": "Set my goal →"
+      },
+      "ob4": {
+        "cta": "Enter Reflexo →"
+      }
     }
   },
 

@@ -15,11 +15,20 @@ interface Props {
   initialAmbitionId: string | null;
   onNext: (ambitionId: string) => void;
   onBack: () => void;
+  // Optional CTA override (defaults to common.continue). Used by the onboarding
+  // flow to show "Entrar no Reflexo →".
+  ctaLabel?: string;
+  // Step indicator. Defaults to the triage flow's 5 dots (active #2). Pass null
+  // to hide it (e.g. inside the 4-step onboarding flow).
+  stepDots?: { count: number; active: number } | null;
 }
 
-export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Props) {
+export default function TriageAmbition({
+  initialAmbitionId, onNext, onBack, ctaLabel, stepDots,
+}: Props) {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<string | null>(initialAmbitionId);
+  const dots = stepDots === undefined ? { count: 5, active: 2 } : stepDots;
 
   return (
     <View style={styles.root}>
@@ -29,8 +38,8 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
           <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
         <View style={styles.dotsRow}>
-          {[1, 2, 3, 4, 5].map(n => (
-            <View key={n} style={[styles.dot, n === 2 && styles.dotActive]} />
+          {dots && Array.from({ length: dots.count }, (_, i) => i + 1).map(n => (
+            <View key={n} style={[styles.dot, n === dots.active && styles.dotActive]} />
           ))}
         </View>
         <View style={{ width: 60 }} />
@@ -92,7 +101,7 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
           activeOpacity={selected ? 0.8 : 1}
         >
           <Text style={[styles.btnPrimaryText, !selected && styles.btnDisabledText]}>
-            {t('common.continue')}
+            {ctaLabel ?? t('common.continue')}
           </Text>
         </TouchableOpacity>
       </View>

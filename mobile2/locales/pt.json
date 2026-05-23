@@ -504,15 +504,31 @@
   },
 
   "onboarding": {
-    "swipeHint": "Deslize para continuar →",
-    "continue": "COMEÇAR",
-    "screen1": {
-      "subtitle": "velocidade de reação",
+    "skip": "pular introdução",
+    "next": "Próximo →",
+    "start": "COMEÇAR →",
+    "t1": {
+      "title": "REFLEXO",
       "tagline": "Velocidade de reação,\nmedida com ciência.",
       "body": "Descubra onde você está. Evolua com dados reais."
     },
-    "screen2": {
-      "title": "4 modos de treino",
+    "t2": {
+      "title": "Seu cérebro é treinável.",
+      "stat1Label": "melhora em 4 semanas",
+      "stat1Val": "10–15%",
+      "stat2Label": "minutos por dia",
+      "stat2Val": "<5min",
+      "stat3Label": "base científica",
+      "stat3Val": "neuroplast."
+    },
+    "t3": {
+      "title": "Uma meta só sua.",
+      "body": "Após sua primeira sessão, fazemos uma triagem rápida. Você escolhe onde quer chegar.",
+      "box": "A gente mostra o caminho."
+    },
+    "t4": {
+      "title": "4 formas de treinar.",
+      "subtitle": "Cada modo treina uma habilidade diferente.",
       "partida": "PARTIDA",
       "partida_desc": "Reação simples · 7 tentativas",
       "alvo": "ALVO",
@@ -520,32 +536,49 @@
       "sequencia": "SEQUÊNCIA",
       "sequencia_desc": "Controle inibitório · Go/NoGo",
       "radar": "RADAR",
-      "radar_desc": "Localização visual · 7 rodadas"
+      "radar_desc": "Localização visual · 15 rodadas"
     },
-    "screen3": {
-      "title": "BENCHMARKS REAIS",
-      "allTitle": "Tudo registrado.",
-      "stat1": "17",
-      "sessionLabel": "sessões",
-      "streakLabel": "streak",
-      "stat2": "40+",
-      "stat3": "conquistas",
-      "body": "Quanto mais você joga, mais rico fica seu histórico."
+    "t5": {
+      "kicker": "Você começa como",
+      "eyebrow": "Arquétipo inicial",
+      "name": "O Explorador",
+      "desc": "Descobrindo seu perfil de reflexo. Cada sessão revela mais sobre como seu cérebro responde.",
+      "footer": "Evolua para O Atirador, O Velocista e além — cada arquétipo é uma identidade conquistada."
     },
-    "screen4": {
-      "title": "Uma meta só sua.",
-      "subtitle": "Do ponto de partida à sua meta",
-      "body": "Após sua primeira sessão, fazemos uma triagem rápida. Você escolhe onde quer chegar.",
-      "cta": "A gente mostra o caminho."
-    },
-    "screen5": {
-      "title": "Seu cérebro é treinável.",
-      "card1": "10–15%",
-      "card1Desc": "de melhora em 4 semanas",
-      "card2": "∞",
-      "card2Desc": "neuroplasticidade por repetição",
-      "card3": "<5min",
-      "card3Desc": "por dia é o suficiente"
+    "ob": {
+      "progress": "{{cur}} de {{total}}",
+      "tooEarly": "Cedo demais!",
+      "ob1": {
+        "kicker": "MODO PARTIDA · TESTE RÁPIDO",
+        "tapWhenGreen": "Toque quando ficar verde",
+        "sub": "3 tentativas · sem pressão",
+        "wait": "aguarde…",
+        "tapNow": "TOQUE!",
+        "startBtn": "COMEÇAR TESTE"
+      },
+      "ob2": {
+        "kicker": "SEU PRIMEIRO REFLEXO",
+        "unit": "milissegundos",
+        "ctxElite": "Reflexo de elite",
+        "ctxFast": "Muito acima da média",
+        "ctxAvg": "Na média humana",
+        "ctxNear": "Perto da média humana",
+        "ctxSlow": "Há muito espaço para evoluir",
+        "ctxSub": "média humana: 250–300 ms",
+        "loreTitle": "O QUE ISSO SIGNIFICA",
+        "lore": "Seu córtex pré-frontal processou o estímulo em {{rt}} ms. Com treino, esse número vai cair.",
+        "cta": "Ver meu arquétipo →"
+      },
+      "ob3": {
+        "kicker": "Baseado no seu resultado",
+        "eyebrow": "Seu arquétipo",
+        "desc": "{{rt}} ms · descobrindo seu potencial. Treine 3x por semana para evoluir.",
+        "nextLabel": "PRÓXIMO",
+        "cta": "Definir minha meta →"
+      },
+      "ob4": {
+        "cta": "Entrar no Reflexo →"
+      }
     }
   },
 

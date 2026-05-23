@@ -19,7 +19,7 @@ import Perfil from './screens/Perfil';
 import Historico from './screens/Historico';
 import Jornada from './screens/Jornada';
 import TriageModal from './screens/triage/TriageModal';
-import OnboardingModal from './screens/OnboardingModal';
+import OnboardingFlow from './screens/onboarding/OnboardingFlow';
 import { ModeKey, MODE_COLORS } from './utils/levels';
 import {
   SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
@@ -497,6 +497,16 @@ function AppInner() {
     setOnboardingVisible(true);
   }, []);
 
+  // Onboarding complete — OnboardingFlow already persisted baseline + goal +
+  // triageCompleted and the onboarding-done flag. Adopt the profile and
+  // suppress the post-first-game triage prompt (the user just did triage).
+  const handleOnboardingComplete = useCallback(async (profile: UserProfile) => {
+    setUserProfile(profile);
+    hasSeenTriagePromptRef.current = true;
+    await saveHasSeenTriagePrompt(true);
+    setOnboardingVisible(false);
+  }, []);
+
   const handleTriageDismiss = useCallback(async () => {
     dismissedThisSession.current = true;
     const updated: UserProfile = {
@@ -796,7 +806,7 @@ function AppInner() {
         statusBarTranslucent
         onRequestClose={() => { /* must complete via "COMEÇAR" — no back-dismiss */ }}
       >
-        <OnboardingModal onComplete={() => setOnboardingVisible(false)} />
+        <OnboardingFlow onComplete={handleOnboardingComplete} />
       </Modal>
 
       {/* Triage prompt — first-game intercept, persisted via reflexo_has_seen_triage_prompt_v1 */}
