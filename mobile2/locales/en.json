@@ -379,6 +379,7 @@
     "save": "SAVE",
     "close": "CLOSE",
     "archetype": "CURRENT ARCHETYPE",
+    "nextShort": "next",
     "evolution": "EVOLUTION",
     "nextArchetype": "TO BECOME",
     "nextArchetypeSection": "NEXT ARCHETYPE",

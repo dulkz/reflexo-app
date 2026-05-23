@@ -461,12 +461,21 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
 
         {/* ── Archetype card ── */}
         <View style={[styles.archetypeCard, { borderColor: archetype.color + '44' }]}>
+          <View style={[styles.archetypeAccent, { backgroundColor: archetype.color }]} />
           <View style={styles.archetypeHeader}>
             <SvgXml xml={archetype.icon} width={34} height={34} />
             <View style={{ flex: 1 }}>
               <Text style={styles.archetypeKicker}>{t('profile.archetype')}</Text>
               <Text style={[styles.archetypeName, { color: archetype.color }]}>{archetype.name}</Text>
             </View>
+            {nextDef && (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.archetypeNextKicker}>{t('profile.nextShort')}</Text>
+                <Text style={[styles.archetypeNextVal, { color: nextDef.color }]} numberOfLines={1}>
+                  {nextDef.name} →
+                </Text>
+              </View>
+            )}
           </View>
           <Text style={styles.archetypeDesc}>{archetype.description}</Text>
           {evidenceChips.length > 0 && (
@@ -481,7 +490,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           )}
         </View>
 
-        {/* ── ARQUÉTIPOS — cadeia de evolução ── */}
+        {/* ── ARQUÉTIPOS — timeline de evolução (nó + conector) ── */}
         {(() => {
           const currentIdx = ARCHETYPE_CHAIN.findIndex(a => a.id === stats.archetypeId);
           return (
@@ -490,34 +499,41 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chainScroll}
+                contentContainerStyle={styles.tlScroll}
               >
                 {ARCHETYPE_CHAIN.map((a, i) => {
                   const isPast    = i < currentIdx;
                   const isCurrent = i === currentIdx;
-                  const isFuture  = i > currentIdx;
                   const archDef   = ARCHETYPES[a.id];
+                  const lineDone  = i < currentIdx;
                   return (
                     <React.Fragment key={a.id}>
-                      <View style={[
-                        styles.chainCard,
-                        isCurrent && styles.chainCardCurrent,
-                        isPast    && styles.chainCardPast,
-                        isFuture  && styles.chainCardFuture,
-                      ]}>
-                        {isPast && <Text style={styles.chainCheck}>✓</Text>}
-                        <SvgXml xml={ARCHETYPES[a.id].icon} width={20} height={20} />
-                        <Text style={[
-                          styles.chainName,
-                          isCurrent && { color: '#fff' },
-                          isPast    && { color: archDef.color },
+                      <View style={styles.tlNode}>
+                        <View style={[
+                          styles.tlCircle,
+                          isPast    && styles.tlCircleDone,
+                          isCurrent && { backgroundColor: archetype.color + '22', borderColor: archetype.color, borderWidth: 2 },
+                          !isPast && !isCurrent && styles.tlCircleLocked,
                         ]}>
+                          {isPast
+                            ? <Text style={styles.tlCheck}>✓</Text>
+                            : isCurrent
+                            ? <Text style={[styles.tlGlyph, { color: archetype.color }]}>◉</Text>
+                            : <Text style={styles.tlLockGlyph}>○</Text>}
+                        </View>
+                        <Text
+                          style={[
+                            styles.tlLabel,
+                            isCurrent && { color: archetype.color, fontWeight: '800' },
+                            isPast && { color: archDef.color },
+                          ]}
+                          numberOfLines={1}
+                        >
                           {archDef.name}
                         </Text>
-                        <Text style={styles.chainTagline} numberOfLines={2}>{a.tagline}</Text>
                       </View>
                       {i < ARCHETYPE_CHAIN.length - 1 && (
-                        <Text style={styles.chainArrow}>→</Text>
+                        <View style={[styles.tlLine, lineDone && styles.tlLineDone]} />
                       )}
                     </React.Fragment>
                   );
@@ -984,12 +1000,17 @@ const styles = StyleSheet.create({
   // ── Archetype card ────────────────────────────────────────────────────────
   archetypeCard: {
     backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
-    padding: 18, marginBottom: 12,
+    padding: 18, marginBottom: 12, overflow: 'hidden',
+  },
+  archetypeAccent: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 2, opacity: 0.7,
   },
   archetypeHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 10 },
   archetypeIcon: { fontSize: 34 },
   archetypeKicker: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2, marginBottom: 3 },
   archetypeName: { fontSize: 18, fontWeight: '900', letterSpacing: 2 },
+  archetypeNextKicker: { fontSize: 9, color: '#3a4a6b', marginBottom: 2 },
+  archetypeNextVal: { fontSize: 12, fontWeight: '700', maxWidth: 110 },
   archetypeDesc: { fontSize: 13, color: '#4a5a7b', lineHeight: 19, marginBottom: 14 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -1152,26 +1173,23 @@ const styles = StyleSheet.create({
   modeExtra: { fontSize: 10, color: '#3a4a6b', marginTop: 1 },
   modeNone: { fontSize: 13, color: '#2d3a55', fontWeight: '700' },
 
-  // ── Archetype chain ───────────────────────────────────────────────────────
+  // ── Archetype evolution timeline (node + connector) ───────────────────────
   chainSection: { marginBottom: 12 },
-  chainScroll: { paddingVertical: 4, alignItems: 'center' },
-  chainCard: {
-    width: 90, borderRadius: 12, padding: 10,
-    backgroundColor: '#111a2e',
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.07)',
-    alignItems: 'center', gap: 4,
+  tlScroll: { paddingVertical: 4, alignItems: 'flex-start' },
+  tlNode: { alignItems: 'center', gap: 6, width: 64 },
+  tlCircle: {
+    width: 30, height: 30, borderRadius: 15,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#111a2e', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)',
   },
-  chainCardCurrent: {
-    borderColor: '#5b4fcf',
-    backgroundColor: 'rgba(91,79,207,0.12)',
-  },
-  chainCardPast: { opacity: 0.5 },
-  chainCardFuture: { opacity: 0.3 },
-  chainCheck: { position: 'absolute', top: 6, right: 8, fontSize: 10, color: '#10b981', fontWeight: '800' },
-  chainIcon: { fontSize: 22 },
-  chainName: { fontSize: 9, fontWeight: '800', color: '#4a5a7b', letterSpacing: 0.5, textAlign: 'center' },
-  chainTagline: { fontSize: 9, color: '#3a4a6b', textAlign: 'center', lineHeight: 13 },
-  chainArrow: { fontSize: 14, color: '#2d3a55', alignSelf: 'center', marginHorizontal: 2 },
+  tlCircleDone: { backgroundColor: 'rgba(16,185,129,0.12)', borderColor: '#10b981' },
+  tlCircleLocked: { backgroundColor: '#1a2540', borderColor: '#2d3a55' },
+  tlCheck: { fontSize: 13, color: '#10b981', fontWeight: '800' },
+  tlGlyph: { fontSize: 13, fontWeight: '800' },
+  tlLockGlyph: { fontSize: 12, color: '#4a5a7b', fontWeight: '700' },
+  tlLabel: { fontSize: 9, fontWeight: '700', color: '#4a5a7b', textAlign: 'center', maxWidth: 60 },
+  tlLine: { width: 18, height: 1.5, backgroundColor: '#2d3a55', marginTop: 14 },
+  tlLineDone: { backgroundColor: '#10b981', opacity: 0.4 },
 
   // ── Achievements summary ──────────────────────────────────────────────────
   achieveSummaryCard: {
