@@ -1,0 +1,70 @@
+# Reflexo App — Progress Log
+
+## v1.0.0 — Fase 1 (branch: feat/goal-redesign-final) ✅
+Branch finalizada e estável.
+- App completo offline com 4 modos de jogo (Partida, Radar, Sequência, Alvo)
+- Sistema de arquétipos, missões, conquistas
+- Design system: bg #0A0F1E, ciano #00E5CC, Bebas Neue, DM Sans, Space Mono
+- Onboarding, Perfil, Histórico, Ciência
+
+---
+
+## Fase 2 — Sistema Online / Ranking (branch: feat/online-ranking) ✅
+**Milestone atingido em: 2026-05-24**
+**Último commit: 7effb38**
+
+### O que foi implementado
+
+#### Infraestrutura
+- Supabase configurado (projeto: ouqneluwoyscvlvckywj.supabase.co)
+- Tabelas: profiles, sessions, friendships
+- View: ranking (user_id, username, archetype, mode, avg_rt_global, session_count, rank_position)
+- RLS policies: sessions_own_insert, sessions_own_read, sessions_public_ranking
+- Permissions: GRANT SELECT/INSERT para authenticated nas tabelas e view
+- Constraint: UNIQUE (user_id, played_at, mode) para idempotência do upsert
+- Migrations versionadas: supabase/migrations/0001 e 0002
+
+#### Autenticação
+- Tela Auth.tsx: login / cadastro / recuperação de senha
+- Fluxo: Splash → verifica sessão → AuthScreen ou AppInner
+- Modo convidado: "Continuar sem conta" (AsyncStorage flag reflexo_guest)
+- RootGate em App.tsx gerencia sessão Supabase em tempo real
+- Logout em Perfil.tsx: limpa sessão, flag convidado e flag de migração
+
+#### Aba Global
+- 4ª tab na nav bar: Início · Global · Missões · Perfil
+- Ícone globo SVG inline, i18n pt/en
+- GlobalScreen completa: seletor de 4 modos, FlatList com pull-to-refresh
+- Usuário logado destacado em ciano com coroa para top 3
+- Realtime via Supabase (escuta tabela sessions)
+- Guest wall: "Faça login para ver o ranking global"
+
+#### Sincronização
+- syncSession.ts: fire-and-forget após cada jogo (upsert idempotente)
+- migrateLocalSessions.ts: migração one-shot no primeiro SIGNED_IN
+- Reset de flag no logout para permitir re-migração limpa
+- Fontes customizadas carregadas: BebasNeue, DM Sans, Space Mono
+
+### Commits da Fase 2
+- 1905d80: feat: integração Supabase — cliente e dependências
+- 33ec2cf: feat: fluxo de auth — splash sempre primeiro, modo convidado, gate de sessão
+- 8a805a6: feat: adiciona aba Global na nav bar (placeholder)
+- aad9dff: feat: GlobalScreen completa — ranking ao vivo, seletor de modo, realtime
+- f6eaad0: fix: query ranking usa avg_rt_global e rank_position; instala e carrega fontes
+- 0e5ddff: feat: sync oportunista de sessões com Supabase após cada jogo
+- e429772: fix: corrige colunas do insert sessions para schema real do Supabase
+- 56919b8: feat: migração one-shot de sessões locais para Supabase no primeiro login
+- 3b62b1c: feat: botão de logout em Perfil + reset flag de migração
+- d630a21: fix: upsert para evitar duplicatas na re-migração; limpa flag convidado no logout
+- 0d0fbb8: fix: limpa estado guest no SIGNED_OUT
+- 7effb38: chore: versiona migrations Supabase aplicadas manualmente
+
+### Pendências / Próximos passos
+- [ ] Card de perfil público (clique no usuário do ranking)
+- [ ] Popular campo accuracy real (modos alvo, radar, sequência)
+- [ ] Deep link para confirmação de email (produção)
+- [ ] Abrir PR feat/online-ranking → main após validação completa
+
+### Configurações de ambiente (não versionadas)
+- Credenciais Supabase em mobile2/.env (ignorado pelo git)
+- Supabase URL Configuration: Site URL = exp://localhost:8081
