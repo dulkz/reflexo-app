@@ -11,6 +11,7 @@ import { hapticError } from '../utils/haptics';
 import { shake } from '../utils/animations';
 import { RARITY_ICONS_SVG, UI_ICONS, ICONS } from '../assets/icons';
 import ModeTutorial from '../components/ModeTutorial';
+import TargetShape, { AlvoShape } from '../components/TargetShape';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -25,13 +26,17 @@ const CHALLENGE_TIMEOUT = 1500;
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 // Posições FIXAS e permanentes — nunca mudam de rodada para rodada.
+// Cada posição tem uma FORMA distinta (acessibilidade de daltonismo) + a cor atual.
 // Índice = posição no grid 2×2:
-//   0 = top-left (azul) · 1 = top-right (laranja) · 2 = bottom-left (roxo) · 3 = bottom-right (verde)
-const CIRCLE_COLORS = [
-  { key: 'AZUL',    color: '#3b82f6', bg: 'rgba(59,130,246,0.15)'  }, // 0 top-left
-  { key: 'LARANJA', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  }, // 1 top-right
-  { key: 'ROXO',    color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)'  }, // 2 bottom-left
-  { key: 'VERDE',   color: '#10b981', bg: 'rgba(16,185,129,0.15)'  }, // 3 bottom-right
+//   0 = top-left: CÍRCULO azul · 1 = top-right: TRIÂNGULO laranja
+//   2 = bottom-left: QUADRADO roxo · 3 = bottom-right: HEXÁGONO verde
+const SHAPE_SIZE = 124;
+interface AlvoTarget { key: string; shape: AlvoShape; shapeKey: string; color: string; bg: string }
+const CIRCLE_COLORS: AlvoTarget[] = [
+  { key: 'AZUL',    shape: 'circle',   shapeKey: 'CIRCULO',   color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' }, // 0 top-left
+  { key: 'LARANJA', shape: 'triangle', shapeKey: 'TRIANGULO', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' }, // 1 top-right
+  { key: 'ROXO',    shape: 'square',   shapeKey: 'QUADRADO',  color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' }, // 2 bottom-left
+  { key: 'VERDE',   shape: 'hexagon',  shapeKey: 'HEXAGONO',  color: '#10b981', bg: 'rgba(16,185,129,0.15)' }, // 3 bottom-right
 ];
 
 type AlvoState = 'intro' | 'initial_wait' | 'ready' | 'challenge' | 'correct' | 'wrong' | 'done';
@@ -259,12 +264,12 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
         <View style={styles.gridInner}>
           <View style={styles.headerArea}>
             {gameState === 'challenge' ? (
-              // SIGNAL — prompt "TOQUE O [COR]"
+              // SIGNAL — prompt "TOQUE O [FORMA]" (forma + cor reforçam a pista)
               <View style={styles.badgeArea}>
-                <Text style={styles.hintLabel}>{t('target.tapCircle')}</Text>
+                <Text style={styles.hintLabel}>{t('target.tapShape')}</Text>
                 <View style={[styles.hintBadge, { backgroundColor: targetColor.bg, borderColor: targetColor.color + '66' }]}>
-                  <View style={[styles.hintDot, { backgroundColor: targetColor.color }]} />
-                  <Text style={[styles.hintColor, { color: targetColor.color }]}>{t(`target.colors.${targetColor.key}`)}</Text>
+                  <TargetShape shape={targetColor.shape} color={targetColor.color} size={22} />
+                  <Text style={[styles.hintColor, { color: targetColor.color }]}>{t(`target.shapes.${targetColor.shapeKey}`)}</Text>
                 </View>
               </View>
             ) : (gameState === 'correct' || gameState === 'wrong') ? (
@@ -290,8 +295,8 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
             )}
           </View>
 
-          {/* Grid de posições fixas — círculo certo destacado no acerto;
-              círculo errado com anel + ✕ + shake; demais esmaecem no feedback. */}
+          {/* Grid de posições fixas — cada alvo na sua FORMA + cor; alvo certo destacado
+              no acerto; alvo errado com contorno vermelho + ✕ + shake; demais esmaecem. */}
           <View style={styles.grid}>
             {CIRCLE_COLORS.map((c, colorIdx) => {
               const isTargetCircle = colorIdx === targetIdx;
@@ -303,16 +308,19 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
                 <AnimatedPressable
                   key={colorIdx}
                   style={[
-                    styles.circle,
-                    { backgroundColor: c.color },
+                    styles.shapeBox,
                     dimmed && styles.circleDimmed,
-                    isWrong && styles.circleWrong,
                     isWrong && { transform: [{ translateX: shakeX }] },
                   ]}
                   onPressIn={() => handleCirclePress(colorIdx)}
                   disabled={gameState !== 'challenge'}
                 >
-                  {isWrong && <Text style={styles.circleX}>✕</Text>}
+                  <TargetShape shape={c.shape} color={c.color} size={SHAPE_SIZE} wrong={isWrong} />
+                  {isWrong && (
+                    <View style={styles.xOverlay}>
+                      <Text style={styles.circleX}>✕</Text>
+                    </View>
+                  )}
                 </AnimatedPressable>
               );
             })}
@@ -383,20 +391,14 @@ const styles = StyleSheet.create({
   headerArea: { minHeight: 116, alignItems: 'center', justifyContent: 'center' },
   badgeArea: { alignItems: 'center' },
   grid: { width: 280, height: 280, flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
-  circle: {
-    width: 124, height: 124, borderRadius: 62,
+  // Container de toque por alvo — transparente; a forma SVG preenche a área.
+  shapeBox: {
+    width: SHAPE_SIZE, height: SHAPE_SIZE,
     alignItems: 'center', justifyContent: 'center',
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
   },
   circleDimmed: { opacity: 0.3 },
-  circleWrong: {
-    borderWidth: 3, borderColor: '#ef4444',
-    shadowColor: '#ef4444', shadowOpacity: 0.6, shadowRadius: 16,
-  },
+  // ✕ centralizado sobre a forma no estado de erro
+  xOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
   circleX: { fontSize: 44, fontWeight: '900', color: 'rgba(255,255,255,0.92)' },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },

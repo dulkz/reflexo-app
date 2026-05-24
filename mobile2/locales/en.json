@@ -63,7 +63,7 @@
     "alvo": {
       "name": "TARGET MODE",
       "desc": "Decision reflex · fixed positions · 10 rounds",
-      "sub": "Fixed positions — tap the right color"
+      "sub": "Fixed positions — tap the right shape"
     },
     "sequencia": {
       "name": "SEQUENCE MODE",
@@ -94,8 +94,9 @@
   "target": {
     "title": "TARGET MODE",
     "subtitle": "Fixed positions · 10 rounds",
-    "howToText": "4 colors in fixed positions. When the color appears, tap the right circle immediately. Wrong tap = +150ms; no tap in time = +200ms.",
+    "howToText": "4 shapes in fixed positions. When the shape appears, tap the right target immediately. Wrong tap = +150ms; no tap in time = +200ms.",
     "tapCircle": "TAP THE CIRCLE",
+    "tapShape": "TAP THE",
     "waitHint": "wait for the stimulus",
     "correct": "CORRECT!",
     "wrong": "WRONG!",
@@ -104,6 +105,12 @@
       "VERDE": "GREEN",
       "LARANJA": "ORANGE",
       "ROXO": "PURPLE"
+    },
+    "shapes": {
+      "CIRCULO": "CIRCLE",
+      "TRIANGULO": "TRIANGLE",
+      "QUADRADO": "SQUARE",
+      "HEXAGONO": "HEXAGON"
     }
   },
 
@@ -566,8 +573,8 @@
       "line2": "Tap as fast as you can."
     },
     "alvo": {
-      "prompt": "TAP THE GREEN",
-      "text": "Memorize the positions. When the color appears, tap immediately."
+      "prompt": "TAP THE HEXAGON",
+      "text": "Memorize the shapes. When the shape appears, tap immediately."
     },
     "sequencia": {
       "go": "GO — tap fast",

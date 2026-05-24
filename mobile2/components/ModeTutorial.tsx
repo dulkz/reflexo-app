@@ -5,6 +5,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { ModeKey, MODE_COLORS } from '../utils/levels';
+import TargetShape, { AlvoShape } from './TargetShape';
 
 // ── Palette (aligned with the app's design system) ───────────────────────────
 const BG2   = '#111a2e';
@@ -155,11 +156,12 @@ function PartidaTutorial({ color = '#3b82f6', reduceMotion }: SubProps) {
   );
 }
 
-// ── Alvo — grid 2x2 de posições FIXAS, dedo na cor correta, prompt "TOQUE O [COR]" ──
-// Posições permanentes: TL azul · TR laranja · BL roxo · BR verde
+// ── Alvo — grid 2x2 de FORMAS FIXAS por posição, dedo na forma correta, prompt "TOQUE O [FORMA]" ──
+// Posições permanentes: TL círculo azul · TR triângulo laranja · BL quadrado roxo · BR hexágono verde
 const ALVO_COLORS = ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'];
-const ALVO_KEYS = ['AZUL', 'LARANJA', 'ROXO', 'VERDE'];
-const ALVO_TARGET = 3; // verde (bottom-right)
+const ALVO_SHAPES: AlvoShape[] = ['circle', 'triangle', 'square', 'hexagon'];
+const ALVO_SHAPE_KEYS = ['CIRCULO', 'TRIANGULO', 'QUADRADO', 'HEXAGONO'];
+const ALVO_TARGET = 3; // hexágono verde (bottom-right)
 
 function AlvoTutorial({ reduceMotion }: SubProps) {
   const { t } = useTranslation();
@@ -201,7 +203,7 @@ function AlvoTutorial({ reduceMotion }: SubProps) {
   return (
     <View style={styles.col}>
       <View style={styles.alvoPrompt}>
-        <View style={[styles.promptDot, { backgroundColor: GREEN }]} />
+        <TargetShape shape={ALVO_SHAPES[ALVO_TARGET]} color={GREEN} size={14} />
         <Text style={styles.promptText}>{t('tutorial.alvo.prompt')}</Text>
       </View>
       <View style={styles.grid}>
@@ -212,18 +214,20 @@ function AlvoTutorial({ reduceMotion }: SubProps) {
               {isTarget && (
                 <Animated.View style={[styles.gridGlow, { opacity: glow, transform: [{ scale: glowScale }], backgroundColor: GREEN }]} />
               )}
-              <View style={[styles.gridCircle, { backgroundColor: c, opacity: isTarget ? 1 : 0.35 }]} />
+              <View style={{ opacity: isTarget ? 1 : 0.35 }}>
+                <TargetShape shape={ALVO_SHAPES[i]} color={c} size={48} />
+              </View>
             </View>
           );
         })}
         <Animated.View style={[styles.gridDot, { opacity: dotOpacity, transform: [{ translateX: dotX }, { translateY: dotY }] }]} />
       </View>
-      {/* Legenda das 4 posições fixas */}
+      {/* Legenda das 4 formas/posições fixas */}
       <View style={styles.alvoLegend}>
         {ALVO_COLORS.map((col, i) => (
           <View key={i} style={styles.alvoLegendChip}>
-            <View style={[styles.alvoLegendDot, { backgroundColor: col }]} />
-            <Text style={styles.alvoLegendText}>{t(`target.colors.${ALVO_KEYS[i]}`)}</Text>
+            <TargetShape shape={ALVO_SHAPES[i]} color={col} size={12} />
+            <Text style={styles.alvoLegendText}>{t(`target.shapes.${ALVO_SHAPE_KEYS[i]}`)}</Text>
           </View>
         ))}
       </View>

@@ -63,7 +63,7 @@
     "alvo": {
       "name": "MODO ALVO",
       "desc": "Reflexo de decisão · posições fixas · 10 rodadas",
-      "sub": "Posições fixas — toque a cor certa"
+      "sub": "Posições fixas — toque a forma certa"
     },
     "sequencia": {
       "name": "MODO SEQUÊNCIA",
@@ -94,8 +94,9 @@
   "target": {
     "title": "MODO ALVO",
     "subtitle": "Posições fixas · 10 rodadas",
-    "howToText": "4 cores em posições fixas. Quando a cor aparecer, toque imediatamente no círculo certo. Toque errado = +150ms; sem toque a tempo = +200ms.",
+    "howToText": "4 formas em posições fixas. Quando a forma aparecer, toque imediatamente no alvo certo. Toque errado = +150ms; sem toque a tempo = +200ms.",
     "tapCircle": "TOQUE NO CÍRCULO",
+    "tapShape": "TOQUE O",
     "waitHint": "aguarde o estímulo",
     "correct": "CORRETO!",
     "wrong": "ERROU!",
@@ -104,6 +105,12 @@
       "VERDE": "VERDE",
       "LARANJA": "LARANJA",
       "ROXO": "ROXO"
+    },
+    "shapes": {
+      "CIRCULO": "CÍRCULO",
+      "TRIANGULO": "TRIÂNGULO",
+      "QUADRADO": "QUADRADO",
+      "HEXAGONO": "HEXÁGONO"
     }
   },
 
@@ -566,8 +573,8 @@
       "line2": "Toque o mais rápido possível."
     },
     "alvo": {
-      "prompt": "TOQUE O VERDE",
-      "text": "Memorize as posições. Quando a cor aparecer, toque imediatamente."
+      "prompt": "TOQUE O HEXÁGONO",
+      "text": "Memorize as formas. Quando a forma aparecer, toque imediatamente."
     },
     "sequencia": {
       "go": "GO — toque rápido",
