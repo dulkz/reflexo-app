@@ -45,3 +45,7 @@ unity-project/*.csproj
 # Office temp files
 ~$*.docx
 ~$*.xlsx
+
+# Design cache/junk
+design/claude design/.thumbnail
+design/claude design/uploads/
