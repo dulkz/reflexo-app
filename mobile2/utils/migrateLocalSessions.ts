@@ -28,7 +28,7 @@ export async function migrateLocalSessions(userId: string): Promise<void> {
       mode:             s.mode,
       avg_rt:           s.score,
       rounds_completed: s.rounds,
-      accuracy:         null,
+      accuracy:         s.accuracy ?? null,
       played_at:        new Date(s.date).toISOString(),
     }));
 

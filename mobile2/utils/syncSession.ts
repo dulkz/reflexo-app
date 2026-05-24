@@ -17,7 +17,7 @@ export async function syncSessionToSupabase(
       mode: session.mode,
       avg_rt: session.score,                  // score local = tempo médio em ms
       rounds_completed: session.rounds,
-      accuracy: null,                         // não calculado localmente ainda
+      accuracy: session.accuracy ?? null,     // 0-1 (alvo/radar/sequencia); null em partida
       played_at: new Date(session.date).toISOString(),
     }, {
       onConflict: 'user_id,played_at,mode',
