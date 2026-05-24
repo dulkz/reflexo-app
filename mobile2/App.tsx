@@ -23,6 +23,7 @@ import OnboardingFlow from './screens/onboarding/OnboardingFlow';
 import AuthScreen from './screens/Auth';
 import { supabase } from './lib/supabase';
 import { syncSessionToSupabase } from './utils/syncSession';
+import { migrateLocalSessions } from './utils/migrateLocalSessions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
 import { useFonts } from 'expo-font';
@@ -115,8 +116,12 @@ function RootGate() {
       setAuthChecked(true);
     });
     // React to login/logout (and token refresh) for the rest of the app's lifetime.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
+      // Migração one-shot: envia sessões locais ao Supabase no primeiro login
+      if (event === 'SIGNED_IN' && newSession?.user?.id) {
+        migrateLocalSessions(newSession.user.id); // sem await — fire-and-forget
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
