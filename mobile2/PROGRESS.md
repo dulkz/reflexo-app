@@ -60,11 +60,20 @@ Branch finalizada e estável.
 - 7effb38: chore: versiona migrations Supabase aplicadas manualmente
 
 ### Pendências / Próximos passos
-- [ ] Card de perfil público (clique no usuário do ranking)
-- [ ] Popular campo accuracy real (modos alvo, radar, sequência)
+- [x] Card de perfil público — PR #3 mergeado (ecff601)
+- [x] Popular campo accuracy real — PR #2 mergeado (5bf0fb2)
+- [x] Abrir PR feat/online-ranking → main — PR #1 mergeado (dc4fe27)
 - [ ] Deep link para confirmação de email (produção)
-- [ ] Abrir PR feat/online-ranking → main após validação completa
+- [ ] Normalizar indentação GlobalScreen.tsx (cosmético)
 
 ### Configurações de ambiente (não versionadas)
 - Credenciais Supabase em mobile2/.env (ignorado pelo git)
 - Supabase URL Configuration: Site URL = exp://localhost:8081
+
+---
+
+## Pós-Fase 2 — melhorias incrementais (branch: main)
+**Última atualização: 2026-05-24**
+
+- PR #2 (5bf0fb2): accuracy real populada no sync (alvo, radar, sequência)
+- PR #3 (ecff601): card de perfil público no ranking (modal com posição, tempo médio, partidas)
