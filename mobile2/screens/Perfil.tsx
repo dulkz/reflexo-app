@@ -10,6 +10,8 @@ import { SvgXml } from 'react-native-svg';
 import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { ICONS } from '../assets/icons';
 import { SessionRecord, loadUnlockedAchievements } from '../utils/storage';
+import { supabase } from '../lib/supabase';
+import { resetMigrationFlag } from '../utils/migrateLocalSessions';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
 
@@ -65,6 +67,7 @@ interface Props {
   onOpenTriage: (editMode: boolean) => void;
   onUpdateProfile: (p: UserProfile) => void;
   onClearData: () => void;
+  onLogout?: () => void;
 }
 
 // ── Gradient avatar ──────────────────────────────────────────────────────────
@@ -209,9 +212,18 @@ const chart = StyleSheet.create({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdateProfile, onClearData }: Props) {
+export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdateProfile, onClearData, onLogout }: Props) {
   const { t } = useTranslation();
   const lang = i18n.language;
+
+  // Logout — reseta a flag de migração (pra re-enviar sessões no próximo login),
+  // encerra a sessão no Supabase, e deixa o RootGate voltar ao AuthScreen.
+  const handleLogout = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) await resetMigrationFlag(session.user.id);
+    await supabase.auth.signOut();
+    onLogout?.();
+  };
 
   // Collapsible embedded sections (Histórico, Conquistas, Ciência)
   const [historyExpanded, setHistoryExpanded] = useState(false);
@@ -953,6 +965,11 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
           </TouchableOpacity>
         </View>
 
+        {/* Logout — encerra a sessão; o RootGate volta ao AuthScreen */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
+          <Text style={styles.logoutButtonText}>SAIR DA CONTA</Text>
+        </TouchableOpacity>
+
         <View style={{ height: 24 }} />
       </ScrollView>
 
@@ -1377,4 +1394,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingVertical: 10,
   },
   dangerButtonText: { fontSize: 13, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.3 },
+  logoutButton: {
+    marginTop: 16,
+    marginHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FF4444',
+    alignItems: 'center',
+  },
+  logoutButtonText: { fontSize: 13, fontWeight: '700', color: '#FF4444', letterSpacing: 1 },
 });

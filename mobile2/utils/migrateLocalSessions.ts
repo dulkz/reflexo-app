@@ -49,3 +49,9 @@ export async function migrateLocalSessions(userId: string): Promise<void> {
     // Silencioso — tentará novamente no próximo login
   }
 }
+
+export async function resetMigrationFlag(userId: string): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(`reflexo_migration_done_${userId}`);
+  } catch (_) {}
+}
