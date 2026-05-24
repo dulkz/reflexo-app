@@ -16,6 +16,7 @@ import ModoSequencia, { SeqSummary } from './screens/ModoSequencia';
 import Resultado from './screens/Resultado';
 import Perfil from './screens/Perfil';
 import Missoes from './screens/Missoes';
+import GlobalScreen from './screens/GlobalScreen';
 import ArchetypeEvolution from './screens/ArchetypeEvolution';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingFlow from './screens/onboarding/OnboardingFlow';
@@ -53,7 +54,7 @@ const RARITY_PRIORITY: Record<RarityKey, number> = {
 // Archetype progression order — used to detect a forward evolution (advancement only).
 const ARCHETYPE_ORDER = ['EXPLORADOR', 'EM_EVOLUCAO', 'RESISTENTE', 'ATIRADOR', 'VELOCISTA', 'PILOTO'];
 
-type Tab = 'jogar' | 'missoes' | 'perfil';
+type Tab = 'jogar' | 'global' | 'missoes' | 'perfil';
 type GameScreen =
   | 'home'
   | 'partida'
@@ -65,9 +66,10 @@ type GameScreen =
   | 'resultado_sequencia'
   | 'resultado_radar';
 
-// 3-tab navigation — Início (jogar) · Missões · Perfil. FAB removed.
+// 4-tab navigation — Início (jogar) · Global · Missões · Perfil. FAB removed.
 const TABS: { key: Tab; labelKey: string; icon: string }[] = [
   { key: 'jogar',   labelKey: 'nav.home',    icon: ICONS.nav.home },
+  { key: 'global',  labelKey: 'nav.global',  icon: ICONS.nav.global },
   { key: 'missoes', labelKey: 'nav.missoes', icon: ICONS.nav.missoes },
   { key: 'perfil',  labelKey: 'nav.perfil',  icon: ICONS.nav.perfil },
 ];
@@ -129,9 +131,8 @@ function RootGate() {
 }
 
 function AppInner({ isGuest }: { isGuest: boolean }) {
-  // isGuest — reservado para uso futuro (aba Global mostra "Faça login para ver o
-  // ranking" quando convidado). Sem leitor ainda; passado pelo RootGate.
-  void isGuest;
+  // isGuest — true para convidado (sem sessão). Usado pela aba Global para mostrar
+  // "Faça login para ver o ranking". Passado pelo RootGate.
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('jogar');
@@ -745,6 +746,7 @@ function AppInner({ isGuest }: { isGuest: boolean }) {
       {/* Screen content */}
       <View style={[styles.content, inGame && styles.contentFullscreen]}>
         {activeTab === 'jogar'   && renderGame()}
+        {activeTab === 'global'  && <GlobalScreen isGuest={isGuest} />}
         {activeTab === 'missoes' && (
           <Missoes
             sessions={sessions}
@@ -763,7 +765,7 @@ function AppInner({ isGuest }: { isGuest: boolean }) {
         )}
       </View>
 
-      {/* Tab bar — 3 tabs, hidden during active game */}
+      {/* Tab bar — 4 tabs, hidden during active game */}
       {!inGame && (
         <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
           {TABS.map(tab => {
@@ -974,10 +976,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    minWidth: 84,
+    minWidth: 64,
     height: 60,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     backgroundColor: 'transparent',
     borderRadius: 14,
     borderWidth: 1,

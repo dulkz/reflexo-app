@@ -552,6 +552,7 @@
 
   "nav": {
     "home": "Home",
+    "global": "Global",
     "missoes": "Missions",
     "perfil": "Profile"
   },
