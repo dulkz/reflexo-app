@@ -1,0 +1,5 @@
+-- accuracy já existia na tabela sessions (numeric, nullable).
+-- A partir desta versão, syncSession e migrateLocalSessions
+-- populam o valor real (0-1) para os modos Alvo, Radar e Sequência.
+-- Partida não tem accuracy por design → permanece NULL.
+-- Nenhuma alteração de schema necessária.
