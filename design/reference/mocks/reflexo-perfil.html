@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Perfil Dark vs Light</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #E8EAF0;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 48px 24px;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .dark {
+    --bg0: #0D0F14; --bg1: #161B24; --bg2: #1E2533; --bg3: #252D3E;
+    --green: #4AFFA3; --green-dim: rgba(74,255,163,0.10); --green-border: rgba(74,255,163,0.22);
+    --purple: #7B6EF6; --purple-dim: rgba(123,110,246,0.12); --purple-border: rgba(123,110,246,0.25);
+    --amber: #FFB547; --amber-dim: rgba(255,181,71,0.11); --amber-border: rgba(255,181,71,0.22);
+    --red: #FF5757; --red-dim: rgba(255,87,87,0.10);
+    --text0: #EDF0F7; --text1: #8892A4; --text2: #4A5268;
+    --border: rgba(255,255,255,0.06); --border-mid: rgba(255,255,255,0.10);
+    --notch: #060709; --shell: rgba(255,255,255,0.08); --tabbar: #161B24;
+  }
+
+  .light {
+    --bg0: #F5F7FA; --bg1: #FFFFFF; --bg2: #ECEEF5; --bg3: #E0E3EE;
+    --green: #0A8A4F; --green-dim: rgba(10,138,79,0.08); --green-border: rgba(10,138,79,0.20);
+    --purple: #5B4FD4; --purple-dim: rgba(91,79,212,0.08); --purple-border: rgba(91,79,212,0.18);
+    --amber: #B56A00; --amber-dim: rgba(181,106,0,0.08); --amber-border: rgba(181,106,0,0.18);
+    --red: #C0392B; --red-dim: rgba(192,57,43,0.08);
+    --text0: #0E1117; --text1: #4A5268; --text2: #8892A4;
+    --border: rgba(0,0,0,0.07); --border-mid: rgba(0,0,0,0.12);
+    --notch: #D0D4DF; --shell: rgba(0,0,0,0.10); --tabbar: #FFFFFF;
+  }
+
+  .col-label {
+    text-align: center; font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 12px;
+  }
+
+  .phone {
+    width: 355px; background: var(--bg0); border-radius: 48px; overflow: hidden;
+    border: 1px solid var(--shell);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.25), 0 0 0 8px rgba(0,0,0,0.03);
+  }
+
+  .notch { width: 110px; height: 26px; background: var(--notch); border-radius: 0 0 18px 18px; margin: 0 auto; }
+
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 24px 4px; font-size: 11px; color: var(--text2);
+    font-family: 'Space Mono', monospace; margin-top: -26px;
+  }
+
+  /* ── Hero de identidade ── */
+  .hero {
+    padding: 16px 20px 14px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .avatar-lg {
+    width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+    background: var(--purple-dim); border: 2px solid var(--purple-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: var(--purple);
+  }
+  .hero-info { flex: 1; }
+  .hero-name { font-size: 20px; font-weight: 700; color: var(--text0); letter-spacing: -0.3px; }
+  .hero-since { font-size: 11px; color: var(--text2); margin-top: 1px; font-family: 'Space Mono', monospace; }
+  .hero-streak {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+  }
+  .streak-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--amber); line-height: 1; }
+  .streak-lbl { font-size: 10px; color: var(--text2); font-family: 'Space Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* ── Scroll ── */
+  .scroll { padding: 14px 20px 0; }
+
+  /* ── Arquétipo block — destaque máximo ── */
+  .arq-block {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px; margin-bottom: 10px;
+    position: relative; overflow: hidden;
+  }
+  .arq-block::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--purple); opacity: 0.7;
+  }
+  .arq-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .arq-eyebrow { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; margin-bottom: 3px; }
+  .arq-name { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--purple); letter-spacing: 0.5px; }
+  .arq-desc { font-size: 12px; color: var(--text1); line-height: 1.5; margin-bottom: 10px; }
+  .arq-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .arq-tag { font-size: 10px; font-family: 'Space Mono', monospace; padding: 3px 8px; border-radius: 6px; background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+
+  /* Timeline de arquétipos */
+  .arq-timeline { display: flex; align-items: center; gap: 0; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .arq-timeline::-webkit-scrollbar { display: none; }
+  .tl-item { display: flex; align-items: center; flex-shrink: 0; }
+  .tl-node {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;
+  }
+  .tl-circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+  .tl-circle.done { background: var(--green-dim); border: 1.5px solid var(--green); color: var(--green); }
+  .tl-circle.active { background: var(--purple-dim); border: 2px solid var(--purple); color: var(--purple); }
+  .tl-circle.locked { background: var(--bg2); border: 1.5px solid var(--border-mid); color: var(--text2); }
+  .tl-label { font-size: 9px; color: var(--text2); font-family: 'Space Mono', monospace; white-space: nowrap; max-width: 48px; text-align: center; overflow: hidden; text-overflow: ellipsis; }
+  .tl-label.active { color: var(--purple); }
+  .tl-line { width: 20px; height: 1.5px; background: var(--border-mid); flex-shrink: 0; margin-bottom: 14px; }
+  .tl-line.done { background: var(--green); opacity: 0.4; }
+
+  /* ── Próximos objetivos ── */
+  .objetivo {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px 14px; margin-bottom: 8px;
+  }
+  .obj-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .obj-eyebrow { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.08em; color: var(--text2); text-transform: uppercase; margin-bottom: 2px; }
+  .obj-title { font-size: 13px; font-weight: 600; color: var(--text0); }
+  .obj-pct { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--green); }
+  .obj-sub { font-size: 11px; color: var(--text1); margin-bottom: 8px; }
+  .prog-bar-wrap { height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .prog-bar-fill { height: 3px; border-radius: 2px; }
+
+  /* ── Stats por modo ── */
+  .sec-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .sec-title { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.12em; color: var(--text2); text-transform: uppercase; }
+
+  .modo-stat-card {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 14px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .modo-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .modo-info { flex: 1; }
+  .modo-name { font-size: 12px; font-weight: 700; color: var(--text0); margin-bottom: 1px; }
+  .modo-sub { font-size: 11px; color: var(--text1); }
+  .modo-nums { text-align: right; }
+  .modo-best { font-size: 16px; font-weight: 700; font-family: 'Space Mono', monospace; line-height: 1; }
+  .modo-avg { font-size: 10px; color: var(--text2); font-family: 'Space Mono', monospace; margin-top: 2px; }
+  .modo-badge { display: inline-block; font-size: 9px; font-weight: 700; font-family: 'Space Mono', monospace; padding: 2px 5px; border-radius: 4px; margin-top: 3px; }
+
+  /* ── Conquistas summary ── */
+  .conquistas-card {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px 14px; margin-bottom: 8px;
+  }
+  .conq-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .conq-title { font-size: 13px; font-weight: 600; color: var(--text0); }
+  .conq-link { font-size: 12px; color: var(--green); }
+  .conq-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .conq-pill {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; font-family: 'Space Mono', monospace;
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid var(--border-mid);
+    color: var(--text1);
+  }
+  .conq-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .conq-prog { width: 100%; margin-top: 10px; }
+  .conq-prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .conq-prog-label { font-size: 11px; color: var(--text1); }
+  .conq-prog-count { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--text2); }
+
+  /* ── Arquivo de ciência ── */
+  .ciencia-card {
+    background: var(--purple-dim); border: 1px solid var(--purple-border);
+    border-radius: 14px; padding: 13px 14px; margin-bottom: 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .ciencia-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); flex-shrink: 0; margin-top: 4px; }
+  .ciencia-body { flex: 1; }
+  .ciencia-label { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--purple); text-transform: uppercase; margin-bottom: 3px; }
+  .ciencia-title { font-size: 13px; font-weight: 600; color: var(--text0); margin-bottom: 2px; }
+  .ciencia-sub { font-size: 11px; color: var(--text1); }
+  .ciencia-link { font-size: 11px; color: var(--purple); margin-top: 6px; display: block; }
+
+  /* ── Tab bar ── */
+  .tabbar { background: var(--tabbar); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 10px 0 26px; margin-top: 14px; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .tab svg { width: 21px; height: 21px; stroke: var(--text2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.active svg { stroke: var(--green); }
+  .tab-lbl { font-size: 10px; color: var(--text2); font-weight: 500; }
+  .tab.active .tab-lbl { color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- ═══ DARK ═══ -->
+<div>
+  <p class="col-label" style="color:#4AFFA3;">Dark mode</p>
+  <div class="phone dark">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="avatar-lg">L</div>
+      <div class="hero-info">
+        <div class="hero-name">Lfc</div>
+        <div class="hero-since">jogando desde maio · 9 sessões</div>
+      </div>
+      <div class="hero-streak">
+        <div class="streak-num">1</div>
+        <div class="streak-lbl">dia seguido</div>
+      </div>
+    </div>
+
+    <div class="scroll">
+
+      <!-- Arquétipo -->
+      <div class="arq-block">
+        <div class="arq-top">
+          <div>
+            <div class="arq-eyebrow">Arquétipo atual</div>
+            <div class="arq-name">O Atirador</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:2px;">próximo</div>
+            <div style="font-size:12px;font-weight:600;color:var(--green);">O Velocista →</div>
+          </div>
+        </div>
+        <div class="arq-desc">Precisão cirúrgica no Alvo. Foca agora na velocidade pura do Partida para chegar ao Elite.</div>
+        <div class="arq-tags">
+          <span class="arq-tag">Precisão 100% no Alvo</span>
+          <span class="arq-tag">8 sessões de Alvo</span>
+        </div>
+        <!-- Timeline -->
+        <div class="arq-timeline">
+          <div class="tl-item">
+            <div class="tl-node">
+              <div class="tl-circle done">✓</div>
+              <div class="tl-label">Explorador</div>
+            </div>
+            <div class="tl-line done"></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node">
+              <div class="tl-circle done">✓</div>
+              <div class="tl-label">Em evolução</div>
+            </div>
+            <div class="tl-line done"></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node">
+              <div class="tl-circle done">✓</div>
+              <div class="tl-label">Resistente</div>
+            </div>
+            <div class="tl-line done"></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node">
+              <div class="tl-circle active">◉</div>
+              <div class="tl-label active">Atirador</div>
+            </div>
+            <div class="tl-line"></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node">
+              <div class="tl-circle locked">○</div>
+              <div class="tl-label">Velocista</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Próximos objetivos -->
+      <div class="sec-hd" style="margin-bottom:8px;">
+        <span class="sec-title">Próximos objetivos</span>
+      </div>
+
+      <div class="objetivo">
+        <div class="obj-top">
+          <div>
+            <div class="obj-eyebrow">Próxima conquista</div>
+            <div class="obj-title">Atirador Frequente</div>
+          </div>
+          <div class="obj-pct">80%</div>
+        </div>
+        <div class="obj-sub">8 / 10 sessões no Alvo</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:80%;background:var(--green);"></div></div>
+      </div>
+
+      <div class="objetivo">
+        <div class="obj-top">
+          <div>
+            <div class="obj-eyebrow">Próximo arquétipo</div>
+            <div class="obj-title" style="color:var(--purple);">O Velocista</div>
+          </div>
+          <div class="obj-pct" style="color:var(--purple);">50%</div>
+        </div>
+        <div class="obj-sub">Partida abaixo de 220 ms · Precisão acima de 90%</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:50%;background:var(--purple);"></div></div>
+      </div>
+
+      <!-- Stats por modo -->
+      <div class="sec-hd" style="margin-top:6px;">
+        <span class="sec-title">Performance por modo</span>
+      </div>
+
+      <div class="modo-stat-card">
+        <div class="modo-icon" style="background:var(--green-dim);">⚡</div>
+        <div class="modo-info">
+          <div class="modo-name">Partida</div>
+          <div class="modo-sub">Reação simples visual</div>
+        </div>
+        <div class="modo-nums">
+          <div class="modo-best" style="color:var(--green);">249<span style="font-size:10px;color:var(--text2);">ms</span></div>
+          <div class="modo-avg">méd 276 ms</div>
+          <div class="modo-badge" style="background:var(--green-dim);color:var(--green);">BOM</div>
+        </div>
+      </div>
+
+      <div class="modo-stat-card">
+        <div class="modo-icon" style="background:rgba(74,255,163,0.07);">🎯</div>
+        <div class="modo-info">
+          <div class="modo-name">Alvo</div>
+          <div class="modo-sub">Velocidade + precisão</div>
+        </div>
+        <div class="modo-nums">
+          <div class="modo-best" style="color:var(--green);">420<span style="font-size:10px;color:var(--text2);">ms</span></div>
+          <div class="modo-avg">méd 563 ms</div>
+          <div class="modo-badge" style="background:var(--green-dim);color:var(--green);">MUITO BOM</div>
+        </div>
+      </div>
+
+      <div class="modo-stat-card" style="opacity:0.5;">
+        <div class="modo-icon" style="background:var(--purple-dim);">⏸</div>
+        <div class="modo-info">
+          <div class="modo-name">Sequência</div>
+          <div class="modo-sub">Controle inibitório</div>
+        </div>
+        <div class="modo-nums">
+          <div style="font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;">—</div>
+          <div class="modo-badge" style="background:var(--purple-dim);color:var(--purple);">NOVO</div>
+        </div>
+      </div>
+
+      <!-- Conquistas -->
+      <div class="sec-hd" style="margin-top:6px;">
+        <span class="sec-title">Conquistas</span>
+      </div>
+      <div class="conquistas-card">
+        <div class="conq-top">
+          <div class="conq-title">7 / 36 desbloqueadas</div>
+          <div class="conq-link">ver todas →</div>
+        </div>
+        <div class="prog-bar-wrap" style="margin-bottom:10px;"><div class="prog-bar-fill" style="width:19%;background:var(--amber);"></div></div>
+        <div class="conq-row">
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--amber);"></div>Lendário 0/5</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--red);"></div>Épico 0/7</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--green);"></div>Raro 1/6</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--purple);"></div>Difícil 2/8</div>
+        </div>
+      </div>
+
+      <!-- Arquivo de ciência -->
+      <div class="ciencia-card">
+        <div class="ciencia-dot"></div>
+        <div class="ciencia-body">
+          <div class="ciencia-label">Arquivo de ciência</div>
+          <div class="ciencia-title">3 artigos desbloqueados</div>
+          <div class="ciencia-sub">Córtex pré-frontal · Neuroplasticidade · Tempo de reação</div>
+          <span class="ciencia-link">explorar arquivo →</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tabbar">
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tab-lbl">Home</span></div>
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tab-lbl">Missões</span></div>
+      <div class="tab active"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="tab-lbl">Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LIGHT ═══ -->
+<div>
+  <p class="col-label" style="color:#0A8A4F;">Light mode</p>
+  <div class="phone light">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="avatar-lg">L</div>
+      <div class="hero-info">
+        <div class="hero-name">Lfc</div>
+        <div class="hero-since">jogando desde maio · 9 sessões</div>
+      </div>
+      <div class="hero-streak">
+        <div class="streak-num">1</div>
+        <div class="streak-lbl">dia seguido</div>
+      </div>
+    </div>
+
+    <div class="scroll">
+
+      <!-- Arquétipo -->
+      <div class="arq-block">
+        <div class="arq-top">
+          <div>
+            <div class="arq-eyebrow">Arquétipo atual</div>
+            <div class="arq-name">O Atirador</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:2px;">próximo</div>
+            <div style="font-size:12px;font-weight:600;color:var(--green);">O Velocista →</div>
+          </div>
+        </div>
+        <div class="arq-desc">Precisão cirúrgica no Alvo. Foca agora na velocidade pura do Partida para chegar ao Elite.</div>
+        <div class="arq-tags">
+          <span class="arq-tag">Precisão 100% no Alvo</span>
+          <span class="arq-tag">8 sessões de Alvo</span>
+        </div>
+        <div class="arq-timeline">
+          <div class="tl-item">
+            <div class="tl-node"><div class="tl-circle done">✓</div><div class="tl-label">Explorador</div></div>
+            <div class="tl-line done"></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node"><div class="tl-circle done">✓</div><div class="tl-label">Em evolução</div></div>
+            <div class="tl-line done"></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node"><div class="tl-circle done">✓</div><div class="tl-label">Resistente</div></div>
+            <div class="tl-line done"></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node"><div class="tl-circle active">◉</div><div class="tl-label active">Atirador</div></div>
+            <div class="tl-line"></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node"><div class="tl-circle locked">○</div><div class="tl-label">Velocista</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Próximos objetivos -->
+      <div class="sec-hd"><span class="sec-title">Próximos objetivos</span></div>
+
+      <div class="objetivo">
+        <div class="obj-top">
+          <div><div class="obj-eyebrow">Próxima conquista</div><div class="obj-title">Atirador Frequente</div></div>
+          <div class="obj-pct">80%</div>
+        </div>
+        <div class="obj-sub">8 / 10 sessões no Alvo</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:80%;background:var(--green);"></div></div>
+      </div>
+
+      <div class="objetivo">
+        <div class="obj-top">
+          <div><div class="obj-eyebrow">Próximo arquétipo</div><div class="obj-title" style="color:var(--purple);">O Velocista</div></div>
+          <div class="obj-pct" style="color:var(--purple);">50%</div>
+        </div>
+        <div class="obj-sub">Partida abaixo de 220 ms · Precisão acima de 90%</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:50%;background:var(--purple);"></div></div>
+      </div>
+
+      <!-- Stats por modo -->
+      <div class="sec-hd" style="margin-top:6px;"><span class="sec-title">Performance por modo</span></div>
+
+      <div class="modo-stat-card">
+        <div class="modo-icon" style="background:var(--green-dim);">⚡</div>
+        <div class="modo-info"><div class="modo-name">Partida</div><div class="modo-sub">Reação simples visual</div></div>
+        <div class="modo-nums">
+          <div class="modo-best" style="color:var(--green);">249<span style="font-size:10px;color:var(--text2);">ms</span></div>
+          <div class="modo-avg">méd 276 ms</div>
+          <div class="modo-badge" style="background:var(--green-dim);color:var(--green);">BOM</div>
+        </div>
+      </div>
+
+      <div class="modo-stat-card">
+        <div class="modo-icon" style="background:var(--green-dim);">🎯</div>
+        <div class="modo-info"><div class="modo-name">Alvo</div><div class="modo-sub">Velocidade + precisão</div></div>
+        <div class="modo-nums">
+          <div class="modo-best" style="color:var(--green);">420<span style="font-size:10px;color:var(--text2);">ms</span></div>
+          <div class="modo-avg">méd 563 ms</div>
+          <div class="modo-badge" style="background:var(--green-dim);color:var(--green);">MUITO BOM</div>
+        </div>
+      </div>
+
+      <div class="modo-stat-card" style="opacity:0.5;">
+        <div class="modo-icon" style="background:var(--purple-dim);">⏸</div>
+        <div class="modo-info"><div class="modo-name">Sequência</div><div class="modo-sub">Controle inibitório</div></div>
+        <div class="modo-nums">
+          <div style="font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;">—</div>
+          <div class="modo-badge" style="background:var(--purple-dim);color:var(--purple);">NOVO</div>
+        </div>
+      </div>
+
+      <!-- Conquistas -->
+      <div class="sec-hd" style="margin-top:6px;"><span class="sec-title">Conquistas</span></div>
+      <div class="conquistas-card">
+        <div class="conq-top">
+          <div class="conq-title">7 / 36 desbloqueadas</div>
+          <div class="conq-link">ver todas →</div>
+        </div>
+        <div class="prog-bar-wrap" style="margin-bottom:10px;"><div class="prog-bar-fill" style="width:19%;background:var(--amber);"></div></div>
+        <div class="conq-row">
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--amber);"></div>Lendário 0/5</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--red);"></div>Épico 0/7</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--green);"></div>Raro 1/6</div>
+          <div class="conq-pill"><div class="conq-dot" style="background:var(--purple);"></div>Difícil 2/8</div>
+        </div>
+      </div>
+
+      <!-- Arquivo de ciência -->
+      <div class="ciencia-card">
+        <div class="ciencia-dot"></div>
+        <div class="ciencia-body">
+          <div class="ciencia-label">Arquivo de ciência</div>
+          <div class="ciencia-title">3 artigos desbloqueados</div>
+          <div class="ciencia-sub">Córtex pré-frontal · Neuroplasticidade · Tempo de reação</div>
+          <span class="ciencia-link">explorar arquivo →</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tabbar">
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tab-lbl">Home</span></div>
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tab-lbl">Missões</span></div>
+      <div class="tab active"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="tab-lbl">Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

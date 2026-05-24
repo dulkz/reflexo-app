@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Home Redesign v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0: #0D0F14;
+    --bg1: #161B24;
+    --bg2: #1E2533;
+    --bg3: #252D3E;
+    --green: #4AFFA3;
+    --green-dim: rgba(74,255,163,0.12);
+    --green-border: rgba(74,255,163,0.25);
+    --purple: #7B6EF6;
+    --purple-dim: rgba(123,110,246,0.12);
+    --purple-border: rgba(123,110,246,0.25);
+    --red: #FF5757;
+    --red-dim: rgba(255,87,87,0.12);
+    --amber: #FFB547;
+    --amber-dim: rgba(255,181,71,0.12);
+    --text0: #EDF0F7;
+    --text1: #8892A4;
+    --text2: #4A5268;
+    --border: rgba(255,255,255,0.06);
+    --border-mid: rgba(255,255,255,0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #060709;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 48px 24px;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Phone shell ── */
+  .phone {
+    width: 375px;
+    background: var(--bg0);
+    border-radius: 48px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow:
+      0 0 0 8px rgba(255,255,255,0.02),
+      0 60px 120px rgba(0,0,0,0.9);
+    position: relative;
+  }
+
+  .notch {
+    width: 120px;
+    height: 28px;
+    background: #060709;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 24px 4px;
+    font-size: 11px;
+    color: var(--text2);
+    font-family: 'Space Mono', monospace;
+    margin-top: -28px;
+  }
+
+  .screen { background: var(--bg0); }
+
+  /* ── Header ── */
+  .header {
+    padding: 16px 22px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .brand { font-size: 10px; letter-spacing: 0.14em; color: var(--text2); font-family: 'Space Mono', monospace; text-transform: uppercase; margin-bottom: 2px; }
+
+  .greeting { font-size: 24px; font-weight: 700; color: var(--text0); letter-spacing: -0.4px; }
+
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--purple-dim);
+    border: 1.5px solid var(--purple-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: var(--purple);
+  }
+
+  /* ── Streak pill ── */
+  .streak {
+    margin: 0 22px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--amber-dim);
+    border: 1px solid rgba(255,181,71,0.2);
+    border-radius: 24px;
+    padding: 5px 12px 5px 8px;
+  }
+  .streak-icon { font-size: 14px; }
+  .streak-text { font-size: 12px; font-weight: 600; color: var(--amber); font-family: 'Space Mono', monospace; }
+  .streak-badge { font-size: 10px; background: rgba(74,255,163,0.15); color: var(--green); border-radius: 10px; padding: 2px 7px; font-weight: 700; }
+
+  /* ── CTA principal — DOMINANTE ── */
+  .cta-hero {
+    margin: 0 22px 14px;
+    background: var(--green);
+    border-radius: 18px;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-hero::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+
+  .cta-left {}
+  .cta-eyebrow { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: rgba(0,0,0,0.45); text-transform: uppercase; margin-bottom: 4px; }
+  .cta-label { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: #081400; letter-spacing: 0.5px; line-height: 1; }
+  .cta-sub { font-size: 12px; color: rgba(0,0,0,0.5); margin-top: 4px; }
+
+  .cta-play {
+    width: 52px; height: 52px;
+    background: rgba(0,0,0,0.12);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .cta-play svg { width: 20px; height: 20px; fill: #081400; margin-left: 3px; }
+
+  /* ── Arquétipo card ── */
+  .arq-card {
+    margin: 0 22px 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .arq-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1.5px;
+    background: linear-gradient(90deg, var(--purple) 0%, transparent 70%);
+  }
+
+  .arq-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .arq-eyebrow { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; margin-bottom: 3px; }
+  .arq-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--purple); letter-spacing: 0.5px; }
+  .arq-next-label { font-size: 10px; color: var(--text2); text-align: right; margin-bottom: 2px; }
+  .arq-next-val { font-size: 12px; font-weight: 600; color: var(--green); text-align: right; }
+
+  .arq-track { background: var(--bg0); border-radius: 3px; height: 4px; margin-bottom: 8px; overflow: hidden; }
+  .arq-fill { height: 4px; border-radius: 3px; background: var(--purple); width: 50%; }
+
+  .arq-hint { font-size: 12px; color: var(--text1); line-height: 1.55; }
+  .arq-hint strong { color: var(--text0); font-weight: 600; }
+
+  /* ── Stats 2-col ── */
+  .stats {
+    margin: 0 22px 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 8px;
+  }
+
+  .stat {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+
+  .stat-val { font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 4px; font-family: 'Space Mono', monospace; }
+  .stat-unit { font-size: 12px; color: var(--text2); font-weight: 400; }
+  .stat-lbl { font-size: 11px; color: var(--text2); }
+
+  .v-green { color: var(--green); }
+  .v-purple { color: var(--purple); }
+
+  /* ── Missão do dia ── */
+  .section-hd {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 22px; margin-bottom: 8px;
+  }
+  .section-title { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.12em; color: var(--text2); text-transform: uppercase; }
+  .section-link { font-size: 12px; color: var(--green); }
+
+  .mission-card {
+    margin: 0 22px 14px;
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .mission-hd {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mission-title { font-size: 13px; font-weight: 600; color: var(--text0); }
+  .mission-badge { font-size: 11px; font-family: 'Space Mono', monospace; background: var(--green-dim); border: 1px solid var(--green-border); border-radius: 8px; padding: 2px 8px; color: var(--green); }
+
+  .mission-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px;
+  }
+  .mission-item + .mission-item { border-top: 1px solid var(--border); }
+
+  .m-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .m-text { flex: 1; font-size: 13px; color: var(--text1); }
+  .m-prog { font-size: 12px; font-family: 'Space Mono', monospace; color: var(--text2); }
+
+  /* ── Modos scroll ── */
+  .modos-scroll {
+    display: flex; gap: 10px;
+    padding: 0 22px;
+    overflow-x: auto; scrollbar-width: none;
+    margin-bottom: 14px;
+  }
+  .modos-scroll::-webkit-scrollbar { display: none; }
+
+  .modo {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    flex-shrink: 0;
+    width: 130px;
+    cursor: pointer;
+  }
+  .modo.active { border-color: var(--green-border); }
+
+  .modo-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 8px; }
+  .modo-name { font-size: 12px; font-weight: 700; color: var(--text0); margin-bottom: 3px; }
+  .modo-stat { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--text1); margin-bottom: 6px; }
+  .modo-pill { display: inline-block; font-size: 9px; font-weight: 700; font-family: 'Space Mono', monospace; padding: 2px 6px; border-radius: 4px; }
+
+  /* ── Lore snippet ── */
+  .lore {
+    margin: 0 22px 14px;
+    background: var(--purple-dim);
+    border: 1px solid var(--purple-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .lore-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); flex-shrink: 0; margin-top: 5px; }
+  .lore-text { font-size: 12px; color: var(--text1); line-height: 1.55; }
+  .lore-text strong { color: var(--purple); font-weight: 500; }
+
+  /* ── Tab bar ── */
+  .tabbar {
+    background: var(--bg1);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 10px 0 28px;
+  }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .tab svg { width: 22px; height: 22px; stroke: var(--text2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.active svg { stroke: var(--green); }
+  .tab-lbl { font-size: 10px; color: var(--text2); font-weight: 500; }
+  .tab.active .tab-lbl { color: var(--green); }
+
+  .tab-play {
+    width: 52px; height: 52px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: -18px;
+    box-shadow: 0 0 28px rgba(74,255,163,0.35);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .tab-play svg { width: 22px; height: 22px; fill: #081400; stroke: none; margin-left: 3px; }
+
+  /* ── Annotation panel ── */
+  .annotations {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 64px;
+  }
+
+  .ann-title {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #3A4050;
+    margin-bottom: 4px;
+  }
+
+  .ann {
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .ann strong { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 4px; }
+
+  .ann-change { background: rgba(74,255,163,0.06); border: 1px solid rgba(74,255,163,0.18); color: #5A7A68; }
+  .ann-change strong { color: var(--green); }
+
+  .ann-remove { background: rgba(255,87,87,0.06); border: 1px solid rgba(255,87,87,0.15); color: #7A5A5A; }
+  .ann-remove strong { color: var(--red); }
+
+  .page-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #3A4050;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div style="display:flex; gap:48px; align-items:flex-start; flex-wrap:wrap; justify-content:center;">
+
+  <!-- Phone -->
+  <div>
+    <p class="page-title">Home — redesign v2</p>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="statusbar">
+        <span>15:53</span>
+        <span>48%</span>
+      </div>
+
+      <div class="screen">
+
+        <!-- Header -->
+        <div class="header">
+          <div>
+            <div class="brand">Reflexo</div>
+            <div class="greeting">Bom dia, Lfc</div>
+          </div>
+          <div class="avatar">L</div>
+        </div>
+
+        <!-- Streak -->
+        <div class="streak">
+          <span class="streak-icon">🔥</span>
+          <span class="streak-text">1 dia</span>
+          <span class="streak-badge">✓ hoje</span>
+        </div>
+
+        <!-- CTA DOMINANTE — primeira coisa que o olho pega -->
+        <div class="cta-hero">
+          <div class="cta-left">
+            <div class="cta-eyebrow">Próxima sessão</div>
+            <div class="cta-label">Treinar agora</div>
+            <div class="cta-sub">Modo Partida · fase atual</div>
+          </div>
+          <div class="cta-play">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>
+
+        <!-- Arquétipo — identidade visível na Home -->
+        <div class="arq-card">
+          <div class="arq-top">
+            <div>
+              <div class="arq-eyebrow">Arquétipo atual</div>
+              <div class="arq-name">O Atirador</div>
+            </div>
+            <div>
+              <div class="arq-next-label">próximo</div>
+              <div class="arq-next-val">O Velocista →</div>
+            </div>
+          </div>
+          <div class="arq-track"><div class="arq-fill"></div></div>
+          <div class="arq-hint">Chegue a <strong>abaixo de 220 ms</strong> no Partida para evoluir. Você está a 56 ms.</div>
+        </div>
+
+        <!-- Stats 2-col -->
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-val v-green">249<span class="stat-unit">ms</span></div>
+            <div class="stat-lbl">melhor hoje</div>
+          </div>
+          <div class="stat">
+            <div class="stat-val v-purple">−47<span class="stat-unit">ms</span></div>
+            <div class="stat-lbl">últimas 8 sessões</div>
+          </div>
+        </div>
+
+        <!-- Lore integrada — Ciência contextual -->
+        <div class="lore">
+          <div class="lore-dot"></div>
+          <div class="lore-text"><strong>Neurociência:</strong> seu córtex pré-frontal processa estímulos visuais em ~250 ms. Você já chegou em 249 ms — está no limite humano médio.</div>
+        </div>
+
+        <!-- Missão do dia -->
+        <div class="section-hd">
+          <span class="section-title">Missão do dia</span>
+          <span class="section-link">ver semana →</span>
+        </div>
+        <div class="mission-card">
+          <div class="mission-hd">
+            <span class="mission-title">Objetivo</span>
+            <span class="mission-badge">1/2</span>
+          </div>
+          <div class="mission-item">
+            <div class="m-icon" style="background:var(--purple-dim);">⏸</div>
+            <div class="m-text">Jogue Modo Sequência</div>
+            <div class="m-prog">0/1</div>
+          </div>
+          <div class="mission-item">
+            <div class="m-icon" style="background:var(--amber-dim);">📡</div>
+            <div class="m-text">Jogue Modo Radar</div>
+            <div class="m-prog">0/1</div>
+          </div>
+        </div>
+
+        <!-- Modos — scroll, secundário -->
+        <div class="section-hd">
+          <span class="section-title">Modos</span>
+        </div>
+        <div class="modos-scroll">
+          <div class="modo active">
+            <div class="modo-icon" style="background:var(--green-dim);">⚡</div>
+            <div class="modo-name">Partida</div>
+            <div class="modo-stat">249 ms</div>
+            <span class="modo-pill" style="background:var(--green-dim);color:var(--green);">BOM</span>
+          </div>
+          <div class="modo">
+            <div class="modo-icon" style="background:rgba(74,255,163,0.07);">🎯</div>
+            <div class="modo-name">Alvo</div>
+            <div class="modo-stat">420 ms</div>
+            <span class="modo-pill" style="background:var(--green-dim);color:var(--green);">MUITO BOM</span>
+          </div>
+          <div class="modo">
+            <div class="modo-icon" style="background:var(--purple-dim);">⏸</div>
+            <div class="modo-name">Sequência</div>
+            <div class="modo-stat" style="color:var(--text2);">não jogado</div>
+            <span class="modo-pill" style="background:var(--purple-dim);color:var(--purple);">NOVO</span>
+          </div>
+          <div class="modo">
+            <div class="modo-icon" style="background:var(--amber-dim);">📡</div>
+            <div class="modo-name">Radar</div>
+            <div class="modo-stat" style="color:var(--text2);">não jogado</div>
+            <span class="modo-pill" style="background:var(--amber-dim);color:var(--amber);">NOVO</span>
+          </div>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tabbar">
+          <div class="tab active">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="tab-lbl">Home</span>
+          </div>
+          <div class="tab">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span class="tab-lbl">Missões</span>
+          </div>
+          <div class="tab">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="tab-lbl">Perfil</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotations -->
+  <div class="annotations">
+    <div class="ann-title">O que mudou</div>
+
+    <div class="ann ann-change">
+      <strong>✦ CTA dominante no topo</strong>
+      "Treinar agora" em verde elétrico é a primeira coisa que o olho pega. No atual, não há botão de ação — o usuário precisa escolher entre 4 modos.
+    </div>
+
+    <div class="ann ann-change">
+      <strong>✦ Arquétipo na Home</strong>
+      "O Atirador" estava enterrado no Perfil. Agora aparece com progressão visível e meta concreta (−56 ms). Cria identidade e urgência.
+    </div>
+
+    <div class="ann ann-change">
+      <strong>✦ Verde elétrico + roxo neurociência</strong>
+      A paleta comunica alerta cognitivo, não relaxamento. Contraste real: fundo #0D0F14 vs accent #4AFFA3 cria separação luminosa de verdade.
+    </div>
+
+    <div class="ann ann-remove">
+      <strong>✕ Aba "Ciência" removida da nav</strong>
+      Conteúdo integrado como lore contextual. O snippet roxo mostra a ciência onde ela é relevante — sem precisar de uma aba separada.
+    </div>
+
+    <div class="ann ann-remove">
+      <strong>✕ Lista de 4 modos como estrutura principal</strong>
+      Modos viram scroll horizontal secundário. O usuário não precisa escolher ao abrir — o app já sugere o próximo passo.
+    </div>
+
+    <div class="ann ann-change">
+      <strong>✦ Tab bar: 2 destinos primários</strong>
+      "Treinar" e "Evolução" — como proposto no critique. Sem aba Ciência, sem fragmentação.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

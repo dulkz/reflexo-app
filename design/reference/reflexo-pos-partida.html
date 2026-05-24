@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Pós-partida Dark vs Light</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #E8EAF0;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 48px 24px;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .dark {
+    --bg0: #0D0F14; --bg1: #161B24; --bg2: #1E2533; --bg3: #252D3E;
+    --green: #4AFFA3; --green-dim: rgba(74,255,163,0.10); --green-border: rgba(74,255,163,0.22);
+    --purple: #7B6EF6; --purple-dim: rgba(123,110,246,0.12); --purple-border: rgba(123,110,246,0.25);
+    --amber: #FFB547; --amber-dim: rgba(255,181,71,0.11); --amber-border: rgba(255,181,71,0.22);
+    --red: #FF5757; --red-dim: rgba(255,87,87,0.10);
+    --text0: #EDF0F7; --text1: #8892A4; --text2: #4A5268;
+    --border: rgba(255,255,255,0.06); --border-mid: rgba(255,255,255,0.10);
+    --notch: #060709; --shell: rgba(255,255,255,0.08); --tabbar: #161B24;
+    --hero-bg: #161B24;
+  }
+
+  .light {
+    --bg0: #F5F7FA; --bg1: #FFFFFF; --bg2: #ECEEF5; --bg3: #E0E3EE;
+    --green: #0A8A4F; --green-dim: rgba(10,138,79,0.08); --green-border: rgba(10,138,79,0.20);
+    --purple: #5B4FD4; --purple-dim: rgba(91,79,212,0.08); --purple-border: rgba(91,79,212,0.18);
+    --amber: #B56A00; --amber-dim: rgba(181,106,0,0.08); --amber-border: rgba(181,106,0,0.18);
+    --red: #C0392B; --red-dim: rgba(192,57,43,0.08);
+    --text0: #0E1117; --text1: #4A5268; --text2: #8892A4;
+    --border: rgba(0,0,0,0.07); --border-mid: rgba(0,0,0,0.12);
+    --notch: #D0D4DF; --shell: rgba(0,0,0,0.10); --tabbar: #FFFFFF;
+    --hero-bg: #ECEEF5;
+  }
+
+  .col-label {
+    text-align: center; font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 12px;
+  }
+
+  .phone {
+    width: 355px; background: var(--bg0); border-radius: 48px; overflow: hidden;
+    border: 1px solid var(--shell);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.25), 0 0 0 8px rgba(0,0,0,0.03);
+  }
+
+  .notch { width: 110px; height: 26px; background: var(--notch); border-radius: 0 0 18px 18px; margin: 0 auto; }
+
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 24px 4px; font-size: 11px; color: var(--text2);
+    font-family: 'Space Mono', monospace; margin-top: -26px;
+  }
+
+  /* ── Hero resultado — o número é o protagonista ── */
+  .result-hero {
+    background: var(--hero-bg);
+    padding: 24px 24px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .result-mode {
+    font-size: 10px; font-family: 'Space Mono', monospace;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text2); margin-bottom: 6px;
+  }
+
+  .result-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px; line-height: 1;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+  }
+
+  .result-unit {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px; color: var(--text1);
+    margin-bottom: 12px;
+  }
+
+  .result-badge {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 20px;
+  }
+
+  /* Comparação vs melhor pessoal */
+  .vs-row {
+    display: flex; justify-content: center; gap: 24px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg0);
+  }
+
+  .vs-item { text-align: center; }
+  .vs-val { font-size: 18px; font-weight: 700; font-family: 'Space Mono', monospace; line-height: 1; margin-bottom: 3px; }
+  .vs-lbl { font-size: 10px; color: var(--text2); font-family: 'Space Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; }
+  .vs-divider { width: 1px; background: var(--border-mid); align-self: stretch; }
+  .vs-delta {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .vs-delta-val { font-size: 14px; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .vs-delta-lbl { font-size: 9px; color: var(--text2); font-family: 'Space Mono', monospace; text-transform: uppercase; margin-top: 2px; }
+
+  /* ── Scroll ── */
+  .scroll { padding: 14px 20px 0; }
+
+  /* ── Progresso no arquétipo ── */
+  .arq-progress {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px 14px; margin-bottom: 10px;
+    position: relative; overflow: hidden;
+  }
+  .arq-progress::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1.5px;
+    background: var(--purple); opacity: 0.6;
+  }
+  .arq-prog-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .arq-prog-label { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; }
+  .arq-prog-pct { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--purple); }
+  .arq-prog-title { font-size: 13px; font-weight: 600; color: var(--text0); margin-bottom: 2px; }
+  .arq-prog-sub { font-size: 11px; color: var(--text1); margin-bottom: 8px; }
+  .prog-bar-wrap { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .prog-bar-fill { height: 4px; border-radius: 2px; }
+
+  /* ── XP ganho ── */
+  .xp-row {
+    display: flex; gap: 8px; margin-bottom: 10px;
+  }
+  .xp-card {
+    flex: 1; background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; text-align: center;
+  }
+  .xp-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1; margin-bottom: 3px; }
+  .xp-lbl { font-size: 10px; color: var(--text2); font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── Lore pós-treino ── */
+  .lore-card {
+    background: var(--purple-dim); border: 1px solid var(--purple-border);
+    border-radius: 14px; padding: 13px 14px; margin-bottom: 10px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .lore-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); flex-shrink: 0; margin-top: 4px; }
+  .lore-label { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--purple); text-transform: uppercase; margin-bottom: 3px; }
+  .lore-text { font-size: 12px; color: var(--text1); line-height: 1.55; }
+  .lore-link { font-size: 11px; color: var(--purple); margin-top: 5px; display: block; }
+
+  /* ── Mini histórico 8 sessões ── */
+  .historico-card {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px 14px; margin-bottom: 10px;
+  }
+  .hist-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .hist-title { font-size: 12px; font-weight: 600; color: var(--text0); }
+  .hist-trend { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--green); }
+  .bars { display: flex; gap: 5px; align-items: flex-end; height: 40px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bar { width: 100%; border-radius: 3px 3px 0 0; }
+  .bar-val { font-size: 8px; font-family: 'Space Mono', monospace; color: var(--text2); }
+
+  /* ── CTAs ── */
+  .cta-stack { padding: 0 0 14px; display: flex; flex-direction: column; gap: 8px; }
+
+  .cta-primary {
+    background: var(--green); border-radius: 14px; padding: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+  }
+  .cta-primary-label { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--bg0); letter-spacing: 0.5px; }
+  .cta-primary-sub { font-size: 11px; color: rgba(0,0,0,0.45); margin-top: 1px; }
+  .cta-primary-icon { width: 36px; height: 36px; background: rgba(0,0,0,0.10); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .cta-primary-icon svg { width: 16px; height: 16px; fill: var(--bg0); margin-left: 2px; }
+
+  .cta-secondary {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 13px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+  }
+  .cta-sec-label { font-size: 13px; font-weight: 600; color: var(--text0); }
+  .cta-sec-sub { font-size: 11px; color: var(--text1); margin-top: 1px; }
+  .cta-sec-arrow { font-size: 16px; color: var(--text2); }
+</style>
+</head>
+<body>
+
+<!-- ═══ DARK ═══ -->
+<div>
+  <p class="col-label" style="color:#4AFFA3;">Dark mode</p>
+  <div class="phone dark">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+    <!-- Hero — número em destaque máximo -->
+    <div class="result-hero">
+      <div class="result-mode">Modo Partida · resultado</div>
+      <div class="result-number" style="color:#4AFFA3;">249</div>
+      <div class="result-unit">milissegundos</div>
+      <div class="result-badge" style="background:rgba(74,255,163,0.12);border:1px solid rgba(74,255,163,0.25);color:#4AFFA3;">
+        Novo recorde pessoal ↑
+      </div>
+    </div>
+
+    <!-- Comparação rápida -->
+    <div class="vs-row">
+      <div class="vs-item">
+        <div class="vs-val" style="color:#4AFFA3;">249</div>
+        <div class="vs-lbl">agora</div>
+      </div>
+      <div class="vs-divider"></div>
+      <div class="vs-delta">
+        <div class="vs-delta-val" style="color:#4AFFA3;">−27 ms</div>
+        <div class="vs-delta-lbl">vs. melhor anterior</div>
+      </div>
+      <div class="vs-divider"></div>
+      <div class="vs-item">
+        <div class="vs-val" style="color:#8892A4;">276</div>
+        <div class="vs-lbl">anterior</div>
+      </div>
+    </div>
+
+    <div class="scroll">
+
+      <!-- Progresso no arquétipo -->
+      <div class="arq-progress">
+        <div class="arq-prog-top">
+          <div>
+            <div class="arq-prog-label">O Velocista</div>
+            <div class="arq-prog-title">Partida abaixo de 220 ms</div>
+          </div>
+          <div class="arq-prog-pct">50%</div>
+        </div>
+        <div class="arq-prog-sub">Você está em 249 ms — faltam 29 ms para evoluir</div>
+        <div class="prog-bar-wrap">
+          <div class="prog-bar-fill" style="width:50%;background:#7B6EF6;"></div>
+        </div>
+      </div>
+
+      <!-- XP + streak -->
+      <div class="xp-row">
+        <div class="xp-card">
+          <div class="xp-val" style="color:#FFB547;">+120</div>
+          <div class="xp-lbl">XP ganho</div>
+        </div>
+        <div class="xp-card">
+          <div class="xp-val" style="color:#FFB547;">🔥 1</div>
+          <div class="xp-lbl">dia seguido</div>
+        </div>
+        <div class="xp-card">
+          <div class="xp-val" style="color:#4AFFA3;">7</div>
+          <div class="xp-lbl">tentativas</div>
+        </div>
+      </div>
+
+      <!-- Mini histórico -->
+      <div class="historico-card">
+        <div class="hist-hd">
+          <span class="hist-title">Últimas 8 sessões</span>
+          <span class="hist-trend">↓ −47 ms</span>
+        </div>
+        <div class="bars">
+          <div class="bar-wrap">
+            <div class="bar" style="height:22px;background:#252D3E;"></div>
+            <div class="bar-val">652</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:28px;background:#252D3E;"></div>
+            <div class="bar-val">581</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:32px;background:#252D3E;"></div>
+            <div class="bar-val">563</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:30px;background:#252D3E;"></div>
+            <div class="bar-val">591</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:26px;background:#252D3E;"></div>
+            <div class="bar-val">613</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:29px;background:#252D3E;"></div>
+            <div class="bar-val">605</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:35px;background:rgba(74,255,163,0.25);"></div>
+            <div class="bar-val" style="color:#4AFFA3;">276</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:40px;background:#4AFFA3;"></div>
+            <div class="bar-val" style="color:#4AFFA3;">249</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lore pós-treino -->
+      <div class="lore-card">
+        <div class="lore-dot"></div>
+        <div>
+          <div class="lore-label">Você treinou isso</div>
+          <div class="lore-text">Seu córtex pré-frontal acabou de processar 7 estímulos em sequência. Cada sessão fortalece as conexões sinápticas responsáveis pela tomada de decisão rápida.</div>
+          <span class="lore-link">ler mais no arquivo →</span>
+        </div>
+      </div>
+
+      <!-- CTAs -->
+      <div class="cta-stack">
+        <div class="cta-primary">
+          <div>
+            <div class="cta-primary-label">Jogar de novo</div>
+            <div class="cta-primary-sub">Modo Partida · mesmas configurações</div>
+          </div>
+          <div class="cta-primary-icon">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>
+        <div class="cta-secondary">
+          <div>
+            <div class="cta-sec-label">Próximo modo</div>
+            <div class="cta-sec-sub">Modo Alvo · missão pendente</div>
+          </div>
+          <div class="cta-sec-arrow">→</div>
+        </div>
+        <div class="cta-secondary">
+          <div>
+            <div class="cta-sec-label">Ver evolução completa</div>
+            <div class="cta-sec-sub">Perfil · progresso no arquétipo</div>
+          </div>
+          <div class="cta-sec-arrow">→</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LIGHT ═══ -->
+<div>
+  <p class="col-label" style="color:#0A8A4F;">Light mode</p>
+  <div class="phone light">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+    <div class="result-hero">
+      <div class="result-mode">Modo Partida · resultado</div>
+      <div class="result-number" style="color:#0A8A4F;">249</div>
+      <div class="result-unit">milissegundos</div>
+      <div class="result-badge" style="background:rgba(10,138,79,0.10);border:1px solid rgba(10,138,79,0.22);color:#0A8A4F;">
+        Novo recorde pessoal ↑
+      </div>
+    </div>
+
+    <div class="vs-row">
+      <div class="vs-item">
+        <div class="vs-val" style="color:#0A8A4F;">249</div>
+        <div class="vs-lbl">agora</div>
+      </div>
+      <div class="vs-divider"></div>
+      <div class="vs-delta">
+        <div class="vs-delta-val" style="color:#0A8A4F;">−27 ms</div>
+        <div class="vs-delta-lbl">vs. melhor anterior</div>
+      </div>
+      <div class="vs-divider"></div>
+      <div class="vs-item">
+        <div class="vs-val" style="color:#8892A4;">276</div>
+        <div class="vs-lbl">anterior</div>
+      </div>
+    </div>
+
+    <div class="scroll">
+
+      <div class="arq-progress">
+        <div class="arq-prog-top">
+          <div>
+            <div class="arq-prog-label">O Velocista</div>
+            <div class="arq-prog-title">Partida abaixo de 220 ms</div>
+          </div>
+          <div class="arq-prog-pct">50%</div>
+        </div>
+        <div class="arq-prog-sub">Você está em 249 ms — faltam 29 ms para evoluir</div>
+        <div class="prog-bar-wrap">
+          <div class="prog-bar-fill" style="width:50%;background:#5B4FD4;"></div>
+        </div>
+      </div>
+
+      <div class="xp-row">
+        <div class="xp-card">
+          <div class="xp-val" style="color:#B56A00;">+120</div>
+          <div class="xp-lbl">XP ganho</div>
+        </div>
+        <div class="xp-card">
+          <div class="xp-val" style="color:#B56A00;">🔥 1</div>
+          <div class="xp-lbl">dia seguido</div>
+        </div>
+        <div class="xp-card">
+          <div class="xp-val" style="color:#0A8A4F;">7</div>
+          <div class="xp-lbl">tentativas</div>
+        </div>
+      </div>
+
+      <div class="historico-card">
+        <div class="hist-hd">
+          <span class="hist-title">Últimas 8 sessões</span>
+          <span class="hist-trend">↓ −47 ms</span>
+        </div>
+        <div class="bars">
+          <div class="bar-wrap">
+            <div class="bar" style="height:22px;background:#E0E3EE;"></div>
+            <div class="bar-val">652</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:28px;background:#E0E3EE;"></div>
+            <div class="bar-val">581</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:32px;background:#E0E3EE;"></div>
+            <div class="bar-val">563</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:30px;background:#E0E3EE;"></div>
+            <div class="bar-val">591</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:26px;background:#E0E3EE;"></div>
+            <div class="bar-val">613</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:29px;background:#E0E3EE;"></div>
+            <div class="bar-val">605</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:35px;background:rgba(10,138,79,0.20);"></div>
+            <div class="bar-val" style="color:#0A8A4F;">276</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:40px;background:#0A8A4F;"></div>
+            <div class="bar-val" style="color:#0A8A4F;">249</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lore-card">
+        <div class="lore-dot"></div>
+        <div>
+          <div class="lore-label">Você treinou isso</div>
+          <div class="lore-text">Seu córtex pré-frontal acabou de processar 7 estímulos em sequência. Cada sessão fortalece as conexões sinápticas responsáveis pela tomada de decisão rápida.</div>
+          <span class="lore-link">ler mais no arquivo →</span>
+        </div>
+      </div>
+
+      <div class="cta-stack">
+        <div class="cta-primary" style="background:#0A8A4F;">
+          <div>
+            <div class="cta-primary-label" style="color:#fff;">Jogar de novo</div>
+            <div class="cta-primary-sub" style="color:rgba(255,255,255,0.55);">Modo Partida · mesmas configurações</div>
+          </div>
+          <div class="cta-primary-icon" style="background:rgba(255,255,255,0.15);">
+            <svg viewBox="0 0 24 24" style="fill:#fff;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>
+        <div class="cta-secondary">
+          <div>
+            <div class="cta-sec-label">Próximo modo</div>
+            <div class="cta-sec-sub">Modo Alvo · missão pendente</div>
+          </div>
+          <div class="cta-sec-arrow">→</div>
+        </div>
+        <div class="cta-secondary">
+          <div>
+            <div class="cta-sec-label">Ver evolução completa</div>
+            <div class="cta-sec-sub">Perfil · progresso no arquétipo</div>
+          </div>
+          <div class="cta-sec-arrow">→</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

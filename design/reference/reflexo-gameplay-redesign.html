@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Gameplay Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#080B10;--bg1:#0F1520;--bg2:#1A2030;--bg3:#252D3E;
+  --green:#4AFFA3;--gdim:rgba(74,255,163,0.09);--gborder:rgba(74,255,163,0.22);
+  --blue:#3b82f6;--bdim:rgba(59,130,246,0.09);
+  --cyan:#06b6d4;--cdim:rgba(6,182,212,0.09);
+  --purple:#8b5cf6;--pdim:rgba(139,92,246,0.09);
+  --amber:#f59e0b;--adim:rgba(245,158,11,0.09);
+  --red:#FF5757;
+  --t0:#EDF0F7;--t1:#8892A4;--t2:#4A5268;
+  --border:rgba(255,255,255,0.06);--bordermid:rgba(255,255,255,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:#040608;
+  font-family:'DM Sans',sans-serif;
+  padding:48px 20px;
+  display:flex;flex-direction:column;align-items:center;gap:52px;
+}
+.sec-hd{text-align:center;width:100%;max-width:1060px;}
+.eyebrow{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:5px;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--t0);letter-spacing:.5px;margin-bottom:4px;}
+.sec-sub{font-size:12px;color:var(--t1);line-height:1.6;max-width:500px;margin:0 auto;}
+.row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%;max-width:1060px;}
+.pw{display:flex;flex-direction:column;align-items:center;gap:7px;}
+.plbl{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--t2);}
+.phone{width:190px;background:var(--bg0);border-radius:26px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);box-shadow:0 20px 50px rgba(0,0,0,0.95);}
+.screen{display:flex;flex-direction:column;align-items:center;overflow:hidden;}
+
+/* Back btn */
+.back{width:100%;padding:12px 12px 0;display:flex;align-items:center;}
+.back-btn{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,0.05);border:0.5px solid var(--bordermid);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--t1);cursor:pointer;}
+
+/* Mode intro screen */
+.mode-intro{padding:0 14px 16px;width:100%;display:flex;flex-direction:column;align-items:center;gap:0;}
+.mode-icon-wrap{margin:12px 0 8px;display:flex;align-items:center;justify-content:center;}
+.mode-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.5px;margin-bottom:2px;text-align:center;}
+.mode-meta{font-size:9px;font-family:'Space Mono',monospace;color:var(--t2);letter-spacing:.04em;margin-bottom:12px;}
+.instr-card{width:100%;border-radius:10px;padding:10px 12px;margin-bottom:14px;border-width:0.5px;border-style:solid;}
+.instr-lbl{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+.instr-txt{font-size:11px;color:var(--t1);line-height:1.5;}
+.btn-iniciar{width:100%;border-radius:11px;padding:13px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.8px;cursor:pointer;}
+
+/* Gameplay commons */
+.game-screen{width:100%;display:flex;flex-direction:column;align-items:center;padding:10px 12px 14px;gap:0;}
+.prog-row{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.prog-label{font-size:9px;font-family:'Space Mono',monospace;color:var(--t2);letter-spacing:.04em;}
+.desistir{font-size:9px;font-family:'Space Mono',monospace;color:var(--t2);cursor:pointer;}
+.dots-row{display:flex;gap:4px;justify-content:center;margin-bottom:8px;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--bg3);}
+.dot.done{background:var(--green);opacity:.55;}
+.dot.cur{background:var(--green);}
+
+/* Partida circle */
+.circle-stage{position:relative;width:130px;height:130px;display:flex;align-items:center;justify-content:center;margin:10px 0;}
+.cr3{position:absolute;inset:-18px;border-radius:50%;border:1px dashed;}
+.cr2{position:absolute;inset:-9px;border-radius:50%;border:1px solid;}
+.cr1{position:absolute;inset:0;border-radius:50%;border:2px solid;}
+.core{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.inner{width:42px;height:42px;border-radius:50%;}
+.wait-hint{font-size:9px;font-family:'Space Mono',monospace;color:var(--t2);letter-spacing:.04em;margin-top:4px;}
+
+/* Partida result */
+.result-block{display:flex;flex-direction:column;align-items:center;gap:4px;margin:14px 0;}
+.result-ms{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--green);line-height:1;}
+.result-unit{font-size:9px;font-family:'Space Mono',monospace;color:var(--t1);}
+.result-badge{font-size:9px;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:4px;background:var(--gdim);color:var(--green);border:0.5px solid var(--gborder);}
+.btn-next{background:var(--green);border-radius:9px;padding:11px;font-family:'Bebas Neue',sans-serif;font-size:14px;color:#081400;letter-spacing:.5px;width:100%;text-align:center;margin-top:6px;}
+
+/* Alvo */
+.color-ind-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;margin-bottom:8px;}
+.color-prompt{font-size:8px;font-family:'Space Mono',monospace;color:var(--t2);letter-spacing:.06em;text-transform:uppercase;}
+.color-ind{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.09);border-radius:16px;padding:4px 10px;}
+.ci-dot{width:8px;height:8px;border-radius:50%;}
+.ci-lbl{font-size:10px;font-family:'Space Mono',monospace;font-weight:700;}
+.alvo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-bottom:8px;}
+.alvo-c{border-radius:50%;aspect-ratio:1;}
+
+/* Sequência */
+.seq-prog{width:100%;height:3px;border-radius:2px;overflow:hidden;margin-bottom:3px;}
+.seq-fill{height:3px;border-radius:2px;}
+.seq-stats{display:flex;justify-content:space-between;width:100%;margin-bottom:12px;}
+.seq-stat{font-size:9px;font-family:'Space Mono',monospace;color:var(--t2);}
+.seq-circle{position:relative;width:110px;height:110px;border-radius:55px;display:flex;align-items:center;justify-content:center;border-width:2px;border-style:solid;margin:8px 0;}
+.seq-r1{position:absolute;inset:-8px;border-radius:63px;border:1px solid;opacity:.25;}
+.seq-r2{position:absolute;inset:-16px;border-radius:71px;border:1px dashed;opacity:.12;}
+.seq-lbl{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.5px;}
+.seq-hint{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.04em;margin-top:4px;}
+
+/* Radar */
+.radar-cross{position:relative;width:170px;height:190px;margin:6px 0;}
+.rc{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.rc-idle{border-width:1.5px;border-style:solid;border-color:rgba(255,255,255,0.10);}
+.rc-active{border-width:2px;border-style:solid;}
+.rc-ring{position:absolute;inset:-7px;border-radius:50%;border:1px dashed;}
+.rc-core{border-radius:50%;}
+
+/* Countdown */
+.cdown{width:100%;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.cdown-num{font-family:'Bebas Neue',sans-serif;font-size:90px;line-height:1;}
+.cdown-sub{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--t2);}
+
+/* Annotations */
+.anns{width:100%;max-width:920px;display:flex;flex-direction:column;gap:5px;}
+.ann{background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.05);border-radius:8px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start;}
+.ann-ico{font-size:12px;flex-shrink:0;margin-top:1px;color:var(--t2);}
+.ann-txt{font-size:11px;color:var(--t1);line-height:1.55;}
+.ann-txt strong{color:var(--t0);}
+.divider{width:100%;max-width:920px;height:1px;background:rgba(255,255,255,0.04);}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════
+     TELAS DE ABERTURA
+════════════════════════════════ -->
+<div class="sec-hd">
+  <div class="eyebrow">Gameplay redesign · parte 1</div>
+  <div class="sec-title">Telas de abertura — padrão unificado</div>
+  <div class="sec-sub">Mesma estrutura em todos os modos. Ícone SVG real do app. Cor do modo como âncora. INICIAR na zona do polegar.</div>
+</div>
+
+<div class="row">
+
+  <!-- PARTIDA intro -->
+  <div class="pw">
+    <div class="plbl">Partida · abertura</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="back"><div class="back-btn">←</div></div>
+        <div class="mode-intro">
+          <div class="mode-icon-wrap" style="margin-top:8px;">
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/>
+            </svg>
+          </div>
+          <div class="mode-title" style="color:#3b82f6;">PARTIDA</div>
+          <div class="mode-meta">7 tentativas · reação simples</div>
+          <div class="instr-card" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.18);">
+            <div class="instr-lbl" style="color:#3b82f6;">Como jogar</div>
+            <div class="instr-txt">Aguarde a tela escurecer. Toque assim que o círculo acender. Quanto mais rápido, melhor.</div>
+          </div>
+          <div class="btn-iniciar" style="background:#3b82f6;color:#fff;">INICIAR</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALVO intro -->
+  <div class="pw">
+    <div class="plbl">Alvo · abertura</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="back"><div class="back-btn">←</div></div>
+        <div class="mode-intro">
+          <div class="mode-icon-wrap" style="margin-top:8px;">
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>
+              <path d="M12 1.5v3"/><path d="M12 19.5v3"/><path d="M1.5 12h3"/><path d="M19.5 12h3"/>
+            </svg>
+          </div>
+          <div class="mode-title" style="color:#06b6d4;">ALVO</div>
+          <div class="mode-meta">4 círculos · 10 rodadas</div>
+          <div class="instr-card" style="background:rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.18);">
+            <div class="instr-lbl" style="color:#06b6d4;">Como jogar</div>
+            <div class="instr-txt">Veja a cor indicada no topo. Toque no círculo dessa cor assim que aparecer. Erro = +150ms.</div>
+          </div>
+          <div class="btn-iniciar" style="background:#06b6d4;color:#020f12;">INICIAR</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEQUÊNCIA intro -->
+  <div class="pw">
+    <div class="plbl">Sequência · abertura</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="back"><div class="back-btn">←</div></div>
+        <div class="mode-intro">
+          <div class="mode-icon-wrap" style="margin-top:8px;">
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="12" r="5" fill="rgba(139,92,246,0.25)"/><circle cx="15" cy="12" r="5"/>
+            </svg>
+          </div>
+          <div class="mode-title" style="color:#8b5cf6;">SEQUÊNCIA</div>
+          <div class="mode-meta">20 sinais · Go / NoGo</div>
+          <div class="instr-card" style="background:rgba(139,92,246,0.06);border-color:rgba(139,92,246,0.18);">
+            <div class="instr-lbl" style="color:#8b5cf6;">Como jogar</div>
+            <div class="instr-txt">Toque apenas nos sinais VERDES. Ignore os vermelhos. Controle o impulso de tocar em tudo.</div>
+          </div>
+          <div class="btn-iniciar" style="background:#8b5cf6;color:#fff;">INICIAR</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RADAR intro -->
+  <div class="pw">
+    <div class="plbl">Radar · abertura</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="back"><div class="back-btn">←</div></div>
+        <div class="mode-intro">
+          <div class="mode-icon-wrap" style="margin-top:8px;">
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="1.5"/>
+              <path d="M8.5 12a3.5 3.5 0 0 1 3.5-3.5"/>
+              <path d="M5 12a7 7 0 0 1 7-7"/>
+              <path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/>
+            </svg>
+          </div>
+          <div class="mode-title" style="color:#f59e0b;">RADAR</div>
+          <div class="mode-meta">5 círculos · 15 rodadas</div>
+          <div class="instr-card" style="background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.18);">
+            <div class="instr-lbl" style="color:#f59e0b;">Como jogar</div>
+            <div class="instr-txt">5 círculos sempre visíveis. Um vai acender — toque nele o mais rápido possível. Erro = +200ms.</div>
+          </div>
+          <div class="btn-iniciar" style="background:#f59e0b;color:#1a0a00;">INICIAR</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════
+     GAMEPLAY — ESTADOS
+════════════════════════════════ -->
+<div class="sec-hd">
+  <div class="eyebrow">Gameplay redesign · parte 2</div>
+  <div class="sec-title">Durante o jogo — todos os estados</div>
+  <div class="sec-sub">Espera, ativo e resultado. O círculo tem profundidade. DESISTIR não compete com o jogo. Resultado aparece inline.</div>
+</div>
+
+<div class="row">
+
+  <!-- PARTIDA espera -->
+  <div class="pw">
+    <div class="plbl">Partida · aguardando</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);min-height:300px;">
+        <div class="game-screen" style="min-height:300px;justify-content:center;">
+          <div class="dots-row" style="margin-bottom:6px;">
+            <div class="dot done"></div>
+            <div class="dot cur"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="prog-label" style="margin-bottom:10px;">RODADA 2 / 7</div>
+          <!-- Circle -->
+          <div class="circle-stage">
+            <div class="cr3" style="border-color:rgba(74,255,163,0.14);"></div>
+            <div class="cr2" style="border-color:rgba(74,255,163,0.20);"></div>
+            <div class="cr1" style="border-color:rgba(74,255,163,0.32);"></div>
+            <div class="core" style="background:rgba(74,255,163,0.05);">
+              <div class="inner" style="background:rgba(74,255,163,0.16);"></div>
+            </div>
+          </div>
+          <div class="wait-hint">aguarde o sinal...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTIDA ativo -->
+  <div class="pw">
+    <div class="plbl">Partida · toque!</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);min-height:300px;">
+        <div class="game-screen" style="min-height:300px;justify-content:center;">
+          <div class="dots-row" style="margin-bottom:6px;">
+            <div class="dot done"></div>
+            <div class="dot cur"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="prog-label" style="margin-bottom:10px;">RODADA 2 / 7</div>
+          <div class="circle-stage">
+            <div class="cr3" style="border-color:rgba(74,255,163,0.30);"></div>
+            <div class="cr2" style="border-color:rgba(74,255,163,0.45);"></div>
+            <div class="cr1" style="border-color:var(--green);"></div>
+            <div class="core" style="background:var(--green);">
+              <div class="inner" style="background:rgba(0,0,0,0.18);"></div>
+            </div>
+          </div>
+          <div class="wait-hint" style="color:var(--green);">TOQUE!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTIDA resultado -->
+  <div class="pw">
+    <div class="plbl">Partida · resultado</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);min-height:300px;">
+        <div class="game-screen" style="min-height:300px;justify-content:center;gap:0;">
+          <div class="dots-row" style="margin-bottom:4px;">
+            <div class="dot done"></div><div class="dot done"></div>
+            <div class="dot cur"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="prog-label" style="margin-bottom:8px;">RODADA 3 / 7</div>
+          <div class="result-block">
+            <div class="result-ms">287</div>
+            <div class="result-unit">milissegundos</div>
+            <div class="result-badge">BOM</div>
+          </div>
+          <div class="btn-next" style="width:calc(100% - 0px);">PRÓXIMA RODADA →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALVO gameplay -->
+  <div class="pw">
+    <div class="plbl">Alvo · jogando</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);min-height:320px;">
+        <div class="game-screen" style="min-height:320px;">
+          <div class="prog-row">
+            <div class="prog-label">RODADA 1/10</div>
+            <div class="desistir">desistir</div>
+          </div>
+          <div class="color-ind-wrap">
+            <div class="color-prompt">toque no círculo</div>
+            <div class="color-ind">
+              <div class="ci-dot" style="background:#4AFFA3;box-shadow:0 0 6px rgba(74,255,163,0.6);"></div>
+              <div class="ci-lbl" style="color:#4AFFA3;">VERDE</div>
+            </div>
+          </div>
+          <div class="alvo-grid" style="margin-top:8px;">
+            <div class="alvo-c" style="background:#4169E1;width:68px;height:68px;margin:0 auto;border-radius:50%;"></div>
+            <div class="alvo-c" style="background:#F97316;width:68px;height:68px;margin:0 auto;border-radius:50%;"></div>
+            <div class="alvo-c" style="background:#8B5CF6;width:68px;height:68px;margin:0 auto;border-radius:50%;"></div>
+            <!-- Verde — target com anel -->
+            <div style="width:68px;height:68px;margin:0 auto;border-radius:50%;background:#4AFFA3;box-shadow:0 0 0 3px rgba(74,255,163,0.35),0 0 20px rgba(74,255,163,0.2);position:relative;">
+            </div>
+          </div>
+          <div style="display:flex;gap:3px;justify-content:center;margin-top:6px;">
+            <div style="width:14px;height:3px;border-radius:2px;background:#06b6d4;"></div>
+            <div style="width:14px;height:3px;border-radius:2px;background:var(--bg3);"></div>
+            <div style="width:14px;height:3px;border-radius:2px;background:var(--bg3);"></div>
+            <div style="width:14px;height:3px;border-radius:2px;background:var(--bg3);"></div>
+            <div style="width:14px;height:3px;border-radius:2px;background:var(--bg3);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEQUÊNCIA Go -->
+  <div class="pw">
+    <div class="plbl">Sequência · Go</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);min-height:300px;">
+        <div class="game-screen" style="min-height:300px;justify-content:center;">
+          <div class="seq-prog" style="background:rgba(139,92,246,0.12);width:100%;">
+            <div class="seq-fill" style="width:15%;background:#8b5cf6;"></div>
+          </div>
+          <div class="seq-stats" style="margin-bottom:10px;">
+            <div class="seq-stat">3 / 20 sinais</div>
+            <div class="seq-stat">2 acertos · 0 erros</div>
+          </div>
+          <div class="seq-circle" style="background:rgba(74,255,163,0.10);border-color:var(--green);">
+            <div class="seq-r1" style="border-color:var(--green);"></div>
+            <div class="seq-r2" style="border-color:var(--green);"></div>
+            <div class="seq-lbl" style="color:var(--green);">GO</div>
+          </div>
+          <div class="seq-hint" style="color:var(--green);">TOQUE AGORA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEQUÊNCIA NoGo -->
+  <div class="pw">
+    <div class="plbl">Sequência · NoGo</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);min-height:300px;">
+        <div class="game-screen" style="min-height:300px;justify-content:center;">
+          <div class="seq-prog" style="background:rgba(139,92,246,0.12);width:100%;">
+            <div class="seq-fill" style="width:30%;background:#8b5cf6;"></div>
+          </div>
+          <div class="seq-stats" style="margin-bottom:10px;">
+            <div class="seq-stat">6 / 20 sinais</div>
+            <div class="seq-stat">4 acertos · 0 erros</div>
+          </div>
+          <div class="seq-circle" style="background:rgba(255,87,87,0.10);border-color:var(--red);">
+            <div class="seq-r1" style="border-color:var(--red);"></div>
+            <div class="seq-r2" style="border-color:var(--red);"></div>
+            <div class="seq-lbl" style="color:var(--red);">NOGO</div>
+          </div>
+          <div class="seq-hint" style="color:var(--red);">SEGURE O IMPULSO</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RADAR aguardando -->
+  <div class="pw">
+    <div class="plbl">Radar · aguardando</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);min-height:320px;">
+        <div class="game-screen" style="min-height:320px;">
+          <div class="prog-row">
+            <div>
+              <div style="width:100%;height:2px;background:rgba(245,158,11,0.12);border-radius:1px;margin-bottom:3px;overflow:hidden;">
+                <div style="height:2px;width:7%;background:#f59e0b;"></div>
+              </div>
+              <div class="prog-label">RODADA 1 / 15</div>
+            </div>
+            <div class="desistir">desistir</div>
+          </div>
+          <div class="wait-hint" style="margin:4px 0 6px;">aguarde o sinal...</div>
+          <!-- Cross 5 circles — none active -->
+          <div class="radar-cross">
+            <div class="rc rc-idle" style="width:50px;height:50px;top:0;left:60px;"></div>
+            <div class="rc rc-idle" style="width:50px;height:50px;top:60px;left:0;"></div>
+            <div class="rc rc-idle" style="width:50px;height:50px;top:60px;left:60px;"></div>
+            <div class="rc rc-idle" style="width:50px;height:50px;top:60px;left:120px;"></div>
+            <div class="rc rc-idle" style="width:50px;height:50px;top:120px;left:60px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RADAR ativo -->
+  <div class="pw">
+    <div class="plbl">Radar · ativo</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);min-height:320px;">
+        <div class="game-screen" style="min-height:320px;">
+          <div class="prog-row">
+            <div>
+              <div style="width:100%;height:2px;background:rgba(245,158,11,0.12);border-radius:1px;margin-bottom:3px;overflow:hidden;">
+                <div style="height:2px;width:14%;background:#f59e0b;"></div>
+              </div>
+              <div class="prog-label">RODADA 2 / 15</div>
+            </div>
+            <div class="desistir">desistir</div>
+          </div>
+          <div class="wait-hint" style="margin:4px 0 6px;color:transparent;">_</div>
+          <!-- Cross — direita ativa -->
+          <div class="radar-cross">
+            <div class="rc rc-idle" style="width:50px;height:50px;top:0;left:60px;"></div>
+            <div class="rc rc-idle" style="width:50px;height:50px;top:60px;left:0;"></div>
+            <div class="rc rc-idle" style="width:50px;height:50px;top:60px;left:60px;"></div>
+            <!-- ATIVO -->
+            <div class="rc rc-active" style="width:50px;height:50px;top:60px;left:120px;border-color:#f59e0b;background:rgba(245,158,11,0.07);">
+              <div class="rc-ring" style="border-color:rgba(245,158,11,0.35);"></div>
+              <div class="rc-core" style="width:24px;height:24px;background:#f59e0b;"></div>
+            </div>
+            <div class="rc rc-idle" style="width:50px;height:50px;top:120px;left:60px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- COUNTDOWN -->
+<div class="sec-hd">
+  <div class="eyebrow">Gameplay redesign · parte 3</div>
+  <div class="sec-title">Contagem regressiva — cor do modo</div>
+  <div class="sec-sub">A cor do número reflete o modo que está prestes a começar — não mais roxo genérico em todos.</div>
+</div>
+
+<div class="row">
+  <div class="pw">
+    <div class="plbl">Partida</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);">
+        <div class="cdown"><div class="cdown-num" style="color:#3b82f6;">3</div><div class="cdown-sub">prepare-se</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pw">
+    <div class="plbl">Alvo</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);">
+        <div class="cdown"><div class="cdown-num" style="color:#06b6d4;">2</div><div class="cdown-sub">prepare-se</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pw">
+    <div class="plbl">Sequência</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);">
+        <div class="cdown"><div class="cdown-num" style="color:#8b5cf6;">1</div><div class="cdown-sub">prepare-se</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pw">
+    <div class="plbl">Radar</div>
+    <div class="phone">
+      <div class="screen" style="background:var(--bg0);">
+        <div class="cdown"><div class="cdown-num" style="color:#f59e0b;">3</div><div class="cdown-sub">prepare-se</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Annotations -->
+<div class="anns">
+  <div class="ann">
+    <div class="ann-ico">⬤</div>
+    <div class="ann-txt"><strong>O círculo do Partida tem três anéis concêntricos</strong> — sólido externo, sólido médio, tracejado interno. Estado de espera: tudo translúcido. Estado ativo: core acende em verde elétrico, anéis ficam mais opacos. A transição entre os dois estados é o momento de máximo impacto do jogo.</div>
+  </div>
+  <div class="ann">
+    <div class="ann-ico">🎨</div>
+    <div class="ann-txt"><strong>Cor do modo como âncora em todos os estados.</strong> Partida = azul. Alvo = ciano. Sequência = roxo. Radar = âmbar. Ícone, título, botão INICIAR, barra de progresso e contagem regressiva usam a mesma cor. Go/NoGo usam verde/vermelho por necessidade semântica — únicos desvios intencionais.</div>
+  </div>
+  <div class="ann">
+    <div class="ann-ico">↓</div>
+    <div class="ann-txt"><strong>"DESISTIR" saiu do vermelho e foi para texto pequeno cinza.</strong> No original era o elemento visualmente mais pesado do Radar — hierarquia completamente invertida. Agora é acessível mas sem competir com o jogo. Também trocado de botão vermelho para texto discreto.</div>
+  </div>
+  <div class="ann">
+    <div class="ann-ico">⬡</div>
+    <div class="ann-txt"><strong>Radar: 5 círculos visíveis mesmo no estado idle.</strong> No original eram quase invisíveis (outline azul sobre preto). Agora têm border branca sutil — o usuário sabe onde estão os alvos antes do sinal. O ativo ganha ring tracejado + core amber, inconfundível.</div>
+  </div>
+  <div class="ann">
+    <div class="ann-ico">▶</div>
+    <div class="ann-txt"><strong>Resultado do Partida aparece inline.</strong> "287ms · BOM · PRÓXIMA RODADA →" substitui o círculo no mesmo espaço — sem navegar para outra tela entre tentativas. Reduz fricção e mantém o usuário no estado mental de jogo entre rodadas.</div>
+  </div>
+</div>
+
+</body>
+</html>

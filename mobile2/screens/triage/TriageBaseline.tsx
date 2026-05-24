@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable,
-  Platform, StatusBar as RNStatusBar,
+  Platform, StatusBar as RNStatusBar, Animated,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SvgXml } from 'react-native-svg';
+import { ICONS, UI_ICONS } from '../../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -38,10 +41,10 @@ type Phase =
 interface Rts { partida: number | null; alvo: number | null; seq: number | null }
 
 const CIRCLE_COLORS = [
-  { key: 'AZUL',    color: '#3b82f6' },
-  { key: 'VERDE',   color: '#10b981' },
-  { key: 'LARANJA', color: '#f59e0b' },
-  { key: 'ROXO',    color: '#8b5cf6' },
+  { key: 'colorAzul',    color: '#3b82f6' },
+  { key: 'colorVerde',   color: '#10b981' },
+  { key: 'colorLaranja', color: '#f59e0b' },
+  { key: 'colorRoxo',    color: '#8b5cf6' },
 ];
 
 function shuffle(arr: number[]): number[] {
@@ -57,6 +60,14 @@ function generateSeqSignals(): ('go' | 'nogo')[] {
   return Array.from({ length: 3 }, () => Math.random() < 0.25 ? 'nogo' : 'go');
 }
 
+function getBaselineColor(ms: number): string {
+  if (ms < 200)  return '#f59e0b'; // âmbar elite
+  if (ms < 251)  return '#ef4444'; // vermelho épico
+  if (ms < 301)  return '#8b5cf6'; // roxo difícil
+  if (ms < 351)  return '#3b82f6'; // azul médio
+  return '#6b7280';                // cinza comum
+}
+
 function computeBaseline(rts: Rts): number {
   const all = [rts.partida!, rts.alvo!, rts.seq!];
   const sorted = [...all].sort((a, b) => a - b); // ascending
@@ -69,6 +80,7 @@ interface Props {
 }
 
 export default function TriageBaseline({ onNext, onBack }: Props) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const footerPadding = Math.max(insets.bottom, 16);
   const [phase, setPhase] = useState<Phase>('intro');
@@ -80,12 +92,14 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   const signalTime = useRef(0);
   const phaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownNext = useRef<'partida_jitter' | 'alvo_jitter' | 'seq_jitter'>('partida_jitter');
+  const transCheckOpacity = useRef(new Animated.Value(0)).current;
 
   // Seq 3-signal state
   const seqSignalsRef = useRef<('go' | 'nogo')[]>([]);
   const seqSignalIdxRef = useRef(0);
   const seqGoRtsRef = useRef<number[]>([]);
   const [seqCurrentSignal, setSeqCurrentSignal] = useState<'go' | 'nogo'>('go');
+  const [seqSignalTapped, setSeqSignalTapped] = useState(false);
   // Prevents multi-tap within a single signal's 400ms inter-signal gap
   const seqTapHandledRef = useRef(false);
 
@@ -137,6 +151,8 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       const interval = SEQ_JITTER_MIN + Math.random() * (SEQ_JITTER_MAX - SEQ_JITTER_MIN);
       phaseTimer.current = setTimeout(() => {
         setSeqCurrentSignal(seqSignalsRef.current[seqSignalIdxRef.current]);
+        setSeqSignalTapped(false);
+        seqTapHandledRef.current = false;
         setPhase('seq_go');
       }, interval);
     }
@@ -144,7 +160,6 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     if (phase === 'seq_go') {
       // signalTime set here (post-render) for accuracy, same pattern as ModoAlvo
       signalTime.current = Date.now();
-      seqTapHandledRef.current = false; // reset lock for each new signal
       // 1400ms timeout: Go=miss (no RT), NoGo=correct_inhibit — advance either way
       phaseTimer.current = setTimeout(() => {
         const nextIdx = seqSignalIdxRef.current + 1;
@@ -163,12 +178,16 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     }
 
     if (phase === 'trans_alvo') {
+      transCheckOpacity.setValue(0);
+      Animated.timing(transCheckOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
       phaseTimer.current = setTimeout(() => {
         setPhase('alvo_instr');
       }, 1600);
     }
 
     if (phase === 'trans_seq') {
+      transCheckOpacity.setValue(0);
+      Animated.timing(transCheckOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
       phaseTimer.current = setTimeout(() => {
         setPhase('seq_instr');
       }, 1600);
@@ -206,6 +225,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     if (seqSignalsRef.current[seqSignalIdxRef.current] === 'nogo') return;
 
     seqTapHandledRef.current = true;
+    setSeqSignalTapped(true);
     clearTimer();
     const rt = Date.now() - signalTime.current;
     seqGoRtsRef.current.push(rt);
@@ -235,7 +255,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         onPress={phase === 'intro' ? onBack : undefined}
         style={styles.backBtn}
       >
-        {phase === 'intro' && <Text style={styles.backText}>← Voltar</Text>}
+        {phase === 'intro' && <Text style={styles.backText}>{t('common.back')}</Text>}
       </TouchableOpacity>
       <View style={styles.dotsRow}>
         {[1, 2, 3, 4, 5].map(n => (
@@ -249,22 +269,20 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   // ── INTRO ────────────────────────────────────────────────────────────────────
   if (phase === 'intro') {
     const MODE_CARDS = [
-      { icon: '🏎', name: 'PARTIDA',   metric: 'VELOCIDADE DE REAÇÃO', range: '~200–400 ms', accent: '#3b82f6' },
-      { icon: '🎯', name: 'ALVO',      metric: 'PRECISÃO SOB PRESSÃO', range: '~300–600 ms', accent: '#06b6d4' },
-      { icon: '🧠', name: 'SEQUÊNCIA', metric: 'CONTROLE INIBITÓRIO',  range: '~250–500 ms', accent: '#8b5cf6' },
+      { icon: ICONS.modes.partida,   name: t('triage.baseline.partida'),   metric: t('triage.baseline.metricPartida'), range: '~200–400 ms', accent: '#3b82f6' },
+      { icon: ICONS.modes.alvo,      name: t('triage.baseline.alvo'),      metric: t('triage.baseline.metricAlvo'),    range: '~300–600 ms', accent: '#06b6d4' },
+      { icon: ICONS.modes.sequencia, name: t('triage.baseline.sequencia'), metric: t('triage.baseline.metricSeq'),     range: '~250–500 ms', accent: '#8b5cf6' },
     ];
     return (
       <View style={styles.root}>
         {renderHeader(5)}
         <View style={styles.body}>
-          <Text style={styles.title}>Vamos ver onde você está agora.</Text>
-          <Text style={styles.subtitle}>
-            1 largada de cada modo. Nenhuma delas entra no seu histórico. Sem pressão.
-          </Text>
+          <Text style={styles.title}>{t('triage.baseline.introTitle')}</Text>
+          <Text style={styles.subtitle}>{t('triage.baseline.introSubtitle')}</Text>
           {MODE_CARDS.map(m => (
             <View key={m.name} style={styles.modeCard}>
               <View style={[styles.modeCardBar, { backgroundColor: m.accent }]} />
-              <Text style={styles.modeCardIcon}>{m.icon}</Text>
+              <SvgXml xml={m.icon} width={32} height={32} />
               <View style={styles.modeCardContent}>
                 <Text style={[styles.modeCardName, { color: m.accent }]}>{m.name}</Text>
                 <Text style={styles.modeCardMetric}>{m.metric}</Text>
@@ -275,7 +293,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         </View>
         <View style={[styles.footer, { paddingBottom: footerPadding }]}>
           <TouchableOpacity style={styles.btnPrimary} onPress={() => setPhase('partida_instr')} activeOpacity={0.8}>
-            <Text style={styles.btnPrimaryText}>COMEÇAR</Text>
+            <Text style={styles.btnPrimaryText}>{t('triage.baseline.startBtn')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -285,18 +303,18 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
   // ── INSTRUCTION SCREENS ──────────────────────────────────────────────────────
   const INSTR_DATA = {
     partida_instr: {
-      icon: '🏎',
-      name: 'PARTIDA',
-      desc: 'Aperte o mais rápido possível assim que o círculo verde aparecer. Sem pressa, espera aparecer, pois será penalizado em caso de queimar a largada.',
+      icon: ICONS.modes.partida,
+      name: t('triage.baseline.partida'),
+      desc: t('triage.baseline.instrPartidaDesc'),
       onStart: () => {
         countdownNext.current = 'partida_jitter';
         setPhase('countdown');
       },
     },
     alvo_instr: {
-      icon: '🎯',
-      name: 'ALVO',
-      desc: 'Toque no círculo com a cor indicada no topo em cada rodada quando ele aparecer. Ignore as outras cores.',
+      icon: ICONS.modes.alvo,
+      name: t('triage.baseline.alvo'),
+      desc: t('triage.baseline.instrAlvoDesc'),
       onStart: () => {
         const target = Math.floor(Math.random() * 4);
         const order = shuffle([0, 1, 2, 3]);
@@ -307,9 +325,9 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       },
     },
     seq_instr: {
-      icon: '🧠',
-      name: 'SEQUÊNCIA',
-      desc: 'Responda rápido aos sinais Go (verde). Ignore os sinais No-Go (vermelho). Serão 3 sinais.',
+      icon: ICONS.modes.sequencia,
+      name: t('triage.baseline.sequencia'),
+      desc: t('triage.baseline.instrSeqDesc'),
       onStart: () => {
         seqSignalsRef.current = generateSeqSignals();
         seqSignalIdxRef.current = 0;
@@ -318,7 +336,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         setPhase('countdown');
       },
     },
-  } as const;
+  };
 
   if (phase === 'partida_instr' || phase === 'alvo_instr' || phase === 'seq_instr') {
     const instr = INSTR_DATA[phase];
@@ -329,16 +347,16 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       : phase === 'alvo_instr' ? 'rgba(6,182,212,0.2)'
       : 'rgba(139,92,246,0.2)';
     const sciText = phase === 'partida_instr'
-      ? 'Pilotos de F1 reagem em 150ms — seu cérebro pode chegar lá'
+      ? t('triage.baseline.sciPartida')
       : phase === 'alvo_instr'
-      ? 'Choice RT mede decisão sob pressão — usado em diagnósticos de atenção'
-      : 'O paradigma Go/NoGo é padrão clínico — usado em diagnóstico de TDAH e controle inibitório';
+      ? t('triage.baseline.sciAlvo')
+      : t('triage.baseline.sciSeq');
     return (
       <View style={styles.root}>
         {renderHeader(5)}
         <View style={styles.instrBody}>
           <View style={[styles.instrIconCircle, { backgroundColor: modeBg }]}>
-            <Text style={styles.instrIconLarge}>{instr.icon}</Text>
+            <SvgXml xml={instr.icon} width={40} height={40} />
           </View>
           <Text style={[styles.instrName, { color: modeColor }]}>{instr.name}</Text>
           <View style={[styles.instrSciCard, { borderColor: modeColor + '44' }]}>
@@ -347,7 +365,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
           {phase === 'partida_instr' && (
             <View style={styles.instrDemo}>
               <View style={styles.instrDemoCircleGreen} />
-              <Text style={[styles.instrDemoLabel, { color: '#10b981' }]}>TOQUE AQUI</Text>
+              <Text style={[styles.instrDemoLabel, { color: '#10b981' }]}>{t('triage.baseline.tapHere')}</Text>
             </View>
           )}
           {phase === 'alvo_instr' && (
@@ -376,7 +394,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
             onPress={instr.onStart}
             activeOpacity={0.8}
           >
-            <Text style={styles.btnPrimaryText}>COMEÇAR</Text>
+            <Text style={styles.btnPrimaryText}>{t('triage.baseline.startBtn')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -405,7 +423,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       <Pressable style={styles.root} onPressIn={handlePartidaFalseStart}>
         {renderHeader(5)}
         <View style={styles.jitterArea}>
-          <Text style={styles.jitterLabel}>PARTIDA</Text>
+          <Text style={styles.jitterLabel}>{t('triage.baseline.partida')}</Text>
         </View>
       </Pressable>
     );
@@ -416,7 +434,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       <View style={styles.root}>
         {renderHeader(5)}
         <View style={styles.jitterArea}>
-          <Text style={styles.jitterLabel}>ALVO</Text>
+          <Text style={styles.jitterLabel}>{t('triage.baseline.alvo')}</Text>
         </View>
       </View>
     );
@@ -427,7 +445,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       <View style={styles.root}>
         {renderHeader(5)}
         <View style={styles.jitterArea}>
-          <Text style={styles.jitterLabel}>SEQUÊNCIA</Text>
+          <Text style={styles.jitterLabel}>{t('triage.baseline.sequencia')}</Text>
           <Text style={styles.seqCounter}>{seqSignalIdxRef.current + 1} / 3</Text>
         </View>
       </View>
@@ -440,9 +458,9 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       <View style={styles.root}>
         {renderHeader(5)}
         <Pressable style={styles.tapArea} onPressIn={handlePartidaTap}>
-          <Text style={styles.miniModeLabel}>MODO PARTIDA</Text>
+          <Text style={styles.miniModeLabel}>{t('triage.baseline.modePartida')}</Text>
           <View style={styles.greenCircle} />
-          <Text style={styles.tapHint}>TOQUE AGORA!</Text>
+          <Text style={styles.tapHint}>{t('triage.baseline.tapNow')}</Text>
         </Pressable>
       </View>
     );
@@ -450,15 +468,17 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
 
   // ── TRANSITION ───────────────────────────────────────────────────────────────
   if (phase === 'trans_alvo' || phase === 'trans_seq') {
-    const from = phase === 'trans_alvo' ? 'Partida' : 'Alvo';
-    const next = phase === 'trans_alvo' ? 'Alvo' : 'Sequência';
+    const fromMode = phase === 'trans_alvo' ? t('triage.baseline.partida') : t('triage.baseline.alvo');
+    const nextMode = phase === 'trans_alvo' ? t('triage.baseline.alvo') : t('triage.baseline.sequencia');
     return (
       <View style={styles.root}>
         {renderHeader(5)}
         <View style={styles.transArea}>
-          <Text style={styles.transCheck}>✓</Text>
-          <Text style={styles.transText}>{from} concluído.</Text>
-          <Text style={styles.transNext}>Próximo: {next}</Text>
+          <Animated.View style={{ opacity: transCheckOpacity }}>
+            <SvgXml xml={UI_ICONS.celebrate} width={48} height={48} />
+          </Animated.View>
+          <Text style={styles.transText}>{t('triage.baseline.transComplete', { mode: fromMode })}</Text>
+          <Text style={styles.transNext}>{t('triage.baseline.transNext', { mode: nextMode })}</Text>
         </View>
       </View>
     );
@@ -471,8 +491,8 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
       <View style={styles.root}>
         {renderHeader(5)}
         <View style={styles.alvoArea}>
-          <Text style={styles.miniModeLabel}>MODO ALVO</Text>
-          <Text style={styles.alvoHint}>Toque no círculo: <Text style={[styles.alvoTargetName, { color: target.color }]}>{target.key}</Text></Text>
+          <Text style={styles.miniModeLabel}>{t('triage.baseline.modeAlvo')}</Text>
+          <Text style={styles.alvoHint}>{t('triage.baseline.tapCircle')} <Text style={[styles.alvoTargetName, { color: target.color }]}>{t(`triage.baseline.${target.key}`)}</Text></Text>
           <View style={styles.alvoGrid}>
             {alvoOrder.map(colorIdx => {
               const c = CIRCLE_COLORS[colorIdx];
@@ -499,11 +519,15 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
         {renderHeader(5)}
         <Pressable style={styles.tapArea} onPressIn={handleSeqTap}>
           <Text style={styles.seqCounter}>{seqSignalIdxRef.current + 1} / 3</Text>
-          <View style={[styles.seqSignalCircle, {
-            backgroundColor: circleColor,
-            shadowColor: circleColor,
-          }]} />
-          {!isNogo && <Text style={styles.tapHint}>TOQUE AGORA!</Text>}
+          {seqSignalTapped ? (
+            <Text style={styles.seqHitCheck}>✓</Text>
+          ) : (
+            <View style={[styles.seqSignalCircle, {
+              backgroundColor: circleColor,
+              shadowColor: circleColor,
+            }]} />
+          )}
+          {!isNogo && !seqSignalTapped && <Text style={styles.tapHint}>{t('triage.baseline.tapNow')}</Text>}
         </Pressable>
       </View>
     );
@@ -514,10 +538,12 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
     <View style={styles.root}>
       {renderHeader(5)}
       <View style={styles.resultBody}>
-        <Text style={styles.resultLabel}>SEU BASELINE</Text>
-        <Text style={styles.resultMs}>{baseline}</Text>
+        <Text style={styles.resultLabel}>{t('triage.baseline.yourBaseline')}</Text>
+        <Text style={[styles.resultMs, baseline !== null && { color: getBaselineColor(baseline) }]}>
+          {baseline}
+        </Text>
         <Text style={styles.resultUnit}>ms</Text>
-        <Text style={styles.resultSub}>Ponto de partida registrado. Agora vem a parte boa — sua jornada.</Text>
+        <Text style={styles.resultSub}>{t('triage.baseline.resultSub')}</Text>
       </View>
       <View style={[styles.footer, { paddingBottom: footerPadding }]}>
         <TouchableOpacity
@@ -525,7 +551,7 @@ export default function TriageBaseline({ onNext, onBack }: Props) {
           onPress={() => baseline !== null && onNext(baseline)}
           activeOpacity={0.8}
         >
-          <Text style={styles.btnPrimaryText}>VER MINHA JORNADA</Text>
+          <Text style={styles.btnPrimaryText}>{t('triage.baseline.viewJourney')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -550,7 +576,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 15, color: '#4a5a7b', lineHeight: 23, marginBottom: 24 },
 
   modeCard: {
-    flexDirection: 'row', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
     overflow: 'hidden', marginBottom: 10,
@@ -605,6 +631,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5, marginBottom: 20,
   },
   tapHint: { fontSize: 13, fontWeight: '800', color: '#10b981', letterSpacing: 2.5 },
+  seqHitCheck: { fontSize: 72, color: '#10b981', lineHeight: 80 },
 
   goText: {
     fontSize: 96, fontWeight: '900', color: '#10b981',
@@ -612,7 +639,6 @@ const styles = StyleSheet.create({
   },
 
   transArea: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  transCheck: { fontSize: 56, color: '#10b981' },
   transText: { fontSize: 22, fontWeight: '800', color: '#fff' },
   transNext: { fontSize: 14, color: '#4a5a7b', fontWeight: '600' },
 

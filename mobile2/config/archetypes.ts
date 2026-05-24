@@ -1,5 +1,6 @@
 import { SessionRecord } from '../utils/storage';
 import { ModeKey } from '../utils/levels';
+import { ARCHETYPE_ICONS } from '../assets/icons';
 
 export interface UserStats {
   sessions: SessionRecord[];
@@ -44,6 +45,7 @@ function detectArchetypeId(
   alvoSessions: number,
   seqSessions: number,
   avgFatigue: number | null,
+  radarPlayed: boolean,
 ): string {
   if (totalSessions < 3) return 'EXPLORADOR';
 
@@ -51,7 +53,7 @@ function detectArchetypeId(
   const preciseEnough = bestAlvoAcc !== null && bestAlvoAcc >= 0.95;
   const resistantEnough = seqSessions >= 5 && avgFatigue !== null && avgFatigue < 3;
 
-  if (fastEnough && preciseEnough && resistantEnough) return 'PILOTO';
+  if (fastEnough && preciseEnough && resistantEnough && radarPlayed) return 'PILOTO';
   if (fastEnough && bestAlvoAcc !== null && bestAlvoAcc >= 0.85) return 'VELOCISTA';
   if (bestAlvoAcc !== null && bestAlvoAcc >= 0.92 && alvoSessions >= 5) return 'ATIRADOR';
   if (seqSessions >= 5 && avgFatigue !== null && avgFatigue < 5) return 'RESISTENTE';
@@ -86,6 +88,7 @@ export function buildUserStats(sessions: SessionRecord[], streak: number): UserS
     alvoSessions,
     seqSessions,
     avgFatigue,
+    bestScore.radar !== null,
   );
 
   return {
@@ -108,7 +111,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   EXPLORADOR: {
     id: 'EXPLORADOR',
     name: 'EXPLORADOR',
-    icon: '🔭',
+    icon: ARCHETYPE_ICONS.EXPLORADOR,
     color: '#4a5a7b',
     description: 'Você está descobrindo como seu cérebro reage. Complete mais sessões para revelar seu perfil.',
     evidence: (s) => [
@@ -139,7 +142,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   EM_EVOLUCAO: {
     id: 'EM_EVOLUCAO',
     name: 'EM EVOLUÇÃO',
-    icon: '📈',
+    icon: ARCHETYPE_ICONS.EM_EVOLUCAO,
     color: '#f59e0b',
     description: 'Seu ritmo de treino está crescendo. Diversifique os modos para acelerar a evolução.',
     evidence: (s) => {
@@ -175,7 +178,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   RESISTENTE: {
     id: 'RESISTENTE',
     name: 'O RESISTENTE',
-    icon: '🛡️',
+    icon: ARCHETYPE_ICONS.RESISTENTE,
     color: '#06b6d4',
     description: 'Mantém consistência sob fadiga — uma habilidade rara que separa atletas de amadores.',
     evidence: (s) => {
@@ -213,7 +216,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   ATIRADOR: {
     id: 'ATIRADOR',
     name: 'O ATIRADOR',
-    icon: '🎯',
+    icon: ARCHETYPE_ICONS.ATIRADOR,
     color: '#3b82f6',
     description: 'Precisão cirúrgica no Alvo. Agora foca na velocidade pura do Partida para chegar ao Elite.',
     evidence: (s) => {
@@ -244,7 +247,7 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
   VELOCISTA: {
     id: 'VELOCISTA',
     name: 'O VELOCISTA',
-    icon: '⚡',
+    icon: ARCHETYPE_ICONS.VELOCISTA,
     color: '#8b5cf6',
     description: 'Velocidade de elite com boa precisão. O nível Piloto de F1 está ao alcance.',
     evidence: (s) => {
@@ -275,13 +278,19 @@ export const ARCHETYPES: Record<string, ArchetypeDefinition> = {
         dynamicSuffix: (s) => s.avgFatigueSeq !== null ? ` (atual: ${s.avgFatigueSeq.toFixed(1)}%)` : '',
         done: (s) => s.avgFatigueSeq !== null && s.avgFatigueSeq < 3,
       },
+      {
+        id: 'playRadar',
+        label: 'Jogar Modo Radar (4º modo)',
+        dynamicSuffix: (s) => s.bestScoreByMode.radar !== null ? ' ✓' : '',
+        done: (s) => s.bestScoreByMode.radar !== null,
+      },
     ],
   },
 
   PILOTO: {
     id: 'PILOTO',
     name: 'O PILOTO',
-    icon: '🏎',
+    icon: ARCHETYPE_ICONS.PILOTO,
     color: '#10b981',
     description: 'Rápido, preciso e resistente à fadiga. Você atingiu o perfil do piloto de corrida de elite.',
     evidence: (s) => {

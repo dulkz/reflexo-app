@@ -3,37 +3,43 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
-import { AMBITIONS, GROUP_LABELS, GROUP_COLOR, AmbitionGroup } from '../../config/ambitions';
+import { useTranslation } from 'react-i18next';
+import { SvgXml } from 'react-native-svg';
+import { AMBITIONS, GROUP_COLOR, AmbitionGroup } from '../../config/ambitions';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 const GROUPS: AmbitionGroup[] = ['elite_sport', 'populational', 'brain_health'];
 
-const GROUP_SUBTITLES: Record<AmbitionGroup, string> = {
-  elite_sport:   'Compare seu reflexo com atletas profissionais medidos em laboratório.',
-  populational:  'Compare-se com a população geral — de todas as idades e perfis.',
-  brain_health:  'Sem competição. Foco em consistência e longevidade cognitiva.',
-};
-
 interface Props {
   initialAmbitionId: string | null;
   onNext: (ambitionId: string) => void;
   onBack: () => void;
+  // Optional CTA override (defaults to common.continue). Used by the onboarding
+  // flow to show "Entrar no Reflexo →".
+  ctaLabel?: string;
+  // Step indicator. Defaults to the triage flow's 5 dots (active #2). Pass null
+  // to hide it (e.g. inside the 4-step onboarding flow).
+  stepDots?: { count: number; active: number } | null;
 }
 
-export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Props) {
+export default function TriageAmbition({
+  initialAmbitionId, onNext, onBack, ctaLabel, stepDots,
+}: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string | null>(initialAmbitionId);
+  const dots = stepDots === undefined ? { count: 5, active: 2 } : stepDots;
 
   return (
     <View style={styles.root}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Text style={styles.backText}>← Voltar</Text>
+          <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
         <View style={styles.dotsRow}>
-          {[1, 2, 3, 4, 5].map(n => (
-            <View key={n} style={[styles.dot, n === 2 && styles.dotActive]} />
+          {dots && Array.from({ length: dots.count }, (_, i) => i + 1).map(n => (
+            <View key={n} style={[styles.dot, n === dots.active && styles.dotActive]} />
           ))}
         </View>
         <View style={{ width: 60 }} />
@@ -41,8 +47,9 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
 
       {/* Title */}
       <View style={styles.titleArea}>
-        <Text style={styles.title}>Até onde você quer chegar?</Text>
-        <Text style={styles.subtitle}>Sem pressão. Dá pra mudar depois.</Text>
+        <Text style={styles.title}>{t('triage.ambition.title')}</Text>
+        <Text style={styles.subtitle}>{t('triage.ambition.subtitle')}</Text>
+        <Text style={styles.chooseOne}>{t('triage.ambition.chooseOne')}</Text>
       </View>
 
       {/* List */}
@@ -55,8 +62,8 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
           const color = GROUP_COLOR[group];
           return (
             <View key={group} style={styles.section}>
-              <Text style={[styles.groupLabel, { color }]}>{GROUP_LABELS[group]}</Text>
-              <Text style={styles.groupSubtitle}>{GROUP_SUBTITLES[group]}</Text>
+              <Text style={[styles.groupLabel, { color }]}>{t(`triage.ambition.groups.${group}`)}</Text>
+              <Text style={styles.groupSubtitle}>{t(`triage.ambition.groupSubtitles.${group}`)}</Text>
               {items.map(a => {
                 const isSelected = selected === a.id;
                 return (
@@ -64,17 +71,18 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
                     key={a.id}
                     style={[
                       styles.card,
-                      isSelected && { borderColor: color, borderWidth: 2 },
+                      isSelected && { borderColor: color, borderWidth: 2, backgroundColor: color + '20' },
+                      selected !== null && !isSelected && styles.cardDimmed,
                     ]}
                     onPress={() => setSelected(a.id)}
                     activeOpacity={0.75}
                   >
-                    <Text style={styles.cardIcon}>{a.icon}</Text>
+                    <SvgXml xml={a.icon} width={40} height={40} />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.cardName, isSelected && { color }]}>{a.name}</Text>
                     </View>
                     <Text style={styles.cardMs}>
-                      {a.finalMetaMs !== null ? `~${a.finalMetaMs} ms` : 'sem meta de ms'}
+                      {a.finalMetaMs !== null ? `~${a.finalMetaMs} ms` : t('triage.ambition.noMsTarget')}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -93,7 +101,7 @@ export default function TriageAmbition({ initialAmbitionId, onNext, onBack }: Pr
           activeOpacity={selected ? 0.8 : 1}
         >
           <Text style={[styles.btnPrimaryText, !selected && styles.btnDisabledText]}>
-            CONTINUAR
+            {ctaLabel ?? t('common.continue')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -116,7 +124,8 @@ const styles = StyleSheet.create({
 
   titleArea: { paddingHorizontal: 24, paddingBottom: 12 },
   title: { fontSize: 26, fontWeight: '900', color: '#fff', marginBottom: 6, letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, color: '#4a5a7b' },
+  subtitle: { fontSize: 14, color: '#4a5a7b', marginBottom: 4 },
+  chooseOne: { fontSize: 13, color: '#6b7280', marginTop: 2 },
 
   scroll: { paddingHorizontal: 20 },
   section: { marginBottom: 20 },
@@ -133,6 +142,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingVertical: 14, paddingHorizontal: 14, marginBottom: 8,
   },
+  cardDimmed: { opacity: 0.4 },
   cardIcon: { fontSize: 26 },
   cardName: { fontSize: 14, fontWeight: '700', color: '#fff' },
   cardMs: { fontSize: 12, color: '#3a4a6b', fontWeight: '600' },

@@ -1,11 +1,17 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { playSfx } from '../utils/sfx';
+import { hapticError, hapticLight } from '../utils/haptics';
+import { shake } from '../utils/animations';
+import { SvgXml } from 'react-native-svg';
+import { ICONS } from '../assets/icons';
+import ModeTutorial from '../components/ModeTutorial';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
-  Animated, Platform, StatusBar as RNStatusBar,
+  Animated, Platform, StatusBar as RNStatusBar, ScrollView,
 } from 'react-native';
 
-const TOTAL_SIGNALS = 20;
+const TOTAL_SIGNALS = 15;
 const MIN_INTERVAL = 1000;
 const MAX_INTERVAL = 2200;
 const SIGNAL_DURATION = 1400;
@@ -56,17 +62,18 @@ function buildSequence(): ('go' | 'nogo')[] {
 }
 
 export default function ModoSequencia({ onComplete, onBack }: Props) {
+  const { t } = useTranslation();
   const [gameState, setGameState] = useState<SeqState>('intro');
   const confirmAbort = useCallback(() => {
     Alert.alert(
-      'Deseja desistir?',
-      'O progresso desta sessão não será salvo.',
+      t('common.quitTitle'),
+      t('common.quitMessage'),
       [
-        { text: 'Continuar jogando', style: 'cancel' },
-        { text: 'Desistir', style: 'destructive', onPress: onBack },
+        { text: t('common.keepPlaying'), style: 'cancel' },
+        { text: t('common.quit'), style: 'destructive', onPress: onBack },
       ],
     );
-  }, [onBack]);
+  }, [onBack, t]);
   const [signalIdx, setSignalIdx] = useState(0);
   const [trials, setTrials] = useState<TrialResult[]>([]);
   const [lastResponse, setLastResponse] = useState<ResponseType | null>(null);
@@ -97,6 +104,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
   const circleScale = useRef(new Animated.Value(0)).current;
+  const screenShakeX = useRef(new Animated.Value(0)).current; // full-screen shake on NoGo tap
 
   useEffect(() => () => {
     if (signalTimer.current) clearTimeout(signalTimer.current);
@@ -113,8 +121,9 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
 
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
-    flashOpacity.setValue(0.4);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 500, useNativeDriver: true }).start();
+    // Sequência error flash is intense per spec: red opacity 0.20 / 250ms.
+    flashOpacity.setValue(red ? 0.20 : 0.35);
+    Animated.timing(flashOpacity, { toValue: 0, duration: 250, useNativeDriver: true }).start();
   }, [flashOpacity]);
 
   const computeSummary = useCallback((allTrials: TrialResult[]): SeqSummary => {
@@ -139,7 +148,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       fatigueIndex = Math.round(((avgLast - avgFirst) / avgFirst) * 100);
     }
 
-    // Score: avg RT contribution per round (all 20 signals participate):
+    // Score: avg RT contribution per round (all TOTAL_SIGNALS signals participate):
     //
     //   Scenario A — Go + hit:             realRt + earlyPenalty (if any)
     //   Scenario B — NoGo + correct inhibit + earlyPenalty: earlyPenalty only enters avg
@@ -261,8 +270,16 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     const newTrials = [...trials, result];
     setTrials(newTrials);
     setLastResponse(responseType);
-    if (responseType === 'hit') playSfx('hit');
-    else if (responseType === 'commission') playSfx('miss');
+    if (responseType === 'hit') {
+      playSfx('hit');
+    } else if (responseType === 'commission') {
+      // NoGo tapped — biggest cognitive error: whole screen shakes (±8px/500ms),
+      // Notification.Error + a light second pulse 200ms later.
+      playSfx('miss');
+      hapticError();
+      shake(screenShakeX, 8, 500);
+      setTimeout(() => hapticLight(), 200);
+    }
     flash(responseType === 'commission');
     setGameState('feedback');
     setTimeout(() => scheduleNext(signalIdx + 1, newTrials), 400);
@@ -309,19 +326,25 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
             <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.introContainer}>
-          <Text style={styles.introTitle}>MODO SEQUÊNCIA</Text>
-          <Text style={styles.introSub}>20 sinais · Go / NoGo</Text>
-          <View style={styles.howToCard}>
-            <Text style={styles.howToTitle}>Como jogar</Text>
-            <Text style={styles.howToText}>
-              Toque apenas nos sinais VERDES (Go). Ignore os vermelhos (No-Go). Controle o impulso de tocar em tudo.
-            </Text>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40, justifyContent: 'center' }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.introIcon}>
+            <SvgXml xml={ICONS.modes.sequencia} width={48} height={48} />
           </View>
+          <Text style={styles.introTitle}>{t('sequence.title')}</Text>
+          <Text style={styles.introSub}>{t('sequence.subtitle')}</Text>
+          <View style={styles.howToCard}>
+            <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
+            <Text style={styles.howToText}>{t('sequence.howToText')}</Text>
+          </View>
+          <ModeTutorial modeKey="sequencia" />
           <TouchableOpacity style={styles.startBtn} onPress={startGame} activeOpacity={0.8}>
-            <Text style={styles.startBtnText}>INICIAR</Text>
+            <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }
@@ -330,13 +353,13 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
     return (
       <View style={[styles.screen, styles.centeredFull]}>
         <Text style={styles.countdownNum}>{countdown}</Text>
-        <Text style={styles.countdownLabel}>PREPARE-SE</Text>
+        <Text style={styles.countdownLabel}>{t('sequence.prepare')}</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
+    <Animated.View style={[styles.screen, { transform: [{ translateX: screenShakeX }] }]}>
       <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
         <TouchableOpacity onPress={confirmAbort} style={styles.backBtn}>
           <Text style={styles.backText}>←</Text>
@@ -367,9 +390,9 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
         {gameState === 'feedback' && lastResponse && (
           <View style={styles.feedbackContainer}>
             {lastResponse === 'hit' && <Text style={[styles.feedbackBig, { color: '#10b981' }]}>✓</Text>}
-            {lastResponse === 'miss' && <Text style={[styles.feedbackBig, { color: '#ef4444' }]}>PERDEU</Text>}
-            {lastResponse === 'commission' && <Text style={[styles.feedbackBig, { color: '#ef4444' }]}>ERRO!</Text>}
-            {lastResponse === 'correct_inhibit' && <Text style={[styles.feedbackBig, { color: '#8b5cf6' }]}>✓ INIBIU</Text>}
+            {lastResponse === 'miss' && <Text style={[styles.feedbackBig, { color: '#ef4444' }]}>{t('sequence.miss')}</Text>}
+            {lastResponse === 'commission' && <Text style={[styles.feedbackBig, { color: '#ef4444' }]}>{t('sequence.error')}</Text>}
+            {lastResponse === 'correct_inhibit' && <Text style={[styles.feedbackBig, { color: '#8b5cf6' }]}>{t('sequence.inhibited')}</Text>}
           </View>
         )}
       </Pressable>
@@ -377,18 +400,18 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
       {/* Instruction reminder */}
       {gameState === 'inter' && (
         <View style={styles.bottomHint}>
-          <Text style={[styles.hintLine, { color: '#10b981' }]}>VERDE → toque</Text>
-          <Text style={[styles.hintLine, { color: '#ef4444' }]}>VERMELHO → não toque</Text>
+          <Text style={[styles.hintLine, { color: '#10b981' }]}>{t('sequence.hintGo')}</Text>
+          <Text style={[styles.hintLine, { color: '#ef4444' }]}>{t('sequence.hintNoGo')}</Text>
         </View>
       )}
 
       {/* Anticipation penalty overlay */}
       {showPenaltyOverlay && (
         <View style={[StyleSheet.absoluteFill, styles.penaltyOverlay]} pointerEvents="none">
-          <Text style={styles.penaltyIcon}>❌</Text>
-          <Text style={styles.penaltyTitle}>Antecipou!</Text>
-          <Text style={styles.penaltyMs}>+150ms</Text>
-          <Text style={styles.penaltyContinue}>Toque para continuar</Text>
+          <Text style={styles.penaltyIcon}>✕</Text>
+          <Text style={styles.penaltyTitle}>{t('sequence.penaltyTitle')}</Text>
+          <Text style={styles.penaltyMs}>{t('sequence.penaltyMs')}</Text>
+          <Text style={styles.penaltyContinue}>{t('sequence.penaltyContinue')}</Text>
         </View>
       )}
 
@@ -400,7 +423,7 @@ export default function ModoSequencia({ onComplete, onBack }: Props) {
           { backgroundColor: flashIsRed.current ? '#ef4444' : '#10b981', opacity: flashOpacity },
         ]}
       />
-    </View>
+    </Animated.View>
   );
 }
 
@@ -443,14 +466,20 @@ const styles = StyleSheet.create({
   hintLine: { fontSize: 13, fontWeight: '700', letterSpacing: 1 },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
+  introIcon: {
+    width: 84, height: 84, borderRadius: 42, alignSelf: 'center',
+    backgroundColor: 'rgba(139,92,246,0.10)',
+    borderWidth: 1, borderColor: 'rgba(139,92,246,0.25)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+  },
   introTitle: { fontSize: 30, fontWeight: '900', color: '#8b5cf6', letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
   howToCard: {
-    backgroundColor: '#1a1a2e',
-    borderLeftWidth: 4, borderLeftColor: '#a855f7',
+    backgroundColor: 'rgba(139,92,246,0.06)',
+    borderWidth: 1, borderColor: 'rgba(139,92,246,0.20)',
     borderRadius: 12, padding: 16, marginBottom: 28,
   },
-  howToTitle: { fontSize: 13, fontWeight: '700', color: '#a855f7', letterSpacing: 0.5, marginBottom: 8 },
+  howToTitle: { fontSize: 13, fontWeight: '700', color: '#8b5cf6', letterSpacing: 0.5, marginBottom: 8 },
   howToText: { fontSize: 14, color: '#cbd5e1', lineHeight: 20 },
   startBtn: { backgroundColor: '#8b5cf6', borderRadius: 14, paddingVertical: 18, alignItems: 'center' },
   startBtnText: { fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 2 },
@@ -462,7 +491,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center',
     zIndex: 100,
   },
-  penaltyIcon: { fontSize: 48, marginBottom: 8 },
+  penaltyIcon: { fontSize: 48, marginBottom: 8, color: '#ef4444', fontWeight: '900' },
   penaltyTitle: { fontSize: 28, fontWeight: '900', color: '#ef4444', letterSpacing: 1 },
   penaltyMs: { fontSize: 20, fontWeight: '800', color: '#f59e0b', marginTop: 6 },
   penaltyContinue: { fontSize: 13, color: '#4a5a7b', marginTop: 14, letterSpacing: 0.5 },

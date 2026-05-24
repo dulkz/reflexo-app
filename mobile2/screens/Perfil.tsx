@@ -3,21 +3,26 @@ import {
   View, Text, StyleSheet, ScrollView, Modal, TextInput,
   Platform, StatusBar as RNStatusBar, TouchableOpacity, Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
+import i18n, { changeLanguage } from '../i18n';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
 import { SvgXml } from 'react-native-svg';
 import { getLevelInfo, getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { ICONS } from '../assets/icons';
 import { SessionRecord, loadUnlockedAchievements } from '../utils/storage';
+import { supabase } from '../lib/supabase';
+import { resetMigrationFlag } from '../utils/migrateLocalSessions';
 import { UserProfile } from '../types/user';
 import { buildUserStats, getArchetypeFromStats, ARCHETYPES } from '../config/archetypes';
 
-const ARCHETYPE_CHAIN: { id: string; icon: string; tagline: string }[] = [
-  { id: 'EXPLORADOR',  icon: '🔭', tagline: 'Descobrindo seu perfil' },
-  { id: 'EM_EVOLUCAO', icon: '🌱', tagline: 'Crescendo a cada treino' },
-  { id: 'RESISTENTE',  icon: '🛡️', tagline: 'Consistente sob fadiga' },
-  { id: 'ATIRADOR',    icon: '🎯', tagline: 'Precisão cirúrgica' },
-  { id: 'VELOCISTA',   icon: '⚡',  tagline: 'Velocidade de elite' },
-  { id: 'PILOTO',      icon: '🏎️', tagline: 'Reflexos de elite' },
+const ARCHETYPE_CHAIN: { id: string; tagline: string }[] = [
+  { id: 'EXPLORADOR',  tagline: 'Descobrindo seu perfil' },
+  { id: 'EM_EVOLUCAO', tagline: 'Crescendo a cada treino' },
+  { id: 'RESISTENTE',  tagline: 'Consistente sob fadiga' },
+  { id: 'ATIRADOR',    tagline: 'Precisão cirúrgica' },
+  { id: 'VELOCISTA',   tagline: 'Velocidade de elite' },
+  { id: 'PILOTO',      tagline: 'Reflexos de elite' },
 ];
 
 // Destination archetype by ambition group — the "ceiling" the user is aiming for
@@ -26,7 +31,8 @@ const DEST_BY_GROUP: Record<string, { id: string; label: string }> = {
   populational: { id: 'VELOCISTA',  label: 'O Velocista' },
   brain_health: { id: 'RESISTENTE', label: 'O Consistente' },
 };
-import { ACHIEVEMENTS, getUnlockedCount } from '../config/achievements';
+import { ACHIEVEMENTS, getUnlockedCount, RARITY_CONFIG } from '../config/achievements';
+import { ARCHETYPE_ICONS, UI_ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
 import { AVATARS } from '../config/avatars';
 import { saveUserProfile } from '../utils/userProfile';
 import {
@@ -35,20 +41,34 @@ import {
   getMilestonesState,
 } from '../utils/ambition';
 import { GROUP_COLOR } from '../config/ambitions';
+import JourneyMap from '../components/JourneyMap';
+import { CienciaContent } from './Ciencia';
+import { HistoricoModeCards } from './Historico';
+import { ConquistasContent } from './Conquistas';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
 const DAY = 86_400_000;
-const PT_MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const PT_MONTHS_LONG = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function shortMonthDay(ts: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'pt-BR', {
+    day: 'numeric', month: 'short',
+  }).format(new Date(ts));
+}
+
+function longMonth(ts: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'pt-BR', {
+    month: 'long',
+  }).format(new Date(ts));
+}
 
 interface Props {
   sessions: SessionRecord[];
   userProfile: UserProfile;
   onOpenTriage: (editMode: boolean) => void;
-  onGoToConquistas: () => void;
   onUpdateProfile: (p: UserProfile) => void;
   onClearData: () => void;
+  onLogout?: () => void;
 }
 
 // ── Gradient avatar ──────────────────────────────────────────────────────────
@@ -84,13 +104,12 @@ function dayStart(ts: number) {
   const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime();
 }
 
-function formatRelDay(ts: number): string {
+function formatRelDay(ts: number, t: (k: string, o?: Record<string, unknown>) => string, lang: string): string {
   const diff = Math.round((dayStart(Date.now()) - dayStart(ts)) / DAY);
-  if (diff === 0) return 'hoje';
-  if (diff === 1) return 'ontem';
+  if (diff === 0) return t('dates.today');
+  if (diff === 1) return t('dates.yesterday');
   if (diff < 7) return `${diff}d`;
-  const d = new Date(ts);
-  return `${d.getDate()} ${PT_MONTHS[d.getMonth()]}`;
+  return shortMonthDay(ts, lang);
 }
 
 function computeStreak(sessions: SessionRecord[]): number {
@@ -108,16 +127,18 @@ function computeStreak(sessions: SessionRecord[]): number {
 
 // ── Mode card data ───────────────────────────────────────────────────────────
 
-const MODE_META: Record<ModeKey, { name: string; icon: string; sub: string }> = {
-  partida:   { name: 'MODO PARTIDA',   icon: ICONS.modes.partida,   sub: 'Reação simples visual' },
-  alvo:      { name: 'MODO ALVO',      icon: ICONS.modes.alvo,      sub: 'Velocidade + precisão' },
-  sequencia: { name: 'MODO SEQUÊNCIA', icon: ICONS.modes.sequencia, sub: 'Controle inibitório' },
-  radar:     { name: 'MODO RADAR',     icon: ICONS.modes.radar,     sub: 'Localização visual' },
+const MODE_ICONS_PERFIL: Record<ModeKey, string> = {
+  partida:   ICONS.modes.partida,
+  alvo:      ICONS.modes.alvo,
+  sequencia: ICONS.modes.sequencia,
+  radar:     ICONS.modes.radar,
 };
 
 // ── Bar chart ────────────────────────────────────────────────────────────────
 
-function BarChart({ sessions }: { sessions: SessionRecord[] }) {
+type TFn = (k: string, o?: Record<string, unknown>) => string;
+
+function BarChart({ sessions, t, lang }: { sessions: SessionRecord[]; t: TFn; lang: string }) {
   if (sessions.length < 2) return null;
 
   const scores = sessions.map(s => s.score);
@@ -149,20 +170,20 @@ function BarChart({ sessions }: { sessions: SessionRecord[] }) {
               <View style={[chart.bar, { height: barH, backgroundColor: mc.accent }]} />
               <View style={[chart.levelPill, { backgroundColor: lvl.bg }]}>
                 <Text style={[chart.levelText, { color: lvl.color }]} numberOfLines={1}>
-                  {lvl.label.split(' ')[0]}
+                  {t(`levels.${lvl.labelKey}.label` as any).split(' ')[0]}
                 </Text>
               </View>
-              <Text style={chart.dayLabel}>{formatRelDay(s.date)}</Text>
+              <Text style={chart.dayLabel}>{formatRelDay(s.date, t, lang)}</Text>
             </View>
           );
         })}
       </View>
       <Text style={chart.insight}>
         {improved
-          ? `↓ Melhorou ${Math.abs(delta)} ms nas últimas ${sessions.length} sessões`
+          ? t('profile.chart.improving', { delta: Math.abs(delta), n: sessions.length })
           : delta > 0
-          ? `↑ +${delta} ms — continue treinando para retomar o ritmo`
-          : 'Consistência perfeita nas últimas sessões'}
+          ? t('profile.chart.declining', { delta })
+          : t('profile.chart.consistent')}
       </Text>
     </View>
   );
@@ -192,12 +213,41 @@ const chart = StyleSheet.create({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConquistas, onUpdateProfile, onClearData }: Props) {
+export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdateProfile, onClearData, onLogout }: Props) {
+  const { t } = useTranslation();
+  const lang = i18n.language;
+
+  // Logout — reseta a flag de migração (pra re-enviar sessões no próximo login),
+  // encerra a sessão no Supabase, e deixa o RootGate voltar ao AuthScreen.
+  const handleLogout = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) await resetMigrationFlag(session.user.id);
+    await AsyncStorage.removeItem('reflexo_guest');
+    await supabase.auth.signOut();
+    onLogout?.();
+  };
+
+  // Collapsible embedded sections (Histórico, Conquistas, Ciência)
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [achievementsExpanded, setAchievementsExpanded] = useState(false);
+  const [scienceExpanded, setScienceExpanded] = useState(false);
+
+  const handleLangChange = async (next: 'pt' | 'en') => {
+    if (i18n.language === next) return;
+    await changeLanguage(next);
+    Alert.alert(t('common.languageChangedTitle'), t('common.languageChangedMessage'));
+  };
+
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const stats = useMemo(() => buildUserStats(sessions, streak), [sessions, streak]);
   const archetype = useMemo(() => getArchetypeFromStats(stats), [stats]);
+  const equippedAchievement = useMemo(() => {
+    if (!userProfile.equippedTitle) return null;
+    const ach = ACHIEVEMENTS.find(a => a.id === userProfile.equippedTitle);
+    return ach && ach.unlocked(stats) ? ach : null;
+  }, [userProfile.equippedTitle, stats]);
   const unlockedCount = useMemo(() => getUnlockedCount(stats), [stats]);
   // Excludes secret+locked from total so secret achievements aren't revealed in the counter
   const visibleAchievementTotal = useMemo(
@@ -213,21 +263,19 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   }, [archetype.nextId]);
 
   const modeBreakdown = useMemo(() => {
-    const keys: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
+    const keys: ModeKey[] = ['partida', 'radar', 'sequencia', 'alvo'];
     return keys.map(k => {
       const mSessions = sessions.filter(s => s.mode === k);
-      const best = stats.bestScoreByMode[k];
+      // melhor tempo médio = melhor score de sessão; melhor tempo absoluto = melhor hit individual
+      const bestAvg = stats.bestScoreByMode[k];
+      const bestAbs = mSessions.length > 0
+        ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
+        : null;
       const bestAcc = stats.bestAccByMode[k];
       const lastFatigue = mSessions.length > 0 && mSessions[0].fatigueIndex !== undefined
         ? mSessions[0].fatigueIndex
         : null;
-      const bestAlvoRt = k === 'alvo' && mSessions.length > 0
-        ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
-        : null;
-      const bestRadarRt = k === 'radar' && mSessions.length > 0
-        ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
-        : null;
-      return { key: k, count: mSessions.length, best, bestAcc, lastFatigue, bestAlvoRt, bestRadarRt };
+      return { key: k, count: mSessions.length, bestAvg, bestAbs, bestAcc, lastFatigue };
     });
   }, [sessions, stats]);
 
@@ -236,9 +284,8 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
   const joinedLabel = useMemo(() => {
     if (sessions.length === 0) return null;
     const oldest = sessions[sessions.length - 1];
-    const d = new Date(oldest.date);
-    return PT_MONTHS_LONG[d.getMonth()];
-  }, [sessions]);
+    return longMonth(oldest.date, lang);
+  }, [sessions, lang]);
 
   // ── Journey data ─────────────────────────────────────────────────────────────
   const currentBestMs = useMemo(
@@ -262,6 +309,11 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
 
   const beatenCount = useMemo(
     () => milestonesState.filter(s => s.status !== 'pendente').length,
+    [milestonesState],
+  );
+
+  const allBeaten = useMemo(
+    () => milestonesState.length > 0 && milestonesState.every(s => s.status !== 'pendente'),
     [milestonesState],
   );
 
@@ -383,25 +435,72 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 onPress={() => { setNameInput(userProfile.name || ''); setEditingName(true); }}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Text style={styles.editNameBtn}>✏️</Text>
+                <SvgXml xml={UI_ICONS.edit} width={16} height={16} />
               </TouchableOpacity>
             </View>
+            {equippedAchievement && (() => {
+              const color = RARITY_CONFIG[equippedAchievement.rarity].cor;
+              return (
+                <View style={styles.titleRow}>
+                  <SvgXml xml={equippedAchievement.icon} width={16} height={16} />
+                  <Text
+                    style={[
+                      styles.titleText,
+                      {
+                        color,
+                        textShadowColor: color,
+                        textShadowOffset: { width: 0, height: 0 },
+                        textShadowRadius: 8,
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    ✦ {equippedAchievement.title} ✦
+                  </Text>
+                </View>
+              );
+            })()}
             <Text style={styles.identitySub}>
               {joinedLabel
-                ? `Jogando desde ${joinedLabel} · ${sessions.length !== 1 ? 'sessões' : 'sessão'}`
-                : 'Sem sessões ainda'}
+                ? t('profile.identity.playingSince', { month: joinedLabel })
+                : t('profile.identity.noSessions')}
             </Text>
+          </View>
+          <View style={styles.identityLangRow}>
+            <TouchableOpacity
+              style={[styles.identityLangBtn, lang === 'pt' && styles.identityLangBtnActive]}
+              onPress={() => handleLangChange('pt')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.identityLangFlag}>🇧🇷</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.identityLangBtn, lang === 'en' && styles.identityLangBtnActive]}
+              onPress={() => handleLangChange('en')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.identityLangFlag}>🇺🇸</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
         {/* ── Archetype card ── */}
         <View style={[styles.archetypeCard, { borderColor: archetype.color + '44' }]}>
+          <View style={[styles.archetypeAccent, { backgroundColor: archetype.color }]} />
           <View style={styles.archetypeHeader}>
-            <Text style={styles.archetypeIcon}>{archetype.icon}</Text>
+            <SvgXml xml={archetype.icon} width={34} height={34} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.archetypeKicker}>ARQUÉTIPO ATUAL</Text>
+              <Text style={styles.archetypeKicker}>{t('profile.archetype')}</Text>
               <Text style={[styles.archetypeName, { color: archetype.color }]}>{archetype.name}</Text>
             </View>
+            {nextDef && (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.archetypeNextKicker}>{t('profile.nextShort')}</Text>
+                <Text style={[styles.archetypeNextVal, { color: nextDef.color }]} numberOfLines={1}>
+                  {nextDef.name} →
+                </Text>
+              </View>
+            )}
           </View>
           <Text style={styles.archetypeDesc}>{archetype.description}</Text>
           {evidenceChips.length > 0 && (
@@ -416,43 +515,93 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           )}
         </View>
 
-        {/* ── ARQUÉTIPOS — cadeia de evolução ── */}
+        {/* ── MINHA JORNADA (mapa + meta) ── */}
+        {!userProfile.triageCompleted ? (
+          <View style={styles.journeyCTA}>
+            <Text style={styles.journeyCTATitle}>{t('journey.ctaTitle')}</Text>
+            <Text style={styles.journeyCTADesc}>{t('journey.ctaDesc')}</Text>
+            <TouchableOpacity style={styles.journeyCTABtn} onPress={() => onOpenTriage(false)} activeOpacity={0.8}>
+              <Text style={styles.journeyCTABtnText}>{t('journey.ctaBtn')}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : ambition ? (
+          <View style={styles.journeySection}>
+            <View style={styles.journeySectionHeader}>
+              <Text style={styles.journeyKicker}>{t('journey.myJourney')}</Text>
+            </View>
+            <View style={styles.journeyAmbitionRow}>
+              <SvgXml xml={ambition.icon} width={22} height={22} />
+              <Text style={[styles.journeyAmbitionName, { color: ambitionGroupColor }]} numberOfLines={1}>
+                {ambition.name}
+              </Text>
+              <TouchableOpacity onPress={() => onOpenTriage(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.journeyChangeLink}>{t('journey.changeGoal')}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.journeySummary}>
+              {isBrainHealth
+                ? t('journey.summaryBrain', { base: baselineMs ?? '—', beaten: beatenCount, total: ambition.milestones.length })
+                : t('journey.summaryGoal', { base: baselineMs ?? '—', goal: ambition.finalMetaMs ?? '—', beaten: beatenCount, total: ambition.milestones.length })}
+            </Text>
+            {baselineMs !== null && (
+              <View style={styles.journeyMapWrap}>
+                <JourneyMap
+                  ambitionId={ambition.id}
+                  baselineMs={baselineMs}
+                  currentBestMs={currentBestMs}
+                  sessions={sessions}
+                  showYouAreHere
+                  hideCompletionCard={allBeaten}
+                />
+              </View>
+            )}
+          </View>
+        ) : null}
+
+        {/* ── ARQUÉTIPOS — timeline de evolução (nó + conector) ── */}
         {(() => {
           const currentIdx = ARCHETYPE_CHAIN.findIndex(a => a.id === stats.archetypeId);
           return (
             <View style={styles.chainSection}>
-              <Text style={styles.sectionTitle}>EVOLUÇÃO</Text>
+              <Text style={styles.sectionTitle}>{t('profile.evolution')}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chainScroll}
+                contentContainerStyle={styles.tlScroll}
               >
                 {ARCHETYPE_CHAIN.map((a, i) => {
                   const isPast    = i < currentIdx;
                   const isCurrent = i === currentIdx;
-                  const isFuture  = i > currentIdx;
                   const archDef   = ARCHETYPES[a.id];
+                  const lineDone  = i < currentIdx;
                   return (
                     <React.Fragment key={a.id}>
-                      <View style={[
-                        styles.chainCard,
-                        isCurrent && styles.chainCardCurrent,
-                        isPast    && styles.chainCardPast,
-                        isFuture  && styles.chainCardFuture,
-                      ]}>
-                        {isPast && <Text style={styles.chainCheck}>✓</Text>}
-                        <Text style={styles.chainIcon}>{a.icon}</Text>
-                        <Text style={[
-                          styles.chainName,
-                          isCurrent && { color: '#fff' },
-                          isPast    && { color: archDef.color },
+                      <View style={styles.tlNode}>
+                        <View style={[
+                          styles.tlCircle,
+                          isPast    && styles.tlCircleDone,
+                          isCurrent && { backgroundColor: archetype.color + '22', borderColor: archetype.color, borderWidth: 2 },
+                          !isPast && !isCurrent && styles.tlCircleLocked,
                         ]}>
+                          {isPast
+                            ? <Text style={styles.tlCheck}>✓</Text>
+                            : isCurrent
+                            ? <Text style={[styles.tlGlyph, { color: archetype.color }]}>◉</Text>
+                            : <Text style={styles.tlLockGlyph}>○</Text>}
+                        </View>
+                        <Text
+                          style={[
+                            styles.tlLabel,
+                            isCurrent && { color: archetype.color, fontWeight: '800' },
+                            isPast && { color: archDef.color },
+                          ]}
+                          numberOfLines={1}
+                        >
                           {archDef.name}
                         </Text>
-                        <Text style={styles.chainTagline} numberOfLines={2}>{a.tagline}</Text>
                       </View>
                       {i < ARCHETYPE_CHAIN.length - 1 && (
-                        <Text style={styles.chainArrow}>→</Text>
+                        <View style={[styles.tlLine, lineDone && styles.tlLineDone]} />
                       )}
                     </React.Fragment>
                   );
@@ -464,7 +613,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
 
         {/* ── METAS DE LONGO PRAZO ── */}
         <View style={styles.ltSection}>
-          <Text style={styles.sectionTitle}>METAS DE LONGO PRAZO</Text>
+          <Text style={styles.sectionTitle}>{t('profile.longTermGoals')}</Text>
 
           {/* Próximo marco de velocidade */}
           {ambition && nextMilestone && !isBrainHealth &&
@@ -472,15 +621,15 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
            currentBestMs !== null && (
             <View style={styles.ltCard}>
               <View style={styles.ltCardTop}>
-                <Text style={styles.ltIcon}>🚀</Text>
+                <SvgXml xml={ARCHETYPE_ICONS.ROCKET} width={22} height={22} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.ltKicker}>PRÓXIMO MARCO</Text>
+                  <Text style={styles.ltKicker}>{t('profile.nextMilestone')}</Text>
                   <Text style={styles.ltTitle}>{nextMilestone.label}</Text>
                   <Text style={styles.ltSub}>
-                    {`${ambition.name} · meta ${nextMilestone.ms} ms`}
+                    {`${ambition.name} · ${t('profile.goalMs', { ms: nextMilestone.ms })}`}
                     {currentBestMs <= nextMilestone.ms
-                      ? ' · ✓ Já atingido!'
-                      : ` · faltam ${currentBestMs - nextMilestone.ms} ms`}
+                      ? ` · ${t('profile.alreadyReached')}`
+                      : ` · ${t('profile.remaining', { delta: currentBestMs - nextMilestone.ms })}`}
                   </Text>
                 </View>
                 <Text style={styles.ltPct}>{Math.round(milestonePct * 100)}%</Text>
@@ -499,9 +648,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           {nextAchievementInfo && (
             <View style={styles.ltCard}>
               <View style={styles.ltCardTop}>
-                <Text style={styles.ltIcon}>{nextAchievementInfo.a.icon}</Text>
+                <SvgXml xml={nextAchievementInfo.a.icon} width={22} height={22} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.ltKicker}>PRÓXIMA CONQUISTA</Text>
+                  <Text style={styles.ltKicker}>{t('profile.nextAchievement')}</Text>
                   <Text style={styles.ltTitle}>{nextAchievementInfo.a.name}</Text>
                   <Text style={styles.ltSub}>{nextAchievementInfo.a.progress(stats)}</Text>
                 </View>
@@ -521,15 +670,15 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
           {nextDef && archetype.targetCriteria.length > 0 && (
             <View style={styles.ltCard}>
               <View style={styles.ltCardTop}>
-                <Text style={styles.ltIcon}>{nextDef.icon}</Text>
+                <SvgXml xml={nextDef.icon} width={24} height={24} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.ltKicker}>PRÓXIMO ARQUÉTIPO</Text>
+                  <Text style={styles.ltKicker}>{t('profile.nextArchetypeSection')}</Text>
                   <Text style={[styles.ltTitle, { color: nextDef.color }]}>{nextDef.name}</Text>
                   <Text style={styles.ltSub}>
-                    {archetype.targetCriteria.filter(c => c.done(stats)).length}
-                    {'/'}
-                    {archetype.targetCriteria.length}
-                    {' critérios concluídos'}
+                    {t('profile.criteriaDone', {
+                      done: archetype.targetCriteria.filter(c => c.done(stats)).length,
+                      total: archetype.targetCriteria.length,
+                    })}
                   </Text>
                 </View>
                 <Text style={styles.ltPct}>{Math.round(archetypePct * 100)}%</Text>
@@ -552,10 +701,10 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 onPress={() => setCompletedExpanded(prev => !prev)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.completedHeaderText}>✓ CONCLUÍDAS</Text>
+                <Text style={styles.completedHeaderText}>{t('profile.completed')}</Text>
                 <View style={styles.completedHeaderRight}>
                   <Text style={styles.completedHeaderCount}>
-                    {completedCount} conquistada{completedCount !== 1 ? 's' : ''}
+                    {t('profile.completedCount', { count: completedCount })}
                   </Text>
                   <Text style={styles.completedArrow}>
                     {completedExpanded ? '▼' : '▶'}
@@ -570,10 +719,10 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                       <View style={{ flex: 1 }}>
                         <Text style={styles.completedLabel}>{ms.milestone.label}</Text>
                         {ms.milestone.type !== 'qualitative' && ms.milestone.ms !== undefined && (
-                          <Text style={styles.completedSub}>{ms.milestone.ms} ms atingido</Text>
+                          <Text style={styles.completedSub}>{t('profile.msReached', { ms: ms.milestone.ms })}</Text>
                         )}
                       </View>
-                      <Text style={styles.completedTag}>MARCO</Text>
+                      <Text style={styles.completedTag}>{t('profile.milestone')}</Text>
                     </View>
                   ))}
                   {mostRecentUnlockedAch && (
@@ -585,7 +734,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                           {mostRecentUnlockedAch.description}
                         </Text>
                       </View>
-                      <Text style={styles.completedTag}>CONQUISTA</Text>
+                      <Text style={styles.completedTag}>{t('profile.achievement')}</Text>
                     </View>
                   )}
                   {pastArchetypes.map(pa => (
@@ -595,7 +744,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                         <Text style={styles.completedLabel}>{ARCHETYPES[pa.id].name}</Text>
                         <Text style={styles.completedSub}>{pa.tagline}</Text>
                       </View>
-                      <Text style={styles.completedTag}>ARQUÉTIPO</Text>
+                      <Text style={styles.completedTag}>{t('profile.archetypeLabel')}</Text>
                     </View>
                   ))}
                 </View>
@@ -608,9 +757,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {nextDef && archetype.targetCriteria.length > 0 && !reachedDestination && (
           <View style={styles.paraVirarCard}>
             <View style={styles.paraVirarHeader}>
-              <Text style={styles.paraVirarKicker}>PARA VIRAR</Text>
+              <Text style={styles.paraVirarKicker}>{t('profile.nextArchetype')}</Text>
               <View style={styles.paraVirarTarget}>
-                <Text style={styles.paraVirarIcon}>{nextDef.icon}</Text>
+                <SvgXml xml={nextDef.icon} width={24} height={24} />
                 <Text style={[styles.paraVirarName, { color: nextDef.color }]}>{nextDef.name}</Text>
               </View>
             </View>
@@ -643,7 +792,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                   {/* Pending by definition — it's the NEXT milestone not yet beaten */}
                 </View>
                 <Text style={styles.criterionLabel}>
-                  {`Bater próximo marco: ${nextMilestone.ms} ms`}
+                  {t('profile.beatNextMilestone', { ms: nextMilestone.ms })}
                   {currentBestMs !== null && (
                     <Text style={styles.criterionSuffix}>
                       {` (delta: ${currentBestMs - nextMilestone.ms} ms)`}
@@ -656,9 +805,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
             {/* Destination footer — only when destination is further than the immediate next arch */}
             {showDestFooter && destinationArch && (
               <View style={styles.destRow}>
-                <Text style={styles.destIcon}>🎯</Text>
+                <SvgXml xml={ACHIEVEMENT_ICONS.sniper} width={20} height={20} />
                 <Text style={[styles.destLabel, { color: ambitionGroupColor }]}>
-                  Seu destino: {destinationArch.label}
+                  {t('profile.destinationLabel', { name: destinationArch.label })}
                 </Text>
               </View>
             )}
@@ -666,51 +815,51 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         )}
 
         {/* ── Mode breakdown ── */}
-        <Text style={styles.sectionTitle}>POR MODO</Text>
+        <Text style={styles.sectionTitle}>{t('profile.byMode')}</Text>
         {modeBreakdown.map(m => {
           const mc = MODE_COLORS[m.key];
-          const meta = MODE_META[m.key];
-          const displayScore = m.key === 'alvo' && m.bestAlvoRt !== null ? m.bestAlvoRt
-                             : m.key === 'radar' && m.bestRadarRt !== null ? m.bestRadarRt
-                             : m.best;
-          const lvl = displayScore !== null ? getLevelForMode(displayScore, m.key) : null;
+          const hasData = m.bestAbs !== null && m.bestAvg !== null;
+          const lvlAbs = m.bestAbs !== null ? getLevelForMode(m.bestAbs, m.key) : null;
+          const lvlAvg = m.bestAvg !== null ? getLevelForMode(m.bestAvg, m.key) : null;
 
           return (
             <View key={m.key} style={styles.modeCard}>
               <View style={[styles.modeIconBox, { backgroundColor: mc.accent + '2a' }]}>
-                <SvgXml xml={meta.icon} width={28} height={28} />
+                <SvgXml xml={MODE_ICONS_PERFIL[m.key]} width={28} height={28} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={[styles.modeName, { color: mc.accent }]}>{meta.name}</Text>
-                <Text style={styles.modeSub}>{meta.sub}</Text>
+                <Text style={[styles.modeName, { color: mc.accent }]}>{t(`modes.${m.key}.name`)}</Text>
+                <Text style={styles.modeSub}>{t(`profile.modeDesc.${m.key}`)}</Text>
               </View>
               <View style={styles.modeRight}>
-                {displayScore !== null && lvl ? (
+                {hasData && lvlAbs && lvlAvg ? (
                   <>
-                    <Text style={[styles.modeScore, { color: lvl.color }]}>{displayScore} ms</Text>
-                    <View style={[styles.modeLevelPill, { backgroundColor: lvl.bg }]}>
-                      <Text style={[styles.modeLevelText, { color: lvl.color }]} numberOfLines={1}>
-                        {lvl.label}
+                    {/* DOIS valores sempre visíveis: melhor absoluto + melhor média */}
+                    <View style={styles.modeStatLine}>
+                      <Text style={[styles.modeScore, { color: lvlAbs.color }]}>{m.bestAbs} ms</Text>
+                      <Text style={styles.modeStatLabel}>{t('history.stats.absLabel')}</Text>
+                    </View>
+                    <View style={styles.modeStatLine}>
+                      <Text style={[styles.modeScoreSecondary, { color: lvlAvg.color }]}>{m.bestAvg} ms</Text>
+                      <Text style={styles.modeStatLabel}>{t('history.stats.avgBestLabel')}</Text>
+                    </View>
+                    <View style={[styles.modeLevelPill, { backgroundColor: lvlAvg.bg }]}>
+                      <Text style={[styles.modeLevelText, { color: lvlAvg.color }]} numberOfLines={1}>
+                        {t(`levels.${lvlAvg.labelKey}.label` as any)}
                       </Text>
                     </View>
-                    {m.key === 'alvo' && (
-                      <Text style={styles.modeExtra}>Melhor Tempo Reflexo</Text>
-                    )}
                     {m.key === 'alvo' && m.bestAcc !== null && (
                       <Text style={styles.modeExtra}>{Math.round(m.bestAcc * 100)}% acc</Text>
                     )}
                     {m.key === 'sequencia' && m.lastFatigue !== null && m.lastFatigue !== undefined && (
-                      <Text style={styles.modeExtra}>{m.lastFatigue.toFixed(1)}% fadiga</Text>
-                    )}
-                    {m.key === 'radar' && (
-                      <Text style={[styles.modeExtra, { color: mc.accent }]}>Melhor Tempo Reflexo</Text>
+                      <Text style={styles.modeExtra}>{m.lastFatigue.toFixed(1)}% {t('profile.fatigue')}</Text>
                     )}
                     {m.key === 'radar' && m.bestAcc !== null && (
-                      <Text style={[styles.modeExtra, { color: mc.accent }]}>Precisão: {Math.round(m.bestAcc * 100)}%</Text>
+                      <Text style={[styles.modeExtra, { color: mc.accent }]}>{t('profile.accuracy')}: {Math.round(m.bestAcc * 100)}%</Text>
                     )}
                   </>
                 ) : (
-                  <Text style={styles.modeNone}>{m.count > 0 ? `${m.count} sess.` : '—'}</Text>
+                  <Text style={styles.modeNone}>{m.count > 0 ? t('profile.modeCount', { count: m.count }) : '—'}</Text>
                 )}
               </View>
             </View>
@@ -721,55 +870,107 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
         {last8.length >= 2 && (
           <>
             <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-              ÚLTIMAS {last8.length} SESSÕES
+              {t('profile.lastSessionsN', { n: last8.length })}
             </Text>
-            <BarChart sessions={last8} />
+            <BarChart sessions={last8} t={t} lang={lang} />
           </>
         )}
 
-        {/* ── Achievements summary ── */}
-        <Text style={styles.sectionTitle}>CONQUISTAS</Text>
-        <TouchableOpacity style={styles.achieveSummaryCard} onPress={onGoToConquistas} activeOpacity={0.8}>
+        {/* ── HISTÓRICO — evolução por modo (colapsável) ── */}
+        <TouchableOpacity
+          style={[styles.collapseHeader, { marginTop: 20 }]}
+          onPress={() => setHistoryExpanded(p => !p)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.sectionTitle}>{t('history.evolutionByMode')}</Text>
+          <Text style={styles.collapseArrow}>{historyExpanded ? '▼' : '▶'}</Text>
+        </TouchableOpacity>
+        {historyExpanded && <HistoricoModeCards sessions={sessions} />}
+
+        {/* ── Achievements summary (toca para expandir lista completa) ── */}
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>{t('profile.achievementsSummary')}</Text>
+        <TouchableOpacity style={styles.achieveSummaryCard} onPress={() => setAchievementsExpanded(p => !p)} activeOpacity={0.8}>
           <View style={styles.achieveSummaryRow}>
             <Text style={styles.achieveSummaryCount}>
-              {unlockedCount}/{visibleAchievementTotal} desbloqueadas
+              {t('achievements.unlockedFraction', { count: unlockedCount, total: visibleAchievementTotal })}
             </Text>
-            <Text style={styles.achieveSummaryLink}>Ver todas →</Text>
+            <Text style={styles.achieveSummaryLink}>{achievementsExpanded ? t('common.close') : t('profile.seeAll')}</Text>
           </View>
           <View style={styles.achieveProgressTrack}>
             <View style={[styles.achieveProgressFill, { flex: unlockedCount }]} />
             <View style={{ flex: Math.max(0, visibleAchievementTotal - unlockedCount) }} />
           </View>
         </TouchableOpacity>
-
-        {sessions.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🎮</Text>
-            <Text style={styles.emptyText}>
-              Complete sua primeira sessão para ver seu perfil evoluir!
-            </Text>
+        {achievementsExpanded && (
+          <View style={{ marginTop: 4 }}>
+            <ConquistasContent
+              sessions={sessions}
+              userProfile={userProfile}
+              onUpdateProfile={onUpdateProfile}
+              showHeader={false}
+            />
           </View>
         )}
 
-        {/* ── ZONA DE PERIGO ── */}
+        {/* ── CIÊNCIA (colapsável) ── */}
+        <TouchableOpacity
+          style={[styles.collapseHeader, { marginTop: 20 }]}
+          onPress={() => setScienceExpanded(p => !p)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.sectionTitle}>{t('science.title')}</Text>
+          <Text style={styles.collapseArrow}>{scienceExpanded ? '▼' : '▶'}</Text>
+        </TouchableOpacity>
+        {scienceExpanded && (
+          <CienciaContent userProfile={userProfile} sessions={sessions} showTitle={false} />
+        )}
+
+        {sessions.length === 0 && (
+          <View style={styles.emptyState}>
+            <SvgXml xml={UI_ICONS.emptyGame} width={48} height={48} />
+            <Text style={styles.emptyText}>{t('profile.emptyProfile')}</Text>
+          </View>
+        )}
+
+        {/* ── Limpar dados — discreto, confirmação em duas etapas ── */}
         <View style={styles.dangerZone}>
           <TouchableOpacity
             style={styles.dangerButton}
             onPress={() => {
+              // 1ª etapa
               Alert.alert(
-                'Limpar todos os dados',
-                'Tem certeza? Esta ação apaga todo o histórico, conquistas e progresso. Não pode ser desfeita.',
+                t('profile.clearDataStep1Title'),
+                t('profile.clearDataStep1Message'),
                 [
-                  { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Limpar tudo', style: 'destructive', onPress: onClearData },
+                  { text: t('common.cancel'), style: 'cancel' },
+                  {
+                    text: t('profile.clearDataStep1Confirm'),
+                    style: 'destructive',
+                    onPress: () => {
+                      // 2ª etapa — confirmação final
+                      Alert.alert(
+                        t('profile.clearDataStep2Title'),
+                        undefined,
+                        [
+                          { text: t('profile.clearDataStep2Cancel'), style: 'cancel' },
+                          { text: t('profile.clearDataStep2Confirm'), style: 'destructive', onPress: onClearData },
+                        ],
+                      );
+                    },
+                  },
                 ],
               );
             }}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
           >
-            <Text style={styles.dangerButtonText}>Limpar todos os dados</Text>
+            <Text style={styles.dangerButtonText}>{t('profile.clearData')}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Logout — encerra a sessão; o RootGate volta ao AuthScreen */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
+          <Text style={styles.logoutButtonText}>SAIR DA CONTA</Text>
+        </TouchableOpacity>
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -783,14 +984,14 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
       >
         <View style={styles.nameModalOverlay}>
           <View style={styles.nameModalCard}>
-            <Text style={styles.nameModalTitle}>EDITAR PERFIL</Text>
+            <Text style={styles.nameModalTitle}>{t('profile.editProfile')}</Text>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 4 }}>
-              <Text style={styles.editFieldLabel}>NOME</Text>
+              <Text style={styles.editFieldLabel}>{t('profile.name')}</Text>
               <TextInput
                 style={styles.nameModalInput}
                 value={nameInput}
                 onChangeText={setNameInput}
-                placeholder="Seu nome"
+                placeholder={t('profile.namePlaceholder')}
                 placeholderTextColor="#4a5a7b"
                 maxLength={30}
               />
@@ -801,9 +1002,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 return (
                   <View style={{ marginTop: 18 }}>
                     <View style={styles.editAvatarHeader}>
-                      <Text style={styles.editFieldLabel}>AVATAR</Text>
+                      <Text style={styles.editFieldLabel}>{t('profile.avatar')}</Text>
                       <Text style={styles.avatarHeaderCount}>
-                        {unlockedAvatarCount}/{AVATARS.length} desbloqueados
+                        {t('profile.avatarCount', { count: unlockedAvatarCount, total: AVATARS.length })}
                       </Text>
                     </View>
                     <View style={styles.avatarGrid}>
@@ -812,7 +1013,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                         const selected = selectedId === av.id;
                         const avIsInitial = av.id === 'initial';
                         const cellContent = !unlocked
-                          ? <Text style={styles.avatarCellLock}>🔒</Text>
+                          ? <SvgXml xml={UI_ICONS.lock} width={24} height={24} />
                           : avIsInitial
                             ? <Text style={styles.avatarCellLetter}>{(nameInput || userProfile.name || 'U')[0].toUpperCase()}</Text>
                             : <SvgXml xml={av.icon!} width={56} height={56} />;
@@ -852,7 +1053,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 onPress={() => setEditingName(false)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.nameModalCancelText}>FECHAR</Text>
+                <Text style={styles.nameModalCancelText}>{t('common.close')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.nameModalSave}
@@ -864,7 +1065,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onGoToConq
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.nameModalSaveText}>SALVAR</Text>
+                <Text style={styles.nameModalSaveText}>{t('profile.save')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -884,6 +1085,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   identityName: { fontSize: 26, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  titleText: { fontSize: 13, fontWeight: '800', letterSpacing: 1 },
   identitySub: { fontSize: 12, color: '#4a5a7b' },
   emojiAvatarLarge: {
     width: 72, height: 72, borderRadius: 36,
@@ -920,12 +1123,17 @@ const styles = StyleSheet.create({
   // ── Archetype card ────────────────────────────────────────────────────────
   archetypeCard: {
     backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
-    padding: 18, marginBottom: 12,
+    padding: 18, marginBottom: 12, overflow: 'hidden',
+  },
+  archetypeAccent: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 2, opacity: 0.7,
   },
   archetypeHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 10 },
   archetypeIcon: { fontSize: 34 },
   archetypeKicker: { fontSize: 9, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2, marginBottom: 3 },
   archetypeName: { fontSize: 18, fontWeight: '900', letterSpacing: 2 },
+  archetypeNextKicker: { fontSize: 9, color: '#3a4a6b', marginBottom: 2 },
+  archetypeNextVal: { fontSize: 12, fontWeight: '700', maxWidth: 110 },
   archetypeDesc: { fontSize: 13, color: '#4a5a7b', lineHeight: 19, marginBottom: 14 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -1062,11 +1270,16 @@ const styles = StyleSheet.create({
     marginTop: 10, paddingTop: 10,
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)',
   },
-  destIcon: { fontSize: 14 },
   destLabel: { fontSize: 12, fontWeight: '700' },
 
   // ── Section title ─────────────────────────────────────────────────────────
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 10 },
+
+  // ── Collapsible embedded-section header ───────────────────────────────────
+  collapseHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  collapseArrow: { fontSize: 11, color: '#3a4a6b', marginBottom: 10 },
 
   // ── Mode cards ────────────────────────────────────────────────────────────
   modeCard: {
@@ -1082,33 +1295,33 @@ const styles = StyleSheet.create({
   modeIconText: { fontSize: 24 },
   modeName: { fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
   modeSub: { fontSize: 11, color: '#3a4a6b' },
-  modeRight: { alignItems: 'flex-end', gap: 3, minWidth: 64 },
+  modeRight: { alignItems: 'flex-end', gap: 4, minWidth: 96 },
+  modeStatLine: { alignItems: 'flex-end' },
+  modeStatLabel: { fontSize: 9, color: '#3a4a6b', fontWeight: '600', letterSpacing: 0.3 },
+  modeScoreSecondary: { fontSize: 14, fontWeight: '800' },
   modeScore: { fontSize: 16, fontWeight: '800' },
   modeLevelPill: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   modeLevelText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
   modeExtra: { fontSize: 10, color: '#3a4a6b', marginTop: 1 },
   modeNone: { fontSize: 13, color: '#2d3a55', fontWeight: '700' },
 
-  // ── Archetype chain ───────────────────────────────────────────────────────
+  // ── Archetype evolution timeline (node + connector) ───────────────────────
   chainSection: { marginBottom: 12 },
-  chainScroll: { paddingVertical: 4, alignItems: 'center' },
-  chainCard: {
-    width: 90, borderRadius: 12, padding: 10,
-    backgroundColor: '#111a2e',
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.07)',
-    alignItems: 'center', gap: 4,
+  tlScroll: { paddingVertical: 4, alignItems: 'flex-start' },
+  tlNode: { alignItems: 'center', gap: 6, width: 64 },
+  tlCircle: {
+    width: 30, height: 30, borderRadius: 15,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#111a2e', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)',
   },
-  chainCardCurrent: {
-    borderColor: '#5b4fcf',
-    backgroundColor: 'rgba(91,79,207,0.12)',
-  },
-  chainCardPast: { opacity: 0.5 },
-  chainCardFuture: { opacity: 0.3 },
-  chainCheck: { position: 'absolute', top: 6, right: 8, fontSize: 10, color: '#10b981', fontWeight: '800' },
-  chainIcon: { fontSize: 22 },
-  chainName: { fontSize: 9, fontWeight: '800', color: '#4a5a7b', letterSpacing: 0.5, textAlign: 'center' },
-  chainTagline: { fontSize: 9, color: '#3a4a6b', textAlign: 'center', lineHeight: 13 },
-  chainArrow: { fontSize: 14, color: '#2d3a55', alignSelf: 'center', marginHorizontal: 2 },
+  tlCircleDone: { backgroundColor: 'rgba(16,185,129,0.12)', borderColor: '#10b981' },
+  tlCircleLocked: { backgroundColor: '#1a2540', borderColor: '#2d3a55' },
+  tlCheck: { fontSize: 13, color: '#10b981', fontWeight: '800' },
+  tlGlyph: { fontSize: 13, fontWeight: '800' },
+  tlLockGlyph: { fontSize: 12, color: '#4a5a7b', fontWeight: '700' },
+  tlLabel: { fontSize: 9, fontWeight: '700', color: '#4a5a7b', textAlign: 'center', maxWidth: 60 },
+  tlLine: { width: 18, height: 1.5, backgroundColor: '#2d3a55', marginTop: 14 },
+  tlLineDone: { backgroundColor: '#10b981', opacity: 0.4 },
 
   // ── Achievements summary ──────────────────────────────────────────────────
   achieveSummaryCard: {
@@ -1163,11 +1376,34 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', lineHeight: 20 },
 
-  // ── Danger zone ───────────────────────────────────────────────────────────
+  // ── Compact language selector (identity area, top) ───────────────────────
+  identityLangRow: { flexDirection: 'row', gap: 4, alignSelf: 'flex-start' },
+  identityLangBtn: {
+    paddingHorizontal: 7, paddingVertical: 4,
+    borderRadius: 6, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#111a2e',
+  },
+  identityLangBtnActive: {
+    borderColor: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,0.18)',
+  },
+  identityLangFlag: { fontSize: 16, lineHeight: 18 },
+
+  // ── Limpar dados — discreto, secundário (sem borda/fundo, texto cinza) ──────
   dangerZone: { marginTop: 24, alignItems: 'center' },
   dangerButton: {
-    borderWidth: 1, borderColor: '#ef4444', borderRadius: 10,
     paddingHorizontal: 24, paddingVertical: 10,
   },
-  dangerButtonText: { fontSize: 13, fontWeight: '700', color: '#ef4444', letterSpacing: 0.5 },
+  dangerButtonText: { fontSize: 13, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.3 },
+  logoutButton: {
+    marginTop: 16,
+    marginHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FF4444',
+    alignItems: 'center',
+  },
+  logoutButtonText: { fontSize: 13, fontWeight: '700', color: '#FF4444', letterSpacing: 1 },
 });

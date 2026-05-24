@@ -3,19 +3,11 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { SvgXml } from 'react-native-svg';
 import { getAmbitionById, GROUP_COLOR, GROUP_LABELS } from '../../config/ambitions';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
-
-const POPULATION_CONTEXT: Record<string, string> = {
-  f1: 'Top 1% da população',
-  boxer: 'Top 3% da população',
-  tennis: 'Top 5% da população',
-  sprinter: 'Top 0.1% — elite mundial',
-  top50: 'Top 50% da população',
-  top10: 'Top 10% da população',
-  top1: 'Top 1% da população',
-};
 
 interface Props {
   ambitionId: string;
@@ -24,19 +16,24 @@ interface Props {
 }
 
 export default function TriageAmbitionConfirm({ ambitionId, onNext, onBack }: Props) {
+  const { t } = useTranslation();
   const ambition = getAmbitionById(ambitionId);
   if (!ambition) return null;
 
   const groupColor = GROUP_COLOR[ambition.group];
   const groupLabel = GROUP_LABELS[ambition.group];
-  const popContext = POPULATION_CONTEXT[ambition.id];
+  const POP_IDS = ['f1', 'boxer', 'tennis', 'sprinter', 'top50', 'top10', 'top1'];
+  const popContext = POP_IDS.includes(ambition.id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? t(`triage.confirm.population.${ambition.id}` as any)
+    : null;
 
   return (
     <View style={styles.root}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Text style={styles.backText}>← Voltar</Text>
+          <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
         <View style={styles.dotsRow}>
           {[1, 2, 3, 4, 5].map(n => (
@@ -50,14 +47,14 @@ export default function TriageAmbitionConfirm({ ambitionId, onNext, onBack }: Pr
       <View style={styles.body}>
         {/* ZONA 1 — identidade */}
         <View style={styles.identity}>
-          <Text style={styles.icon}>{ambition.icon}</Text>
+          <SvgXml xml={ambition.icon} width={64} height={64} />
           <Text style={styles.name}>{ambition.name}</Text>
           <Text style={[styles.groupTag, { color: groupColor }]}>{groupLabel}</Text>
         </View>
 
         {/* ZONA 2 — card de meta */}
         <View style={styles.metaCard}>
-          <Text style={styles.metaLabel}>SUA META FINAL</Text>
+          <Text style={styles.metaLabel}>{t('triage.confirm.yourFinalGoal')}</Text>
 
           {ambition.finalMetaMs !== null ? (
             <>
@@ -71,7 +68,7 @@ export default function TriageAmbitionConfirm({ ambitionId, onNext, onBack }: Pr
           ) : (
             <>
               <Text style={[styles.metaBigText, { color: groupColor }]}>
-                Consistência e evolução contínua
+                {t('triage.confirm.consistencyGoal')}
               </Text>
               <Text style={styles.metaDescription}>{ambition.description}</Text>
             </>
@@ -79,19 +76,17 @@ export default function TriageAmbitionConfirm({ ambitionId, onNext, onBack }: Pr
 
           <View style={styles.divider} />
 
-          <Text style={styles.metaLabel}>PARA CHEGAR LÁ</Text>
-          <Text style={styles.howToText}>
-            Treinos curtos, todo dia. Vamos medir onde você está agora.
-          </Text>
+          <Text style={styles.metaLabel}>{t('triage.confirm.toGetThere')}</Text>
+          <Text style={styles.howToText}>{t('triage.confirm.howTo')}</Text>
         </View>
       </View>
 
       {/* ZONA 3 — Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.btnPrimary} onPress={onNext} activeOpacity={0.8}>
-          <Text style={styles.btnPrimaryText}>CONTINUAR</Text>
+        <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: groupColor }]} onPress={onNext} activeOpacity={0.8}>
+          <Text style={styles.btnPrimaryText}>{t('common.continue')}</Text>
         </TouchableOpacity>
-        <Text style={styles.footerHint}>Próximo: medimos seu reflexo base</Text>
+        <Text style={styles.footerHint}>{t('triage.confirm.nextHint')}</Text>
       </View>
     </View>
   );

@@ -5,6 +5,10 @@
 //
 export const MONETIZATION_ENABLED = false;
 
+// Assinante Premium ativo → energia infinita (badge mostra ∞, sem consumo).
+// Quando houver billing real, derivar disto a partir do estado da assinatura.
+export const PREMIUM_ACTIVE = false;
+
 // ── Regras de energia ────────────────────────────────────────────────────────
 
 export const GRACE_PERIOD_DAYS = 3;     // dias de energia ilimitada pós-instalação

@@ -1,0 +1,785 @@
+{
+  "common": {
+    "back": "← Back",
+    "backArrow": "←",
+    "continue": "CONTINUE",
+    "start": "START",
+    "cancel": "Cancel",
+    "quit": "Quit",
+    "keepPlaying": "Keep playing",
+    "quitTitle": "Quit session?",
+    "quitMessage": "Progress from this session will not be saved.",
+    "howToPlay": "How to play",
+    "round": "ROUND",
+    "ms": "ms",
+    "newBadge": "NEW",
+    "ok": "OK",
+    "soon": "Coming soon",
+    "noData": "No data",
+    "close": "CLOSE",
+    "languageChangedTitle": "Language changed",
+    "languageChangedMessage": "Some changes may require restarting the app to take effect across all screens."
+  },
+
+  "home": {
+    "appName": "REFLEXO",
+    "greeting": "Hey, {{name}}",
+    "modesTitle": "GAME MODES",
+    "streakDays_one": "{{count}} day streak",
+    "streakDays_other": "{{count}} days streak",
+    "streakToday": "✓ today",
+    "streakPlayToday": "⚡ play today",
+    "notPlayed": "Not played yet",
+    "yourBest": "Your best: ",
+    "bestReflexTime": "Best Reflex Time",
+    "avgRt": "Avg RT",
+    "f1BenchmarkTitle": "F1 Benchmark",
+    "f1BenchmarkBody": "Formula 1 drivers react in 150–250 ms — tested under real racing conditions.",
+    "sessionsCount_one": "{{count}} session recorded",
+    "sessionsCount_other": "{{count}} sessions recorded",
+    "noSessions": "Based on scientific benchmarks from elite athletes",
+    "graceExpiring": "⚡ Free · expires in {{time}}",
+    "energyCount": "⚡ {{current}}/{{max}}",
+    "energyInfinite": "⚡ ∞",
+    "ctaEyebrow": "NEXT SESSION",
+    "ctaLabel": "TRAIN NOW",
+    "ctaSub": "Reaction mode · start here",
+    "archetypeCurrent": "CURRENT ARCHETYPE",
+    "archetypeNext": "next",
+    "archetypeMaxed": "Max level reached — you're elite.",
+    "statBestReflex": "best reflex",
+    "statSessions": "total sessions",
+    "unlockHint": "Complete {{mode}} to unlock",
+    "modeUnlockedTitle": "MODE UNLOCKED!",
+    "tapToContinue": "Tap to continue"
+  },
+
+  "modes": {
+    "partida": {
+      "name": "REACTION MODE",
+      "desc": "Simple visual reaction · 7 attempts",
+      "sub": "Top 5 of 7 — discards the 2 worst"
+    },
+    "alvo": {
+      "name": "TARGET MODE",
+      "desc": "Decision reflex · fixed positions · 10 rounds",
+      "sub": "Fixed positions — tap the right shape"
+    },
+    "sequencia": {
+      "name": "SEQUENCE MODE",
+      "desc": "15 Go/NoGo signals · ~25% random",
+      "sub": "Measures cognitive fatigue and inhibitory control"
+    },
+    "radar": {
+      "name": "RADAR MODE",
+      "desc": "Visual location · 15 rounds",
+      "sub": "5 circles in a cross — tap the one that lights up"
+    }
+  },
+
+  "match": {
+    "title": "REACTION MODE",
+    "subtitle": "7 attempts · simple reaction",
+    "howToText": "Wait for the screen to go dark. Tap as soon as the green circle appears. The faster, the better.",
+    "falseStart": "FALSE START",
+    "penaltyFixed": "fixed 500 ms",
+    "waitHint": "Wait for the dark screen — tap as soon as the green circle appears",
+    "waitWarn": "Tapping early = false start (fixed 500 ms)",
+    "startRound": "START ROUND {{round}}",
+    "ready": "READY",
+    "waiting": "wait...",
+    "tapNow": "TAP!"
+  },
+
+  "target": {
+    "title": "TARGET MODE",
+    "subtitle": "Fixed positions · 10 rounds",
+    "howToText": "4 shapes in fixed positions. When the shape appears, tap the right target immediately. Wrong tap = +150ms; no tap in time = +200ms.",
+    "tapCircle": "TAP THE CIRCLE",
+    "tapShape": "TAP THE",
+    "waitHint": "wait for the stimulus",
+    "correct": "CORRECT!",
+    "wrong": "WRONG!",
+    "colors": {
+      "AZUL": "BLUE",
+      "VERDE": "GREEN",
+      "LARANJA": "ORANGE",
+      "ROXO": "PURPLE"
+    },
+    "shapes": {
+      "CIRCULO": "CIRCLE",
+      "TRIANGULO": "TRIANGLE",
+      "QUADRADO": "SQUARE",
+      "HEXAGONO": "HEXAGON"
+    }
+  },
+
+  "sequence": {
+    "title": "SEQUENCE MODE",
+    "subtitle": "15 signals · Go / NoGo",
+    "howToText": "Tap only on GREEN signals (Go). Ignore the red ones (No-Go). Control the impulse to tap everything.",
+    "prepare": "GET READY",
+    "hintGo": "GREEN → tap",
+    "hintNoGo": "RED → don't tap",
+    "miss": "MISSED",
+    "error": "ERROR!",
+    "inhibited": "✓ INHIBITED",
+    "penaltyTitle": "Anticipated!",
+    "penaltyMs": "+150ms",
+    "penaltyContinue": "Tap to continue"
+  },
+
+  "radar": {
+    "title": "RADAR MODE",
+    "subtitle": "5 circles in a cross · 15 rounds",
+    "howToText": "All 5 circles are always visible. One will light up — tap it as fast as possible. Wrong tap: +{{penalty}}ms penalty on average.",
+    "waitHint": "wait...",
+    "tapHint": "tap the lit circle",
+    "hit": "✓ HIT",
+    "miss": "✗ MISS",
+    "timeout": "⏱ TIMEOUT",
+    "quitBtn": "QUIT"
+  },
+
+  "triage": {
+    "intro": {
+      "title": "Ready to map\nyour route?",
+      "subtitle": "F1 drivers react in 150ms. Olympic athletes in 160ms. Where do you stand? Let's find out.",
+      "chip1": "150ms F1",
+      "chip2": "+40% attention",
+      "chip3": "Trainable",
+      "btnPrimary": "LET'S GO",
+      "btnSecondary": "Not now"
+    },
+    "ambition": {
+      "title": "How far do you want to go?",
+      "subtitle": "No pressure. You can change it later.",
+      "chooseOne": "Choose one goal",
+      "noMsTarget": "no ms target",
+      "groups": {
+        "elite_sport": "ELITE SPORT",
+        "populational": "POPULATION RANKING",
+        "brain_health": "BRAIN HEALTH"
+      },
+      "groupSubtitles": {
+        "elite_sport": "Compare your reflex to professional athletes measured in lab conditions.",
+        "populational": "Compare yourself to the general population — all ages and profiles.",
+        "brain_health": "No competition. Focus on consistency and cognitive longevity."
+      }
+    },
+    "confirm": {
+      "yourFinalGoal": "YOUR FINAL GOAL",
+      "toGetThere": "TO GET THERE",
+      "consistencyGoal": "Consistency and continuous improvement",
+      "howTo": "Short daily sessions. Let's measure where you are now.",
+      "nextHint": "Next: we measure your reaction baseline",
+      "population": {
+        "f1": "Top 1% of the population",
+        "boxer": "Top 3% of the population",
+        "tennis": "Top 5% of the population",
+        "sprinter": "Top 0.1% — world elite",
+        "top50": "Top 50% of the population",
+        "top10": "Top 10% of the population",
+        "top1": "Top 1% of the population"
+      }
+    },
+    "age": {
+      "title": "What is your age range?",
+      "subtitle": "We use this to compare you to the right group — your ambition stays the same.",
+      "options": {
+        "lt25": "Under 25",
+        "r25_40": "25 – 40",
+        "r40_55": "40 – 55",
+        "r55_70": "55 – 70",
+        "r70plus": "70+"
+      }
+    },
+    "baseline": {
+      "title": "Let's measure your baseline",
+      "subtitle": "3 quick tests — takes less than 2 minutes",
+      "partida": "REACTION",
+      "alvo": "TARGET",
+      "sequencia": "SEQUENCE",
+      "tapWhenGreen": "Tap when green appears",
+      "tapCorrectColor": "Tap the indicated color",
+      "tapGoIgnoreNoGo": "Tap green, ignore red",
+      "startBtn": "START",
+      "done": "COMPLETE",
+      "introTitle": "Let's see where you stand right now.",
+      "introSubtitle": "1 round from each mode. None count toward your history. No pressure.",
+      "metricPartida": "REACTION SPEED",
+      "metricAlvo": "PRECISION UNDER PRESSURE",
+      "metricSeq": "INHIBITORY CONTROL",
+      "instrPartidaDesc": "Tap as fast as possible once the green circle appears. Wait for it — a false start will be penalized.",
+      "instrAlvoDesc": "Tap the circle with the color shown at the top when it appears. Ignore the other colors.",
+      "instrSeqDesc": "Respond fast to Go signals (green). Ignore NoGo signals (red). There will be 3 signals.",
+      "sciPartida": "F1 drivers react in 150ms — your brain can get there",
+      "sciAlvo": "Choice RT measures decision under pressure — used in attention diagnostics",
+      "sciSeq": "The Go/NoGo paradigm is a clinical standard — used in ADHD and inhibitory control diagnostics",
+      "tapHere": "TAP HERE",
+      "modePartida": "PARTIDA MODE",
+      "modeAlvo": "TARGET MODE",
+      "tapNow": "TAP NOW!",
+      "tapCircle": "Tap the circle:",
+      "colorAzul": "BLUE",
+      "colorVerde": "GREEN",
+      "colorLaranja": "ORANGE",
+      "colorRoxo": "PURPLE",
+      "transComplete": "{{mode}} done.",
+      "transNext": "Next: {{mode}}",
+      "yourBaseline": "YOUR BASELINE",
+      "resultSub": "Starting point registered. Now comes the good part — your journey.",
+      "viewJourney": "VIEW MY JOURNEY",
+      "journeyTitle": "YOUR JOURNEY",
+      "headingTo": "Heading to {{name}}",
+      "startPlaying": "START PLAYING"
+    }
+  },
+
+  "result": {
+    "yourScore": "YOUR SCORE",
+    "roundList": "ROUNDS",
+    "round": "Round",
+    "hit": "✓ Hit",
+    "miss": "✗ Miss",
+    "timeout": "⏱ Timeout",
+    "falseStart": "False start",
+    "playAgain": "↻ Play again",
+    "backToHome": "BACK",
+    "newRecord": "NEW RECORD",
+    "totalSessions": "Total sessions",
+    "best": "Best",
+    "accuracy": "ACCURACY",
+    "inhibitionControl": "Inhibitory control: {{pct}}% · {{errors}} error(s)",
+    "earlyTaps": "✗ Early taps: {{count}} × +150ms",
+    "missErrors": "✗ Errors: {{count}} (+200ms avg)",
+    "hits": "HITS",
+    "bestHit": "BEST HIT",
+    "errors": "ERRORS",
+    "allRounds": "ALL ROUNDS",
+    "playAgainBtn": "PLAY AGAIN",
+    "mainMenu": "MAIN MENU",
+    "discarded": "DISCARDED",
+    "discardedNote": "The 2 worst were discarded from the final score",
+    "alvoPenaltyNote": "Wrong taps add +150 ms to the real time",
+    "youMarker": "YOU",
+    "youBadge": "◄ YOU",
+    "scaleTitle": "REFERENCE SCALE",
+    "scaleTitleSeq": "REFERENCE SCALE — SEQUENCE",
+    "scaleTitleAlvo": "CHOICE RT SCALE — TARGET MODE",
+    "scaleTitleRadar": "REFERENCE SCALE — RADAR",
+    "methodPartida": "Score = average of the best 5 out of 7 attempts.",
+    "methodRadar": "Score = average RT of rounds with a hit.",
+    "penalizedMs": "ms (penalized)",
+    "avgHitsMs": "ms (average of hits)",
+    "avgGoMs": "Clean Go avg: {{ms}} ms",
+    "f1Sub": "F1 drivers react in 150–250 ms",
+    "choiceRtSub": "Choice RT · Color identification under pressure",
+    "yourJourney": "YOUR JOURNEY",
+    "yourBestLabel": "Your best: ",
+    "journeyComplete": "Journey complete!",
+    "nextGoal": "Next goal: {{ms}} ms",
+    "nextGoalDelta": "Next goal: {{ms}} ms — {{delta}} ms to go",
+    "consistencyTitle": "Your consistency is the next level",
+    "consistencyLine1": "Best round: {{best}}ms · Worst round: {{worst}}ms · Variation: {{var}}ms",
+    "consistencyLine2": "Your brain already knows how to react fast — now train to do it every time",
+    "consistencyTarget": "Try to keep all rounds under {{target}}ms",
+    "choiceBenchElite": "You are at high-performance athlete level!",
+    "choiceBenchVeryGood": "{{delta}} ms from ELITE level (high-performance athlete)",
+    "choiceBenchGood": "{{delta}} ms from VERY GOOD level",
+    "choiceBenchLower": "Keep training — next level: {{next}}",
+    "timeline": "TIMELINE",
+    "spamWarning": "We detected very fast taps in this session — result not saved.",
+    "radarTimeouts": "⏱ {{count}} timeout(s) (no tap in time)",
+    "fatigue": {
+      "significant": "SIGNIFICANT FATIGUE",
+      "light": "LIGHT FATIGUE",
+      "improving": "PROGRESSIVE IMPROVEMENT",
+      "stable": "STABLE",
+      "desc": "Fatigue index: RT variation between the 1st and 2nd half of the session."
+    },
+    "seqGoHits": "GO HITS",
+    "seqInhibition": "INHIBITION",
+    "seqSummaryHits": "✓ Hits (correct Go)",
+    "seqSummaryMisses": "✗ Misses (ignored Go)",
+    "seqSummaryErrors": "Inhibition errors (NoGo tapped)",
+    "seqSummaryInhibited": "Correct inhibitions",
+    "partida": {
+      "stat1": "TOP 5",
+      "stat2": "BEST",
+      "stat3": "WORST 2"
+    },
+    "alvo": {
+      "stat1": "ACCURACY",
+      "stat2": "BEST",
+      "stat3": "TIMEOUTS"
+    },
+    "sequencia": {
+      "stat1": "HITS",
+      "stat2": "AVG RT",
+      "stat3": "FATIGUE",
+      "stat4": "INHIBITION ERRORS",
+      "noGoAccuracy": "INHIBITORY CONTROL"
+    },
+    "radar": {
+      "stat1": "ACCURACY",
+      "stat2": "BEST HIT",
+      "stat3": "HITS"
+    }
+  },
+
+  "history": {
+    "title": "EVOLUTION",
+    "pageTitle": "HISTORY",
+    "evolutionByMode": "EVOLUTION BY MODE",
+    "filters": {
+      "all": "All",
+      "partida": "Reaction",
+      "alvo": "Target",
+      "sequencia": "Sequence",
+      "radar": "Radar"
+    },
+    "period": {
+      "7d": "7d",
+      "30d": "30d",
+      "all": "All"
+    },
+    "bestTime": "BEST REFLEX TIME",
+    "mostPlayed": "MOST PLAYED",
+    "streak": "STREAK",
+    "currentStreak": "CURRENT STREAK",
+    "total": "TOTAL",
+    "sessions": "sessions",
+    "noSessions": "No sessions recorded",
+    "sessionsInDays": "{{s}} sessions in {{d}} days",
+    "noSessionsShort": "no sessions",
+    "streakSince": "since {{date}}",
+    "streakSinceToday": "since today",
+    "modeSessionCount": "{{count}} of {{total}} sessions",
+    "trend": {
+      "improving": "↑ improving",
+      "stable": "→ stable",
+      "declining": "↓ declining"
+    },
+    "stats": {
+      "bestEver": "All-time best",
+      "firstVsCurrent": "First vs. current",
+      "totalSessions": "Total sessions",
+      "lastSession": "Last session",
+      "bestDayOfWeek": "Best day of week",
+      "mostPlayedDay": "Most played day",
+      "avgLabel": "avg",
+      "bestLabel": "best",
+      "absLabel": "best single",
+      "avgBestLabel": "best average",
+      "avgRtBest": "Avg RT (best session)",
+      "footnote": "Best reflex = fastest individual round/hit. Avg RT = best session score (with penalties when applicable)."
+    },
+    "achievements": "ACHIEVEMENTS"
+  },
+
+  "dates": {
+    "today": "today",
+    "yesterday": "yesterday",
+    "daysAgo": "{{count}} days ago",
+    "since": "since"
+  },
+
+  "evolution": {
+    "eyebrow": "ARCHETYPE EVOLUTION",
+    "xp": "+{{xp}} XP",
+    "next": "Next",
+    "maxReached": "Max level reached",
+    "continue": "Keep training"
+  },
+
+  "profile": {
+    "title": "PROFILE",
+    "editProfile": "EDIT PROFILE",
+    "name": "NAME",
+    "namePlaceholder": "Your name",
+    "avatar": "AVATAR",
+    "avatarCount": "{{count}}/{{total}} unlocked",
+    "save": "SAVE",
+    "close": "CLOSE",
+    "archetype": "CURRENT ARCHETYPE",
+    "nextShort": "next",
+    "evolution": "EVOLUTION",
+    "nextArchetype": "TO BECOME",
+    "nextArchetypeSection": "NEXT ARCHETYPE",
+    "destination": "Your destination:",
+    "destinationLabel": "Your destination: {{name}}",
+    "longTermGoals": "LONG-TERM GOALS",
+    "nextMilestone": "NEXT MILESTONE",
+    "nextAchievement": "NEXT ACHIEVEMENT",
+    "goalMs": "goal {{ms}} ms",
+    "alreadyReached": "✓ Already reached!",
+    "remaining": "{{delta}} ms to go",
+    "criteriaDone": "{{done}}/{{total}} criteria completed",
+    "completed": "✓ COMPLETED",
+    "completedCount_one": "{{count}} completed",
+    "completedCount_other": "{{count}} completed",
+    "msReached": "{{ms}} ms reached",
+    "beatNextMilestone": "Beat next milestone: {{ms}} ms",
+    "byMode": "BY MODE",
+    "lastSessions": "LAST SESSIONS",
+    "lastSessionsN": "LAST {{n}} SESSIONS",
+    "achievementsSummary": "ACHIEVEMENTS",
+    "seeAll": "See all →",
+    "emptyProfile": "Complete your first session to see your profile evolve!",
+    "dangerZone": "DANGER ZONE",
+    "language": "LANGUAGE",
+    "clearData": "Clear all data",
+    "clearDataConfirmTitle": "Clear all data?",
+    "clearDataConfirmMessage": "All sessions, achievements and settings will be deleted. This action cannot be undone.",
+    "clearDataBtn": "Clear everything",
+    "clearDataStep1Title": "Erase all progress?",
+    "clearDataStep1Message": "This will remove all sessions, achievements and archetypes. This action cannot be undone.",
+    "clearDataStep1Confirm": "Erase everything",
+    "clearDataStep2Title": "Are you sure? There's no recovery.",
+    "clearDataStep2Cancel": "No, go back",
+    "clearDataStep2Confirm": "Yes, erase",
+    "milestone": "MILESTONE",
+    "achievement": "ACHIEVEMENT",
+    "archetypeLabel": "ARCHETYPE",
+    "bestReflexTime": "Best Reflex Time",
+    "accuracy": "Accuracy",
+    "fatigue": "fatigue",
+    "modeCount": "{{count}} sess.",
+    "modeDesc": {
+      "partida": "Simple visual reaction",
+      "alvo": "Speed + accuracy",
+      "sequencia": "Inhibitory control",
+      "radar": "Visual location"
+    },
+    "identity": {
+      "playingSince": "Playing since {{month}}",
+      "noSessions": "No sessions yet"
+    },
+    "chart": {
+      "improving": "↓ Improved {{delta}} ms in the last {{n}} sessions",
+      "declining": "↑ +{{delta}} ms — keep training to regain the pace",
+      "consistent": "Perfect consistency in recent sessions"
+    }
+  },
+
+  "achievements": {
+    "title": "ACHIEVEMENTS",
+    "unlocked": "UNLOCKED",
+    "locked": "LOCKED",
+    "secret": "SECRET",
+    "secretCount": "{{count}} exist",
+    "discovered": "✓ DISCOVERED",
+    "allUnlocked": "✓ All achieved",
+    "progress": "{{current}}/{{total}}",
+    "unlockedFraction": "{{count}}/{{total}} unlocked",
+    "secretSummary_one": "{{count}} discovered / {{total}} exist",
+    "secretSummary_other": "{{count}} discovered / {{total}} exist",
+    "unlockedOn": "✓ Unlocked on {{date}}",
+    "unlockedNone": "✓ Unlocked",
+    "secretHint": "Secret achievement — discover while playing",
+    "lockedState": "Locked",
+    "secretEmpty": "Play and discover — some achievements only appear when you least expect it",
+    "rare": "RARE",
+    "epic": "EPIC",
+    "legendary": "LEGENDARY",
+    "common": "COMMON",
+    "medium": "MEDIUM",
+    "hard": "HARD",
+    "secret_badge": "SECRET",
+    "secretRevealed": "SECRET REVEALED!",
+    "achievementUnlocked": "ACHIEVEMENT UNLOCKED!",
+    "tapToContinue": "Tap to continue",
+    "equipTitle": "Equip as Title",
+    "removeTitle": "Remove Title",
+    "titlePreview": "✦ {{name}} ✦ will appear below your name",
+    "titleSubtitleHint": "This title will appear below your name",
+    "titleEquipped": "Title equipped!",
+    "titleRemoved": "Title removed",
+    "rarity": {
+      "comum":    "COMMON",
+      "medio":    "MEDIUM",
+      "dificil":  "HARD",
+      "raro":     "RARE",
+      "epico":    "EPIC",
+      "lendario": "LEGENDARY"
+    }
+  },
+
+  "journey": {
+    "title": "JOURNEY",
+    "myJourney": "MY JOURNEY",
+    "missions": "MISSIONS",
+    "dailyGoal": "TODAY'S GOAL",
+    "weeklyMission": "WEEKLY MISSION",
+    "nextMilestone": "Next milestone: {{label}} · {{ms}} ms",
+    "currentBest": "Your current best: {{ms}} ms",
+    "startTriage": "Take the baseline test",
+    "triageCta": "Complete baseline to see your journey",
+    "ctaTitle": "Set your goal",
+    "ctaDesc": "Choose an ambition and see your personalized journey across all screens.",
+    "ctaBtn": "SET MY GOAL",
+    "changeGoal": "change goal",
+    "yourGoalLabel": "YOUR GOAL",
+    "metaDistance": "{{delta}} ms away",
+    "metaReached": "Goal reached",
+    "today": "Today",
+    "thisWeek": "This week",
+    "loreTitle": "Why train with intervals?",
+    "loreBody": "Neuroplasticity research shows that ~48h intervals between training maximize motor learning consolidation. More than that has marginal returns.",
+    "summaryBrain": "Baseline: {{base}} ms · {{beaten}} of {{total}} milestones reached",
+    "summaryGoal": "Baseline: {{base}} ms · Goal: {{goal}} ms · {{beaten}} of {{total}} milestones cleared",
+    "nextLabel": "Next: {{label}}",
+    "reached": "✓ reached",
+    "remaining": "{{delta}} ms to go",
+    "complete": "JOURNEY COMPLETE",
+    "allBeaten": "All milestones for {{name}} cleared!",
+    "startNextChallenge": "START NEXT CHALLENGE",
+    "goalMs": "Goal: {{ms}} ms",
+    "starting": "Starting…",
+    "peakTitle": "You've reached the highest level!",
+    "peakDesc": "Reaction speed of the top 1% fastest in the world.\nNo challenges remaining.",
+    "dailyProgress": "{{done}}/{{total}} completed",
+    "weeklyProgress": "{{done}}/{{total}} completed",
+    "emptyMissions": "Complete your first session to unlock missions.",
+    "baselineLabel": "Starting point: {{ms}} ms",
+    "baselineLabelDefault": "Baseline: {{ms}} ms",
+    "youAreHere": "You are here",
+    "yourBestPill": "Your best: {{ms}} ms",
+    "nextTarget": "YOUR NEXT TARGET",
+    "allMilestonesBeaten": "✓ All milestones beaten!"
+  },
+
+  "nav": {
+    "home": "Home",
+    "global": "Global",
+    "missoes": "Missions",
+    "perfil": "Profile"
+  },
+
+  "missoes": {
+    "title": "MISSIONS",
+    "dailyRewardHint": "Each completed mission grants +1 energy",
+    "weeklyRewardHint": "Each completed mission grants a Golden Ticket",
+    "energyReward": "+1 ENERGY",
+    "energyEarned": "ENERGY EARNED",
+    "ticketReward": "GOLDEN TICKET",
+    "ticketEarned": "TICKET EARNED"
+  },
+
+  "tutorial": {
+    "dontShowAgain": "don't show again",
+    "partida": {
+      "line1": "Wait for the circle to light up.",
+      "line2": "Tap as fast as you can."
+    },
+    "alvo": {
+      "prompt": "TAP THE HEXAGON",
+      "text": "Memorize the shapes. When the shape appears, tap immediately."
+    },
+    "sequencia": {
+      "go": "GO — tap fast",
+      "nogo": "NO-GO — don't tap",
+      "text": "Tap only the green signals. Ignore the red ones. 25% are traps."
+    },
+    "radar": {
+      "text": "Tap the circle that lights up. 5 possible positions."
+    }
+  },
+
+  "onboarding": {
+    "skip": "skip intro",
+    "next": "Next →",
+    "start": "LET'S GO →",
+    "t1": {
+      "title": "REFLEXO",
+      "tagline": "Reaction speed,\nmeasured with science.",
+      "body": "Discover where you stand. Evolve with real data."
+    },
+    "t2": {
+      "title": "Your brain is trainable.",
+      "stat1Label": "improvement in 4 weeks",
+      "stat1Val": "10–15%",
+      "stat2Label": "minutes per day",
+      "stat2Val": "<5min",
+      "stat3Label": "scientific basis",
+      "stat3Val": "neuroplast."
+    },
+    "t3": {
+      "title": "A goal that's yours.",
+      "body": "After your first session, we run a quick baseline. You choose where you want to go.",
+      "box": "We'll show you the way."
+    },
+    "t4": {
+      "title": "4 ways to train.",
+      "subtitle": "Each mode trains a different skill.",
+      "partida": "REACTION",
+      "partida_desc": "Simple reaction · 7 attempts",
+      "alvo": "TARGET",
+      "alvo_desc": "Speed + accuracy · 10 rounds",
+      "sequencia": "SEQUENCE",
+      "sequencia_desc": "Inhibitory control · Go/NoGo",
+      "radar": "RADAR",
+      "radar_desc": "Visual location · 15 rounds"
+    },
+    "t5": {
+      "kicker": "You start as",
+      "eyebrow": "Starting archetype",
+      "name": "The Explorer",
+      "desc": "Discovering your reflex profile. Each session reveals more about how your brain responds.",
+      "footer": "Evolve into The Marksman, The Sprinter and beyond — each archetype is an earned identity."
+    },
+    "ob": {
+      "progress": "{{cur}} of {{total}}",
+      "tooEarly": "Too early!",
+      "ob1": {
+        "kicker": "REACTION MODE · QUICK TEST",
+        "tapWhenGreen": "Tap when it turns green",
+        "sub": "3 attempts · no pressure",
+        "wait": "wait…",
+        "tapNow": "TAP!",
+        "startBtn": "START TEST"
+      },
+      "ob2": {
+        "kicker": "YOUR FIRST REFLEX",
+        "unit": "milliseconds",
+        "ctxElite": "Elite reflex",
+        "ctxFast": "Well above average",
+        "ctxAvg": "Around the human average",
+        "ctxNear": "Near the human average",
+        "ctxSlow": "Plenty of room to improve",
+        "ctxSub": "human average: 250–300 ms",
+        "loreTitle": "WHAT THIS MEANS",
+        "lore": "Your prefrontal cortex processed the stimulus in {{rt}} ms. With training, that number will drop.",
+        "cta": "See my archetype →"
+      },
+      "ob3": {
+        "kicker": "Based on your result",
+        "eyebrow": "Your archetype",
+        "desc": "{{rt}} ms · discovering your potential. Train 3x a week to evolve.",
+        "nextLabel": "NEXT",
+        "cta": "Set my goal →"
+      },
+      "ob4": {
+        "cta": "Enter Reflexo →"
+      }
+    }
+  },
+
+  "energy": {
+    "depleted": "ENERGY DEPLETED",
+    "resetLabel": "Energy resets at midnight",
+    "resetSub": "Wait or recharge now",
+    "rechargeNow": "RECHARGE NOW",
+    "perModeDesc": "{{energies}} energies · all modes",
+    "once": "one-time",
+    "premium": "PREMIUM",
+    "premiumDesc": "Unlimited energy · No ads · Exclusive badge",
+    "best": "BEST",
+    "testModeFooter": "⚙ Test mode active — simulated purchases, no charges",
+    "testModeTitle": "⚡ Test mode",
+    "testModeEnergy": "{{energies}} energies added to all modes (no real charge).",
+    "testModeSubscription": "Subscription \"{{label}}\" simulated — unlimited energy activated (no real charge).",
+    "comingSoonPackage": "Purchase of \"{{label}}\" will be processed via Google Play.",
+    "comingSoonSubscription": "Subscription \"{{label}}\" ({{price}}) via Google Play."
+  },
+
+  "levels": {
+    "impossible":   { "label": "IMPOSSIBLE",    "desc": "Below any physiological human limit" },
+    "superhuman":   { "label": "SUPERHUMAN",    "desc": "Below the human visual reaction limit" },
+    "extremeElite": { "label": "EXTREME ELITE", "desc": "Olympic sprinters in auditory start" },
+    "elite":        { "label": "ELITE",         "desc": "Top F1 drivers · Top 5% of population" },
+    "veryGood":     { "label": "VERY GOOD",     "desc": "Professional athletes · ATP tennis players" },
+    "good":         { "label": "GOOD",          "desc": "Functional reflex, foundation to build on" },
+    "average":      { "label": "AVERAGE",       "desc": "Adult population baseline" },
+    "building":     { "label": "BUILDING",      "desc": "Every training starts here" },
+    "warmingUp":    { "label": "WARMING UP",    "desc": "The pace will pick up" },
+    "starting":     { "label": "STARTING OUT",  "desc": "Each session already changes this" }
+  },
+
+  "f1": {
+    "above": "Incredible — you are ABOVE the F1 driver level!",
+    "top": "You are at the level of the best F1 drivers!",
+    "within": "You are within the F1 driver range (150–250 ms).",
+    "gap": "You are {{gap}} ms from the F1 driver level (150–250 ms)."
+  },
+
+  "science": {
+    "title": "SCIENCE",
+    "doseKicker": "THE RIGHT DOSE",
+    "recKicker": "YOUR RECOMMENDATION",
+    "headline1": "A little, but every day.",
+    "recBadge": "RECOMMENDATION",
+    "sessions": "SESSIONS",
+    "minutes": "MINUTES",
+    "freqContext": "= {{total}} weekly minutes · less than {{daily}} min/day",
+    "freqScheduleHeader": "IDEAL TRAINING FREQUENCY",
+    "freqScheduleDayMon": "MON",
+    "freqScheduleDayWed": "WED",
+    "freqScheduleDayFri": "FRI",
+    "freqScheduleNote": "3 short sessions/week outperform 1 long session for motor retention.",
+    "taglineDefault": "Enough to keep the circuit active. More yields diminishing returns. Less fades fast.",
+    "taglineElite": "you are competing — consistency is everything",
+    "taglineBrain": "enough to keep the circuit active for decades",
+    "taglinePopulational": "reaction is a skill, and skills are trained",
+    "perspKicker": "TO PUT IT IN PERSPECTIVE",
+    "perspHeadline": "Who reacts faster than you.",
+    "benchGroupPartida": "REACTION & SEQUENCE — REFERENCE SCALE",
+    "benchGroupAlvo": "TARGET MODE — REFERENCE SCALE",
+    "benchGroupSub": "Target mode requires identifying the correct color before reacting — that's why the reference times are higher.",
+    "goalBadge": "← your goal",
+    "youAreHere": "← you are here",
+    "lastSession": "Last session: {{ms}} ms · {{level}}",
+    "howKicker": "HOW IT WORKS",
+    "howHeadline": "Training reaction is training the brain.",
+    "editorial1": "When you see a signal and respond in under **300 ms**, your brain isn't thinking — it's **executing**. It's a **cognitive reflex**: visual perception, decision, and motor command fired in parallel.",
+    "editorial2": "This **circuit is trainable**. And the beautiful side effect is that the same system that speeds up your game keeps your brain **sharp for decades**.",
+    "whyKicker": "WHY TRAIN REACTION",
+    "mechKicker": "3 NEURAL MECHANISMS",
+    "closingBody": "We're not promising genius or eternal youth. But three minutes three times a week engages one of the most time-sensitive systems in your body.",
+    "closingEmphasis": "That's worth it.",
+    "disclaimer": "Results reflect simple visual reaction — different from complex decisions. Factors like lighting, sleep and caffeine affect the outcome.",
+    "sourcesTitle": "SOURCES",
+    "mechs": [
+      {
+        "num": "01",
+        "title": "Processing Speed",
+        "desc": "The time between stimulus and motor response reflects neural conduction speed — trainable with repeated practice."
+      },
+      {
+        "num": "02",
+        "title": "Sustained Attention",
+        "desc": "Maintaining focus for extended periods without lapse. Sequence mode measures this directly via fatigue index."
+      },
+      {
+        "num": "03",
+        "title": "Inhibitory Control",
+        "desc": "Suppressing automatic responses. The Go/NoGo paradigm is the clinical gold standard — used in ADHD diagnosis."
+      }
+    ],
+    "stats": [
+      { "stat": "25%", "desc": "reduction in dementia risk with cognitive training", "fonte": "ACTIVE Study · NIH" },
+      { "stat": "30%", "desc": "improvement in fine motor coordination after 6 weeks of reaction training", "fonte": "Willingham et al., 2002" },
+      { "stat": "40%", "desc": "improvement in sustained attention after 8 weeks of practice", "fonte": "Journal of Cognitive Enhancement" },
+      { "stat": "300ms", "desc": "threshold where the brain stops thinking and starts executing automatically", "fonte": "Neuroscience of Action" },
+      { "stat": "10%", "desc": "decline per decade in processing speed without active training", "fonte": "Salthouse, 2004" },
+      { "stat": "2×", "desc": "lower traffic accident risk in people with trained reaction", "fonte": "AAA Foundation, 2015" }
+    ],
+    "benchmarks": [
+      { "name": "Elite visual anticipation", "level": "SUPER-HUMAN" },
+      { "name": "Olympic sprinter (auditory)", "level": "EXTREME ELITE" },
+      { "name": "Top F1 driver", "level": "ELITE" },
+      { "name": "Olympic sprinter (visual)", "level": "ELITE" },
+      { "name": "Olympic boxer", "level": "VERY GOOD" },
+      { "name": "ATP tennis player", "level": "VERY GOOD" },
+      { "name": "Healthy adult (25–45)", "level": "GOOD" }
+    ],
+    "choiceBenchmarks": [
+      { "name": "Racket sport athlete", "level": "ELITE", "levelKey": "elite" },
+      { "name": "Young healthy adult (25–40)", "level": "VERY GOOD", "levelKey": "veryGood" },
+      { "name": "Middle-aged adult (40–55)", "level": "GOOD", "levelKey": "good" },
+      { "name": "Starting the journey", "level": "BELOW", "levelKey": "building" },
+      { "name": "Calibrating the rhythm", "level": "SLOW", "levelKey": "warmingUp" }
+    ]
+  }
+}

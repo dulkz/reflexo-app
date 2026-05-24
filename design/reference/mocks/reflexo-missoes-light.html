@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Missões Dark vs Light</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #E8EAF0;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 48px 24px;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .dark {
+    --bg0: #0D0F14; --bg1: #161B24; --bg2: #1E2533; --bg3: #252D3E;
+    --green: #4AFFA3; --green-dim: rgba(74,255,163,0.10); --green-border: rgba(74,255,163,0.22);
+    --purple: #7B6EF6; --purple-dim: rgba(123,110,246,0.12); --purple-border: rgba(123,110,246,0.25);
+    --amber: #FFB547; --amber-dim: rgba(255,181,71,0.11); --amber-border: rgba(255,181,71,0.22);
+    --text0: #EDF0F7; --text1: #8892A4; --text2: #4A5268;
+    --border: rgba(255,255,255,0.06); --border-mid: rgba(255,255,255,0.10);
+    --notch: #060709; --shell: rgba(255,255,255,0.08);
+    --tabbar: #161B24;
+  }
+
+  .light {
+    --bg0: #F5F7FA; --bg1: #FFFFFF; --bg2: #ECEEF5; --bg3: #E0E3EE;
+    --green: #0A8A4F; --green-dim: rgba(10,138,79,0.08); --green-border: rgba(10,138,79,0.20);
+    --purple: #5B4FD4; --purple-dim: rgba(91,79,212,0.08); --purple-border: rgba(91,79,212,0.18);
+    --amber: #B56A00; --amber-dim: rgba(181,106,0,0.08); --amber-border: rgba(181,106,0,0.18);
+    --text0: #0E1117; --text1: #4A5268; --text2: #8892A4;
+    --border: rgba(0,0,0,0.07); --border-mid: rgba(0,0,0,0.12);
+    --notch: #D0D4DF; --shell: rgba(0,0,0,0.10);
+    --tabbar: #FFFFFF;
+  }
+
+  .col-label {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .phone {
+    width: 355px;
+    background: var(--bg0);
+    border-radius: 48px;
+    overflow: hidden;
+    border: 1px solid var(--shell);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.25), 0 0 0 8px rgba(0,0,0,0.03);
+  }
+
+  .notch { width: 110px; height: 26px; background: var(--notch); border-radius: 0 0 18px 18px; margin: 0 auto; }
+
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 24px 4px; font-size: 11px; color: var(--text2);
+    font-family: 'Space Mono', monospace; margin-top: -26px;
+  }
+
+  .header { padding: 14px 20px 0; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
+  .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: var(--text0); letter-spacing: 0.5px; }
+  .week-label { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--text2); letter-spacing: 0.08em; text-transform: uppercase; text-align: right; margin-bottom: 2px; margin-top: 6px; }
+  .week-prog { font-size: 12px; font-weight: 600; color: var(--green); font-family: 'Space Mono', monospace; text-align: right; }
+
+  .scroll { padding: 12px 20px 0; }
+
+  .meta-banner {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+  }
+  .meta-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--purple-dim); border: 1px solid var(--purple-border); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .meta-label { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; margin-bottom: 2px; }
+  .meta-value { font-size: 13px; font-weight: 600; color: var(--purple); }
+  .meta-sub { font-size: 11px; color: var(--text1); margin-top: 1px; }
+  .meta-edit { font-size: 11px; color: var(--text2); padding: 4px 8px; border: 0.5px solid var(--border-mid); border-radius: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+
+  .sec-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .sec-title { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.12em; color: var(--text2); text-transform: uppercase; }
+
+  .missao { background: var(--bg1); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; overflow: hidden; }
+  .missao-main { display: flex; align-items: center; gap: 11px; padding: 13px 14px; }
+  .missao-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .missao-title { font-size: 13px; font-weight: 600; color: var(--text0); margin-bottom: 1px; }
+  .missao-sub { font-size: 11px; color: var(--text1); }
+  .missao-prog { font-size: 12px; font-family: 'Space Mono', monospace; color: var(--text1); }
+
+  .prog-bar-wrap { height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .prog-bar-fill { height: 3px; border-radius: 2px; }
+
+  .missao-cta { border-top: 1px solid var(--border); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .missao-cta-label { font-size: 11px; color: var(--text1); }
+  .missao-cta-btn { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 7px; cursor: pointer; }
+
+  .missao.done { opacity: 0.55; }
+  .missao.done .missao-title { text-decoration: line-through; color: var(--text1); }
+  .check-circle { width: 20px; height: 20px; border-radius: 50%; background: var(--green-dim); border: 1.5px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--green); font-weight: 700; flex-shrink: 0; }
+
+  .week-header { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 11px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+  .week-title-txt { font-size: 13px; font-weight: 600; color: var(--text0); }
+  .week-dots { display: flex; gap: 4px; }
+  .wdot { width: 7px; height: 7px; border-radius: 50%; }
+
+  .lore { background: var(--purple-dim); border: 1px solid var(--purple-border); border-radius: 11px; padding: 11px 13px; margin-bottom: 14px; display: flex; gap: 9px; align-items: flex-start; }
+  .lore-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--purple); flex-shrink: 0; margin-top: 5px; }
+  .lore-text { font-size: 11px; color: var(--text1); line-height: 1.55; }
+  .lore-strong { color: var(--purple); font-weight: 500; }
+
+  .week-block { margin-bottom: 14px; }
+
+  .tabbar { background: var(--tabbar); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 10px 0 26px; margin-top: 14px; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .tab svg { width: 21px; height: 21px; stroke: var(--text2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.active svg { stroke: var(--green); }
+  .tab-lbl { font-size: 10px; color: var(--text2); font-weight: 500; }
+  .tab.active .tab-lbl { color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- DARK -->
+<div>
+  <p class="col-label" style="color:#4AFFA3;">Dark mode</p>
+  <div class="phone dark">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+    <div class="header">
+      <div class="page-title">Missões</div>
+      <div><div class="week-label">Esta semana</div><div class="week-prog">1 / 3 completas</div></div>
+    </div>
+    <div class="scroll">
+
+      <div class="meta-banner">
+        <div class="meta-icon">🎯</div>
+        <div style="flex:1;">
+          <div class="meta-label">Sua meta</div>
+          <div class="meta-value">Chegar a 220 ms</div>
+          <div class="meta-sub">Modo Partida · 56 ms de distância</div>
+        </div>
+        <div class="meta-edit">editar</div>
+      </div>
+
+      <div class="week-block">
+        <div class="sec-hd"><span class="sec-title">Hoje</span><span style="font-size:11px;font-family:'Space Mono',monospace;color:var(--text2);">0 / 2</span></div>
+        <div class="missao">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--purple-dim);">⏸</div>
+            <div style="flex:1;">
+              <div class="missao-title">Jogue Modo Sequência</div>
+              <div class="missao-sub">Controle inibitório · 20 sinais</div>
+            </div>
+            <div class="missao-prog">0 / 1</div>
+          </div>
+          <div class="missao-cta">
+            <span class="missao-cta-label">Não jogado ainda hoje</span>
+            <span class="missao-cta-btn" style="background:var(--purple-dim);color:var(--purple);">Jogar agora →</span>
+          </div>
+        </div>
+        <div class="missao">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--amber-dim);">📡</div>
+            <div style="flex:1;">
+              <div class="missao-title">Jogue Modo Radar</div>
+              <div class="missao-sub">Localização visual · 8 rodadas</div>
+            </div>
+            <div class="missao-prog">0 / 1</div>
+          </div>
+          <div class="missao-cta">
+            <span class="missao-cta-label">Não jogado ainda hoje</span>
+            <span class="missao-cta-btn" style="background:var(--amber-dim);color:var(--amber);">Jogar agora →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="week-block">
+        <div class="sec-hd"><span class="sec-title">Semana</span><span style="font-size:11px;font-family:'Space Mono',monospace;color:var(--green);">1 / 3</span></div>
+        <div class="week-header">
+          <div class="week-title-txt">Progresso semanal</div>
+          <div class="week-dots">
+            <div class="wdot" style="background:var(--green);"></div>
+            <div class="wdot" style="background:var(--bg3);border:1px solid var(--border-mid);"></div>
+            <div class="wdot" style="background:var(--bg3);border:1px solid var(--border-mid);"></div>
+          </div>
+        </div>
+        <div class="missao done">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--green-dim);">🎯</div>
+            <div style="flex:1;"><div class="missao-title">Jogue 5 sessões de Alvo</div><div class="missao-sub">Concluído segunda-feira</div></div>
+            <div class="check-circle">✓</div>
+          </div>
+        </div>
+        <div class="missao">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--green-dim);">⚡</div>
+            <div style="flex:1;"><div class="missao-title">Jogue os 4 modos esta semana</div><div class="missao-sub">Partida e Alvo concluídos</div></div>
+            <div class="missao-prog">2 / 4</div>
+          </div>
+          <div style="padding:0 14px 10px;"><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:50%;background:var(--green);"></div></div></div>
+          <div class="missao-cta">
+            <span class="missao-cta-label">Faltam Sequência e Radar</span>
+            <span class="missao-cta-btn" style="background:var(--green-dim);color:var(--green);">Continuar →</span>
+          </div>
+        </div>
+        <div class="missao">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--amber-dim);">🔥</div>
+            <div style="flex:1;"><div class="missao-title">Jogue 3 dias seguidos</div><div class="missao-sub">Consistência de treino</div></div>
+            <div class="missao-prog">1 / 3</div>
+          </div>
+          <div style="padding:0 14px 10px;"><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:33%;background:var(--amber);"></div></div></div>
+          <div class="missao-cta">
+            <span class="missao-cta-label">Treine hoje para manter a série</span>
+            <span class="missao-cta-btn" style="background:var(--amber-dim);color:var(--amber);">Treinar →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lore">
+        <div class="lore-dot"></div>
+        <div class="lore-text"><span class="lore-strong">Por que 3 sessões por semana?</span> Intervalos de 48h entre treinos maximizam a consolidação do aprendizado motor. Mais que isso tem retorno marginal.</div>
+      </div>
+
+    </div>
+    <div class="tabbar">
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tab-lbl">Home</span></div>
+      <div class="tab active"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tab-lbl">Missões</span></div>
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="tab-lbl">Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHT -->
+<div>
+  <p class="col-label" style="color:#0A8A4F;">Light mode</p>
+  <div class="phone light">
+    <div class="notch"></div>
+    <div class="statusbar"><span>15:53</span><span>48%</span></div>
+    <div class="header">
+      <div class="page-title">Missões</div>
+      <div><div class="week-label">Esta semana</div><div class="week-prog">1 / 3 completas</div></div>
+    </div>
+    <div class="scroll">
+
+      <div class="meta-banner">
+        <div class="meta-icon">🎯</div>
+        <div style="flex:1;">
+          <div class="meta-label">Sua meta</div>
+          <div class="meta-value">Chegar a 220 ms</div>
+          <div class="meta-sub">Modo Partida · 56 ms de distância</div>
+        </div>
+        <div class="meta-edit">editar</div>
+      </div>
+
+      <div class="week-block">
+        <div class="sec-hd"><span class="sec-title">Hoje</span><span style="font-size:11px;font-family:'Space Mono',monospace;color:var(--text2);">0 / 2</span></div>
+        <div class="missao">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--purple-dim);">⏸</div>
+            <div style="flex:1;">
+              <div class="missao-title">Jogue Modo Sequência</div>
+              <div class="missao-sub">Controle inibitório · 20 sinais</div>
+            </div>
+            <div class="missao-prog">0 / 1</div>
+          </div>
+          <div class="missao-cta">
+            <span class="missao-cta-label">Não jogado ainda hoje</span>
+            <span class="missao-cta-btn" style="background:var(--purple-dim);color:var(--purple);">Jogar agora →</span>
+          </div>
+        </div>
+        <div class="missao">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--amber-dim);">📡</div>
+            <div style="flex:1;">
+              <div class="missao-title">Jogue Modo Radar</div>
+              <div class="missao-sub">Localização visual · 8 rodadas</div>
+            </div>
+            <div class="missao-prog">0 / 1</div>
+          </div>
+          <div class="missao-cta">
+            <span class="missao-cta-label">Não jogado ainda hoje</span>
+            <span class="missao-cta-btn" style="background:var(--amber-dim);color:var(--amber);">Jogar agora →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="week-block">
+        <div class="sec-hd"><span class="sec-title">Semana</span><span style="font-size:11px;font-family:'Space Mono',monospace;color:var(--green);">1 / 3</span></div>
+        <div class="week-header">
+          <div class="week-title-txt">Progresso semanal</div>
+          <div class="week-dots">
+            <div class="wdot" style="background:var(--green);"></div>
+            <div class="wdot" style="background:var(--bg3);border:1px solid var(--border-mid);"></div>
+            <div class="wdot" style="background:var(--bg3);border:1px solid var(--border-mid);"></div>
+          </div>
+        </div>
+        <div class="missao done">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--green-dim);">🎯</div>
+            <div style="flex:1;"><div class="missao-title">Jogue 5 sessões de Alvo</div><div class="missao-sub">Concluído segunda-feira</div></div>
+            <div class="check-circle">✓</div>
+          </div>
+        </div>
+        <div class="missao">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--green-dim);">⚡</div>
+            <div style="flex:1;"><div class="missao-title">Jogue os 4 modos esta semana</div><div class="missao-sub">Partida e Alvo concluídos</div></div>
+            <div class="missao-prog">2 / 4</div>
+          </div>
+          <div style="padding:0 14px 10px;"><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:50%;background:var(--green);"></div></div></div>
+          <div class="missao-cta">
+            <span class="missao-cta-label">Faltam Sequência e Radar</span>
+            <span class="missao-cta-btn" style="background:var(--green-dim);color:var(--green);">Continuar →</span>
+          </div>
+        </div>
+        <div class="missao">
+          <div class="missao-main">
+            <div class="missao-icon" style="background:var(--amber-dim);">🔥</div>
+            <div style="flex:1;"><div class="missao-title">Jogue 3 dias seguidos</div><div class="missao-sub">Consistência de treino</div></div>
+            <div class="missao-prog">1 / 3</div>
+          </div>
+          <div style="padding:0 14px 10px;"><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:33%;background:var(--amber);"></div></div></div>
+          <div class="missao-cta">
+            <span class="missao-cta-label">Treine hoje para manter a série</span>
+            <span class="missao-cta-btn" style="background:var(--amber-dim);color:var(--amber);">Treinar →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lore">
+        <div class="lore-dot"></div>
+        <div class="lore-text"><span class="lore-strong">Por que 3 sessões por semana?</span> Intervalos de 48h entre treinos maximizam a consolidação do aprendizado motor. Mais que isso tem retorno marginal.</div>
+      </div>
+
+    </div>
+    <div class="tabbar">
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tab-lbl">Home</span></div>
+      <div class="tab active"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tab-lbl">Missões</span></div>
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="tab-lbl">Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

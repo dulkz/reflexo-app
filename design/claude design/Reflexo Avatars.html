@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Reflexo — Avatars</title>
+<style>
+  :root {
+    --bg: #0A0F1E;
+    --bg-card: #111729;
+    --line: rgba(255,255,255,0.08);
+    --fg: #ffffff;
+    --fg-dim: rgba(255,255,255,0.6);
+    --fg-mute: rgba(255,255,255,0.4);
+    --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  body { padding: 64px 48px 96px; min-height: 100vh; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding-bottom: 28px; border-bottom: 1px solid var(--line); margin-bottom: 48px;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--fg);
+    border-radius: 50%;
+    display: grid; place-items: center;
+  }
+  .brand-mark::after {
+    content: ""; width: 6px; height: 6px;
+    background: var(--fg); border-radius: 50%;
+  }
+  h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+  h1 span { color: var(--fg-mute); font-weight: 400; margin-left: 8px; }
+  .meta {
+    font-family: var(--mono); font-size: 11px; color: var(--fg-mute);
+    text-align: right; line-height: 1.7;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  .section-title {
+    display: flex; align-items: baseline; gap: 14px; margin-bottom: 28px;
+  }
+  .section-title h2 {
+    font-size: 13px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-dim);
+  }
+  .section-title .num {
+    font-family: var(--mono); font-size: 11px; color: var(--fg-mute);
+  }
+  .section-title .rule { flex: 1; height: 1px; background: var(--line); }
+
+  /* AVATAR GRID 4x4 */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-bottom: 56px;
+  }
+  .cell {
+    background: var(--bg-card);
+    padding: 32px 16px 22px;
+    display: flex; flex-direction: column; align-items: center;
+    transition: transform 200ms ease;
+  }
+  .cell:hover { transform: translateY(-2px); }
+  .avatar {
+    width: 100px; height: 100px;
+    margin-bottom: 18px;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.3));
+  }
+  .avatar svg { width: 100%; height: 100%; display: block; }
+  .num-badge {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-mute); margin-bottom: 4px;
+    letter-spacing: 0.08em;
+  }
+  .name { font-size: 14px; font-weight: 500; }
+
+  /* SCALE TEST */
+  .scale-row {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-bottom: 56px;
+  }
+  .scale-cell {
+    background: var(--bg-card);
+    padding: 22px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .scale-stack {
+    display: flex; align-items: flex-end; gap: 12px; height: 68px;
+  }
+  .scale-stack svg { display: block; }
+  .s24 { width: 24px; height: 24px; }
+  .s40 { width: 40px; height: 40px; }
+  .s64 { width: 64px; height: 64px; }
+  .scale-label {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-mute); text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* IN CONTEXT */
+  .context {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    padding: 28px;
+    border-radius: 4px;
+  }
+  .context-label {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-mute); margin-bottom: 22px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .leaderboard {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    background: #060912;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .row .rank {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--fg-mute); width: 24px;
+  }
+  .row .av { width: 40px; height: 40px; flex-shrink: 0; }
+  .row .av svg { width: 100%; height: 100%; }
+  .row .name { font-size: 13px; flex: 1; font-weight: 500; }
+  .row .score {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--fg-dim);
+  }
+
+  footer {
+    margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px; color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <h1>Reflexo<span>avatar set</span></h1>
+    </div>
+    <div class="meta">
+      16 avatars · 80×80<br>
+      flat · monochrome
+    </div>
+  </header>
+
+  <div class="section-title">
+    <span class="num">01</span>
+    <h2>Avatar Set</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="section-title">
+    <span class="num">02</span>
+    <h2>Scale · 24 / 40 / 64 px</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="scale-row" id="scaleRow"></div>
+
+  <div class="section-title">
+    <span class="num">03</span>
+    <h2>In Context · Leaderboard</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="context">
+    <div class="context-label">Top Players</div>
+    <div class="leaderboard" id="leaderboard"></div>
+  </div>
+
+  <footer>
+    <span>Reflexo · Avatar System</span>
+    <span>Files in /avatars/*.svg</span>
+  </footer>
+
+</div>
+
+<script>
+  const avatars = [
+    { num: 1, name: 'Explorador', file: '01-explorador.svg' },
+    { num: 2, name: 'Iniciante', file: '02-iniciante.svg' },
+    { num: 3, name: 'Resistente', file: '03-resistente.svg' },
+    { num: 4, name: 'Velocista', file: '04-velocista.svg' },
+    { num: 5, name: 'Atirador', file: '05-atirador.svg' },
+    { num: 6, name: 'Piloto F1', file: '06-piloto.svg' },
+    { num: 7, name: 'Boxeador', file: '07-boxeador.svg' },
+    { num: 8, name: 'Tenista', file: '08-tenista.svg' },
+    { num: 9, name: 'Mestre', file: '09-mestre.svg' },
+    { num: 10, name: 'Ninja', file: '10-ninja.svg' },
+    { num: 11, name: 'Cientista', file: '11-cientista.svg' },
+    { num: 12, name: 'Robô', file: '12-robo.svg' },
+    { num: 13, name: 'Caçador', file: '13-cacador.svg' },
+    { num: 14, name: 'Fantasma', file: '14-fantasma.svg' },
+    { num: 15, name: 'Chama', file: '15-chama.svg' },
+    { num: 16, name: 'Diamante', file: '16-diamante.svg' },
+  ];
+
+  // Build grid
+  const grid = document.getElementById('grid');
+  avatars.forEach(a => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.innerHTML = `
+      <div class="avatar"><img src="avatars/${a.file}" alt="${a.name}" style="width:100%;height:100%;display:block;"/></div>
+      <div class="num-badge">${String(a.num).padStart(2,'0')}</div>
+      <div class="name">${a.name}</div>
+    `;
+    grid.appendChild(cell);
+  });
+
+  // Scale row — pick 8 representative (0-indexed)
+  const scalePicks = [3, 8, 4, 5, 9, 10, 13, 15];
+  const scaleRow = document.getElementById('scaleRow');
+  scalePicks.forEach(idx => {
+    const a = avatars[idx];
+    const cell = document.createElement('div');
+    cell.className = 'scale-cell';
+    cell.innerHTML = `
+      <div class="scale-stack">
+        <img src="avatars/${a.file}" class="s24"/>
+        <img src="avatars/${a.file}" class="s40"/>
+        <img src="avatars/${a.file}" class="s64"/>
+      </div>
+      <div class="scale-label">${a.name}</div>
+    `;
+    scaleRow.appendChild(cell);
+  });
+
+  // Leaderboard
+  const lb = document.getElementById('leaderboard');
+  const lbPicks = [
+    { idx: 8, score: '2.847' },
+    { idx: 3, score: '2.612' },
+    { idx: 9, score: '2.498' },
+    { idx: 14, score: '2.331' },
+    { idx: 4, score: '2.205' },
+  ];
+  lbPicks.forEach((p, i) => {
+    const a = avatars[p.idx];
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="rank">${String(i+1).padStart(2,'0')}</div>
+      <div class="av"><img src="avatars/${a.file}" style="width:100%;height:100%;display:block;"/></div>
+      <div class="name">${a.name}</div>
+      <div class="score">${p.score} ms</div>
+    `;
+    lb.appendChild(row);
+  });
+</script>
+</body>
+</html>

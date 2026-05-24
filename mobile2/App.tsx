@@ -1,8 +1,12 @@
+import './i18n';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SvgXml } from 'react-native-svg';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 import Home from './screens/Home';
 import Splash from './screens/Splash';
 import ModoPartida from './screens/ModoPartida';
@@ -10,51 +14,53 @@ import ModoAlvo, { RoundResult } from './screens/ModoAlvo';
 import ModoRadar, { RoundResult as RadarRound } from './screens/ModoRadar';
 import ModoSequencia, { SeqSummary } from './screens/ModoSequencia';
 import Resultado from './screens/Resultado';
-import Ciencia from './screens/Ciencia';
 import Perfil from './screens/Perfil';
-import Historico from './screens/Historico';
-import Jornada from './screens/Jornada';
+import Missoes from './screens/Missoes';
+import GlobalScreen from './screens/GlobalScreen';
+import ArchetypeEvolution from './screens/ArchetypeEvolution';
 import TriageModal from './screens/triage/TriageModal';
-import OnboardingModal from './screens/OnboardingModal';
+import OnboardingFlow from './screens/onboarding/OnboardingFlow';
+import AuthScreen from './screens/Auth';
+import { supabase } from './lib/supabase';
+import { syncSessionToSupabase } from './utils/syncSession';
+import { migrateLocalSessions } from './utils/migrateLocalSessions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Session } from '@supabase/supabase-js';
+import { useFonts } from 'expo-font';
+import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
+import { DMSans_400Regular, DMSans_500Medium } from '@expo-google-fonts/dm-sans';
+import { SpaceMono_400Regular } from '@expo-google-fonts/space-mono';
 import { ModeKey, MODE_COLORS } from './utils/levels';
 import {
   SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
   loadHasPlayedFirstGame, saveHasPlayedFirstGame,
   loadHasSeenTriagePrompt, saveHasSeenTriagePrompt,
   clearUserData,
+  computeModeUnlocks, loadModeUnlocks, persistModeUnlocks, previousModeInChain,
 } from './utils/storage';
+import { hapticSuccess } from './utils/haptics';
 import {
   EnergyData, loadEnergy, consumeEnergy, addEnergy,
-  ensureInstallDate, isInGracePeriod,
+  ensureInstallDate, isInGracePeriod, hasInfiniteEnergy,
 } from './utils/energy';
 import SemEnergia from './screens/SemEnergia';
 import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
 import { preloadSounds, playSfx } from './utils/sfx';
+import { calculateStreak } from './utils/streak';
 import { ACHIEVEMENTS, Achievement, RARITY_CONFIG, RarityKey } from './config/achievements';
 import { buildUserStats } from './config/archetypes';
-import { ICONS } from './assets/icons';
+import { ICONS, ARCHETYPE_ICONS, RARITY_ICONS_SVG } from './assets/icons';
 
 const RARITY_PRIORITY: Record<RarityKey, number> = {
   lendario: 6, epico: 5, raro: 4, dificil: 3, medio: 2, comum: 1,
 };
 
-function computeStreakFromSessions(sessions: SessionRecord[]): number {
-  if (sessions.length === 0) return 0;
-  const DAY = 86_400_000;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  let s = 0;
-  for (let i = 0; i < sessions.length; i++) {
-    const d = new Date(sessions[i].date); d.setHours(0, 0, 0, 0);
-    const diff = Math.round((today.getTime() - d.getTime()) / DAY);
-    if (diff === s) s++;
-    else if (diff > s) break;
-  }
-  return s;
-}
+// Archetype progression order — used to detect a forward evolution (advancement only).
+const ARCHETYPE_ORDER = ['EXPLORADOR', 'EM_EVOLUCAO', 'RESISTENTE', 'ATIRADOR', 'VELOCISTA', 'PILOTO'];
 
-type Tab = 'jogar' | 'historico' | 'ciencia' | 'perfil' | 'jornada';
+type Tab = 'jogar' | 'global' | 'missoes' | 'perfil';
 type GameScreen =
   | 'home'
   | 'partida'
@@ -66,39 +72,108 @@ type GameScreen =
   | 'resultado_sequencia'
   | 'resultado_radar';
 
-const FAB_SIZE      = 70;
-const TAB_BAR_HEIGHT = 52;
-
-const LEFT_TABS:  { key: Tab; label: string; icon: string }[] = [
-  { key: 'jornada',  label: 'Jornada',   icon: ICONS.nav.jornada },
-  { key: 'ciencia',  label: 'Ciência',   icon: ICONS.nav.ciencia },
-];
-const RIGHT_TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'historico', label: 'Histórico', icon: ICONS.nav.historico },
-  { key: 'perfil',    label: 'Perfil',    icon: ICONS.nav.perfil },
+// 4-tab navigation — Início (jogar) · Global · Missões · Perfil. FAB removed.
+const TABS: { key: Tab; labelKey: string; icon: string }[] = [
+  { key: 'jogar',   labelKey: 'nav.home',    icon: ICONS.nav.home },
+  { key: 'global',  labelKey: 'nav.global',  icon: ICONS.nav.global },
+  { key: 'missoes', labelKey: 'nav.missoes', icon: ICONS.nav.missoes },
+  { key: 'perfil',  labelKey: 'nav.perfil',  icon: ICONS.nav.perfil },
 ];
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <AppInner />
-    </SafeAreaProvider>
+    <I18nextProvider i18n={i18n}>
+      <SafeAreaProvider>
+        <RootGate />
+      </SafeAreaProvider>
+    </I18nextProvider>
   );
 }
 
-function AppInner() {
+// Auth gate — plays the splash first, then checks the Supabase session and the
+// persisted guest flag. Splash always shows first (new or returning users).
+// After splash: no session and not guest → AuthScreen; otherwise → the app.
+function RootGate() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [guest, setGuest] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
+  const [fontsLoaded] = useFonts({
+    BebasNeue_400Regular,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    SpaceMono_400Regular,
+  });
+
+  useEffect(() => {
+    // Restore persisted session + guest flag on startup, in parallel.
+    Promise.all([
+      supabase.auth.getSession(),
+      AsyncStorage.getItem('reflexo_guest'),
+    ]).then(([{ data }, guestFlag]) => {
+      setSession(data.session);
+      setGuest(guestFlag === 'true');
+      setAuthChecked(true);
+    });
+    // React to login/logout (and token refresh) for the rest of the app's lifetime.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      // Migração one-shot: envia sessões locais ao Supabase no primeiro login
+      if (event === 'SIGNED_IN' && newSession?.user?.id) {
+        migrateLocalSessions(newSession.user.id); // sem await — fire-and-forget
+      }
+      // Logout: zera o estado guest em memória → RootGate volta ao AuthScreen
+      if (event === 'SIGNED_OUT') {
+        setGuest(false);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Called by AuthScreen's "Continuar sem conta" (which also persists the flag).
+  const handleContinueAsGuest = useCallback(() => setGuest(true), []);
+
+  // 1. Splash always first — stays until its animation ends, the auth/guest check
+  //    resolves, AND the custom fonts finish loading, so everything is ready first.
+  if (!splashDone || !authChecked || !fontsLoaded) {
+    return (
+      <View style={styles.root}>
+        <Splash onAnimationComplete={() => setSplashDone(true)} />
+      </View>
+    );
+  }
+
+  // 2/3/4. Splash done and auth known → decide what to show.
+  if (session || guest) {
+    return <AppInner isGuest={!session} />;
+  }
+  return <AuthScreen onContinueAsGuest={handleContinueAsGuest} />;
+}
+
+function AppInner({ isGuest }: { isGuest: boolean }) {
+  // isGuest — true para convidado (sem sessão). Usado pela aba Global para mostrar
+  // "Faça login para ver o ranking". Passado pelo RootGate.
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('jogar');
   const [gameScreen, setGameScreen] = useState<GameScreen>('home');
-  const [modePickerVisible, setModePickerVisible] = useState(false);
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile());
   const [triageVisible, setTriageVisible] = useState(false);
   const [triageEditMode, setTriageEditMode] = useState(false);
   const [milestoneBeat, setMilestoneBeat] = useState<string | null>(null);
   const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
+  // Archetype evolution takeover — set to the new archetype id when the user advances
+  const [evolutionTo, setEvolutionTo] = useState<string | null>(null);
+  // Progressive mode unlock — partida sempre liberado; demais via cadeia
+  const [modeUnlocks, setModeUnlocks] = useState<Record<ModeKey, boolean>>({
+    partida: true, radar: false, sequencia: false, alvo: false,
+  });
+  // Fila de modos recém-desbloqueados aguardando toast de feedback
+  const [modeUnlockQueue, setModeUnlockQueue] = useState<ModeKey[]>([]);
   const toastAnim = useRef(new Animated.Value(0)).current;
   const achieveAnim = useRef(new Animated.Value(0)).current;
+  const unlockAnim = useRef(new Animated.Value(0)).current;
   const pendingMilestoneRef = useRef<string | null>(null);
 
   // Partida state
@@ -122,12 +197,6 @@ function AppInner() {
   const pendingTriage = useRef(false);
   // Prevent re-offering triage if dismissed in this app session
   const dismissedThisSession = useRef(false);
-
-  // Splash screen — shown once per app open
-  const [splashVisible, setSplashVisible] = useState(true);
-  const splashOpacity = useRef(new Animated.Value(1)).current;
-  const dataReadyRef  = useRef(false);
-  const animDoneRef   = useRef(false);
 
   // Onboarding — shown once on first app open ever (persisted flag)
   const [onboardingVisible, setOnboardingVisible] = useState(false);
@@ -166,18 +235,35 @@ function AppInner() {
     }
   }, [achievementQueue.length]);
 
-  const tryExitSplash = useCallback(() => {
-    if (!dataReadyRef.current || !animDoneRef.current) return;
-    Animated.timing(splashOpacity, { toValue: 0, duration: 300, useNativeDriver: true })
-      .start(() => {
-        setSplashVisible(false);
-        if (onboardingNeededRef.current) setOnboardingVisible(true);
-      });
-  }, []); // splashOpacity is a stable Animated.Value ref
+  // Mode-unlock toast — deferred behind evolution / achievement / milestone toasts.
+  const firstModeUnlock = modeUnlockQueue[0] ?? null;
+  const showModeUnlock = firstModeUnlock !== null
+    && evolutionTo === null && achievementQueue.length === 0 && milestoneBeat === null;
+  useEffect(() => {
+    if (showModeUnlock) {
+      unlockAnim.setValue(0);
+      hapticSuccess();
+      Animated.spring(unlockAnim, { toValue: 1, tension: 65, friction: 7, useNativeDriver: true }).start();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showModeUnlock, firstModeUnlock]);
 
   useEffect(() => {
     Promise.all([
-      loadSessions().then(setSessions),
+      loadSessions().then(async (s) => {
+        setSessions(s);
+        // Estado de desbloqueio: derivado das sessões (fonte da verdade) ∪ flags persistidos.
+        const persisted = await loadModeUnlocks();
+        const derived = computeModeUnlocks(s);
+        const merged: Record<ModeKey, boolean> = {
+          partida: true,
+          radar: derived.radar || persisted.radar,
+          sequencia: derived.sequencia || persisted.sequencia,
+          alvo: derived.alvo || persisted.alvo,
+        };
+        setModeUnlocks(merged);
+        await persistModeUnlocks(merged);
+      }),
       loadUserProfile().then(setUserProfile),
       loadOnboardingDone().then(done => { onboardingNeededRef.current = !done; }),
       loadHasPlayedFirstGame().then(v => { hasPlayedFirstGameRef.current = v; }),
@@ -186,16 +272,17 @@ function AppInner() {
       ensureInstallDate().then(setInstallDate),
       preloadSounds(),
     ]).then(() => {
-      dataReadyRef.current = true;
       // If the user already played their first game in a previous session but never
       // saw the triage prompt, offer it now (no pending continuation — pure init case).
       if (hasPlayedFirstGameRef.current && !hasSeenTriagePromptRef.current) {
         pendingNavRef.current = null;
         setShowTriagePrompt(true);
       }
-      tryExitSplash();
+      // Splash now lives in RootGate (shown before AppInner mounts). Trigger the
+      // first-open onboarding here, once startup data has finished loading.
+      if (onboardingNeededRef.current) setOnboardingVisible(true);
     });
-  }, [tryExitSplash]);
+  }, []);
 
   // Fade+scale entrance animation for the triage prompt card.
   useEffect(() => {
@@ -210,17 +297,25 @@ function AppInner() {
 
     // ── Pre-session achievement snapshot ──────────────────────────────────────
     const prevValid = sessions.filter(s => !s.invalidForAchievements);
-    const prevStreak = computeStreakFromSessions(prevValid);
+    const prevStreak = calculateStreak(prevValid).current;
     const prevStats = buildUserStats(prevValid, prevStreak);
     const prevUnlocked = new Set(ACHIEVEMENTS.filter(a => a.unlocked(prevStats)).map(a => a.id));
 
     await saveSession(session);
+
+    // Sync oportunista com Supabase (só se logado, nunca bloqueia)
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+    if (authSession?.user?.id) {
+      syncSessionToSupabase(session, authSession.user.id);
+      // sem await intencional — fire-and-forget
+    }
+
     const updated = await loadSessions();
     setSessions(updated);
 
     // ── Achievement detection ─────────────────────────────────────────────────
     const updatedValid = updated.filter(s => !s.invalidForAchievements);
-    const updatedStreak = computeStreakFromSessions(updatedValid);
+    const updatedStreak = calculateStreak(updatedValid).current;
     const updatedStats = buildUserStats(updatedValid, updatedStreak);
     const newlyUnlocked = ACHIEVEMENTS.filter(
       a => !prevUnlocked.has(a.id) && a.unlocked(updatedStats),
@@ -228,6 +323,26 @@ function AppInner() {
     const sortedAchievements = [...newlyUnlocked].sort(
       (a, b) => RARITY_PRIORITY[b.rarity] - RARITY_PRIORITY[a.rarity],
     );
+
+    // ── Archetype evolution detection (advancement only) ──────────────────────
+    // prevStats/updatedStats already exclude invalidForAchievements sessions, so a
+    // discarded session can't trigger a phantom evolution.
+    const prevArchIdx = ARCHETYPE_ORDER.indexOf(prevStats.archetypeId);
+    const newArchIdx = ARCHETYPE_ORDER.indexOf(updatedStats.archetypeId);
+    const evolved = newArchIdx > prevArchIdx && newArchIdx > 0;
+    if (evolved) setEvolutionTo(updatedStats.archetypeId);
+
+    // ── Progressive mode unlock detection ─────────────────────────────────────
+    // A mode unlocks when the previous mode in the chain gets its first session.
+    const prevUnlocks = computeModeUnlocks(sessions);
+    const newUnlocks = computeModeUnlocks(updated);
+    const newlyUnlockedModes = (['radar', 'sequencia', 'alvo'] as ModeKey[])
+      .filter(m => newUnlocks[m] && !prevUnlocks[m]);
+    setModeUnlocks(newUnlocks);
+    if (newlyUnlockedModes.length > 0) {
+      await persistModeUnlocks(newUnlocks);
+      setModeUnlockQueue(q => [...q, ...newlyUnlockedModes]);
+    }
 
     // ── Milestone beat detection ──────────────────────────────────────────────
     let beatenLabel: string | null = null;
@@ -310,6 +425,8 @@ function AppInner() {
   // • Se dados de energia ainda não carregaram → navega direto (fallback seguro)
   //
   const tryStartMode = useCallback(async (mode: ModeKey) => {
+    // Modo bloqueado — ignora (a Home já impede o toque, isto é só salvaguarda)
+    if (!modeUnlocks[mode]) return;
     // Dados ainda carregando — não acontece em interações normais do usuário
     if (!energyData || installDate === null) {
       setActiveTab('jogar');
@@ -317,11 +434,11 @@ function AppInner() {
       return;
     }
 
-    const inGrace = isInGracePeriod(installDate);
+    // Premium → energia infinita; período de graça → grátis. Em ambos não consome.
+    const unlimited = hasInfiniteEnergy() || isInGracePeriod(installDate);
 
-    if (inGrace || energyData.counts[mode] > 0) {
-      // Tem acesso — consome energia (exceto no período de graça)
-      if (!inGrace) {
+    if (unlimited || energyData.counts[mode] > 0) {
+      if (!unlimited) {
         const updated = await consumeEnergy(mode, energyData);
         setEnergyData(updated);
       }
@@ -331,7 +448,7 @@ function AppInner() {
       // Sem energia — abre tela de paywall
       setSemEnergiaMode(mode);
     }
-  }, [energyData, installDate]);
+  }, [energyData, installDate, modeUnlocks]);
 
   // Callback da SemEnergia quando o usuário compra energia:
   // 1. energia já foi adicionada dentro de SemEnergia via addEnergy()
@@ -484,6 +601,8 @@ function AppInner() {
     setUserProfile(updated);
     setTriageVisible(false);
     setTriageEditMode(false);
+    hasSeenTriagePromptRef.current = true;
+    await saveHasSeenTriagePrompt(true);
     setActiveTab('jogar');
     setGameScreen('home');
     homeScrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -499,6 +618,16 @@ function AppInner() {
     setGameScreen('home');
     setSemEnergiaMode(null);
     setOnboardingVisible(true);
+  }, []);
+
+  // Onboarding complete — OnboardingFlow already persisted baseline + goal +
+  // triageCompleted and the onboarding-done flag. Adopt the profile and
+  // suppress the post-first-game triage prompt (the user just did triage).
+  const handleOnboardingComplete = useCallback(async (profile: UserProfile) => {
+    setUserProfile(profile);
+    hasSeenTriagePromptRef.current = true;
+    await saveHasSeenTriagePrompt(true);
+    setOnboardingVisible(false);
   }, []);
 
   const handleTriageDismiss = useCallback(async () => {
@@ -550,6 +679,7 @@ function AppInner() {
             energyCounts={energyCounts}
             inGrace={inGrace}
             graceExpiryMs={installDate !== null ? installDate + 3 * 24 * 60 * 60 * 1000 : null}
+            modeUnlocks={modeUnlocks}
           />
         );
       case 'partida':
@@ -643,91 +773,47 @@ function AppInner() {
 
       {/* Screen content */}
       <View style={[styles.content, inGame && styles.contentFullscreen]}>
-        {activeTab === 'jogar'      && renderGame()}
-        {activeTab === 'historico'  && <Historico sessions={sessions} userProfile={userProfile} />}
-        {activeTab === 'ciencia'    && <Ciencia userProfile={userProfile} sessions={sessions} />}
-        {activeTab === 'perfil'     && (
+        {activeTab === 'jogar'   && renderGame()}
+        {activeTab === 'global'  && <GlobalScreen isGuest={isGuest} />}
+        {activeTab === 'missoes' && (
+          <Missoes
+            sessions={sessions}
+            userProfile={userProfile}
+            onOpenTriage={openTriageForEdit}
+          />
+        )}
+        {activeTab === 'perfil'  && (
           <Perfil
             sessions={sessions}
             userProfile={userProfile}
             onOpenTriage={openTriageForEdit}
-            onGoToConquistas={() => handleTabPress('historico')}
             onUpdateProfile={setUserProfile}
             onClearData={handleClearData}
           />
         )}
-        {activeTab === 'jornada' && (
-          <Jornada
-            sessions={sessions}
-            userProfile={userProfile}
-            onOpenTriage={openTriageForEdit}
-            onUpdateProfile={setUserProfile}
-          />
-        )}
       </View>
 
-      {/* Tab bar — hidden during active game */}
+      {/* Tab bar — 4 tabs, hidden during active game */}
       {!inGame && (
-        <>
-          <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
-            {LEFT_TABS.map(t => {
-              const active = activeTab === t.key;
-              return (
-                <TouchableOpacity
-                  key={t.key}
-                  style={styles.tabBtn}
-                  onPress={() => handleTabPress(t.key)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                    <SvgXml xml={t.icon.replace(/#FFFFFF/g, active ? '#3b82f6' : '#FFFFFF')} width={24} height={24} />
-                    <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-
-            {/* Spacer — keeps 5-column layout while FAB floats above */}
-            <View style={styles.fabSpacer} />
-
-            {RIGHT_TABS.map(t => {
-              const active = activeTab === t.key;
-              return (
-                <TouchableOpacity
-                  key={t.key}
-                  style={styles.tabBtn}
-                  onPress={() => handleTabPress(t.key)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                    <SvgXml xml={t.icon.replace(/#FFFFFF/g, active ? '#3b82f6' : '#FFFFFF')} width={24} height={24} />
-                    <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t.label}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* FAB — position absolute sibling of tabBar, no overflow dependency */}
-          <View
-            style={[styles.fabContainer, { bottom: TAB_BAR_HEIGHT + Math.max(insets.bottom, 4) - FAB_SIZE / 2 }]}
-            pointerEvents="box-none"
-          >
-            <TouchableOpacity
-              style={styles.fab}
-              onPress={() => {
-                if (activeTab === 'jogar' && gameScreen === 'home') {
-                  setModePickerVisible(true);
-                } else {
-                  handleTabPress('jogar');
-                }
-              }}
-              activeOpacity={0.85}
-            >
-              <SvgXml xml={ICONS.mark} width={36} height={36} />
-            </TouchableOpacity>
-          </View>
-        </>
+        <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
+          {TABS.map(tab => {
+            const active = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={styles.tabBtn}
+                onPress={() => handleTabPress(tab.key)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
+                  {/* Mesmo tamanho/posição em ambos os estados — apenas a cor muda */}
+                  <SvgXml xml={tab.icon.replace(/#FFFFFF/g, active ? '#00E5CC' : '#7a8aa0')} width={24} height={24} />
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t(tab.labelKey)}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       )}
 
       {/* Triage modal — fullscreen, covers tab bar */}
@@ -745,9 +831,9 @@ function AppInner() {
         />
       </Modal>
 
-      {/* Achievement unlocked toast */}
+      {/* Achievement unlocked toast — deferred while an evolution takeover is showing */}
       <Modal
-        visible={achievementQueue.length > 0}
+        visible={achievementQueue.length > 0 && evolutionTo === null}
         transparent
         animationType="fade"
         onRequestClose={() => setAchievementQueue(prev => prev.slice(1))}
@@ -762,33 +848,24 @@ function AppInner() {
             const rcfg = RARITY_CONFIG[a.rarity];
             return (
               <Animated.View style={[styles.toastCard, { borderColor: rcfg.cor + '66', transform: [{ scale: achieveAnim }], opacity: achieveAnim }]}>
-                <Text style={[styles.achieveToastKicker, { color: a.secret ? '#f59e0b' : rcfg.cor }]}>
-                  {a.secret ? '🔒 SEGREDO REVELADO!' : 'CONQUISTA DESBLOQUEADA!'}
-                </Text>
-                <View style={[styles.achieveToastBadge, { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor }]}>
-                  <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{rcfg.label}</Text>
+                <View style={styles.achieveToastKickerRow}>
+                  {a.secret && <SvgXml xml={RARITY_ICONS_SVG.secretas} width={12} height={12} />}
+                  <Text style={[styles.achieveToastKicker, { color: a.secret ? '#f59e0b' : rcfg.cor }]}>
+                    {a.secret ? t('achievements.secretRevealed') : t('achievements.achievementUnlocked')}
+                  </Text>
                 </View>
-                <Text style={styles.toastEmoji}>{a.icon}</Text>
+                <View style={[styles.achieveToastBadge, { backgroundColor: rcfg.cor + '22', borderColor: rcfg.cor }]}>
+                  <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{t(`achievements.rarity.${a.rarity}` as any)}</Text>
+                </View>
+                <SvgXml xml={a.icon} width={28} height={28} />
                 <Text style={[styles.toastTitle, { color: '#fff' }]}>{a.name}</Text>
                 <Text style={styles.achieveToastDesc}>{a.description}</Text>
-                <Text style={styles.toastSub}>Toque para continuar</Text>
+                <Text style={styles.toastSub}>{t('achievements.tapToContinue')}</Text>
               </Animated.View>
             );
           })()}
         </TouchableOpacity>
       </Modal>
-
-      {/* Splash — absoluteFill overlay, shown once on app open */}
-      {splashVisible && (
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: splashOpacity, zIndex: 200 }]}>
-          <Splash
-            onAnimationComplete={() => {
-              animDoneRef.current = true;
-              tryExitSplash();
-            }}
-          />
-        </Animated.View>
-      )}
 
       {/* Onboarding modal — first-open only, persisted via reflexo_onboarding_done_v1 */}
       <Modal
@@ -797,7 +874,7 @@ function AppInner() {
         statusBarTranslucent
         onRequestClose={() => { /* must complete via "COMEÇAR" — no back-dismiss */ }}
       >
-        <OnboardingModal onComplete={() => setOnboardingVisible(false)} />
+        <OnboardingFlow onComplete={handleOnboardingComplete} />
       </Modal>
 
       {/* Triage prompt — first-game intercept, persisted via reflexo_has_seen_triage_prompt_v1 */}
@@ -815,7 +892,7 @@ function AppInner() {
               { opacity: triagePromptAnim, transform: [{ scale: triagePromptAnim }] },
             ]}
           >
-            <Text style={styles.triagePromptIcon}>⚡</Text>
+            <SvgXml xml={ARCHETYPE_ICONS.VELOCISTA} width={48} height={48} style={{ marginBottom: 12 }} />
             <Text style={styles.triagePromptTitle}>Calibrar seu perfil</Text>
             <Text style={styles.triagePromptSubtitle}>
               A triagem ajusta os benchmarks para o seu nível real. Leva menos de 2 minutos.
@@ -841,78 +918,9 @@ function AppInner() {
         </View>
       </Modal>
 
-      {/* Mode picker bottom sheet — opens when FAB is tapped while already on Home */}
+      {/* Milestone beat toast — deferred while an evolution takeover is showing */}
       <Modal
-        visible={modePickerVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModePickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modePickerOverlay}
-          onPress={() => setModePickerVisible(false)}
-          activeOpacity={1}
-        >
-          <TouchableOpacity activeOpacity={1} style={styles.modePickerSheet} onPress={() => { /* swallow taps inside sheet */ }}>
-            <View style={styles.modePickerHandle} />
-            <View style={styles.modePickerHeader}>
-              <Text style={styles.modePickerTitle}>ESCOLHA UM MODO</Text>
-              <TouchableOpacity
-                onPress={() => setModePickerVisible(false)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Text style={styles.modePickerClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            {([
-              { key: 'partida'   as ModeKey, name: 'PARTIDA',   desc: 'Reação simples · 7 tentativas',     icon: ICONS.modes.partida },
-              { key: 'alvo'      as ModeKey, name: 'ALVO',      desc: '4 alvos · 10 rodadas · escolha',    icon: ICONS.modes.alvo },
-              { key: 'sequencia' as ModeKey, name: 'SEQUÊNCIA', desc: '20 sinais Go/NoGo · inibição',      icon: ICONS.modes.sequencia },
-              { key: 'radar'     as ModeKey, name: 'RADAR',     desc: '5 círculos · localização visual',   icon: ICONS.modes.radar },
-            ]).map(m => {
-              const mc = MODE_COLORS[m.key];
-              // Badge de energia para o mode picker
-              const modeEnergy = energyCounts ? energyCounts[m.key] : null;
-              const noEnergy = !inGrace && modeEnergy !== null && modeEnergy <= 0;
-              const energyLabel = inGrace
-                ? '⚡ Grátis'
-                : modeEnergy !== null
-                  ? `⚡ ${modeEnergy}/5`
-                  : null;
-              return (
-                <TouchableOpacity
-                  key={m.key}
-                  style={[styles.modePickerCard, { borderColor: mc.accent + '66', backgroundColor: mc.bg }]}
-                  onPress={() => {
-                    setModePickerVisible(false);
-                    tryStartMode(m.key);
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <SvgXml xml={m.icon} width={28} height={28} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.modePickerName, { color: mc.accent }]}>{m.name}</Text>
-                    <Text style={styles.modePickerDesc}>{m.desc}</Text>
-                  </View>
-                  {energyLabel !== null && (
-                    <Text style={[
-                      styles.modePickerEnergy,
-                      noEnergy ? styles.modePickerEnergyEmpty : styles.modePickerEnergyOk,
-                    ]}>
-                      {energyLabel}
-                    </Text>
-                  )}
-                  <Text style={[styles.modePickerArrow, { color: mc.accent }]}>›</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Milestone beat toast */}
-      <Modal
-        visible={milestoneBeat !== null}
+        visible={milestoneBeat !== null && evolutionTo === null}
         transparent
         animationType="fade"
         onRequestClose={() => setMilestoneBeat(null)}
@@ -923,12 +931,50 @@ function AppInner() {
           activeOpacity={1}
         >
           <Animated.View style={[styles.toastCard, { transform: [{ scale: toastAnim }], opacity: toastAnim }]}>
-            <Text style={styles.toastEmoji}>🏆</Text>
+            <SvgXml xml={RARITY_ICONS_SVG.desbloqueadas} width={52} height={52} />
             <Text style={styles.toastTitle}>MARCO BATIDO!</Text>
             <Text style={styles.toastLabel}>{milestoneBeat}</Text>
             <Text style={styles.toastSub}>Toque para continuar</Text>
           </Animated.View>
         </TouchableOpacity>
+      </Modal>
+
+      {/* Mode unlocked toast — fires haptic + brief celebratory card */}
+      <Modal
+        visible={showModeUnlock}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModeUnlockQueue(q => q.slice(1))}
+      >
+        <TouchableOpacity
+          style={styles.toastOverlay}
+          onPress={() => setModeUnlockQueue(q => q.slice(1))}
+          activeOpacity={1}
+        >
+          {firstModeUnlock && (() => {
+            const accent = MODE_COLORS[firstModeUnlock].accent;
+            return (
+              <Animated.View style={[styles.toastCard, { borderColor: accent + '66', transform: [{ scale: unlockAnim }], opacity: unlockAnim }]}>
+                <SvgXml xml={ICONS.modes[firstModeUnlock]} width={48} height={48} />
+                <Text style={[styles.toastTitle, { color: accent }]}>{t('home.modeUnlockedTitle')}</Text>
+                <Text style={styles.toastLabel}>{t(`modes.${firstModeUnlock}.name`)}</Text>
+                <Text style={styles.toastSub}>{t('home.tapToContinue')}</Text>
+              </Animated.View>
+            );
+          })()}
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Archetype evolution takeover — the most important moment; covers everything */}
+      <Modal
+        visible={evolutionTo !== null}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setEvolutionTo(null)}
+      >
+        {evolutionTo !== null && (
+          <ArchetypeEvolution toId={evolutionTo} onContinue={() => setEvolutionTo(null)} />
+        )}
       </Modal>
     </View>
   );
@@ -939,58 +985,41 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   contentFullscreen: { flex: 1 },
 
-  // ── FAB tab bar ──────────────────────────────────────────────────────────────
+  // ── Tab bar (3 tabs) ─────────────────────────────────────────────────────────
   tabBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-around',
     backgroundColor: '#0d1525',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
-    paddingTop: 6,
+    paddingTop: 10,
+    paddingHorizontal: 8,
   },
-  fabSpacer: { flex: 1 },
-  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 2 },
+  // flex:1 → cada item ocupa fatia igual; minHeight 44 garante área de toque ≥ 44x44pt.
+  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingVertical: 4, paddingHorizontal: 4 },
+  // Container interno com dimensões/padding IDÊNTICOS em todos os estados.
+  // Estado inativo = totalmente transparente; só a cor do ícone/label distingue.
   tabItemCard: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
-    width: 72,
-    height: 54,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(255,255,255,0.09)',
-    borderRadius: 12,
+    gap: 5,
+    minWidth: 64,
+    height: 60,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    backgroundColor: 'transparent',
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'transparent',
   },
+  // Estado ativo: APENAS cor de fundo/borda mudam — mesmas dimensões e padding.
   tabItemCardActive: {
-    backgroundColor: 'rgba(59,130,246,0.15)',
-    borderColor: 'rgba(59,130,246,0.3)',
+    backgroundColor: '#00E5CC18',
+    borderColor: '#00E5CC55',
   },
-  tabLabel: { fontSize: 10, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.5 },
-  tabLabelActive: { color: '#3b82f6' },
-  fabContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 20,
-  },
-  fab: {
-    width: FAB_SIZE,
-    height: FAB_SIZE,
-    borderRadius: FAB_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f59e0b',
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,255,255,0.3)',
-    elevation: 0,
-    shadowColor: 'transparent',
-  },
-  fabIcon: {
-    fontSize: 32,
-    color: '#fff',
-  },
+  tabLabel: { fontSize: 12, fontWeight: '700', color: '#7a8aa0', letterSpacing: 0.3 },
+  tabLabelActive: { color: '#00E5CC' },
 
   // ── Triage prompt (first-game intercept) ─────────────────────────────────────
   triagePromptOverlay: {
@@ -1058,8 +1087,11 @@ const styles = StyleSheet.create({
   toastSub: { fontSize: 11, color: '#3a4a6b', marginTop: 8, letterSpacing: 1 },
 
   // ── Achievement toast ────────────────────────────────────────────────────────
+  achieveToastKickerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4,
+  },
   achieveToastKicker: {
-    fontSize: 10, fontWeight: '800', letterSpacing: 2, marginBottom: 4,
+    fontSize: 10, fontWeight: '800', letterSpacing: 2,
   },
   achieveToastBadge: {
     borderWidth: 1, borderRadius: 6,
@@ -1068,54 +1100,5 @@ const styles = StyleSheet.create({
   achieveToastBadgeText: { fontSize: 11, fontWeight: '800', letterSpacing: 1 },
   achieveToastDesc: {
     fontSize: 13, color: '#7a8aa0', textAlign: 'center', lineHeight: 19,
-  },
-
-  // ── Mode picker bottom sheet ─────────────────────────────────────────────────
-  modePickerOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'flex-end',
-  },
-  modePickerSheet: {
-    backgroundColor: '#0f1729',
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 28,
-  },
-  modePickerHandle: {
-    alignSelf: 'center', width: 40, height: 4, borderRadius: 2,
-    backgroundColor: '#2a3a5a', marginBottom: 16,
-  },
-  modePickerHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  modePickerTitle: {
-    fontSize: 12, fontWeight: '800', color: '#7a8aa0', letterSpacing: 2.5,
-  },
-  modePickerClose: { fontSize: 18, color: '#4a5a7b', fontWeight: '700' },
-  modePickerCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderRadius: 14, borderWidth: 1,
-    paddingHorizontal: 16, paddingVertical: 16,
-    marginBottom: 10,
-  },
-  modePickerIcon: { fontSize: 28 },
-  modePickerName: { fontSize: 14, fontWeight: '900', letterSpacing: 1.5 },
-  modePickerDesc: { fontSize: 12, color: '#7a8aa0', marginTop: 2 },
-  modePickerArrow: { fontSize: 24, fontWeight: '300' },
-  modePickerEnergy: {
-    fontSize: 10, fontWeight: '700', letterSpacing: 0.5,
-    paddingHorizontal: 7, paddingVertical: 3,
-    borderRadius: 6, overflow: 'hidden',
-    marginRight: 2,
-  },
-  modePickerEnergyOk: {
-    color: '#3b82f6',
-    backgroundColor: 'rgba(59,130,246,0.12)',
-  },
-  modePickerEnergyEmpty: {
-    color: '#ef4444',
-    backgroundColor: 'rgba(239,68,68,0.12)',
   },
 });

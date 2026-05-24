@@ -1,10 +1,18 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
-  Animated, Platform, StatusBar as RNStatusBar, Dimensions,
+  Animated, Platform, StatusBar as RNStatusBar, Dimensions, ScrollView,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
+import { hapticError } from '../utils/haptics';
+import { shake } from '../utils/animations';
+import { SvgXml } from 'react-native-svg';
+import { ICONS } from '../assets/icons';
+import ModeTutorial from '../components/ModeTutorial';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const TOTAL_ROUNDS = 15;
 const SIGNAL_TIMEOUT = 1500;
@@ -50,17 +58,18 @@ interface Props {
 }
 
 export default function ModoRadar({ onComplete, onBack }: Props) {
+  const { t } = useTranslation();
   const [gameState, setGameState] = useState<RadarState>('intro');
   const confirmAbort = useCallback(() => {
     Alert.alert(
-      'Deseja desistir?',
-      'O progresso desta sessão não será salvo.',
+      t('common.quitTitle'),
+      t('common.quitMessage'),
       [
-        { text: 'Continuar jogando', style: 'cancel' },
-        { text: 'Desistir', style: 'destructive', onPress: onBack },
+        { text: t('common.keepPlaying'), style: 'cancel' },
+        { text: t('common.quit'), style: 'destructive', onPress: onBack },
       ],
     );
-  }, [onBack]);
+  }, [onBack, t]);
   const [round, setRound] = useState(1);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -81,6 +90,7 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
   const missPenaltyOpacity = useRef(new Animated.Value(0)).current;
+  const shakeX = useRef(new Animated.Value(0)).current; // wrong-circle shake
 
   useEffect(() => () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
@@ -91,8 +101,9 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
 
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
-    flashOpacity.setValue(0.4);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 600, useNativeDriver: true }).start();
+    // Error flash per spec: red opacity 0.14 / 200ms. Success flash softer.
+    flashOpacity.setValue(red ? 0.14 : 0.45);
+    Animated.timing(flashOpacity, { toValue: 0, duration: red ? 200 : 500, useNativeDriver: true }).start();
   }, [flashOpacity]);
 
   const advance = useCallback((newResults: RoundResult[], delay: number) => {
@@ -186,6 +197,8 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
     } else {
       missCount.current += 1;
       playSfx('miss');
+      hapticError();              // Notification.Error — wrong location
+      shake(shakeX, 6, 400);     // shake the wrong circle only
       setGameState('miss');
       flash(true);
       missPenaltyOpacity.setValue(0);
@@ -207,19 +220,25 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
           </TouchableOpacity>
           <View style={{ width: 32 }} />
         </View>
-        <View style={styles.introContainer}>
-          <Text style={styles.introTitle}>MODO RADAR</Text>
-          <Text style={styles.introSub}>5 círculos em cruz · 15 rodadas</Text>
-          <View style={styles.howToCard}>
-            <Text style={styles.howToTitle}>Como jogar</Text>
-            <Text style={styles.howToText}>
-              Os 5 círculos ficam visíveis o tempo todo. Um deles vai acender — toque nele o mais rápido possível. Toque no errado: +{MISS_PENALTY}ms de penalidade na média.
-            </Text>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40, justifyContent: 'center' }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.introIcon}>
+            <SvgXml xml={ICONS.modes.radar} width={48} height={48} />
           </View>
+          <Text style={styles.introTitle}>{t('radar.title')}</Text>
+          <Text style={styles.introSub}>{t('radar.subtitle')}</Text>
+          <View style={styles.howToCard}>
+            <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
+            <Text style={styles.howToText}>{t('radar.howToText', { penalty: MISS_PENALTY })}</Text>
+          </View>
+          <ModeTutorial modeKey="radar" />
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
-            <Text style={styles.startBtnText}>INICIAR</Text>
+            <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }
@@ -227,13 +246,14 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
   return (
     <View style={styles.screen}>
       <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
+        <TouchableOpacity onPress={confirmAbort} style={styles.backBtn}>
+          <Text style={styles.backText}>←</Text>
+        </TouchableOpacity>
         <Text style={styles.roundText}>
-          RODADA <Text style={styles.roundNum}>{round}</Text>
+          {t('common.round')} <Text style={styles.roundNum}>{round}</Text>
           <Text style={styles.roundTotal}> / {TOTAL_ROUNDS}</Text>
         </Text>
-        <TouchableOpacity onPress={confirmAbort} style={styles.quitBtn} activeOpacity={0.7}>
-          <Text style={styles.quitText}>DESISTIR</Text>
-        </TouchableOpacity>
+        <View style={{ width: 32 }} />
       </View>
 
       <View style={styles.dotsRow}>
@@ -256,24 +276,24 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
 
       <View style={styles.hintArea}>
         {(gameState === 'initial_wait' || gameState === 'ready') && (
-          <Text style={styles.hintText}>aguarde...</Text>
+          <Text style={styles.hintText}>{t('radar.waitHint')}</Text>
         )}
         {gameState === 'signal' && (
-          <Text style={[styles.hintText, { color: RADAR_COLOR }]}>toque no círculo aceso</Text>
+          <Text style={[styles.hintText, { color: RADAR_COLOR }]}>{t('radar.tapHint')}</Text>
         )}
         {gameState === 'hit' && lastResult && (
           <View style={styles.feedbackRow}>
             <Text style={[styles.feedbackRt, { color: getLevelInfo(lastResult.rt).color }]}>
               {lastResult.rt} ms
             </Text>
-            <Text style={[styles.feedbackLabel, { color: '#10b981' }]}>✓ ACERTOU</Text>
+            <Text style={[styles.feedbackLabel, { color: '#10b981' }]}>{t('radar.hit')}</Text>
           </View>
         )}
         {gameState === 'miss' && (
-          <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>✗ ERROU</Text>
+          <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>{t('radar.miss')}</Text>
         )}
         {gameState === 'timeout' && (
-          <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>⏱ TIMEOUT</Text>
+          <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>{t('radar.timeout')}</Text>
         )}
       </View>
 
@@ -285,6 +305,8 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
             const isCorrectFlash = gameState === 'hit' && i === activeIdx;
             const isWrongPress = gameState === 'miss' && pressedIdx === i;
             const isMissedTarget = gameState === 'timeout' && i === activeIdx;
+            // On a wrong tap, reveal where the user *should* have tapped (faint amber).
+            const isShouldHaveTapped = gameState === 'miss' && i === activeIdx;
             const left = OFFSET + c.dx;
             const top = OFFSET + c.dy;
 
@@ -294,9 +316,15 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
                 backgroundColor: isCorrectFlash ? '#10b981' : RADAR_COLOR,
                 borderColor: isCorrectFlash ? '#10b981' : RADAR_COLOR,
               };
+            } else if (isShouldHaveTapped) {
+              visualStyle = {
+                backgroundColor: 'rgba(245,158,11,0.12)',
+                borderColor: RADAR_COLOR,
+                opacity: 0.5,
+              };
             } else if (isWrongPress || isMissedTarget) {
               visualStyle = {
-                backgroundColor: 'transparent',
+                backgroundColor: 'rgba(239,68,68,0.10)',
                 borderColor: '#ef4444',
               };
             } else {
@@ -307,17 +335,19 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
             }
 
             return (
-              <Pressable
+              <AnimatedPressable
                 key={i}
-                style={({ pressed }) => [
+                style={[
                   styles.circleBase,
                   { left, top },
                   visualStyle,
-                  { opacity: pressed ? 0.7 : 1 },
+                  isWrongPress && { transform: [{ translateX: shakeX }] },
                 ]}
                 onPressIn={() => handleCirclePress(i)}
                 disabled={gameState !== 'signal'}
-              />
+              >
+                {isWrongPress && <Text style={styles.circleX}>✕</Text>}
+              </AnimatedPressable>
             );
           })}
         </View>
@@ -407,14 +437,23 @@ const styles = StyleSheet.create({
     height: CIRCLE_SIZE,
     borderRadius: CIRCLE_SIZE / 2,
     borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  circleX: { fontSize: 40, fontWeight: '900', color: '#ef4444', lineHeight: 44 },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
+  introIcon: {
+    width: 84, height: 84, borderRadius: 42, alignSelf: 'center',
+    backgroundColor: 'rgba(245,158,11,0.10)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+  },
   introTitle: { fontSize: 34, fontWeight: '900', color: RADAR_COLOR, letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
   howToCard: {
-    backgroundColor: '#1a1a0f',
-    borderLeftWidth: 4, borderLeftColor: '#f59e0b',
+    backgroundColor: 'rgba(245,158,11,0.06)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.20)',
     borderRadius: 12, padding: 16, marginBottom: 28,
   },
   howToTitle: { fontSize: 13, fontWeight: '700', color: '#f59e0b', letterSpacing: 0.5, marginBottom: 8 },

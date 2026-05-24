@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Reflexo — App Icon</title>
+<style>
+  :root {
+    --bg: #0A0F1E;
+    --bg-card: #111729;
+    --line: rgba(255,255,255,0.08);
+    --fg: #ffffff;
+    --fg-mute: rgba(255,255,255,0.4);
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 64px 48px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 56px;
+  }
+  h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+  h1 span { color: var(--fg-mute); font-weight: 400; margin-left: 8px; }
+  .meta {
+    font-family: var(--mono); font-size: 11px; color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.06em; text-align: right;
+  }
+
+  .hero {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    padding: 72px 48px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 56px;
+  }
+  .hero .icon-large {
+    width: 360px; height: 360px;
+    border-radius: 80px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  }
+  .hero .icon-large svg { display: block; width: 100%; height: 100%; }
+
+  .section-title {
+    display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px;
+  }
+  .section-title h2 {
+    font-size: 13px; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.14em; color: rgba(255,255,255,0.6);
+  }
+  .section-title .num {
+    font-family: var(--mono); font-size: 11px; color: var(--fg-mute);
+  }
+  .section-title .rule { flex: 1; height: 1px; background: var(--line); }
+
+  /* Mask grid */
+  .masks {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--line);
+    border: 1px solid var(--line); margin-bottom: 64px;
+  }
+  .mask-cell {
+    background: var(--bg-card);
+    padding: 40px 24px 28px;
+    display: flex; flex-direction: column; align-items: center; gap: 22px;
+  }
+  .mask-shape {
+    width: 140px; height: 140px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+  }
+  .mask-shape svg { display: block; width: 100%; height: 100%; }
+  .mask-ios { border-radius: 32px; }
+  .mask-android { border-radius: 50%; }
+  .mask-square { border-radius: 4px; }
+  .mask-squircle { border-radius: 24px; }
+  .mask-label {
+    font-family: var(--mono); font-size: 10px; color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+
+  /* Sizes */
+  .sizes {
+    display: flex; align-items: flex-end; justify-content: center; gap: 32px;
+    background: var(--bg-card); border: 1px solid var(--line);
+    padding: 48px 32px; margin-bottom: 64px;
+  }
+  .size-item {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .size-icon { overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+  .size-icon svg { display: block; width: 100%; height: 100%; }
+  .size-label {
+    font-family: var(--mono); font-size: 10px; color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  /* Home screen */
+  .homescreen {
+    background: linear-gradient(180deg, #1a2540 0%, #0d1428 100%);
+    border-radius: 36px;
+    padding: 48px 32px 32px;
+    max-width: 320px; margin: 0 auto;
+    border: 1px solid var(--line);
+  }
+  .home-time {
+    text-align: center; font-size: 56px; font-weight: 200;
+    letter-spacing: -0.02em; margin-bottom: 4px;
+  }
+  .home-date {
+    text-align: center; font-size: 13px; color: rgba(255,255,255,0.7);
+    margin-bottom: 36px;
+  }
+  .home-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 12px;
+  }
+  .home-app { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .home-app-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+  .home-app-icon svg { display: block; width: 100%; height: 100%; }
+  .home-app-name { font-size: 10px; color: rgba(255,255,255,0.85); }
+  .placeholder {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .ph-1 { background: linear-gradient(135deg, #4ade80, #22c55e); }
+  .ph-2 { background: linear-gradient(135deg, #f43f5e, #be123c); }
+  .ph-3 { background: linear-gradient(135deg, #a855f7, #6d28d9); }
+  .ph-4 { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+  .ph-5 { background: linear-gradient(135deg, #f59e0b, #b45309); }
+  .ph-6 { background: linear-gradient(135deg, #6366f1, #4338ca); }
+
+  footer {
+    margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px; color: var(--fg-mute);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Reflexo<span>app icon</span></h1>
+    <div class="meta">1024×1024 · SVG</div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="icon-large">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+        <rect width="1024" height="1024" fill="#0A0F1E"/>
+        <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+        <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z"
+              fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 01 — MASKS -->
+  <div class="section-title">
+    <span class="num">01</span>
+    <h2>Platform Masks</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="masks">
+    <div class="mask-cell">
+      <div class="mask-shape mask-ios">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="mask-label">iOS · rounded</div>
+    </div>
+    <div class="mask-cell">
+      <div class="mask-shape mask-android">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="mask-label">Android · circle</div>
+    </div>
+    <div class="mask-cell">
+      <div class="mask-shape mask-squircle">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="mask-label">Squircle</div>
+    </div>
+    <div class="mask-cell">
+      <div class="mask-shape mask-square">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="mask-label">Square · 1024</div>
+    </div>
+  </div>
+
+  <!-- 02 — SIZES -->
+  <div class="section-title">
+    <span class="num">02</span>
+    <h2>Scale Test</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="sizes">
+    <div class="size-item">
+      <div class="size-icon mask-ios" style="width:160px;height:160px;border-radius:36px;">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="size-label">160px</div>
+    </div>
+    <div class="size-item">
+      <div class="size-icon mask-ios" style="width:96px;height:96px;border-radius:22px;">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="size-label">96px</div>
+    </div>
+    <div class="size-item">
+      <div class="size-icon" style="width:64px;height:64px;border-radius:14px;">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="size-label">64px</div>
+    </div>
+    <div class="size-item">
+      <div class="size-icon" style="width:40px;height:40px;border-radius:9px;">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="size-label">40px</div>
+    </div>
+    <div class="size-item">
+      <div class="size-icon" style="width:24px;height:24px;border-radius:5px;">
+        <svg viewBox="0 0 1024 1024" fill="none">
+          <rect width="1024" height="1024" fill="#0A0F1E"/>
+          <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+          <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="size-label">24px</div>
+    </div>
+  </div>
+
+  <!-- 03 — HOME SCREEN -->
+  <div class="section-title">
+    <span class="num">03</span>
+    <h2>On Home Screen</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="homescreen">
+    <div class="home-time">9:41</div>
+    <div class="home-date">Quinta-feira, 30 de Abril</div>
+    <div class="home-grid">
+      <div class="home-app">
+        <div class="home-app-icon">
+          <svg viewBox="0 0 1024 1024" fill="none">
+            <rect width="1024" height="1024" fill="#0A0F1E"/>
+            <circle cx="512" cy="512" r="320" stroke="#FFFFFF" stroke-width="24" fill="none"/>
+            <path d="M548 312 L380 540 L500 540 L476 712 L644 484 L524 484 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="home-app-name">Reflexo</div>
+      </div>
+      <div class="home-app"><div class="home-app-icon ph-1"></div><div class="home-app-name">Saúde</div></div>
+      <div class="home-app"><div class="home-app-icon ph-2"></div><div class="home-app-name">Música</div></div>
+      <div class="home-app"><div class="home-app-icon ph-3"></div><div class="home-app-name">Fotos</div></div>
+      <div class="home-app"><div class="home-app-icon ph-4"></div><div class="home-app-name">Mapas</div></div>
+      <div class="home-app"><div class="home-app-icon ph-5"></div><div class="home-app-name">Notas</div></div>
+      <div class="home-app"><div class="home-app-icon ph-6"></div><div class="home-app-name">Calendário</div></div>
+      <div class="home-app"><div class="home-app-icon placeholder"></div><div class="home-app-name">Ajustes</div></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Reflexo · App Icon</span>
+    <span>logo/app-icon.svg</span>
+  </footer>
+
+</div>
+</body>
+</html>

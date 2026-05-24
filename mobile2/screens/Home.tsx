@@ -1,18 +1,33 @@
 import React, { useMemo, useRef, useEffect, useState, RefObject } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Platform, StatusBar as RNStatusBar, Animated,
+  Platform, StatusBar as RNStatusBar, Animated, Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18n, { changeLanguage } from '../i18n';
 import { SvgXml } from 'react-native-svg';
 import { getLevelForMode, MODE_COLORS, ModeKey } from '../utils/levels';
 import { SessionRecord } from '../utils/storage';
 import { UserProfile } from '../types/user';
 import { AVATARS } from '../config/avatars';
+import { ACHIEVEMENTS, RARITY_CONFIG } from '../config/achievements';
+import { buildUserStats, ARCHETYPES } from '../config/archetypes';
 import { calculateStreak, streakColor } from '../utils/streak';
-import { MAX_ENERGY_PER_MODE } from '../config/monetization';
-import { ICONS } from '../assets/icons';
+import { MAX_ENERGY_PER_MODE, MONETIZATION_ENABLED } from '../config/monetization';
+import { hasInfiniteEnergy } from '../utils/energy';
+import { ICONS, ACHIEVEMENT_ICONS, UI_ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
+
+function getStreakSvg(days: number): string {
+  if (days >= 30) return ACHIEVEMENT_ICONS.streak60;
+  const color =
+    days < 4  ? '#6b7280' :
+    days < 7  ? '#3b82f6' :
+    days < 10 ? '#8b5cf6' :
+                '#f59e0b';
+  return ACHIEVEMENT_ICONS.streak5.replace('#3b82f6', color);
+}
 
 interface Props {
   onStartPartida: () => void;
@@ -30,44 +45,38 @@ interface Props {
   inGrace?: boolean;
   /** Timestamp de expiração da graça, para countdown (ms) */
   graceExpiryMs?: number | null;
+  /** Estado de desbloqueio progressivo por modo (partida sempre true) */
+  modeUnlocks?: Record<ModeKey, boolean>;
 }
 
-const MODE_INFO = [
-  {
-    key: 'partida' as ModeKey,
-    name: 'MODO PARTIDA',
-    icon: ICONS.modes.partida,
-    desc: 'Reação simples visual · 7 tentativas',
-    sub: 'Top 5 de 7 — descarta as 2 piores',
-  },
-  {
-    key: 'alvo' as ModeKey,
-    name: 'MODO ALVO',
-    icon: ICONS.modes.alvo,
-    desc: '4 alvos simultâneos · 10 rodadas',
-    sub: 'Acerte o correto — penalidade por erro',
-  },
-  {
-    key: 'sequencia' as ModeKey,
-    name: 'MODO SEQUÊNCIA',
-    icon: ICONS.modes.sequencia,
-    desc: '20 sinais Go/NoGo · ~25% aleatório',
-    sub: 'Mede fadiga cognitiva e controle inibitório',
-  },
-  {
-    key: 'radar' as ModeKey,
-    name: 'MODO RADAR',
-    icon: ICONS.modes.radar,
-    desc: 'Localização visual · 15 rodadas',
-    sub: '5 círculos em cruz — toque no que acender',
-  },
+// Ordem de exibição: Partida → Radar → Sequência → Alvo (cadeia de desbloqueio)
+const MODE_INFO: { key: ModeKey; icon: string }[] = [
+  { key: 'partida',  icon: ICONS.modes.partida  },
+  { key: 'radar',    icon: ICONS.modes.radar    },
+  { key: 'sequencia',icon: ICONS.modes.sequencia },
+  { key: 'alvo',     icon: ICONS.modes.alvo     },
 ];
+
+// Modo anterior na cadeia — usado na mensagem "Complete [modo] para desbloquear"
+const PREV_MODE: Record<ModeKey, ModeKey | null> = {
+  partida: null, radar: 'partida', sequencia: 'radar', alvo: 'sequencia',
+};
 
 export default function Home({
   onStartPartida, onStartAlvo, onStartSequencia, onStartRadar,
   sessions, bestByMode, userProfile, onGoToPerfil, scrollRef,
   energyCounts = null, inGrace = false, graceExpiryMs = null,
+  modeUnlocks = { partida: true, radar: true, sequencia: true, alvo: true },
 }: Props) {
+  const { t } = useTranslation();
+  const lang = i18n.language;
+
+  const handleLangChange = async (next: 'pt' | 'en') => {
+    if (i18n.language === next) return;
+    await changeLanguage(next);
+    Alert.alert(t('common.languageChangedTitle'), t('common.languageChangedMessage'));
+  };
+
   const bestAccByMode = useMemo(() => {
     const acc: Record<ModeKey, number | null> = { partida: null, alvo: null, sequencia: null, radar: null };
     for (const s of sessions) {
@@ -81,6 +90,31 @@ export default function Home({
   }, [sessions]);
 
   const streak = useMemo(() => calculateStreak(sessions), [sessions]);
+
+  // ── Archetype identity (surfaced on Home per redesign) ──────────────────────
+  const archInfo = useMemo(() => {
+    const stats = buildUserStats(sessions, streak.current);
+    const arch = ARCHETYPES[stats.archetypeId] ?? ARCHETYPES.EXPLORADOR;
+    const next = arch.nextId ? ARCHETYPES[arch.nextId] : null;
+    const criteria = arch.targetCriteria;
+    const doneCount = criteria.filter(c => c.done(stats)).length;
+    const progress = criteria.length > 0 ? doneCount / criteria.length : 1;
+    const firstUnmet = criteria.find(c => !c.done(stats));
+    const hint = firstUnmet
+      ? `${firstUnmet.label}${firstUnmet.dynamicSuffix?.(stats) ?? ''}`
+      : null;
+    return { arch, next, progress, hint };
+  }, [sessions, streak.current]);
+
+  const totalSessions = sessions.length;
+
+  const equippedAchievement = useMemo(() => {
+    if (!userProfile.equippedTitle) return null;
+    const ach = ACHIEVEMENTS.find(a => a.id === userProfile.equippedTitle);
+    if (!ach) return null;
+    const stats = buildUserStats(sessions, streak.current);
+    return ach.unlocked(stats) ? ach : null;
+  }, [userProfile.equippedTitle, sessions, streak.current]);
 
   // Tick a cada 60s para atualizar o countdown da graça no badge
   const [graceTick, setGraceTick] = useState(0);
@@ -119,19 +153,59 @@ export default function Home({
       {/* ── Fixed header ── */}
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <View style={styles.headerLeft}>
-          <Text style={styles.reflexoSmall}>REFLEXO</Text>
-          <Text style={styles.greeting}>Olá, {userProfile.name || 'Atleta'}</Text>
-        </View>
-        <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
-          {(() => {
-            const av = (userProfile.selectedAvatar ?? 'initial') !== 'initial'
-              ? AVATARS.find(a => a.id === userProfile.selectedAvatar)
-              : null;
-            return av?.icon
-              ? <SvgXml xml={av.icon} width={42} height={42} />
-              : <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>;
+          <Text style={styles.reflexoSmall}>{t('home.appName')}</Text>
+          <Text style={styles.greeting}>{t('home.greeting', { name: userProfile.name || 'Atleta' })}</Text>
+          {equippedAchievement && (() => {
+            const color = RARITY_CONFIG[equippedAchievement.rarity].cor;
+            return (
+              <View style={styles.titleRow}>
+                <SvgXml xml={equippedAchievement.icon} width={16} height={16} />
+                <Text
+                  style={[
+                    styles.titleText,
+                    {
+                      color,
+                      textShadowColor: color,
+                      textShadowOffset: { width: 0, height: 0 },
+                      textShadowRadius: 8,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  ✦ {equippedAchievement.title} ✦
+                </Text>
+              </View>
+            );
           })()}
-        </TouchableOpacity>
+        </View>
+        <View style={styles.headerRight}>
+          <View style={styles.langRow}>
+            <TouchableOpacity
+              style={[styles.langBtn, lang === 'pt' && styles.langBtnActive]}
+              onPress={() => handleLangChange('pt')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.langFlag}>🇧🇷</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
+              onPress={() => handleLangChange('en')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.langFlag}>🇺🇸</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
+            {(() => {
+              const av = (userProfile.selectedAvatar ?? 'initial') !== 'initial'
+                ? AVATARS.find(a => a.id === userProfile.selectedAvatar)
+                : null;
+              return av?.icon
+                ? <SvgXml xml={av.icon} width={42} height={42} />
+                : <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>;
+            })()}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ── Scrollable content ── */}
@@ -140,50 +214,139 @@ export default function Home({
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Streak block ── */}
+        {/* ── Streak pill ── */}
         {streak.current >= 1 && (
-          <View style={styles.streakCard}>
-            <Text style={styles.streakFire}>🔥</Text>
-            <Text style={[styles.streakNumber, { color: streakColor(streak.current) }]}>
-              {streak.current}
+          <View style={styles.streakPill}>
+            <SvgXml xml={getStreakSvg(streak.current)} width={16} height={16} />
+            <Text style={[styles.streakPillText, { color: streakColor(streak.current) }]}>
+              {t('home.streakDays', { count: streak.current })}
             </Text>
-            <Text style={styles.streakLabel}>dias seguidos</Text>
             {streak.playedToday ? (
               <View style={styles.streakBadgeDone}>
-                <Text style={styles.streakBadgeDoneText}>✓ hoje</Text>
+                <Text style={styles.streakBadgeDoneText}>{t('home.streakToday')}</Text>
               </View>
             ) : (
               <Animated.View style={[styles.streakBadgePulse, { opacity: pulseAnim }]}>
-                <Text style={styles.streakBadgePulseText}>⚡ jogue hoje</Text>
+                <Text style={styles.streakBadgePulseText}>{t('home.streakPlayToday')}</Text>
               </Animated.View>
             )}
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>MODOS DE JOGO</Text>
+        {/* ── CTA dominante — Treinar agora ── */}
+        <TouchableOpacity style={styles.ctaHero} onPress={onStartPartida} activeOpacity={0.9}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.ctaEyebrow}>{t('home.ctaEyebrow')}</Text>
+            <Text style={styles.ctaLabel}>{t('home.ctaLabel')}</Text>
+            <Text style={styles.ctaSub}>{t('home.ctaSub')}</Text>
+          </View>
+          <View style={styles.ctaPlay}>
+            <Text style={styles.ctaPlayIcon}>▶</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* ── Arquétipo — identidade na Home ── */}
+        <TouchableOpacity style={styles.arqCard} onPress={onGoToPerfil} activeOpacity={0.85}>
+          <View style={styles.arqAccent} />
+          <View style={styles.arqTop}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.arqEyebrow}>{t('home.archetypeCurrent')}</Text>
+              <Text style={styles.arqName}>{archInfo.arch.name}</Text>
+            </View>
+            {archInfo.next && (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.arqNextLabel}>{t('home.archetypeNext')}</Text>
+                <Text style={styles.arqNextVal}>{archInfo.next.name} →</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.arqTrack}>
+            <View style={[styles.arqFill, { width: `${Math.round(archInfo.progress * 100)}%` }]} />
+          </View>
+          <Text style={styles.arqHint}>{archInfo.hint ?? t('home.archetypeMaxed')}</Text>
+        </TouchableOpacity>
+
+        {/* ── Stats 2-col ── */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>
+              <Text style={styles.statValGreen}>{bestByMode.partida ?? '—'}</Text>
+              {bestByMode.partida != null && <Text style={styles.statUnit}> ms</Text>}
+            </Text>
+            <Text style={styles.statLbl}>{t('home.statBestReflex')}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>
+              <Text style={styles.statValPurple}>{totalSessions}</Text>
+            </Text>
+            <Text style={styles.statLbl}>{t('home.statSessions')}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>{t('home.modesTitle')}</Text>
 
         {MODE_INFO.map(m => {
+          const mc = MODE_COLORS[m.key];
+
+          // ── Modo bloqueado — cadeado + "Complete [modo anterior] para desbloquear" ──
+          if (!modeUnlocks[m.key]) {
+            const prev = PREV_MODE[m.key] ?? 'partida';
+            return (
+              <View key={m.key} style={[styles.modeCard, styles.modeCardLocked]}>
+                <View style={[styles.modeAccentBar, { backgroundColor: '#2d3a55' }]} />
+                <View style={styles.modeCardInner}>
+                  <View style={styles.modeTop}>
+                    <View style={{ opacity: 0.45 }}>
+                      <SvgXml xml={m.icon} width={28} height={28} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modeName, { color: '#4a5a7b' }]}>{t(`modes.${m.key}.name`)}</Text>
+                      <Text style={styles.modeDesc}>{t(`modes.${m.key}.desc`)}</Text>
+                    </View>
+                    <SvgXml xml={UI_ICONS.lock} width={20} height={20} />
+                  </View>
+                  <View style={styles.modeDivider} />
+                  <View style={styles.modeBottom}>
+                    <View style={styles.lockedMsgRow}>
+                      <SvgXml xml={UI_ICONS.lock} width={12} height={12} />
+                      <Text style={styles.lockedMsg} numberOfLines={1}>
+                        {t('home.unlockHint', { mode: t(`modes.${prev}.name`) })}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            );
+          }
+
           const best = bestByMode[m.key];
           const lvl = best !== null && best !== undefined ? getLevelForMode(best, m.key) : null;
-          const mc = MODE_COLORS[m.key];
           const bestAcc = bestAccByMode[m.key];
 
           // ── Badge de energia ──────────────────────────────────────────
+          // Energia só aparece na UI quando a monetização está ativa.
+          // (A contagem continua rastreada nos bastidores — só a apresentação some.)
           const modeEnergy = energyCounts ? energyCounts[m.key] : null;
           const noEnergy = !inGrace && modeEnergy !== null && modeEnergy <= 0;
           let energyBadgeText: string | null = null;
           let energyBadgeStyle: object = styles.energyBadgeOk;
-          if (inGrace && graceExpiryMs !== null) {
-            void graceTick; // força re-render quando tick muda
-            const msLeft = Math.max(0, graceExpiryMs - Date.now());
-            const h = Math.floor(msLeft / (60 * 60 * 1000));
-            const min = Math.floor((msLeft % (60 * 60 * 1000)) / 60_000);
-            const displayTime = h > 0 ? `${h}h` : min > 0 ? `${min}m` : '<1m';
-            energyBadgeText = `⚡ Grátis · expira em ${displayTime}`;
-            energyBadgeStyle = styles.energyBadgeGrace;
-          } else if (modeEnergy !== null) {
-            energyBadgeText = `⚡ ${modeEnergy}/${MAX_ENERGY_PER_MODE}`;
-            energyBadgeStyle = noEnergy ? styles.energyBadgeEmpty : styles.energyBadgeOk;
+          if (MONETIZATION_ENABLED) {
+            if (hasInfiniteEnergy()) {
+              // Assinante Premium — energia infinita (∞ em vez do contador)
+              energyBadgeText = t('home.energyInfinite');
+              energyBadgeStyle = styles.energyBadgeOk;
+            } else if (inGrace && graceExpiryMs !== null) {
+              void graceTick; // força re-render quando tick muda
+              const msLeft = Math.max(0, graceExpiryMs - Date.now());
+              const h = Math.floor(msLeft / (60 * 60 * 1000));
+              const min = Math.floor((msLeft % (60 * 60 * 1000)) / 60_000);
+              const displayTime = h > 0 ? `${h}h` : min > 0 ? `${min}m` : '<1m';
+              energyBadgeText = t('home.graceExpiring', { time: displayTime });
+              energyBadgeStyle = styles.energyBadgeGrace;
+            } else if (modeEnergy !== null) {
+              energyBadgeText = t('home.energyCount', { current: modeEnergy, max: MAX_ENERGY_PER_MODE });
+              energyBadgeStyle = noEnergy ? styles.energyBadgeEmpty : styles.energyBadgeOk;
+            }
           }
 
           return (
@@ -199,8 +362,8 @@ export default function Home({
                 <View style={styles.modeTop}>
                   <SvgXml xml={m.icon} width={28} height={28} />
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.modeName, { color: mc.accent }]}>{m.name}</Text>
-                    <Text style={styles.modeDesc}>{m.desc}</Text>
+                    <Text style={[styles.modeName, { color: mc.accent }]}>{t(`modes.${m.key}.name`)}</Text>
+                    <Text style={styles.modeDesc}>{t(`modes.${m.key}.desc`)}</Text>
                   </View>
                   <Text style={[styles.modeArrow, { color: mc.accent }]}>›</Text>
                 </View>
@@ -211,14 +374,14 @@ export default function Home({
                   <View style={styles.modeBottom}>
                     <View style={{ flexShrink: 1 }}>
                       <Text style={styles.modeBestLabel}>
-                        {'Sua melhor: '}
+                        {t('home.yourBest')}
                         <Text style={[styles.modeBestMs, { color: lvl.color }]}>{best} ms</Text>
                         {bestAcc !== null
                           ? <Text style={styles.modeBestAcc}>{` · ${Math.round(bestAcc * 100)}%`}</Text>
                           : null}
                       </Text>
                       <Text style={styles.modeBestSubLabel}>
-                        {(m.key === 'alvo' || m.key === 'radar') ? 'Melhor Tempo Reflexo' : 'Média RT'}
+                        {(m.key === 'alvo' || m.key === 'radar') ? t('home.bestReflexTime') : t('home.avgRt')}
                       </Text>
                     </View>
                     <View style={styles.modeBottomRight}>
@@ -230,14 +393,14 @@ export default function Home({
                       <View style={[styles.levelPill, { backgroundColor: lvl.bg }]}>
                         <View style={[styles.levelDot, { backgroundColor: lvl.color }]} />
                         <Text style={[styles.levelPillText, { color: lvl.color }]} numberOfLines={1}>
-                          {lvl.label}
+                          {t(`levels.${lvl.labelKey}.label` as any)}
                         </Text>
                       </View>
                     </View>
                   </View>
                 ) : (
                   <View style={styles.modeBottom}>
-                    <Text style={styles.modeBestLabel}>Ainda não jogado</Text>
+                    <Text style={styles.modeBestLabel}>{t('home.notPlayed')}</Text>
                     <View style={styles.modeBottomRight}>
                       {energyBadgeText !== null && (
                         <Text style={[styles.energyBadge, energyBadgeStyle]} numberOfLines={1}>
@@ -245,7 +408,7 @@ export default function Home({
                         </Text>
                       )}
                       <View style={[styles.newPill, { borderColor: mc.accent + '66' }]}>
-                        <Text style={[styles.newPillText, { color: mc.accent }]}>NOVO</Text>
+                        <Text style={[styles.newPillText, { color: mc.accent }]}>{t('common.newBadge')}</Text>
                       </View>
                     </View>
                   </View>
@@ -257,19 +420,17 @@ export default function Home({
 
         {/* F1 insight strip */}
         <View style={styles.insightStrip}>
-          <Text style={styles.insightIcon}>🏁</Text>
+          <SvgXml xml={ACHIEVEMENT_ICONS.piloto} width={22} height={22} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.insightTitle}>Benchmark F1</Text>
-            <Text style={styles.insightBody}>
-              Pilotos de Fórmula 1 largam em 150–250 ms — testados em condições de corrida real.
-            </Text>
+            <Text style={styles.insightTitle}>{t('home.f1BenchmarkTitle')}</Text>
+            <Text style={styles.insightBody}>{t('home.f1BenchmarkBody')}</Text>
           </View>
         </View>
 
         <Text style={styles.footer}>
           {sessions.length > 0
-            ? `${sessions.length} sessão${sessions.length > 1 ? 'ões' : ''} registrada${sessions.length > 1 ? 's' : ''}`
-            : 'Baseado em benchmarks científicos de atletas de elite'}
+            ? t('home.sessionsCount', { count: sessions.length })
+            : t('home.noSessions')}
         </Text>
       </ScrollView>
     </View>
@@ -286,15 +447,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
-  headerLeft: { gap: 2 },
+  headerLeft: { gap: 2, flex: 1 },
+  headerRight: { alignItems: 'flex-end', gap: 6 },
   reflexoSmall: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 4 },
   greeting: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  titleText: { fontSize: 13, fontWeight: '800', letterSpacing: 1 },
   avatar: {
     width: 42, height: 42, borderRadius: 21,
     backgroundColor: '#1A6DB5',
     alignItems: 'center', justifyContent: 'center',
   },
   avatarLetter: { fontSize: 17, fontWeight: '800', color: '#fff' },
+
+  // ── Compact language selector (header) ────────────────────────────────────
+  langRow: { flexDirection: 'row', gap: 4 },
+  langBtn: {
+    paddingHorizontal: 6, paddingVertical: 3,
+    borderRadius: 6, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#111a2e',
+  },
+  langBtnActive: {
+    borderColor: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,0.18)',
+  },
+  langFlag: { fontSize: 14, lineHeight: 16 },
 
   scroll: { paddingHorizontal: 20, paddingBottom: 8 },
   sectionTitle: { fontSize: 10, fontWeight: '700', color: '#3a4a6b', letterSpacing: 2.5, marginBottom: 12 },
@@ -318,10 +496,74 @@ const styles = StyleSheet.create({
   },
   streakBadgePulseText: { fontSize: 11, color: '#f59e0b', fontWeight: '700' },
 
+  // ── Streak pill (compact) ──────────────────────────────────────────────────
+  streakPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.22)',
+    borderRadius: 22, paddingLeft: 10, paddingRight: 8, paddingVertical: 5,
+    marginBottom: 14,
+  },
+  streakPillText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
+
+  // ── CTA hero ──────────────────────────────────────────────────────────────
+  ctaHero: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#10b981', borderRadius: 18,
+    paddingVertical: 18, paddingHorizontal: 20, marginBottom: 14,
+  },
+  ctaEyebrow: {
+    fontSize: 10, fontWeight: '800', letterSpacing: 1.5,
+    color: 'rgba(6,18,12,0.55)', marginBottom: 3,
+  },
+  ctaLabel: { fontSize: 26, fontWeight: '900', color: '#06120c', letterSpacing: 0.5, lineHeight: 28 },
+  ctaSub: { fontSize: 12, color: 'rgba(6,18,12,0.6)', marginTop: 3, fontWeight: '600' },
+  ctaPlay: {
+    width: 50, height: 50, borderRadius: 25,
+    backgroundColor: 'rgba(0,0,0,0.14)',
+    alignItems: 'center', justifyContent: 'center', marginLeft: 12,
+  },
+  ctaPlayIcon: { fontSize: 18, color: '#06120c', marginLeft: 3 },
+
+  // ── Arquétipo card ─────────────────────────────────────────────────────────
+  arqCard: {
+    backgroundColor: '#111a2e', borderRadius: 16, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    padding: 16, marginBottom: 14, overflow: 'hidden',
+  },
+  arqAccent: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+    backgroundColor: '#8b5cf6',
+  },
+  arqTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
+  arqEyebrow: { fontSize: 10, fontWeight: '700', color: '#4a5a7b', letterSpacing: 1.5, marginBottom: 3 },
+  arqName: { fontSize: 20, fontWeight: '900', color: '#8b5cf6', letterSpacing: 0.5 },
+  arqNextLabel: { fontSize: 10, color: '#4a5a7b', marginBottom: 2 },
+  arqNextVal: { fontSize: 12, fontWeight: '700', color: '#10b981' },
+  arqTrack: { height: 4, borderRadius: 3, backgroundColor: '#0b1220', overflow: 'hidden', marginBottom: 8 },
+  arqFill: { height: 4, borderRadius: 3, backgroundColor: '#8b5cf6' },
+  arqHint: { fontSize: 12, color: '#7a8aa0', lineHeight: 18 },
+
+  // ── Stats 2-col ────────────────────────────────────────────────────────────
+  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  statCard: {
+    flex: 1, backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 16, paddingVertical: 14,
+  },
+  statVal: { fontSize: 26, fontWeight: '900', letterSpacing: -0.5, marginBottom: 4 },
+  statValGreen: { color: '#10b981' },
+  statValPurple: { color: '#8b5cf6' },
+  statUnit: { fontSize: 12, color: '#4a5a7b', fontWeight: '600' },
+  statLbl: { fontSize: 11, color: '#4a5a7b' },
+
   modeCard: {
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     flexDirection: 'row', marginBottom: 10, overflow: 'hidden',
   },
+  modeCardLocked: { borderColor: 'rgba(255,255,255,0.06)', opacity: 0.8 },
+  lockedMsgRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  lockedMsg: { fontSize: 12, color: '#4a5a7b', fontWeight: '600', flex: 1 },
   modeAccentBar: { width: 4 },
   modeCardInner: { flex: 1 },
   modeTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, paddingBottom: 12 },
@@ -373,12 +615,12 @@ const styles = StyleSheet.create({
 
   insightStrip: {
     flexDirection: 'row', gap: 12, alignItems: 'flex-start',
-    backgroundColor: '#111a2e', borderRadius: 12, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: 16, marginTop: 4, marginBottom: 16,
+    backgroundColor: 'rgba(139,92,246,0.10)', borderRadius: 12, borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.25)', padding: 16, marginTop: 4, marginBottom: 16,
   },
   insightIcon: { fontSize: 22 },
-  insightTitle: { fontSize: 12, fontWeight: '700', color: '#fff', marginBottom: 4 },
-  insightBody: { fontSize: 12, color: '#4a5a7b', lineHeight: 18 },
+  insightTitle: { fontSize: 12, fontWeight: '700', color: '#cbd5e1', marginBottom: 4 },
+  insightBody: { fontSize: 12, color: '#7a8aa0', lineHeight: 18 },
 
   footer: { fontSize: 11, color: '#2d3a55', textAlign: 'center', marginBottom: 4 },
 });

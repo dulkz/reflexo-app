@@ -3,17 +3,10 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AgeRange } from '../../types/user';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
-
-const AGE_OPTIONS: { value: AgeRange; label: string }[] = [
-  { value: '<25',   label: 'Menos de 25' },
-  { value: '25-40', label: '25 – 40' },
-  { value: '40-55', label: '40 – 55' },
-  { value: '55-70', label: '55 – 70' },
-  { value: '70+',   label: '70+' },
-];
 
 interface Props {
   initialAgeRange: AgeRange | null;
@@ -22,14 +15,23 @@ interface Props {
 }
 
 export default function TriageAge({ initialAgeRange, onNext, onBack }: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<AgeRange | null>(initialAgeRange);
+
+  const AGE_OPTIONS: { value: AgeRange; label: string }[] = [
+    { value: '<25',   label: t('triage.age.options.lt25') },
+    { value: '25-40', label: t('triage.age.options.r25_40') },
+    { value: '40-55', label: t('triage.age.options.r40_55') },
+    { value: '55-70', label: t('triage.age.options.r55_70') },
+    { value: '70+',   label: t('triage.age.options.r70plus') },
+  ];
 
   return (
     <View style={styles.root}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Text style={styles.backText}>← Voltar</Text>
+          <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
         <View style={styles.dotsRow}>
           {[1, 2, 3, 4, 5].map(n => (
@@ -41,10 +43,8 @@ export default function TriageAge({ initialAgeRange, onNext, onBack }: Props) {
 
       {/* Content */}
       <View style={styles.body}>
-        <Text style={styles.title}>Qual sua faixa etária?</Text>
-        <Text style={styles.subtitle}>
-          A gente usa pra te comparar com o grupo certo — sua ambição continua a mesma.
-        </Text>
+        <Text style={styles.title}>{t('triage.age.title')}</Text>
+        <Text style={styles.subtitle}>{t('triage.age.subtitle')}</Text>
 
         <View style={styles.pillsGrid}>
           {AGE_OPTIONS.map(opt => {
@@ -73,7 +73,7 @@ export default function TriageAge({ initialAgeRange, onNext, onBack }: Props) {
           activeOpacity={selected ? 0.8 : 1}
         >
           <Text style={[styles.btnPrimaryText, !selected && styles.btnDisabledText]}>
-            CONTINUAR
+            {t('common.continue')}
           </Text>
         </TouchableOpacity>
       </View>

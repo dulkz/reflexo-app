@@ -3,7 +3,9 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Platform, StatusBar as RNStatusBar,
 } from 'react-native';
-import { getAmbitionById } from '../../config/ambitions';
+import { useTranslation } from 'react-i18next';
+import { SvgXml } from 'react-native-svg';
+import { getAmbitionById, GROUP_COLOR } from '../../config/ambitions';
 import JourneyMap from '../../components/JourneyMap';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
@@ -15,6 +17,7 @@ interface Props {
 }
 
 export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: Props) {
+  const { t } = useTranslation();
   const ambition = getAmbitionById(ambitionId);
   if (!ambition) return null;
 
@@ -22,10 +25,13 @@ export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: P
     <View style={styles.root}>
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <View style={{ width: 60 }} />
-        <Text style={styles.headerTitle}>SUA JORNADA</Text>
+        <Text style={styles.headerTitle}>{t('triage.baseline.journeyTitle')}</Text>
         <View style={{ width: 60 }} />
       </View>
-      <Text style={styles.ambitionSub}>{`Rumo a ${ambition.name} ${ambition.icon}`}</Text>
+      <View style={styles.ambitionSubRow}>
+        <SvgXml xml={ambition.icon} width={28} height={28} />
+        <Text style={styles.ambitionSubText}>{t('triage.baseline.headingTo', { name: ambition.name })}</Text>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <JourneyMap
@@ -37,8 +43,12 @@ export default function TriageJourneyMap({ ambitionId, baselineMs, onFinish }: P
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.btnPrimary} onPress={onFinish} activeOpacity={0.8}>
-          <Text style={styles.btnPrimaryText}>COMEÇAR A JOGAR</Text>
+        <TouchableOpacity
+          style={[styles.btnPrimary, { backgroundColor: GROUP_COLOR[ambition.group] }]}
+          onPress={onFinish}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.btnPrimaryText}>{t('triage.baseline.startPlaying')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -53,7 +63,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 4,
   },
   headerTitle: { fontSize: 13, fontWeight: '800', color: '#fff', letterSpacing: 2 },
-  ambitionSub: { fontSize: 13, color: '#4a5a7b', textAlign: 'center', marginBottom: 20, paddingHorizontal: 24 },
+  ambitionSubRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, marginBottom: 20, paddingHorizontal: 24,
+  },
+  ambitionSubText: { fontSize: 13, color: '#4a5a7b' },
 
   scroll: { paddingHorizontal: 24 },
 

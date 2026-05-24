@@ -1,25 +1,42 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Pressable, Alert,
-  Animated, Platform, StatusBar as RNStatusBar,
+  Animated, Platform, StatusBar as RNStatusBar, ScrollView,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { SvgXml } from 'react-native-svg';
 import { getLevelInfo } from '../utils/levels';
 import { playSfx } from '../utils/sfx';
+import { hapticError } from '../utils/haptics';
+import { shake } from '../utils/animations';
+import { RARITY_ICONS_SVG, UI_ICONS, ICONS } from '../assets/icons';
+import ModeTutorial from '../components/ModeTutorial';
+import TargetShape, { AlvoShape } from '../components/TargetShape';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const TOTAL_ROUNDS = 10;
-const ERROR_PENALTY = 150;
+const ERROR_PENALTY = 150;   // toque na cor errada
+const TIMEOUT_PENALTY = 200; // sem toque a tempo (total = CHALLENGE_TIMEOUT + 200 = 1700ms)
 const READY_DELAY = 700;
 const INITIAL_WAIT_MIN = 1000;
 const INITIAL_WAIT_MAX = 3000;
-const CHALLENGE_TIMEOUT = 2000;
+const CHALLENGE_TIMEOUT = 1500;
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
-const CIRCLE_COLORS = [
-  { key: 'AZUL',    color: '#3b82f6', bg: 'rgba(59,130,246,0.15)'  },
-  { key: 'VERDE',   color: '#10b981', bg: 'rgba(16,185,129,0.15)'  },
-  { key: 'LARANJA', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  },
-  { key: 'ROXO',    color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)'  },
+// Posições FIXAS e permanentes — nunca mudam de rodada para rodada.
+// Cada posição tem uma FORMA distinta (acessibilidade de daltonismo) + a cor atual.
+// Índice = posição no grid 2×2:
+//   0 = top-left: CÍRCULO azul · 1 = top-right: TRIÂNGULO laranja
+//   2 = bottom-left: QUADRADO roxo · 3 = bottom-right: HEXÁGONO verde
+const SHAPE_SIZE = 124;
+interface AlvoTarget { key: string; shape: AlvoShape; shapeKey: string; color: string; bg: string }
+const CIRCLE_COLORS: AlvoTarget[] = [
+  { key: 'AZUL',    shape: 'circle',   shapeKey: 'CIRCULO',   color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' }, // 0 top-left
+  { key: 'LARANJA', shape: 'triangle', shapeKey: 'TRIANGULO', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' }, // 1 top-right
+  { key: 'ROXO',    shape: 'square',   shapeKey: 'QUADRADO',  color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' }, // 2 bottom-left
+  { key: 'VERDE',   shape: 'hexagon',  shapeKey: 'HEXAGONO',  color: '#10b981', bg: 'rgba(16,185,129,0.15)' }, // 3 bottom-right
 ];
 
 type AlvoState = 'intro' | 'initial_wait' | 'ready' | 'challenge' | 'correct' | 'wrong' | 'done';
@@ -31,32 +48,24 @@ interface Props {
   onBack: () => void;
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 export default function ModoAlvo({ onComplete, onBack }: Props) {
+  const { t } = useTranslation();
   const [gameState, setGameState] = useState<AlvoState>('intro');
   const confirmAbort = useCallback(() => {
     Alert.alert(
-      'Deseja desistir?',
-      'O progresso desta sessão não será salvo.',
+      t('common.quitTitle'),
+      t('common.quitMessage'),
       [
-        { text: 'Continuar jogando', style: 'cancel' },
-        { text: 'Desistir', style: 'destructive', onPress: onBack },
+        { text: t('common.keepPlaying'), style: 'cancel' },
+        { text: t('common.quit'), style: 'destructive', onPress: onBack },
       ],
     );
-  }, [onBack]);
+  }, [onBack, t]);
   const [round, setRound] = useState(1);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [targetIdx, setTargetIdx] = useState(0);
-  const [colorOrder, setColorOrder] = useState([0, 1, 2, 3]);
   const [lastResult, setLastResult] = useState<RoundResult | null>(null);
+  const [wrongColorIdx, setWrongColorIdx] = useState<number | null>(null);
 
   const signalTime = useRef(0);
   const responded = useRef(false);
@@ -70,6 +79,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
 
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const flashIsRed = useRef(false);
+  const shakeX = useRef(new Animated.Value(0)).current; // wrong-circle shake
 
   useEffect(() => () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
@@ -84,7 +94,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
     responded.current = true;
     if (challengeTimeoutTimer.current) clearTimeout(challengeTimeoutTimer.current);
     timeoutCount.current += 1;
-    const result: RoundResult = { rt: CHALLENGE_TIMEOUT, correct: false, penalizedRt: CHALLENGE_TIMEOUT, targetIdx };
+    const result: RoundResult = { rt: CHALLENGE_TIMEOUT, correct: false, penalizedRt: CHALLENGE_TIMEOUT + TIMEOUT_PENALTY, targetIdx };
     setLastResult(result);
     const newResults = [...results, result];
     setResults(newResults);
@@ -98,7 +108,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
         setRound(next);
         startRound();
       }
-    }, 1400);
+    }, 800);
   };
 
   // Timer starts after 'challenge' render commit — circles are on screen before counting begins.
@@ -117,15 +127,16 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
 
   const flash = useCallback((red: boolean) => {
     flashIsRed.current = red;
-    flashOpacity.setValue(0.45);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 600, useNativeDriver: true }).start();
+    // Error flash per spec: red opacity 0.14 / 200ms. Success flash softer.
+    flashOpacity.setValue(red ? 0.14 : 0.45);
+    Animated.timing(flashOpacity, { toValue: 0, duration: red ? 200 : 500, useNativeDriver: true }).start();
   }, [flashOpacity]);
 
   const startChallenge = useCallback(() => {
+    // Posições permanecem fixas — só a cor-alvo muda a cada rodada.
     const newTarget = Math.floor(Math.random() * 4);
-    const newOrder = shuffle([0, 1, 2, 3]);
     setTargetIdx(newTarget);
-    setColorOrder(newOrder);
+    setWrongColorIdx(null);
     responded.current = false;
     setGameState('challenge'); // signalTime captured in useEffect after this render
   }, []);
@@ -152,11 +163,17 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
     setLastResult(result);
     const newResults = [...results, result];
     setResults(newResults);
-    if (correct) playSfx('hit');
+    if (correct) {
+      playSfx('hit');
+    } else {
+      setWrongColorIdx(pressedColorIdx); // isolate the wrong circle for ring + ✕ + shake
+      hapticError();                     // Notification.Error — decision error
+      shake(shakeX, 6, 400);
+    }
     flash(!correct);
     setGameState(correct ? 'correct' : 'wrong');
 
-    const delay = correct ? 900 : 1400;
+    const delay = 800;
     advanceTimer.current = setTimeout(() => {
       const next = round + 1;
       if (next > TOTAL_ROUNDS) {
@@ -196,24 +213,32 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
             <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.introContainer}>
-          <Text style={styles.introTitle}>MODO ALVO</Text>
-          <Text style={styles.introSub}>4 círculos · 10 rodadas</Text>
-          <View style={styles.howToCard}>
-            <Text style={styles.howToTitle}>Como jogar</Text>
-            <Text style={styles.howToText}>
-              Observe a cor indicada no topo. Toque no círculo dessa cor assim que aparecer. Erro = +150ms de penalidade.
-            </Text>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40, justifyContent: 'center' }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.introIcon}>
+            <SvgXml xml={ICONS.modes.alvo} width={48} height={48} />
           </View>
+          <Text style={styles.introTitle}>{t('target.title')}</Text>
+          <Text style={styles.introSub}>{t('target.subtitle')}</Text>
+          <View style={styles.howToCard}>
+            <Text style={styles.howToTitle}>{t('common.howToPlay')}</Text>
+            <Text style={styles.howToText}>{t('target.howToText')}</Text>
+          </View>
+          <ModeTutorial modeKey="alvo" />
           <TouchableOpacity style={styles.startBtn} onPress={startInitialWait} activeOpacity={0.8}>
-            <Text style={styles.startBtnText}>INICIAR</Text>
+            <Text style={styles.startBtnText}>{t('common.start')}</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }
 
   const targetColor = CIRCLE_COLORS[targetIdx];
+  const correctIconXml = RARITY_ICONS_SVG.desbloqueadas.replace('#f59e0b', '#10b981');
+  const wrongIconXml   = UI_ICONS.lock.replace('#6b7280', '#ef4444');
 
   return (
     <View style={styles.screen}>
@@ -224,7 +249,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
         </TouchableOpacity>
         <View style={styles.progressInfo}>
           <Text style={styles.roundText}>
-            RODADA <Text style={styles.roundNum}>{round}</Text>
+            {t('common.round')} <Text style={styles.roundNum}>{round}</Text>
             <Text style={styles.roundTotal}> / {TOTAL_ROUNDS}</Text>
           </Text>
         </View>
@@ -233,72 +258,75 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
 
       {renderDots()}
 
-      {/* Waiting indicator — shown before first round and between rounds; hides the next target color */}
-      {(gameState === 'initial_wait' || gameState === 'ready') && (
-        <View style={styles.hintArea}>
-          <Text style={styles.waitingIcon}>👁️</Text>
-          <Text style={styles.waitingHint}>aguarde o estímulo</Text>
-        </View>
-      )}
-
-      {/* Target hint — only shown once circles are on screen */}
-      {gameState === 'challenge' && (
-        <View style={styles.hintArea}>
-          <Text style={styles.hintLabel}>TOQUE NO CÍRCULO</Text>
-          <View style={[styles.hintBadge, { backgroundColor: targetColor.bg, borderColor: targetColor.color + '66' }]}>
-            <View style={[styles.hintDot, { backgroundColor: targetColor.color }]} />
-            <Text style={[styles.hintColor, { color: targetColor.color }]}>{targetColor.key}</Text>
+      {/* Círculos sempre visíveis (waiting · signal · feedback) — posições fixas.
+          O cabeçalho acima do grid muda por fase: aguarde / prompt da cor / feedback. */}
+      <View style={styles.gridContainer}>
+        <View style={styles.gridInner}>
+          <View style={styles.headerArea}>
+            {gameState === 'challenge' ? (
+              // SIGNAL — prompt "TOQUE O [FORMA]" (forma + cor reforçam a pista)
+              <View style={styles.badgeArea}>
+                <Text style={styles.hintLabel}>{t('target.tapShape')}</Text>
+                <View style={[styles.hintBadge, { backgroundColor: targetColor.bg, borderColor: targetColor.color + '66' }]}>
+                  <TargetShape shape={targetColor.shape} color={targetColor.color} size={22} />
+                  <Text style={[styles.hintColor, { color: targetColor.color }]}>{t(`target.shapes.${targetColor.shapeKey}`)}</Text>
+                </View>
+              </View>
+            ) : (gameState === 'correct' || gameState === 'wrong') ? (
+              // FEEDBACK
+              <View style={styles.feedbackBlock}>
+                <SvgXml
+                  xml={gameState === 'correct' ? correctIconXml : wrongIconXml}
+                  width={56}
+                  height={56}
+                />
+                <Text style={[styles.feedbackWord, { color: gameState === 'correct' ? '#10b981' : '#ef4444' }]}>
+                  {gameState === 'correct' ? t('target.correct') : t('target.wrong')}
+                </Text>
+                {gameState === 'correct' && lastResult && (
+                  <Text style={[styles.feedbackRt, { color: getLevelInfo(lastResult.rt).color }]}>
+                    {lastResult.rt} ms
+                  </Text>
+                )}
+              </View>
+            ) : (
+              // WAITING — círculos visíveis, sem prompt
+              <Text style={styles.waitingHint}>{t('target.waitHint')}</Text>
+            )}
           </View>
-        </View>
-      )}
 
-      {/* Feedback */}
-      {(gameState === 'correct' || gameState === 'wrong') && lastResult && (
-        <View style={styles.hintArea}>
-          {gameState === 'correct' ? (
-            <View style={styles.feedbackRow}>
-              <Text style={[styles.feedbackRt, { color: getLevelInfo(lastResult.rt).color }]}>
-                {lastResult.rt} ms
-              </Text>
-              <Text style={styles.feedbackLabel}>✓ CORRETO</Text>
-            </View>
-          ) : (
-            <View style={styles.feedbackRow}>
-              <Text style={[styles.feedbackRt, { color: '#ef4444' }]}>+{ERROR_PENALTY} ms</Text>
-              <Text style={[styles.feedbackLabel, { color: '#ef4444' }]}>✗ ERRADO</Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {/* Waiting dots overlay — initial_wait and ready share the same visual */}
-      {(gameState === 'initial_wait' || gameState === 'ready') && (
-        <View style={styles.centeredFull}>
-          <Text style={styles.waitingDots}>· · ·</Text>
-        </View>
-      )}
-
-      {/* Circle grid — visible during challenge, correct, wrong */}
-      {(gameState === 'challenge' || gameState === 'correct' || gameState === 'wrong') && (
-        <View style={styles.gridContainer}>
+          {/* Grid de posições fixas — cada alvo na sua FORMA + cor; alvo certo destacado
+              no acerto; alvo errado com contorno vermelho + ✕ + shake; demais esmaecem. */}
           <View style={styles.grid}>
-            {colorOrder.map((colorIdx) => {
-              const c = CIRCLE_COLORS[colorIdx];
+            {CIRCLE_COLORS.map((c, colorIdx) => {
+              const isTargetCircle = colorIdx === targetIdx;
+              const isWrong = gameState === 'wrong' && colorIdx === wrongColorIdx;
+              const showFeedback = gameState === 'correct' || gameState === 'wrong';
+              const highlight = (gameState === 'correct' && isTargetCircle) || isWrong;
+              const dimmed = showFeedback && !highlight;
               return (
-                <Pressable
+                <AnimatedPressable
                   key={colorIdx}
-                  style={({ pressed }) => [
-                    styles.circle,
-                    { backgroundColor: c.color, opacity: pressed ? 0.7 : 1 },
+                  style={[
+                    styles.shapeBox,
+                    dimmed && styles.circleDimmed,
+                    isWrong && { transform: [{ translateX: shakeX }] },
                   ]}
                   onPressIn={() => handleCirclePress(colorIdx)}
                   disabled={gameState !== 'challenge'}
-                />
+                >
+                  <TargetShape shape={c.shape} color={c.color} size={SHAPE_SIZE} wrong={isWrong} />
+                  {isWrong && (
+                    <View style={styles.xOverlay}>
+                      <Text style={styles.circleX}>✕</Text>
+                    </View>
+                  )}
+                </AnimatedPressable>
               );
             })}
           </View>
         </View>
-      )}
+      </View>
 
       {/* Flash overlay */}
       <Animated.View
@@ -344,34 +372,47 @@ const styles = StyleSheet.create({
     borderRadius: 20, borderWidth: 1,
     paddingHorizontal: 20, paddingVertical: 10,
   },
-  hintDot: { width: 14, height: 14, borderRadius: 7 },
+  hintDot: {
+    width: 20, height: 20, borderRadius: 10,
+    borderWidth: 3, borderColor: '#ffffff',
+  },
   hintColor: { fontSize: 16, fontWeight: '800', letterSpacing: 2 },
-  feedbackRow: { alignItems: 'center', gap: 4 },
+  feedbackBlock: { alignItems: 'center', gap: 10 },
+  feedbackWord: { fontSize: 22, fontWeight: '900', letterSpacing: 3 },
   feedbackRt: { fontSize: 42, fontWeight: '900', letterSpacing: -1 },
-  feedbackLabel: { fontSize: 13, fontWeight: '700', color: '#10b981', letterSpacing: 2 },
 
   centeredFull: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  waitingDots: { fontSize: 32, color: '#1a2540', letterSpacing: 12 },
-  waitingIcon: { fontSize: 26, marginBottom: 6 },
-  waitingHint: { fontSize: 10, fontWeight: '700', color: '#2d3a55', letterSpacing: 1.5 },
+  waitingDots: { fontSize: 48, color: '#2d3a55', letterSpacing: 12 },
+  waitingHint: { fontSize: 13, fontWeight: '700', color: '#4a5a7b', letterSpacing: 1.5 },
 
   gridContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
+  gridInner: { flexDirection: 'column', alignItems: 'center', gap: 24 },
+  // Fixed-height header so the grid never shifts between waiting / signal / feedback.
+  headerArea: { minHeight: 116, alignItems: 'center', justifyContent: 'center' },
+  badgeArea: { alignItems: 'center' },
   grid: { width: 280, height: 280, flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
-  circle: {
-    width: 124, height: 124, borderRadius: 62,
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
+  // Container de toque por alvo — transparente; a forma SVG preenche a área.
+  shapeBox: {
+    width: SHAPE_SIZE, height: SHAPE_SIZE,
+    alignItems: 'center', justifyContent: 'center',
   },
+  circleDimmed: { opacity: 0.3 },
+  // ✕ centralizado sobre a forma no estado de erro
+  xOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  circleX: { fontSize: 44, fontWeight: '900', color: 'rgba(255,255,255,0.92)' },
 
   introContainer: { flex: 1, paddingHorizontal: 24, justifyContent: 'center', paddingBottom: 40 },
+  introIcon: {
+    width: 84, height: 84, borderRadius: 42, alignSelf: 'center',
+    backgroundColor: 'rgba(6,182,212,0.10)',
+    borderWidth: 1, borderColor: 'rgba(6,182,212,0.25)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+  },
   introTitle: { fontSize: 34, fontWeight: '900', color: '#06b6d4', letterSpacing: 3, textAlign: 'center', marginBottom: 6 },
   introSub: { fontSize: 14, color: '#4a5a7b', textAlign: 'center', marginBottom: 32 },
   howToCard: {
-    backgroundColor: '#0f1f2a',
-    borderLeftWidth: 4, borderLeftColor: '#06b6d4',
+    backgroundColor: 'rgba(6,182,212,0.06)',
+    borderWidth: 1, borderColor: 'rgba(6,182,212,0.20)',
     borderRadius: 12, padding: 16, marginBottom: 28,
   },
   howToTitle: { fontSize: 13, fontWeight: '700', color: '#06b6d4', letterSpacing: 0.5, marginBottom: 8 },

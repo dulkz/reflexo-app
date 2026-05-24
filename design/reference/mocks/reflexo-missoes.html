@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Missões</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0: #0D0F14;
+    --bg1: #161B24;
+    --bg2: #1E2533;
+    --bg3: #252D3E;
+    --green: #4AFFA3;
+    --green-dim: rgba(74,255,163,0.10);
+    --green-border: rgba(74,255,163,0.22);
+    --purple: #7B6EF6;
+    --purple-dim: rgba(123,110,246,0.12);
+    --purple-border: rgba(123,110,246,0.25);
+    --amber: #FFB547;
+    --amber-dim: rgba(255,181,71,0.11);
+    --amber-border: rgba(255,181,71,0.22);
+    --red: #FF5757;
+    --red-dim: rgba(255,87,87,0.10);
+    --text0: #EDF0F7;
+    --text1: #8892A4;
+    --text2: #4A5268;
+    --border: rgba(255,255,255,0.06);
+    --border-mid: rgba(255,255,255,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #060709;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 48px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .phone {
+    width: 375px;
+    background: var(--bg0);
+    border-radius: 48px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 0 0 8px rgba(255,255,255,0.02), 0 60px 120px rgba(0,0,0,0.9);
+  }
+
+  .notch {
+    width: 120px; height: 28px;
+    background: #060709;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto;
+  }
+
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 24px 4px;
+    font-size: 11px; color: var(--text2);
+    font-family: 'Space Mono', monospace;
+    margin-top: -28px;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 16px 22px 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 4px;
+  }
+  .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--text0); letter-spacing: 0.5px; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 4px; }
+  .week-label { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--text2); letter-spacing: 0.08em; text-transform: uppercase; }
+  .week-prog { font-size: 12px; font-weight: 600; color: var(--green); font-family: 'Space Mono', monospace; }
+
+  /* ── Scrollable content ── */
+  .scroll { padding: 14px 22px 0; }
+
+  /* ── Meta pessoal banner ── */
+  .meta-banner {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .meta-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--purple-dim);
+    border: 1px solid var(--purple-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .meta-text { flex: 1; }
+  .meta-label { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; margin-bottom: 3px; }
+  .meta-value { font-size: 14px; font-weight: 600; color: var(--purple); }
+  .meta-sub { font-size: 11px; color: var(--text1); margin-top: 1px; }
+  .meta-edit { font-size: 11px; color: var(--text2); padding: 4px 8px; border: 0.5px solid var(--border-mid); border-radius: 6px; cursor: pointer; white-space: nowrap; }
+
+  /* ── Section header ── */
+  .sec-hd {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .sec-title { font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.12em; color: var(--text2); text-transform: uppercase; }
+  .sec-count { font-size: 11px; font-family: 'Space Mono', monospace; }
+
+  /* ── Missão card ── */
+  .missao {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+
+  .missao-main {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .missao-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+
+  .missao-body { flex: 1; min-width: 0; }
+  .missao-title { font-size: 13px; font-weight: 600; color: var(--text0); margin-bottom: 2px; }
+  .missao-sub { font-size: 11px; color: var(--text1); }
+
+  .missao-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+  .missao-prog { font-size: 12px; font-family: 'Space Mono', monospace; color: var(--text1); }
+
+  .prog-bar-wrap { height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .prog-bar-fill { height: 3px; border-radius: 2px; }
+
+  /* CTA inline — toca para jogar o modo */
+  .missao-cta {
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+  }
+  .missao-cta-label { font-size: 12px; color: var(--text1); }
+  .missao-cta-btn {
+    font-size: 11px; font-weight: 600;
+    padding: 5px 12px; border-radius: 8px;
+    cursor: pointer;
+  }
+
+  /* Completa */
+  .missao.done { opacity: 0.6; }
+  .missao.done .missao-title { text-decoration: line-through; color: var(--text1); }
+  .check-circle {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--green-dim);
+    border: 1.5px solid var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--green); font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ── Separador de semana ── */
+  .week-block { margin-bottom: 16px; }
+  .week-header {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .week-title-txt { font-size: 13px; font-weight: 600; color: var(--text0); }
+  .week-dots { display: flex; gap: 4px; }
+  .wdot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── Tab bar ── */
+  .tabbar {
+    background: var(--bg1);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 10px 0 28px;
+    margin-top: 16px;
+  }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .tab svg { width: 22px; height: 22px; stroke: var(--text2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.active svg { stroke: var(--green); }
+  .tab-lbl { font-size: 10px; color: var(--text2); font-weight: 500; }
+  .tab.active .tab-lbl { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>15:53</span><span>48%</span></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="page-title">Missões</div>
+    <div class="header-right">
+      <div class="week-label">Esta semana</div>
+      <div class="week-prog">1 / 3 completas</div>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <!-- Meta pessoal -->
+    <div class="meta-banner">
+      <div class="meta-icon">🎯</div>
+      <div class="meta-text">
+        <div class="meta-label">Sua meta</div>
+        <div class="meta-value">Chegar a 220 ms</div>
+        <div class="meta-sub">Modo Partida · 56 ms de distância</div>
+      </div>
+      <div class="meta-edit">editar</div>
+    </div>
+
+    <!-- ── HOJE ── -->
+    <div class="week-block">
+      <div class="sec-hd">
+        <span class="sec-title">Hoje</span>
+        <span class="sec-count" style="color:var(--text2);">0 / 2</span>
+      </div>
+
+      <!-- Missão 1 — pendente com CTA -->
+      <div class="missao">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:var(--purple-dim);">⏸</div>
+          <div class="missao-body">
+            <div class="missao-title">Jogue Modo Sequência</div>
+            <div class="missao-sub">Controle inibitório · 20 sinais</div>
+          </div>
+          <div class="missao-right">
+            <div class="missao-prog">0 / 1</div>
+          </div>
+        </div>
+        <div class="missao-cta">
+          <span class="missao-cta-label">Não jogado ainda hoje</span>
+          <span class="missao-cta-btn" style="background:var(--purple-dim);color:var(--purple);">Jogar agora →</span>
+        </div>
+      </div>
+
+      <!-- Missão 2 — pendente com CTA -->
+      <div class="missao">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:var(--amber-dim);">📡</div>
+          <div class="missao-body">
+            <div class="missao-title">Jogue Modo Radar</div>
+            <div class="missao-sub">Localização visual · 8 rodadas</div>
+          </div>
+          <div class="missao-right">
+            <div class="missao-prog">0 / 1</div>
+          </div>
+        </div>
+        <div class="missao-cta">
+          <span class="missao-cta-label">Não jogado ainda hoje</span>
+          <span class="missao-cta-btn" style="background:var(--amber-dim);color:var(--amber);">Jogar agora →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEMANA ── -->
+    <div class="week-block">
+      <div class="sec-hd">
+        <span class="sec-title">Semana</span>
+        <span class="sec-count" style="color:var(--green);">1 / 3</span>
+      </div>
+
+      <!-- Semana header — dots de progresso -->
+      <div class="week-header">
+        <div class="week-title-txt">Progresso semanal</div>
+        <div class="week-dots">
+          <div class="wdot" style="background:var(--green);"></div>
+          <div class="wdot" style="background:var(--bg3);border:1px solid var(--border-mid);"></div>
+          <div class="wdot" style="background:var(--bg3);border:1px solid var(--border-mid);"></div>
+        </div>
+      </div>
+
+      <!-- Missão semana 1 — completa -->
+      <div class="missao done">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:var(--green-dim);">🎯</div>
+          <div class="missao-body">
+            <div class="missao-title">Jogue 5 sessões de Alvo</div>
+            <div class="missao-sub">Concluído segunda-feira</div>
+          </div>
+          <div class="check-circle">✓</div>
+        </div>
+      </div>
+
+      <!-- Missão semana 2 — em andamento com barra -->
+      <div class="missao">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:rgba(74,255,163,0.07);">⚡</div>
+          <div class="missao-body">
+            <div class="missao-title">Jogue os 4 modos esta semana</div>
+            <div class="missao-sub">Partida e Alvo concluídos</div>
+          </div>
+          <div class="missao-right">
+            <div class="missao-prog">2 / 4</div>
+          </div>
+        </div>
+        <!-- Barra de progresso -->
+        <div style="padding: 0 16px 12px;">
+          <div class="prog-bar-wrap" style="width:100%;">
+            <div class="prog-bar-fill" style="width:50%;background:var(--green);"></div>
+          </div>
+        </div>
+        <div class="missao-cta">
+          <span class="missao-cta-label">Faltam Sequência e Radar</span>
+          <span class="missao-cta-btn" style="background:var(--green-dim);color:var(--green);">Continuar →</span>
+        </div>
+      </div>
+
+      <!-- Missão semana 3 — em andamento -->
+      <div class="missao">
+        <div class="missao-main">
+          <div class="missao-icon" style="background:var(--amber-dim);">🔥</div>
+          <div class="missao-body">
+            <div class="missao-title">Jogue 3 dias seguidos</div>
+            <div class="missao-sub">Consistência de treino</div>
+          </div>
+          <div class="missao-right">
+            <div class="missao-prog">1 / 3</div>
+          </div>
+        </div>
+        <div style="padding: 0 16px 12px;">
+          <div class="prog-bar-wrap" style="width:100%;">
+            <div class="prog-bar-fill" style="width:33%;background:var(--amber);"></div>
+          </div>
+        </div>
+        <div class="missao-cta">
+          <span class="missao-cta-label">Treine hoje para manter a série</span>
+          <span class="missao-cta-btn" style="background:var(--amber-dim);color:var(--amber);">Treinar →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LORE contextual ── -->
+    <div style="background:var(--purple-dim);border:1px solid var(--purple-border);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--purple);flex-shrink:0;margin-top:5px;"></div>
+      <div style="font-size:12px;color:var(--text1);line-height:1.55;"><span style="color:var(--purple);font-weight:500;">Por que 3 sessões por semana?</span> Estudos de neuroplasticidade mostram que intervalos de 48h entre treinos maximizam a consolidação do aprendizado motor. Mais que isso tem retorno marginal.</div>
+    </div>
+
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tabbar">
+    <div class="tab">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="tab-lbl">Home</span>
+    </div>
+    <div class="tab active">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="tab-lbl">Missões</span>
+    </div>
+    <div class="tab">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="tab-lbl">Perfil</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

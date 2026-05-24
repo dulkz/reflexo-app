@@ -5,14 +5,20 @@ import {
   StatusBar as RNStatusBar,
   NativeSyntheticEvent, NativeScrollEvent,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, {
-  Circle, Polygon, Path, Rect,
+  Circle, Path, Rect,
   Defs, LinearGradient as SvgLinearGradient, Stop,
 } from 'react-native-svg';
-import { saveOnboardingDone } from '../utils/storage';
+import { SvgXml } from 'react-native-svg';
+import { ARCHETYPES } from '../config/archetypes';
 
 const SCREEN_W = Dimensions.get('window').width;
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
+
+// Vertical space reserved at the bottom for the fixed navigation chrome.
+const NAV_RESERVE = 150;
 
 const COLORS = {
   cyan:   '#00f5ff',
@@ -23,10 +29,13 @@ const COLORS = {
   green:  '#10b981',
 };
 
-const SCREEN_COLORS = [COLORS.cyan, COLORS.blue, COLORS.purple, COLORS.amber, COLORS.green];
+// New narrative order: brand → science → goal → modes → archetype.
+// Anchor colour is green; T3 (goal) is the single intentional amber deviation.
+const SCREEN_ACCENTS = [COLORS.cyan, COLORS.green, COLORS.amber, COLORS.blue, COLORS.purple];
+const NAV_COLORS     = [COLORS.green, COLORS.green, COLORS.amber, COLORS.green, COLORS.green];
 
 // Subtle accent-tinted top color for each screen's gradient (fades to #0b1220)
-const GRADIENT_TOP = ['#062028', '#0b1830', '#160f30', '#251410', '#0a1f18'];
+const GRADIENT_TOP = ['#062028', '#0a1f18', '#251410', '#0b1830', '#160f30'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -46,20 +55,12 @@ function GradientBg({ id, topColor }: { id: string; topColor: string }) {
   );
 }
 
-function hexPoints(cx: number, cy: number, r: number): string {
-  const pts: string[] = [];
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i - Math.PI / 2;
-    pts.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`);
-  }
-  return pts.join(' ');
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// Screen 1 — Bem-vindo (cyan)
+// T1 — Marca / brand (cyan)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Screen1() {
+function ScreenBrand() {
+  const { t } = useTranslation();
   const pulse = useRef(new Animated.Value(0)).current;
   const rotate = useRef(new Animated.Value(0)).current;
 
@@ -85,7 +86,7 @@ function Screen1() {
     <View style={styles.screen}>
       <GradientBg id="g1" topColor={GRADIENT_TOP[0]} />
       <View style={styles.content}>
-        <View style={styles.visualBox}>
+        <View style={styles.visualArea}>
           <Animated.View style={[styles.absCenter, { transform: [{ rotate: rot }] }]}>
             <Svg width={220} height={220}>
               <Circle cx={110} cy={110} r={100} fill="none"
@@ -102,168 +103,91 @@ function Screen1() {
           </Animated.View>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.cyan, fontSize: 52, letterSpacing: -2 }]}>
-          REFLEXO
-        </Text>
-        <Text style={styles.subtitle}>
-          Velocidade de reação,{'\n'}medida com ciência.
-        </Text>
-        <Text style={styles.body}>
-          Descubra onde você está. Evolua com dados reais.
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Screen 2 — 3 modos (blue)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function Screen2() {
-  const bar1 = useRef(new Animated.Value(0)).current;
-  const bar2 = useRef(new Animated.Value(0)).current;
-  const bar3 = useRef(new Animated.Value(0)).current;
-  const bar4 = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = (val: Animated.Value, dur: number, delay = 0) => Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(val, { toValue: 1, duration: dur, easing: Easing.inOut(Easing.quad), useNativeDriver: false }),
-        Animated.timing(val, { toValue: 0, duration: dur, easing: Easing.inOut(Easing.quad), useNativeDriver: false }),
-      ])
-    );
-    const a1 = loop(bar1, 700, 0);
-    const a2 = loop(bar2, 1100, 150);
-    const a3 = loop(bar3, 850, 300);
-    const a4 = loop(bar4, 950, 450);
-    a1.start(); a2.start(); a3.start(); a4.start();
-    return () => { a1.stop(); a2.stop(); a3.stop(); a4.stop(); };
-  }, [bar1, bar2, bar3, bar4]);
-
-  const h1 = bar1.interpolate({ inputRange: [0, 1], outputRange: [40, 80] });
-  const h2 = bar2.interpolate({ inputRange: [0, 1], outputRange: [40, 80] });
-  const h3 = bar3.interpolate({ inputRange: [0, 1], outputRange: [40, 80] });
-  const h4 = bar4.interpolate({ inputRange: [0, 1], outputRange: [40, 80] });
-
-  return (
-    <View style={styles.screen}>
-      <GradientBg id="g2" topColor={GRADIENT_TOP[1]} />
-      <View style={styles.content}>
-        <View style={styles.visualBox}>
-          <View style={styles.equalizerRow}>
-            <Animated.View style={[styles.eqBar, { height: h1, backgroundColor: COLORS.blue }]} />
-            <Animated.View style={[styles.eqBar, { height: h2, backgroundColor: COLORS.cyan2 }]} />
-            <Animated.View style={[styles.eqBar, { height: h3, backgroundColor: COLORS.purple }]} />
-            <Animated.View style={[styles.eqBar, { height: h4, backgroundColor: COLORS.amber }]} />
-          </View>
-        </View>
-
-        <Text style={[styles.bigTitle, { color: COLORS.blue }]}>4 modos de treino</Text>
-
-        <View style={styles.modeCardsCol}>
-          <ModeCard color={COLORS.blue}    name="PARTIDA"   desc="Reação simples · 7 tentativas" />
-          <ModeCard color={COLORS.cyan2}   name="ALVO"      desc="Velocidade + precisão · 10 rodadas" />
-          <ModeCard color={COLORS.purple}  name="SEQUÊNCIA" desc="Controle inibitório · Go/NoGo" />
-          <ModeCard color={COLORS.amber}   name="RADAR"     desc="Localização visual · 7 rodadas" />
+        <View style={styles.textBlock}>
+          <Text style={[styles.bigTitle, { color: COLORS.cyan, fontSize: 52, letterSpacing: -2 }]}>
+            {t('onboarding.t1.title')}
+          </Text>
+          <Text style={styles.subtitle}>{t('onboarding.t1.tagline')}</Text>
+          <Text style={styles.body}>{t('onboarding.t1.body')}</Text>
         </View>
       </View>
     </View>
   );
 }
 
-function ModeCard({ color, name, desc }: { color: string; name: string; desc: string }) {
-  return (
-    <View style={styles.modeCard}>
-      <View style={[styles.modeAccent, { backgroundColor: color }]} />
-      <View style={styles.modeBody}>
-        <Text style={[styles.modeName, { color }]}>{name}</Text>
-        <Text style={styles.modeDesc}>{desc}</Text>
-      </View>
-    </View>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// Screen 3 — Progresso (purple)
+// T2 — Ciência / science (green)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Screen3() {
-  const rot1 = useRef(new Animated.Value(0)).current;
-  const rot2 = useRef(new Animated.Value(0)).current;
-  const rot3 = useRef(new Animated.Value(0)).current;
+const WAVE_PATH = 'M0 30 Q50 -8 100 30 T200 30 T300 30 T400 30 T500 30 T600 30';
+
+function ScreenScience() {
+  const { t } = useTranslation();
+  const wave1 = useRef(new Animated.Value(0)).current;
+  const wave2 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const loop = (val: Animated.Value, dur: number) => Animated.loop(
       Animated.timing(val, { toValue: 1, duration: dur, easing: Easing.linear, useNativeDriver: true })
     );
-    const a1 = loop(rot1, 14000);
-    const a2 = loop(rot2, 10000);
-    const a3 = loop(rot3, 18000);
-    a1.start(); a2.start(); a3.start();
-    return () => { a1.stop(); a2.stop(); a3.stop(); };
-  }, [rot1, rot2, rot3]);
+    const a1 = loop(wave1, 4000);
+    const a2 = loop(wave2, 6500);
+    a1.start(); a2.start();
+    return () => { a1.stop(); a2.stop(); };
+  }, [wave1, wave2]);
 
-  const r1 = rot1.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  const r2 = rot2.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-360deg'] });
-  const r3 = rot3.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const tx1 = wave1.interpolate({ inputRange: [0, 1], outputRange: [0, -200] });
+  const tx2 = wave2.interpolate({ inputRange: [0, 1], outputRange: [0, -200] });
+
+  const ROWS: { label: string; val: string }[] = [
+    { label: t('onboarding.t2.stat1Label'), val: t('onboarding.t2.stat1Val') },
+    { label: t('onboarding.t2.stat2Label'), val: t('onboarding.t2.stat2Val') },
+    { label: t('onboarding.t2.stat3Label'), val: t('onboarding.t2.stat3Val') },
+  ];
 
   return (
     <View style={styles.screen}>
-      <GradientBg id="g3" topColor={GRADIENT_TOP[2]} />
+      <GradientBg id="g2" topColor={GRADIENT_TOP[1]} />
       <View style={styles.content}>
-        <View style={styles.visualBox}>
-          <Animated.View style={[styles.absCenter, { transform: [{ rotate: r1 }] }]}>
-            <Svg width={180} height={180}>
-              <Polygon points={hexPoints(90, 90, 80)} fill="none"
-                stroke={COLORS.purple} strokeWidth={2} strokeOpacity={1} />
-            </Svg>
-          </Animated.View>
-          <Animated.View style={[styles.absCenter, { transform: [{ rotate: r2 }] }]}>
-            <Svg width={180} height={180}>
-              <Polygon points={hexPoints(90, 90, 56)} fill="none"
-                stroke={COLORS.purple} strokeWidth={1.5} strokeOpacity={0.55} />
-            </Svg>
-          </Animated.View>
-          <Animated.View style={[styles.absCenter, { transform: [{ rotate: r3 }] }]}>
-            <Svg width={180} height={180}>
-              <Polygon points={hexPoints(90, 90, 32)} fill="none"
-                stroke={COLORS.purple} strokeWidth={1} strokeOpacity={0.3} />
-            </Svg>
-          </Animated.View>
+        <View style={[styles.visualArea, { maxHeight: 140 }]}>
+          <View style={styles.waves}>
+            <Animated.View style={{ position: 'absolute', top: 30, transform: [{ translateX: tx1 }] }}>
+              <Svg width={620} height={60}>
+                <Path d={WAVE_PATH} stroke={COLORS.green} strokeWidth={2.5} fill="none"
+                  strokeOpacity={0.95} strokeLinecap="round" />
+              </Svg>
+            </Animated.View>
+            <Animated.View style={{ position: 'absolute', top: 60, transform: [{ translateX: tx2 }] }}>
+              <Svg width={620} height={60}>
+                <Path d={WAVE_PATH} stroke={COLORS.green} strokeWidth={2} fill="none"
+                  strokeOpacity={0.4} strokeLinecap="round" />
+              </Svg>
+            </Animated.View>
+          </View>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.purple }]}>Tudo registrado.</Text>
-
-        <View style={styles.statsRow}>
-          <Stat color={COLORS.purple} value="17"  label="sessões" />
-          <Stat color={COLORS.purple} value="#"   label="streak" />
-          <Stat color={COLORS.purple} value="40+" label="conquistas" />
+        <View style={styles.textBlock}>
+          <Text style={[styles.bigTitle, { color: COLORS.green }]}>{t('onboarding.t2.title')}</Text>
+          <View style={styles.statRowsCol}>
+            {ROWS.map(r => (
+              <View key={r.label} style={styles.statRow}>
+                <Text style={styles.statKey}>{r.label}</Text>
+                <Text style={[styles.statVal, { color: COLORS.green }]}>{r.val}</Text>
+              </View>
+            ))}
+          </View>
         </View>
-
-        <Text style={styles.body}>
-          Quanto mais você joga, mais rico fica seu histórico.
-        </Text>
       </View>
     </View>
   );
 }
 
-function Stat({ color, value, label }: { color: string; value: string; label: string }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// Screen 4 — Jornada (amber)
+// T3 — Meta / goal (amber)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Screen4({ visible }: { visible: boolean }) {
+function ScreenGoal() {
+  const { t } = useTranslation();
   const pulse = useRef(new Animated.Value(0)).current;
   const lineFill = useRef(new Animated.Value(0)).current;
 
@@ -275,29 +199,20 @@ function Screen4({ visible }: { visible: boolean }) {
       ])
     );
     pulseAnim.start();
+    Animated.timing(lineFill, {
+      toValue: 1, duration: 1500, easing: Easing.out(Easing.ease), useNativeDriver: false,
+    }).start();
     return () => pulseAnim.stop();
-  }, [pulse]);
-
-  useEffect(() => {
-    if (visible) {
-      lineFill.setValue(0);
-      Animated.timing(lineFill, {
-        toValue: 1,
-        duration: 1500,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    }
-  }, [visible, lineFill]);
+  }, [pulse, lineFill]);
 
   const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
   const fillH = lineFill.interpolate({ inputRange: [0, 1], outputRange: [0, 156] });
 
   return (
     <View style={styles.screen}>
-      <GradientBg id="g4" topColor={GRADIENT_TOP[3]} />
+      <GradientBg id="g3" topColor={GRADIENT_TOP[2]} />
       <View style={styles.content}>
-        <View style={styles.visualBox}>
+        <View style={styles.visualArea}>
           <View style={styles.journey}>
             <View style={styles.journeyLineBg} />
             <Animated.View style={[styles.journeyLineFill, { height: fillH }]} />
@@ -317,172 +232,194 @@ function Screen4({ visible }: { visible: boolean }) {
           </View>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.amber }]}>Uma meta só sua.</Text>
-        <Text style={styles.body}>
-          Após sua primeira sessão, fazemos uma triagem rápida.{' '}
-          Você escolhe onde quer chegar.
-        </Text>
-        <Text style={[styles.subtitle, { color: COLORS.amber, marginTop: 6 }]}>
-          A gente mostra o caminho.
-        </Text>
+        <View style={styles.textBlock}>
+          <Text style={[styles.bigTitle, { color: COLORS.amber }]}>{t('onboarding.t3.title')}</Text>
+          <Text style={styles.body}>{t('onboarding.t3.body')}</Text>
+          <View style={styles.goalBox}>
+            <Text style={styles.goalBoxText}>{t('onboarding.t3.box')}</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Screen 5 — Ciência + CTA (green)
+// T4 — Modos / modes (blue, compact)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const WAVE_PATH = 'M0 30 Q50 -8 100 30 T200 30 T300 30 T400 30 T500 30 T600 30';
+function ModeItem({ color, name, desc }: { color: string; name: string; desc: string }) {
+  return (
+    <View style={styles.modeItem}>
+      <View style={[styles.modeDot, { backgroundColor: color }]} />
+      <View style={styles.modeBody}>
+        <Text style={[styles.modeName, { color }]}>{name}</Text>
+        <Text style={styles.modeDesc}>{desc}</Text>
+      </View>
+    </View>
+  );
+}
 
-function Screen5({ onStart }: { onStart: () => void }) {
-  const wave1 = useRef(new Animated.Value(0)).current;
-  const wave2 = useRef(new Animated.Value(0)).current;
+function ScreenModes() {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.screen}>
+      <GradientBg id="g4" topColor={GRADIENT_TOP[3]} />
+      <View style={[styles.content, { justifyContent: 'center' }]}>
+        <View style={{ width: '100%' }}>
+          <Text style={[styles.bigTitle, styles.modesTitle]}>{t('onboarding.t4.title')}</Text>
+          <Text style={styles.modesSubtitle}>{t('onboarding.t4.subtitle')}</Text>
+          <View style={styles.modeCardsCol}>
+            <ModeItem color={COLORS.blue}   name={t('onboarding.t4.partida')}   desc={t('onboarding.t4.partida_desc')} />
+            <ModeItem color={COLORS.amber}  name={t('onboarding.t4.radar')}     desc={t('onboarding.t4.radar_desc')} />
+            <ModeItem color={COLORS.purple} name={t('onboarding.t4.sequencia')} desc={t('onboarding.t4.sequencia_desc')} />
+            <ModeItem color={COLORS.cyan2}  name={t('onboarding.t4.alvo')}      desc={t('onboarding.t4.alvo_desc')} />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// T5 — Arquétipo reveal (purple)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ScreenArchetype() {
+  const { t } = useTranslation();
+  const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const loop = (val: Animated.Value, dur: number) => Animated.loop(
-      Animated.timing(val, { toValue: 1, duration: dur, easing: Easing.linear, useNativeDriver: true })
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 1100, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 1100, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
     );
-    const a1 = loop(wave1, 4000);
-    const a2 = loop(wave2, 6500);
-    a1.start(); a2.start();
-    return () => { a1.stop(); a2.stop(); };
-  }, [wave1, wave2]);
+    anim.start();
+    return () => anim.stop();
+  }, [pulse]);
 
-  const tx1 = wave1.interpolate({ inputRange: [0, 1], outputRange: [0, -200] });
-  const tx2 = wave2.interpolate({ inputRange: [0, 1], outputRange: [0, -200] });
+  const ringScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
+  const ringOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0.15] });
 
   return (
     <View style={styles.screen}>
       <GradientBg id="g5" topColor={GRADIENT_TOP[4]} />
-      <View style={styles.content}>
-        <View style={[styles.visualBox, { height: 120 }]}>
-          <View style={styles.waves}>
-            <Animated.View style={{ position: 'absolute', top: 10, transform: [{ translateX: tx1 }] }}>
-              <Svg width={620} height={60}>
-                <Path d={WAVE_PATH} stroke={COLORS.green} strokeWidth={2.5} fill="none"
-                  strokeOpacity={0.95} strokeLinecap="round" />
-              </Svg>
-            </Animated.View>
-            <Animated.View style={{ position: 'absolute', top: 50, transform: [{ translateX: tx2 }] }}>
-              <Svg width={620} height={60}>
-                <Path d={WAVE_PATH} stroke={COLORS.green} strokeWidth={2} fill="none"
-                  strokeOpacity={0.4} strokeLinecap="round" />
-              </Svg>
-            </Animated.View>
+      <View style={[styles.content, { justifyContent: 'center', gap: 16 }]}>
+        <Text style={styles.arqKicker}>{t('onboarding.t5.kicker')}</Text>
+
+        <View style={styles.arqCard}>
+          <View style={styles.arqAvatarWrap}>
+            <Animated.View style={[styles.arqAvatarRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]} />
+            <View style={styles.arqAvatar}>
+              <SvgXml xml={ARCHETYPES.EXPLORADOR.icon} width={48} height={48} />
+            </View>
           </View>
+          <Text style={styles.arqEyebrow}>{t('onboarding.t5.eyebrow')}</Text>
+          <Text style={styles.arqName}>{t('onboarding.t5.name')}</Text>
+          <Text style={styles.arqDesc}>{t('onboarding.t5.desc')}</Text>
         </View>
 
-        <Text style={[styles.bigTitle, { color: COLORS.green }]}>Seu cérebro é treinável.</Text>
-
-        <View style={styles.sciCardsCol}>
-          <SciCard value="10–15%" label="melhora de RT em 4 semanas" />
-          <SciCard value="∞"      label="neuroplasticidade por repetição" />
-          <SciCard value="< 5min" label="por dia é o suficiente" />
-        </View>
-
-        <TouchableOpacity style={styles.startBtn} onPress={onStart} activeOpacity={0.85}>
-          <Text style={styles.startBtnText}>COMEÇAR</Text>
-        </TouchableOpacity>
+        <Text style={styles.arqFooter}>{t('onboarding.t5.footer')}</Text>
       </View>
     </View>
   );
 }
 
-function SciCard({ value, label }: { value: string; label: string }) {
-  return (
-    <View style={styles.sciCard}>
-      <Text style={styles.sciValue}>{value}</Text>
-      <Text style={styles.sciLabel}>{label}</Text>
-    </View>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// OnboardingModal — root
+// OnboardingModal — intro root (5 passive screens + bottom nav)
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
+  // Called by both "COMEÇAR →" (T5) and "pular introdução" — advances the
+  // OnboardingFlow into the active onboarding (OB1). Persistence happens at the
+  // end of the whole flow, not here.
   onComplete: () => void;
 }
 
 export default function OnboardingModal({ onComplete }: Props) {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
-  const swipeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(swipeAnim, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(swipeAnim, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [swipeAnim]);
-
-  const handleStart = async () => {
-    await saveOnboardingDone();
-    onComplete();
-  };
+  const listRef = useRef<FlatList<number>>(null);
 
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_W);
     if (idx !== activeIndex) setActiveIndex(idx);
   };
 
-  const showSwipeHint = activeIndex < 4;
-  const swipeTranslate = swipeAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 6] });
-  const swipeOpacity   = swipeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0.85] });
-  const hintColor = SCREEN_COLORS[activeIndex];
+  const isLast = activeIndex === 4;
+
+  const goNext = () => {
+    if (isLast) {
+      onComplete();
+      return;
+    }
+    const next = activeIndex + 1;
+    listRef.current?.scrollToIndex({ index: next, animated: true });
+    setActiveIndex(next); // optimistic; reconciled by onMomentumScrollEnd
+  };
+
+  const navColor = NAV_COLORS[activeIndex];
+  const dotColor = SCREEN_ACCENTS[activeIndex];
 
   return (
     <View style={styles.root}>
       <FlatList
+        ref={listRef}
         data={[0, 1, 2, 3, 4]}
         keyExtractor={n => String(n)}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumScrollEnd}
+        getItemLayout={(_, index) => ({ length: SCREEN_W, offset: SCREEN_W * index, index })}
         renderItem={({ item }) => (
           <View style={{ width: SCREEN_W, height: '100%' }}>
-            {item === 0 && <Screen1 />}
-            {item === 1 && <Screen2 />}
-            {item === 2 && <Screen3 />}
-            {item === 3 && <Screen4 visible={activeIndex === 3} />}
-            {item === 4 && <Screen5 onStart={handleStart} />}
+            {item === 0 && <ScreenBrand />}
+            {item === 1 && <ScreenScience />}
+            {item === 2 && <ScreenGoal />}
+            {item === 3 && <ScreenModes />}
+            {item === 4 && <ScreenArchetype />}
           </View>
         )}
       />
 
-      {/* Swipe hint — visible on screens 1–4, hidden on the final CTA screen */}
-      {showSwipeHint && (
-        <Animated.View
-          style={[styles.swipeHint, { opacity: swipeOpacity, transform: [{ translateX: swipeTranslate }] }]}
-          pointerEvents="none"
+      {/* Skip — top-right, low emphasis, hidden on the final commitment screen */}
+      {!isLast && (
+        <TouchableOpacity
+          style={[styles.skipBtn, { top: TOP + 10 }]}
+          onPress={onComplete}
+          activeOpacity={0.6}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Text style={[styles.swipeHintText, { color: hintColor }]}>
-            ← Deslize para avançar
-          </Text>
-        </Animated.View>
+          <Text style={styles.skipText}>{t('onboarding.skip')}</Text>
+        </TouchableOpacity>
       )}
 
-      {/* Progress dots */}
-      <View style={[styles.dotsRow, { top: TOP + 16 }]} pointerEvents="none">
-        {SCREEN_COLORS.map((c, i) => {
-          const active = i === activeIndex;
-          return (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                active && { width: 22, backgroundColor: c },
-              ]}
-            />
-          );
-        })}
+      {/* Bottom navigation — dots above an explicit Próximo/COMEÇAR button */}
+      <View style={[styles.navWrap, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+        <View style={styles.dotsRow}>
+          {SCREEN_ACCENTS.map((_, i) => {
+            const active = i === activeIndex;
+            return (
+              <View
+                key={i}
+                style={[styles.dot, active && { width: 22, backgroundColor: dotColor }]}
+              />
+            );
+          })}
+        </View>
+        <TouchableOpacity
+          style={[styles.navBtn, { backgroundColor: navColor }]}
+          onPress={goNext}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.navBtnText}>
+            {isLast ? t('onboarding.start') : t('onboarding.next')}
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -500,14 +437,14 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 28,
-    paddingTop: TOP + 60,
-    paddingBottom: 40,
+    paddingTop: TOP + 48,
+    paddingBottom: NAV_RESERVE,
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
-  visualBox: {
-    width: 220,
-    height: 220,
+  visualArea: {
+    flex: 1,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -515,6 +452,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  textBlock: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 10,
   },
 
   // Typography
@@ -540,11 +482,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
 
-  // Dots
-  dotsRow: {
+  // Bottom navigation
+  navWrap: {
     position: 'absolute',
-    left: 0,
-    right: 0,
+    left: 0, right: 0, bottom: 0,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    gap: 14,
+  },
+  dotsRow: {
     flexDirection: 'row',
     gap: 8,
     justifyContent: 'center',
@@ -555,59 +501,60 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#1a2a4a',
   },
-
-  // Swipe hint
-  swipeHint: {
-    position: 'absolute',
-    left: 0, right: 0, top: 60,
+  navBtn: {
+    width: '100%',
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  swipeHintText: {
-    fontSize: 12,
-    fontWeight: '700',
+  navBtnText: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#06121f',
     letterSpacing: 1.5,
   },
 
-  // Screen 2 — equalizer + cards
-  equalizerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 14,
-    height: 100,
+  // Skip link
+  skipBtn: {
+    position: 'absolute',
+    right: 20,
+    zIndex: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
   },
-  eqBar: {
-    width: 22,
-    borderRadius: 4,
+  skipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4a5a7b',
+    letterSpacing: 0.5,
   },
-  modeCardsCol: {
-    width: '100%',
-    gap: 10,
-  },
-  modeCard: {
-    flexDirection: 'row',
-    backgroundColor: '#111a2e',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+
+  // T2 — waves + stat rows
+  waves: {
+    width: SCREEN_W,
+    height: 120,
     overflow: 'hidden',
   },
-  modeAccent: { width: 4 },
-  modeBody: { flex: 1, paddingHorizontal: 14, paddingVertical: 10, gap: 2 },
-  modeName: { fontSize: 13, fontWeight: '900', letterSpacing: 1.5 },
-  modeDesc: { fontSize: 12, color: '#7a8aa0' },
-
-  // Screen 3 — stats
-  statsRow: {
-    flexDirection: 'row',
-    gap: 16,
-    justifyContent: 'space-around',
+  statRowsCol: {
     width: '100%',
+    gap: 8,
+    marginTop: 6,
   },
-  stat: { alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 36, fontWeight: '900', letterSpacing: -1 },
-  statLabel: { fontSize: 11, color: '#4a5a7b', letterSpacing: 1.5, fontWeight: '700' },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#111a2e',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  statKey: { fontSize: 13, color: '#7a8aa0', flex: 1 },
+  statVal: { fontSize: 16, fontWeight: '900', letterSpacing: -0.5 },
 
-  // Screen 4 — journey
+  // T3 — journey + goal box
   journey: {
     width: 60,
     height: 200,
@@ -615,17 +562,14 @@ const styles = StyleSheet.create({
   },
   journeyLineBg: {
     position: 'absolute',
-    left: 29,
-    top: 22,
-    width: 2,
-    height: 156,
+    left: 29, top: 22,
+    width: 2, height: 156,
     backgroundColor: '#1a2540',
     borderRadius: 1,
   },
   journeyLineFill: {
     position: 'absolute',
-    left: 29,
-    top: 22,
+    left: 29, top: 22,
     width: 2,
     backgroundColor: COLORS.amber,
     borderRadius: 1,
@@ -636,53 +580,94 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   journeyMidDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 14, height: 14, borderRadius: 7,
     backgroundColor: '#2d3a55',
   },
+  goalBox: {
+    backgroundColor: 'rgba(245,158,11,0.10)',
+    borderColor: 'rgba(245,158,11,0.30)',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  goalBoxText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.amber,
+    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
 
-  // Screen 5 — waves + CTA
-  waves: {
-    width: SCREEN_W,
-    height: 120,
-    overflow: 'hidden',
-  },
-  sciCardsCol: {
-    width: '100%',
-    gap: 8,
-  },
-  sciCard: {
+  // T4 — compact mode list
+  modesTitle: { fontSize: 26, textAlign: 'left', marginBottom: 4 },
+  modesSubtitle: { fontSize: 13, color: '#7a8aa0', marginBottom: 16 },
+  modeCardsCol: { width: '100%', gap: 10 },
+  modeItem: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     backgroundColor: '#111a2e',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.15)',
-    paddingHorizontal: 16,
+    borderColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 14,
     paddingVertical: 12,
-    alignItems: 'center',
-    gap: 14,
   },
-  sciValue: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: COLORS.green,
-    letterSpacing: -0.5,
-    minWidth: 80,
-  },
-  sciLabel: { fontSize: 13, color: '#cbd5e1', flex: 1 },
+  modeDot: { width: 4, height: 34, borderRadius: 2 },
+  modeBody: { flex: 1, gap: 2 },
+  modeName: { fontSize: 13, fontWeight: '900', letterSpacing: 1.5 },
+  modeDesc: { fontSize: 12, color: '#7a8aa0' },
 
-  startBtn: {
-    backgroundColor: COLORS.green,
-    borderRadius: 14,
-    paddingVertical: 18,
-    alignItems: 'center',
+  // T5 — archetype reveal
+  arqKicker: { fontSize: 13, color: '#7a8aa0', textAlign: 'center' },
+  arqCard: {
     width: '100%',
+    backgroundColor: 'rgba(139,92,246,0.12)',
+    borderColor: 'rgba(139,92,246,0.30)',
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingVertical: 22,
+    paddingHorizontal: 18,
+    alignItems: 'center',
   },
-  startBtnText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#0b1220',
-    letterSpacing: 2.5,
+  arqAvatarWrap: {
+    width: 84, height: 84,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 10,
+  },
+  arqAvatarRing: {
+    position: 'absolute',
+    width: 84, height: 84, borderRadius: 42,
+    borderWidth: 2,
+    borderColor: COLORS.purple,
+  },
+  arqAvatar: {
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: '#1e3a5f',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(139,92,246,0.45)',
+  },
+  arqEyebrow: {
+    fontSize: 10, fontWeight: '700',
+    color: '#4a5a7b', letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 3,
+  },
+  arqName: {
+    fontSize: 30, fontWeight: '900',
+    color: COLORS.purple, letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+  arqDesc: {
+    fontSize: 13, color: '#94a3b8',
+    textAlign: 'center', lineHeight: 20,
+  },
+  arqFooter: {
+    fontSize: 13, color: '#7a8aa0',
+    textAlign: 'center', lineHeight: 20,
+    paddingHorizontal: 8,
   },
 });
