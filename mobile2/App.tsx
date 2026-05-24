@@ -122,6 +122,10 @@ function RootGate() {
       if (event === 'SIGNED_IN' && newSession?.user?.id) {
         migrateLocalSessions(newSession.user.id); // sem await — fire-and-forget
       }
+      // Logout: zera o estado guest em memória → RootGate volta ao AuthScreen
+      if (event === 'SIGNED_OUT') {
+        setGuest(false);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
