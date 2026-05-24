@@ -219,7 +219,7 @@ export default function Home({
           <View style={styles.streakPill}>
             <SvgXml xml={getStreakSvg(streak.current)} width={16} height={16} />
             <Text style={[styles.streakPillText, { color: streakColor(streak.current) }]}>
-              {streak.current} {t('home.streakDays')}
+              {t('home.streakDays', { count: streak.current })}
             </Text>
             {streak.playedToday ? (
               <View style={styles.streakBadgeDone}>
