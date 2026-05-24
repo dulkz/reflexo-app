@@ -271,9 +271,9 @@ function ScreenModes() {
           <Text style={styles.modesSubtitle}>{t('onboarding.t4.subtitle')}</Text>
           <View style={styles.modeCardsCol}>
             <ModeItem color={COLORS.blue}   name={t('onboarding.t4.partida')}   desc={t('onboarding.t4.partida_desc')} />
-            <ModeItem color={COLORS.cyan2}  name={t('onboarding.t4.alvo')}      desc={t('onboarding.t4.alvo_desc')} />
-            <ModeItem color={COLORS.purple} name={t('onboarding.t4.sequencia')} desc={t('onboarding.t4.sequencia_desc')} />
             <ModeItem color={COLORS.amber}  name={t('onboarding.t4.radar')}     desc={t('onboarding.t4.radar_desc')} />
+            <ModeItem color={COLORS.purple} name={t('onboarding.t4.sequencia')} desc={t('onboarding.t4.sequencia_desc')} />
+            <ModeItem color={COLORS.cyan2}  name={t('onboarding.t4.alvo')}      desc={t('onboarding.t4.alvo_desc')} />
           </View>
         </View>
       </View>

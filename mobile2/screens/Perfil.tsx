@@ -249,7 +249,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
   }, [archetype.nextId]);
 
   const modeBreakdown = useMemo(() => {
-    const keys: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
+    const keys: ModeKey[] = ['partida', 'radar', 'sequencia', 'alvo'];
     return keys.map(k => {
       const mSessions = sessions.filter(s => s.mode === k);
       const best = stats.bestScoreByMode[k];

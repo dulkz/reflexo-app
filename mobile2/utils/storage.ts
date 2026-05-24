@@ -184,6 +184,10 @@ const USER_DATA_KEYS = [
   'reflexo_has_played_first_game_v1',
   'reflexo_has_seen_triage_prompt_v1',
   'reflexo_user_profile_v1',
+  'mode_unlocked_partida',
+  'mode_unlocked_radar',
+  'mode_unlocked_sequencia',
+  'mode_unlocked_alvo',
 ] as const;
 
 export async function clearUserData(): Promise<void> {
@@ -192,6 +196,56 @@ export async function clearUserData(): Promise<void> {
   } catch (e) {
     console.error('[storage] clearUserData error:', e);
   }
+}
+
+// ── Progressive mode unlock ───────────────────────────────────────────────────
+//
+// Ordem de desbloqueio: Partida → Radar → Sequência → Alvo.
+// Cada modo desbloqueia após 1 sessão completa do modo anterior.
+// Estado persistido em AsyncStorage com chave mode_unlocked_{modeKey}.
+//
+export const MODE_UNLOCK_ORDER: ModeKey[] = ['partida', 'radar', 'sequencia', 'alvo'];
+
+/** Modo que precisa ser concluído para desbloquear `mode` (null se sempre liberado). */
+export function previousModeInChain(mode: ModeKey): ModeKey | null {
+  const i = MODE_UNLOCK_ORDER.indexOf(mode);
+  return i > 0 ? MODE_UNLOCK_ORDER[i - 1] : null;
+}
+
+/** Deriva o estado de desbloqueio a partir das sessões concluídas (fonte da verdade). */
+export function computeModeUnlocks(sessions: SessionRecord[]): Record<ModeKey, boolean> {
+  const played = new Set(sessions.map(s => s.mode));
+  const unlocks: Record<ModeKey, boolean> = { partida: true, radar: false, sequencia: false, alvo: false };
+  for (const mode of MODE_UNLOCK_ORDER) {
+    const prev = previousModeInChain(mode);
+    unlocks[mode] = prev === null ? true : played.has(prev);
+  }
+  return unlocks;
+}
+
+const MODE_UNLOCK_KEY = (mode: ModeKey) => `mode_unlocked_${mode}`;
+
+/** Lê os flags persistidos de desbloqueio (partida sempre true). */
+export async function loadModeUnlocks(): Promise<Record<ModeKey, boolean>> {
+  const unlocks: Record<ModeKey, boolean> = { partida: true, radar: false, sequencia: false, alvo: false };
+  try {
+    const entries = await AsyncStorage.multiGet(MODE_UNLOCK_ORDER.map(MODE_UNLOCK_KEY));
+    for (const [key, val] of entries) {
+      const mode = MODE_UNLOCK_ORDER.find(m => MODE_UNLOCK_KEY(m) === key);
+      if (mode && val === 'true') unlocks[mode] = true;
+    }
+  } catch (e) { console.error('[storage] loadModeUnlocks error:', e); }
+  unlocks.partida = true;
+  return unlocks;
+}
+
+/** Persiste o estado de desbloqueio (um flag por modo). */
+export async function persistModeUnlocks(unlocks: Record<ModeKey, boolean>): Promise<void> {
+  try {
+    await AsyncStorage.multiSet(
+      MODE_UNLOCK_ORDER.map(m => [MODE_UNLOCK_KEY(m), unlocks[m] ? 'true' : 'false']),
+    );
+  } catch (e) { console.error('[storage] persistModeUnlocks error:', e); }
 }
 
 export function getBestByMode(sessions: SessionRecord[]): Record<ModeKey, number | null> {

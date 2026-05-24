@@ -262,7 +262,7 @@ export function HistoricoModeCards({ sessions }: { sessions: SessionRecord[] }) 
   const [expanded, setExpanded] = useState<Record<ModeKey, boolean>>({
     partida: false, alvo: false, sequencia: false, radar: false,
   });
-  const modes: ModeKey[] = ['partida', 'alvo', 'sequencia', 'radar'];
+  const modes: ModeKey[] = ['partida', 'radar', 'sequencia', 'alvo'];
   return (
     <>
       {modes.map(m => (
@@ -294,7 +294,7 @@ export default function Historico({ sessions, userProfile, onUpdateProfile }: Pr
   }, [sessions]);
 
   const { mostPlayed, modeCounts } = useMemo(() => {
-    const counts: Record<ModeKey, number> = { partida: 0, alvo: 0, sequencia: 0, radar: 0 };
+    const counts: Record<ModeKey, number> = { partida: 0, radar: 0, sequencia: 0, alvo: 0 };
     for (const s of sessions) counts[s.mode]++;
     let mp: ModeKey | null = null;
     for (const k of Object.keys(counts) as ModeKey[]) {

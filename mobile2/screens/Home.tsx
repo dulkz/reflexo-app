@@ -15,7 +15,7 @@ import { buildUserStats, ARCHETYPES } from '../config/archetypes';
 import { calculateStreak, streakColor } from '../utils/streak';
 import { MAX_ENERGY_PER_MODE } from '../config/monetization';
 import { hasInfiniteEnergy } from '../utils/energy';
-import { ICONS, ACHIEVEMENT_ICONS } from '../assets/icons';
+import { ICONS, ACHIEVEMENT_ICONS, UI_ICONS } from '../assets/icons';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
@@ -45,19 +45,28 @@ interface Props {
   inGrace?: boolean;
   /** Timestamp de expiração da graça, para countdown (ms) */
   graceExpiryMs?: number | null;
+  /** Estado de desbloqueio progressivo por modo (partida sempre true) */
+  modeUnlocks?: Record<ModeKey, boolean>;
 }
 
+// Ordem de exibição: Partida → Radar → Sequência → Alvo (cadeia de desbloqueio)
 const MODE_INFO: { key: ModeKey; icon: string }[] = [
   { key: 'partida',  icon: ICONS.modes.partida  },
-  { key: 'alvo',     icon: ICONS.modes.alvo     },
-  { key: 'sequencia',icon: ICONS.modes.sequencia },
   { key: 'radar',    icon: ICONS.modes.radar    },
+  { key: 'sequencia',icon: ICONS.modes.sequencia },
+  { key: 'alvo',     icon: ICONS.modes.alvo     },
 ];
+
+// Modo anterior na cadeia — usado na mensagem "Complete [modo] para desbloquear"
+const PREV_MODE: Record<ModeKey, ModeKey | null> = {
+  partida: null, radar: 'partida', sequencia: 'radar', alvo: 'sequencia',
+};
 
 export default function Home({
   onStartPartida, onStartAlvo, onStartSequencia, onStartRadar,
   sessions, bestByMode, userProfile, onGoToPerfil, scrollRef,
   energyCounts = null, inGrace = false, graceExpiryMs = null,
+  modeUnlocks = { partida: true, radar: true, sequencia: true, alvo: true },
 }: Props) {
   const { t } = useTranslation();
   const lang = i18n.language;
@@ -277,9 +286,41 @@ export default function Home({
         <Text style={styles.sectionTitle}>{t('home.modesTitle')}</Text>
 
         {MODE_INFO.map(m => {
+          const mc = MODE_COLORS[m.key];
+
+          // ── Modo bloqueado — cadeado + "Complete [modo anterior] para desbloquear" ──
+          if (!modeUnlocks[m.key]) {
+            const prev = PREV_MODE[m.key] ?? 'partida';
+            return (
+              <View key={m.key} style={[styles.modeCard, styles.modeCardLocked]}>
+                <View style={[styles.modeAccentBar, { backgroundColor: '#2d3a55' }]} />
+                <View style={styles.modeCardInner}>
+                  <View style={styles.modeTop}>
+                    <View style={{ opacity: 0.45 }}>
+                      <SvgXml xml={m.icon} width={28} height={28} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modeName, { color: '#4a5a7b' }]}>{t(`modes.${m.key}.name`)}</Text>
+                      <Text style={styles.modeDesc}>{t(`modes.${m.key}.desc`)}</Text>
+                    </View>
+                    <SvgXml xml={UI_ICONS.lock} width={20} height={20} />
+                  </View>
+                  <View style={styles.modeDivider} />
+                  <View style={styles.modeBottom}>
+                    <View style={styles.lockedMsgRow}>
+                      <SvgXml xml={UI_ICONS.lock} width={12} height={12} />
+                      <Text style={styles.lockedMsg} numberOfLines={1}>
+                        {t('home.unlockHint', { mode: t(`modes.${prev}.name`) })}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            );
+          }
+
           const best = bestByMode[m.key];
           const lvl = best !== null && best !== undefined ? getLevelForMode(best, m.key) : null;
-          const mc = MODE_COLORS[m.key];
           const bestAcc = bestAccByMode[m.key];
 
           // ── Badge de energia ──────────────────────────────────────────
@@ -516,6 +557,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#111a2e', borderRadius: 14, borderWidth: 1,
     flexDirection: 'row', marginBottom: 10, overflow: 'hidden',
   },
+  modeCardLocked: { borderColor: 'rgba(255,255,255,0.06)', opacity: 0.8 },
+  lockedMsgRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  lockedMsg: { fontSize: 12, color: '#4a5a7b', fontWeight: '600', flex: 1 },
   modeAccentBar: { width: 4 },
   modeCardInner: { flex: 1 },
   modeTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, paddingBottom: 12 },

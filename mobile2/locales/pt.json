@@ -47,7 +47,10 @@
     "archetypeNext": "próximo",
     "archetypeMaxed": "Nível máximo atingido — você é elite.",
     "statBestReflex": "melhor reflexo",
-    "statSessions": "sessões totais"
+    "statSessions": "sessões totais",
+    "unlockHint": "Complete {{mode}} para desbloquear",
+    "modeUnlockedTitle": "MODO DESBLOQUEADO!",
+    "tapToContinue": "Toque para continuar"
   },
 
   "modes": {

@@ -47,7 +47,10 @@
     "archetypeNext": "next",
     "archetypeMaxed": "Max level reached — you're elite.",
     "statBestReflex": "best reflex",
-    "statSessions": "total sessions"
+    "statSessions": "total sessions",
+    "unlockHint": "Complete {{mode}} to unlock",
+    "modeUnlockedTitle": "MODE UNLOCKED!",
+    "tapToContinue": "Tap to continue"
   },
 
   "modes": {

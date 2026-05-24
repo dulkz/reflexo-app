@@ -19,13 +19,15 @@ import Missoes from './screens/Missoes';
 import ArchetypeEvolution from './screens/ArchetypeEvolution';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingFlow from './screens/onboarding/OnboardingFlow';
-import { ModeKey } from './utils/levels';
+import { ModeKey, MODE_COLORS } from './utils/levels';
 import {
   SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
   loadHasPlayedFirstGame, saveHasPlayedFirstGame,
   loadHasSeenTriagePrompt, saveHasSeenTriagePrompt,
   clearUserData,
+  computeModeUnlocks, loadModeUnlocks, persistModeUnlocks, previousModeInChain,
 } from './utils/storage';
+import { hapticSuccess } from './utils/haptics';
 import {
   EnergyData, loadEnergy, consumeEnergy, addEnergy,
   ensureInstallDate, isInGracePeriod, hasInfiniteEnergy,
@@ -89,8 +91,15 @@ function AppInner() {
   const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
   // Archetype evolution takeover — set to the new archetype id when the user advances
   const [evolutionTo, setEvolutionTo] = useState<string | null>(null);
+  // Progressive mode unlock — partida sempre liberado; demais via cadeia
+  const [modeUnlocks, setModeUnlocks] = useState<Record<ModeKey, boolean>>({
+    partida: true, radar: false, sequencia: false, alvo: false,
+  });
+  // Fila de modos recém-desbloqueados aguardando toast de feedback
+  const [modeUnlockQueue, setModeUnlockQueue] = useState<ModeKey[]>([]);
   const toastAnim = useRef(new Animated.Value(0)).current;
   const achieveAnim = useRef(new Animated.Value(0)).current;
+  const unlockAnim = useRef(new Animated.Value(0)).current;
   const pendingMilestoneRef = useRef<string | null>(null);
 
   // Partida state
@@ -158,6 +167,19 @@ function AppInner() {
     }
   }, [achievementQueue.length]);
 
+  // Mode-unlock toast — deferred behind evolution / achievement / milestone toasts.
+  const firstModeUnlock = modeUnlockQueue[0] ?? null;
+  const showModeUnlock = firstModeUnlock !== null
+    && evolutionTo === null && achievementQueue.length === 0 && milestoneBeat === null;
+  useEffect(() => {
+    if (showModeUnlock) {
+      unlockAnim.setValue(0);
+      hapticSuccess();
+      Animated.spring(unlockAnim, { toValue: 1, tension: 65, friction: 7, useNativeDriver: true }).start();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showModeUnlock, firstModeUnlock]);
+
   const tryExitSplash = useCallback(() => {
     if (!dataReadyRef.current || !animDoneRef.current) return;
     Animated.timing(splashOpacity, { toValue: 0, duration: 300, useNativeDriver: true })
@@ -169,7 +191,20 @@ function AppInner() {
 
   useEffect(() => {
     Promise.all([
-      loadSessions().then(setSessions),
+      loadSessions().then(async (s) => {
+        setSessions(s);
+        // Estado de desbloqueio: derivado das sessões (fonte da verdade) ∪ flags persistidos.
+        const persisted = await loadModeUnlocks();
+        const derived = computeModeUnlocks(s);
+        const merged: Record<ModeKey, boolean> = {
+          partida: true,
+          radar: derived.radar || persisted.radar,
+          sequencia: derived.sequencia || persisted.sequencia,
+          alvo: derived.alvo || persisted.alvo,
+        };
+        setModeUnlocks(merged);
+        await persistModeUnlocks(merged);
+      }),
       loadUserProfile().then(setUserProfile),
       loadOnboardingDone().then(done => { onboardingNeededRef.current = !done; }),
       loadHasPlayedFirstGame().then(v => { hasPlayedFirstGameRef.current = v; }),
@@ -228,6 +263,18 @@ function AppInner() {
     const newArchIdx = ARCHETYPE_ORDER.indexOf(updatedStats.archetypeId);
     const evolved = newArchIdx > prevArchIdx && newArchIdx > 0;
     if (evolved) setEvolutionTo(updatedStats.archetypeId);
+
+    // ── Progressive mode unlock detection ─────────────────────────────────────
+    // A mode unlocks when the previous mode in the chain gets its first session.
+    const prevUnlocks = computeModeUnlocks(sessions);
+    const newUnlocks = computeModeUnlocks(updated);
+    const newlyUnlockedModes = (['radar', 'sequencia', 'alvo'] as ModeKey[])
+      .filter(m => newUnlocks[m] && !prevUnlocks[m]);
+    setModeUnlocks(newUnlocks);
+    if (newlyUnlockedModes.length > 0) {
+      await persistModeUnlocks(newUnlocks);
+      setModeUnlockQueue(q => [...q, ...newlyUnlockedModes]);
+    }
 
     // ── Milestone beat detection ──────────────────────────────────────────────
     let beatenLabel: string | null = null;
@@ -310,6 +357,8 @@ function AppInner() {
   // • Se dados de energia ainda não carregaram → navega direto (fallback seguro)
   //
   const tryStartMode = useCallback(async (mode: ModeKey) => {
+    // Modo bloqueado — ignora (a Home já impede o toque, isto é só salvaguarda)
+    if (!modeUnlocks[mode]) return;
     // Dados ainda carregando — não acontece em interações normais do usuário
     if (!energyData || installDate === null) {
       setActiveTab('jogar');
@@ -331,7 +380,7 @@ function AppInner() {
       // Sem energia — abre tela de paywall
       setSemEnergiaMode(mode);
     }
-  }, [energyData, installDate]);
+  }, [energyData, installDate, modeUnlocks]);
 
   // Callback da SemEnergia quando o usuário compra energia:
   // 1. energia já foi adicionada dentro de SemEnergia via addEnergy()
@@ -562,6 +611,7 @@ function AppInner() {
             energyCounts={energyCounts}
             inGrace={inGrace}
             graceExpiryMs={installDate !== null ? installDate + 3 * 24 * 60 * 60 * 1000 : null}
+            modeUnlocks={modeUnlocks}
           />
         );
       case 'partida':
@@ -828,6 +878,32 @@ function AppInner() {
             <Text style={styles.toastLabel}>{milestoneBeat}</Text>
             <Text style={styles.toastSub}>Toque para continuar</Text>
           </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Mode unlocked toast — fires haptic + brief celebratory card */}
+      <Modal
+        visible={showModeUnlock}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModeUnlockQueue(q => q.slice(1))}
+      >
+        <TouchableOpacity
+          style={styles.toastOverlay}
+          onPress={() => setModeUnlockQueue(q => q.slice(1))}
+          activeOpacity={1}
+        >
+          {firstModeUnlock && (() => {
+            const accent = MODE_COLORS[firstModeUnlock].accent;
+            return (
+              <Animated.View style={[styles.toastCard, { borderColor: accent + '66', transform: [{ scale: unlockAnim }], opacity: unlockAnim }]}>
+                <SvgXml xml={ICONS.modes[firstModeUnlock]} width={48} height={48} />
+                <Text style={[styles.toastTitle, { color: accent }]}>{t('home.modeUnlockedTitle')}</Text>
+                <Text style={styles.toastLabel}>{t(`modes.${firstModeUnlock}.name`)}</Text>
+                <Text style={styles.toastSub}>{t('home.tapToContinue')}</Text>
+              </Animated.View>
+            );
+          })()}
         </TouchableOpacity>
       </Modal>
 
