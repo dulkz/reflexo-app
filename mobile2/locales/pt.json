@@ -61,8 +61,8 @@
     },
     "alvo": {
       "name": "MODO ALVO",
-      "desc": "4 alvos simultâneos · 10 rodadas",
-      "sub": "Acerte o correto — penalidade por erro"
+      "desc": "Reflexo de decisão · posições fixas · 10 rodadas",
+      "sub": "Posições fixas — toque a cor certa"
     },
     "sequencia": {
       "name": "MODO SEQUÊNCIA",
@@ -90,8 +90,8 @@
 
   "target": {
     "title": "MODO ALVO",
-    "subtitle": "4 círculos · 10 rodadas",
-    "howToText": "Leia a cor indicada e toque no círculo correto. Toque errado = +150ms de penalidade.",
+    "subtitle": "Posições fixas · 10 rodadas",
+    "howToText": "4 cores em posições fixas. Quando a cor aparecer, toque imediatamente no círculo certo. Toque errado = +150ms; sem toque a tempo = +200ms.",
     "tapCircle": "TOQUE NO CÍRCULO",
     "waitHint": "aguarde o estímulo",
     "correct": "CORRETO!",
@@ -558,7 +558,7 @@
     },
     "alvo": {
       "prompt": "TOQUE O VERDE",
-      "text": "Leia a cor indicada e toque no círculo correto. Toque errado = +150ms."
+      "text": "Memorize as posições. Quando a cor aparecer, toque imediatamente."
     },
     "sequencia": {
       "go": "GO — toque rápido",

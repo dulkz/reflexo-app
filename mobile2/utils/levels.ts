@@ -43,14 +43,13 @@ export function computeScore(times: number[]): {
 
 // ── Per-mode level scales ──────────────────────────────────────────────────────
 
+// Choice RT com posições fixas (mais rápido que busca visual) — recalibrado p/ GRUPO 12.
 export const ALVO_LEVELS: Array<LevelInfo & { maxMs: number }> = [
-  { maxMs: 380,      labelKey: 'elite',     label: 'ELITE',       color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Atleta de alto rendimento' },
-  { maxMs: 450,      labelKey: 'veryGood',  label: 'MUITO BOM',   color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Reflexo afiado' },
-  { maxMs: 520,      labelKey: 'good',      label: 'BOM',         color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Tempo de reação sólido' },
-  { maxMs: 600,      labelKey: 'average',   label: 'NA MÉDIA',    color: '#facc15', bg: 'rgba(250,204,21,0.15)',  desc: 'Ponto de partida normal' },
-  { maxMs: 700,      labelKey: 'building',  label: 'CONSTRUINDO', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  desc: 'Todo treino começa aqui' },
-  { maxMs: 850,      labelKey: 'warmingUp', label: 'AQUECENDO',   color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'O ritmo vai aumentar' },
-  { maxMs: Infinity, labelKey: 'starting',  label: 'INICIANDO',   color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada sessão já muda isso' },
+  { maxMs: 250,      labelKey: 'elite',     label: 'ELITE',       color: '#10b981', bg: 'rgba(16,185,129,0.15)',  desc: 'Decisão de elite com posições memorizadas' },
+  { maxMs: 320,      labelKey: 'veryGood',  label: 'MUITO BOM',   color: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  desc: 'Reflexo de decisão afiado' },
+  { maxMs: 420,      labelKey: 'good',      label: 'BOM',         color: '#06b6d4', bg: 'rgba(6,182,212,0.15)',   desc: 'Tempo de decisão sólido' },
+  { maxMs: 550,      labelKey: 'warmingUp', label: 'AQUECENDO',   color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   desc: 'O ritmo vai aumentar' },
+  { maxMs: Infinity, labelKey: 'starting',  label: 'INICIANDO',   color: '#b91c1c', bg: 'rgba(185,28,28,0.18)',   desc: 'Cada rodada já calibra a decisão' },
 ];
 export function getAlvoLevel(ms: number): LevelInfo {
   return ALVO_LEVELS.find(l => ms < l.maxMs) ?? ALVO_LEVELS[ALVO_LEVELS.length - 1];

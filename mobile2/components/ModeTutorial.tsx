@@ -155,9 +155,11 @@ function PartidaTutorial({ color = '#3b82f6', reduceMotion }: SubProps) {
   );
 }
 
-// ── Alvo — grid 2x2, dedo na cor correta, prompt "TOQUE O [COR]" ──────────────
+// ── Alvo — grid 2x2 de posições FIXAS, dedo na cor correta, prompt "TOQUE O [COR]" ──
+// Posições permanentes: TL azul · TR laranja · BL roxo · BR verde
 const ALVO_COLORS = ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'];
-const ALVO_TARGET = 3; // verde
+const ALVO_KEYS = ['AZUL', 'LARANJA', 'ROXO', 'VERDE'];
+const ALVO_TARGET = 3; // verde (bottom-right)
 
 function AlvoTutorial({ reduceMotion }: SubProps) {
   const { t } = useTranslation();
@@ -215,6 +217,15 @@ function AlvoTutorial({ reduceMotion }: SubProps) {
           );
         })}
         <Animated.View style={[styles.gridDot, { opacity: dotOpacity, transform: [{ translateX: dotX }, { translateY: dotY }] }]} />
+      </View>
+      {/* Legenda das 4 posições fixas */}
+      <View style={styles.alvoLegend}>
+        {ALVO_COLORS.map((col, i) => (
+          <View key={i} style={styles.alvoLegendChip}>
+            <View style={[styles.alvoLegendDot, { backgroundColor: col }]} />
+            <Text style={styles.alvoLegendText}>{t(`target.colors.${ALVO_KEYS[i]}`)}</Text>
+          </View>
+        ))}
       </View>
       <Text style={styles.legendCenter}>{t('tutorial.alvo.text')}</Text>
     </View>
@@ -431,6 +442,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.9)',
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)',
   },
+
+  // Alvo — legenda das 4 posições fixas
+  alvoLegend: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+  alvoLegendChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  alvoLegendDot: { width: 9, height: 9, borderRadius: 5 },
+  alvoLegendText: { color: TEXT1, fontSize: 10, fontWeight: '700', letterSpacing: 0.3 },
 
   // Sequência legend
   seqLegend: { gap: 6 },

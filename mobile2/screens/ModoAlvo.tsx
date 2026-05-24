@@ -15,19 +15,23 @@ import ModeTutorial from '../components/ModeTutorial';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const TOTAL_ROUNDS = 10;
-const ERROR_PENALTY = 150;
+const ERROR_PENALTY = 150;   // toque na cor errada
+const TIMEOUT_PENALTY = 200; // sem toque a tempo (total = CHALLENGE_TIMEOUT + 200 = 1700ms)
 const READY_DELAY = 700;
 const INITIAL_WAIT_MIN = 1000;
 const INITIAL_WAIT_MAX = 3000;
-const CHALLENGE_TIMEOUT = 2000;
+const CHALLENGE_TIMEOUT = 1500;
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 44;
 
+// Posições FIXAS e permanentes — nunca mudam de rodada para rodada.
+// Índice = posição no grid 2×2:
+//   0 = top-left (azul) · 1 = top-right (laranja) · 2 = bottom-left (roxo) · 3 = bottom-right (verde)
 const CIRCLE_COLORS = [
-  { key: 'AZUL',    color: '#3b82f6', bg: 'rgba(59,130,246,0.15)'  },
-  { key: 'VERDE',   color: '#10b981', bg: 'rgba(16,185,129,0.15)'  },
-  { key: 'LARANJA', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  },
-  { key: 'ROXO',    color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)'  },
+  { key: 'AZUL',    color: '#3b82f6', bg: 'rgba(59,130,246,0.15)'  }, // 0 top-left
+  { key: 'LARANJA', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  }, // 1 top-right
+  { key: 'ROXO',    color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)'  }, // 2 bottom-left
+  { key: 'VERDE',   color: '#10b981', bg: 'rgba(16,185,129,0.15)'  }, // 3 bottom-right
 ];
 
 type AlvoState = 'intro' | 'initial_wait' | 'ready' | 'challenge' | 'correct' | 'wrong' | 'done';
@@ -37,15 +41,6 @@ interface RoundResult { rt: number; correct: boolean; penalizedRt: number; targe
 interface Props {
   onComplete: (results: RoundResult[], score: number, timeoutCount: number) => void;
   onBack: () => void;
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
 }
 
 export default function ModoAlvo({ onComplete, onBack }: Props) {
@@ -64,7 +59,6 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
   const [round, setRound] = useState(1);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [targetIdx, setTargetIdx] = useState(0);
-  const [colorOrder, setColorOrder] = useState([0, 1, 2, 3]);
   const [lastResult, setLastResult] = useState<RoundResult | null>(null);
   const [wrongColorIdx, setWrongColorIdx] = useState<number | null>(null);
 
@@ -95,7 +89,7 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
     responded.current = true;
     if (challengeTimeoutTimer.current) clearTimeout(challengeTimeoutTimer.current);
     timeoutCount.current += 1;
-    const result: RoundResult = { rt: CHALLENGE_TIMEOUT, correct: false, penalizedRt: CHALLENGE_TIMEOUT, targetIdx };
+    const result: RoundResult = { rt: CHALLENGE_TIMEOUT, correct: false, penalizedRt: CHALLENGE_TIMEOUT + TIMEOUT_PENALTY, targetIdx };
     setLastResult(result);
     const newResults = [...results, result];
     setResults(newResults);
@@ -134,10 +128,9 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
   }, [flashOpacity]);
 
   const startChallenge = useCallback(() => {
+    // Posições permanecem fixas — só a cor-alvo muda a cada rodada.
     const newTarget = Math.floor(Math.random() * 4);
-    const newOrder = shuffle([0, 1, 2, 3]);
     setTargetIdx(newTarget);
-    setColorOrder(newOrder);
     setWrongColorIdx(null);
     responded.current = false;
     setGameState('challenge'); // signalTime captured in useEffect after this render
@@ -260,26 +253,13 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
 
       {renderDots()}
 
-      {/* Waiting indicator — shown before first round and between rounds */}
-      {(gameState === 'initial_wait' || gameState === 'ready') && (
-        <View style={styles.hintArea}>
-          <Text style={styles.waitingHint}>{t('target.waitHint')}</Text>
-        </View>
-      )}
-
-      {/* Waiting dots overlay — initial_wait and ready share the same visual */}
-      {(gameState === 'initial_wait' || gameState === 'ready') && (
-        <View style={styles.centeredFull}>
-          <Text style={styles.waitingDots}>· · ·</Text>
-        </View>
-      )}
-
-      {/* Circle grid + badge/feedback — visible during challenge, correct, wrong */}
-      {(gameState === 'challenge' || gameState === 'correct' || gameState === 'wrong') && (
-        <View style={styles.gridContainer}>
-          <View style={styles.gridInner}>
-            {/* Badge during challenge; feedback icon+text during result states */}
+      {/* Círculos sempre visíveis (waiting · signal · feedback) — posições fixas.
+          O cabeçalho acima do grid muda por fase: aguarde / prompt da cor / feedback. */}
+      <View style={styles.gridContainer}>
+        <View style={styles.gridInner}>
+          <View style={styles.headerArea}>
             {gameState === 'challenge' ? (
+              // SIGNAL — prompt "TOQUE O [COR]"
               <View style={styles.badgeArea}>
                 <Text style={styles.hintLabel}>{t('target.tapCircle')}</Text>
                 <View style={[styles.hintBadge, { backgroundColor: targetColor.bg, borderColor: targetColor.color + '66' }]}>
@@ -287,12 +267,13 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
                   <Text style={[styles.hintColor, { color: targetColor.color }]}>{t(`target.colors.${targetColor.key}`)}</Text>
                 </View>
               </View>
-            ) : (
+            ) : (gameState === 'correct' || gameState === 'wrong') ? (
+              // FEEDBACK
               <View style={styles.feedbackBlock}>
                 <SvgXml
                   xml={gameState === 'correct' ? correctIconXml : wrongIconXml}
-                  width={64}
-                  height={64}
+                  width={56}
+                  height={56}
                 />
                 <Text style={[styles.feedbackWord, { color: gameState === 'correct' ? '#10b981' : '#ef4444' }]}>
                   {gameState === 'correct' ? t('target.correct') : t('target.wrong')}
@@ -303,34 +284,41 @@ export default function ModoAlvo({ onComplete, onBack }: Props) {
                   </Text>
                 )}
               </View>
+            ) : (
+              // WAITING — círculos visíveis, sem prompt
+              <Text style={styles.waitingHint}>{t('target.waitHint')}</Text>
             )}
-            {/* Grid — wrong circle highlighted (ring + ✕ + shake); others dim on feedback */}
-            <View style={styles.grid}>
-              {colorOrder.map((colorIdx) => {
-                const c = CIRCLE_COLORS[colorIdx];
-                const isWrong = gameState === 'wrong' && colorIdx === wrongColorIdx;
-                const dimmed = (gameState === 'correct' || gameState === 'wrong') && !isWrong;
-                return (
-                  <AnimatedPressable
-                    key={colorIdx}
-                    style={[
-                      styles.circle,
-                      { backgroundColor: c.color },
-                      dimmed && styles.circleDimmed,
-                      isWrong && styles.circleWrong,
-                      isWrong && { transform: [{ translateX: shakeX }] },
-                    ]}
-                    onPressIn={() => handleCirclePress(colorIdx)}
-                    disabled={gameState !== 'challenge'}
-                  >
-                    {isWrong && <Text style={styles.circleX}>✕</Text>}
-                  </AnimatedPressable>
-                );
-              })}
-            </View>
+          </View>
+
+          {/* Grid de posições fixas — círculo certo destacado no acerto;
+              círculo errado com anel + ✕ + shake; demais esmaecem no feedback. */}
+          <View style={styles.grid}>
+            {CIRCLE_COLORS.map((c, colorIdx) => {
+              const isTargetCircle = colorIdx === targetIdx;
+              const isWrong = gameState === 'wrong' && colorIdx === wrongColorIdx;
+              const showFeedback = gameState === 'correct' || gameState === 'wrong';
+              const highlight = (gameState === 'correct' && isTargetCircle) || isWrong;
+              const dimmed = showFeedback && !highlight;
+              return (
+                <AnimatedPressable
+                  key={colorIdx}
+                  style={[
+                    styles.circle,
+                    { backgroundColor: c.color },
+                    dimmed && styles.circleDimmed,
+                    isWrong && styles.circleWrong,
+                    isWrong && { transform: [{ translateX: shakeX }] },
+                  ]}
+                  onPressIn={() => handleCirclePress(colorIdx)}
+                  disabled={gameState !== 'challenge'}
+                >
+                  {isWrong && <Text style={styles.circleX}>✕</Text>}
+                </AnimatedPressable>
+              );
+            })}
           </View>
         </View>
-      )}
+      </View>
 
       {/* Flash overlay */}
       <Animated.View
@@ -391,6 +379,8 @@ const styles = StyleSheet.create({
 
   gridContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
   gridInner: { flexDirection: 'column', alignItems: 'center', gap: 24 },
+  // Fixed-height header so the grid never shifts between waiting / signal / feedback.
+  headerArea: { minHeight: 116, alignItems: 'center', justifyContent: 'center' },
   badgeArea: { alignItems: 'center' },
   grid: { width: 280, height: 280, flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
   circle: {

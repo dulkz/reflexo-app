@@ -61,8 +61,8 @@
     },
     "alvo": {
       "name": "TARGET MODE",
-      "desc": "4 simultaneous targets · 10 rounds",
-      "sub": "Hit the correct one — penalty for errors"
+      "desc": "Decision reflex · fixed positions · 10 rounds",
+      "sub": "Fixed positions — tap the right color"
     },
     "sequencia": {
       "name": "SEQUENCE MODE",
@@ -90,8 +90,8 @@
 
   "target": {
     "title": "TARGET MODE",
-    "subtitle": "4 circles · 10 rounds",
-    "howToText": "Read the indicated color and tap the correct circle. Wrong tap = +150ms penalty.",
+    "subtitle": "Fixed positions · 10 rounds",
+    "howToText": "4 colors in fixed positions. When the color appears, tap the right circle immediately. Wrong tap = +150ms; no tap in time = +200ms.",
     "tapCircle": "TAP THE CIRCLE",
     "waitHint": "wait for the stimulus",
     "correct": "CORRECT!",
@@ -558,7 +558,7 @@
     },
     "alvo": {
       "prompt": "TAP THE GREEN",
-      "text": "Read the indicated color and tap the correct circle. Wrong tap = +150ms."
+      "text": "Memorize the positions. When the color appears, tap immediately."
     },
     "sequencia": {
       "go": "GO — tap fast",
