@@ -357,6 +357,8 @@
       "mostPlayedDay": "Dia mais jogado",
       "avgLabel": "média",
       "bestLabel": "melhor",
+      "absLabel": "melhor absoluto",
+      "avgBestLabel": "melhor média",
       "avgRtBest": "RT médio (melhor sessão)",
       "footnote": "Melhor reflexo = rodada/hit mais rápido. RT médio = score da melhor sessão (com penalidades quando aplicável)."
     },

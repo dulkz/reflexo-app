@@ -172,12 +172,18 @@ function ModeStatsCard({ mode, sessions, expanded, onToggle }: ModeCardProps) {
           <Text style={[styles.modeName, { color: mc.accent }]}>{t(`history.filters.${mode}`).toUpperCase()}</Text>
           {data && lvl ? (
             <>
-              <View style={styles.modeHeaderRow}>
-                <Text style={[styles.modeBest, { color: lvl.color }]}>{data.bestAvgMs} ms</Text>
-                <Text style={styles.modeBestSub}>{t('history.stats.avgLabel')}</Text>
-                <Text style={styles.modeBestDot}>·</Text>
-                <Text style={[styles.modeBestSecondary, { color: mc.accent }]}>{data.bestReflexMs} ms</Text>
-                <Text style={styles.modeBestSub}>{t('history.stats.bestLabel')}</Text>
+              {/* Two values, always visible without expanding:
+                  melhor tempo absoluto (fastest single round) + melhor tempo médio (best session avg) */}
+              <View style={styles.twoStatRow}>
+                <View style={styles.statBlock}>
+                  <Text style={[styles.statBlockVal, { color: mc.accent }]}>{data.bestReflexMs} ms</Text>
+                  <Text style={styles.statBlockLbl}>{t('history.stats.absLabel')}</Text>
+                </View>
+                <View style={styles.statBlockDivider} />
+                <View style={styles.statBlock}>
+                  <Text style={[styles.statBlockVal, { color: lvl.color }]}>{data.bestAvgMs} ms</Text>
+                  <Text style={styles.statBlockLbl}>{t('history.stats.avgBestLabel')}</Text>
+                </View>
               </View>
               <View style={styles.modeHeaderRow}>
                 <View style={[styles.levelMini, { backgroundColor: lvl.bg }]}>
@@ -452,6 +458,13 @@ const styles = StyleSheet.create({
   modeBestSecondary: { fontSize: 14, fontWeight: '800', letterSpacing: -0.3 },
   modeBestSub: { fontSize: 10, color: '#4a5a7b', fontWeight: '600', letterSpacing: 0.5 },
   modeBestDot: { fontSize: 12, color: '#2d3a55', marginHorizontal: 2 },
+
+  // Two-value stat row (best absolute + best average), always visible
+  twoStatRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 2 },
+  statBlock: { gap: 1 },
+  statBlockVal: { fontSize: 16, fontWeight: '900', letterSpacing: -0.5 },
+  statBlockLbl: { fontSize: 9, color: '#4a5a7b', fontWeight: '700', letterSpacing: 0.5 },
+  statBlockDivider: { width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.08)' },
   levelMini: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
   levelMiniText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
   trendBadge: { fontSize: 11, fontWeight: '700' },

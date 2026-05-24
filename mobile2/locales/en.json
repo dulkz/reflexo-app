@@ -357,6 +357,8 @@
       "mostPlayedDay": "Most played day",
       "avgLabel": "avg",
       "bestLabel": "best",
+      "absLabel": "best single",
+      "avgBestLabel": "best average",
       "avgRtBest": "Avg RT (best session)",
       "footnote": "Best reflex = fastest individual round/hit. Avg RT = best session score (with penalties when applicable)."
     },

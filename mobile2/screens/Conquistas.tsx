@@ -319,13 +319,9 @@ export function ConquistasContent({ sessions, userProfile, onUpdateProfile, show
                               key={a.id}
                               style={[styles.cell, { borderWidth: 1.5, borderColor: cfg.cor }]}
                             >
-                              <View style={{ flexDirection: 'row', gap: 4, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 2 }}>
-                                <View style={[styles.rarityBadge, { backgroundColor: SECRET_COLOR + '22', borderColor: SECRET_COLOR }]}>
-                                  <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>{t('achievements.secret_badge')}</Text>
-                                </View>
-                                <View style={[styles.rarityBadge, { backgroundColor: cfg.cor + '22', borderColor: cfg.cor }]}>
-                                  <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{t(`achievements.rarity.${a.rarity}` as any)}</Text>
-                                </View>
+                              {/* SECRET badge replaces the rarity badge (no overlap) */}
+                              <View style={[styles.rarityBadge, { backgroundColor: SECRET_COLOR + '22', borderColor: SECRET_COLOR }]}>
+                                <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>{t('achievements.secret_badge')}</Text>
                               </View>
                               <SvgXml xml={a.icon} width={28} height={28} />
                               <Text style={styles.name}>{a.name}</Text>

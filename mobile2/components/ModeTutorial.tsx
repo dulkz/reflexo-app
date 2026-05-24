@@ -140,17 +140,17 @@ function PartidaTutorial({ color = '#3b82f6', reduceMotion }: SubProps) {
   const bg     = lit.interpolate({ inputRange: [0, 1], outputRange: [BG2, color] });
   const border = lit.interpolate({ inputRange: [0, 1], outputRange: [BG3, color] });
 
+  // Column layout — mirrors AlvoTutorial: visual on top, single centered
+  // explanation below (no duplicated mode title; that's the screen's job).
   return (
-    <View style={styles.row}>
+    <View style={styles.col}>
       <View style={styles.stage}>
         <Animated.View style={[styles.circle, { backgroundColor: bg, borderColor: border, transform: [{ scale }] }]} />
         <Animated.View style={[styles.touchDot, { opacity: dotOpacity, transform: [{ translateY: dotY }] }]} />
       </View>
-      <View style={styles.legend}>
-        <Text style={styles.legendTitle}>{t('modes.partida.name')}</Text>
-        <Text style={styles.legendLine}>{t('tutorial.partida.line1')}</Text>
-        <Text style={styles.legendLine}>{t('tutorial.partida.line2')}</Text>
-      </View>
+      <Text style={styles.legendCenter}>
+        {t('tutorial.partida.line1')} {t('tutorial.partida.line2')}
+      </Text>
     </View>
   );
 }

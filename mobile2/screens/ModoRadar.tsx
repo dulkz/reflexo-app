@@ -246,13 +246,14 @@ export default function ModoRadar({ onComplete, onBack }: Props) {
   return (
     <View style={styles.screen}>
       <View style={[styles.topBar, { paddingTop: TOP + 8 }]}>
+        <TouchableOpacity onPress={confirmAbort} style={styles.backBtn}>
+          <Text style={styles.backText}>←</Text>
+        </TouchableOpacity>
         <Text style={styles.roundText}>
           {t('common.round')} <Text style={styles.roundNum}>{round}</Text>
           <Text style={styles.roundTotal}> / {TOTAL_ROUNDS}</Text>
         </Text>
-        <TouchableOpacity onPress={confirmAbort} style={styles.quitBtn} activeOpacity={0.7}>
-          <Text style={styles.quitText}>{t('radar.quitBtn')}</Text>
-        </TouchableOpacity>
+        <View style={{ width: 32 }} />
       </View>
 
       <View style={styles.dotsRow}>
