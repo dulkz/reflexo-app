@@ -13,7 +13,7 @@ import { AVATARS } from '../config/avatars';
 import { ACHIEVEMENTS, RARITY_CONFIG } from '../config/achievements';
 import { buildUserStats, ARCHETYPES } from '../config/archetypes';
 import { calculateStreak, streakColor } from '../utils/streak';
-import { MAX_ENERGY_PER_MODE } from '../config/monetization';
+import { MAX_ENERGY_PER_MODE, MONETIZATION_ENABLED } from '../config/monetization';
 import { hasInfiniteEnergy } from '../utils/energy';
 import { ICONS, ACHIEVEMENT_ICONS, UI_ICONS } from '../assets/icons';
 
@@ -324,25 +324,29 @@ export default function Home({
           const bestAcc = bestAccByMode[m.key];
 
           // ── Badge de energia ──────────────────────────────────────────
+          // Energia só aparece na UI quando a monetização está ativa.
+          // (A contagem continua rastreada nos bastidores — só a apresentação some.)
           const modeEnergy = energyCounts ? energyCounts[m.key] : null;
           const noEnergy = !inGrace && modeEnergy !== null && modeEnergy <= 0;
           let energyBadgeText: string | null = null;
           let energyBadgeStyle: object = styles.energyBadgeOk;
-          if (hasInfiniteEnergy()) {
-            // Assinante Premium — energia infinita (∞ em vez do contador)
-            energyBadgeText = t('home.energyInfinite');
-            energyBadgeStyle = styles.energyBadgeOk;
-          } else if (inGrace && graceExpiryMs !== null) {
-            void graceTick; // força re-render quando tick muda
-            const msLeft = Math.max(0, graceExpiryMs - Date.now());
-            const h = Math.floor(msLeft / (60 * 60 * 1000));
-            const min = Math.floor((msLeft % (60 * 60 * 1000)) / 60_000);
-            const displayTime = h > 0 ? `${h}h` : min > 0 ? `${min}m` : '<1m';
-            energyBadgeText = t('home.graceExpiring', { time: displayTime });
-            energyBadgeStyle = styles.energyBadgeGrace;
-          } else if (modeEnergy !== null) {
-            energyBadgeText = t('home.energyCount', { current: modeEnergy, max: MAX_ENERGY_PER_MODE });
-            energyBadgeStyle = noEnergy ? styles.energyBadgeEmpty : styles.energyBadgeOk;
+          if (MONETIZATION_ENABLED) {
+            if (hasInfiniteEnergy()) {
+              // Assinante Premium — energia infinita (∞ em vez do contador)
+              energyBadgeText = t('home.energyInfinite');
+              energyBadgeStyle = styles.energyBadgeOk;
+            } else if (inGrace && graceExpiryMs !== null) {
+              void graceTick; // força re-render quando tick muda
+              const msLeft = Math.max(0, graceExpiryMs - Date.now());
+              const h = Math.floor(msLeft / (60 * 60 * 1000));
+              const min = Math.floor((msLeft % (60 * 60 * 1000)) / 60_000);
+              const displayTime = h > 0 ? `${h}h` : min > 0 ? `${min}m` : '<1m';
+              energyBadgeText = t('home.graceExpiring', { time: displayTime });
+              energyBadgeStyle = styles.energyBadgeGrace;
+            } else if (modeEnergy !== null) {
+              energyBadgeText = t('home.energyCount', { current: modeEnergy, max: MAX_ENERGY_PER_MODE });
+              energyBadgeStyle = noEnergy ? styles.energyBadgeEmpty : styles.energyBadgeOk;
+            }
           }
 
           return (

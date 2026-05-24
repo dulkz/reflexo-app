@@ -12,6 +12,7 @@ import {
   getAmbition, getMilestonesState,
 } from '../utils/ambition';
 import { GROUP_COLOR } from '../config/ambitions';
+import { MONETIZATION_ENABLED } from '../config/monetization';
 import { getDailyMissions, DailyMission } from '../utils/dailyMissions';
 import { getWeeklyMissions, WeeklyMission } from '../utils/missions';
 
@@ -124,10 +125,12 @@ export default function Missoes({ sessions, userProfile, onOpenTriage }: Props) 
                 </Text>
               </View>
             </View>
-            <View style={styles.rewardHint}>
-              <SvgXml xml={REWARD_ICONS.energy} width={13} height={13} />
-              <Text style={styles.rewardHintText}>{t('missoes.dailyRewardHint')}</Text>
-            </View>
+            {MONETIZATION_ENABLED && (
+              <View style={styles.rewardHint}>
+                <SvgXml xml={REWARD_ICONS.energy} width={13} height={13} />
+                <Text style={styles.rewardHintText}>{t('missoes.dailyRewardHint')}</Text>
+              </View>
+            )}
             <View style={styles.missionProgressTrack}>
               <View style={[
                 styles.missionProgressFill,
@@ -151,12 +154,14 @@ export default function Missoes({ sessions, userProfile, onOpenTriage }: Props) 
                       <View style={{ flex: Math.max(0, m.target - m.current) }} />
                     </View>
                   )}
-                  <View style={[styles.rewardChip, styles.rewardChipEnergy, m.done && styles.rewardChipDone]}>
-                    <SvgXml xml={REWARD_ICONS.energy} width={11} height={11} />
-                    <Text style={[styles.rewardChipText, { color: m.done ? '#10b981' : '#06b6d4' }]}>
-                      {m.done ? t('missoes.energyEarned') : t('missoes.energyReward')}
-                    </Text>
-                  </View>
+                  {MONETIZATION_ENABLED && (
+                    <View style={[styles.rewardChip, styles.rewardChipEnergy, m.done && styles.rewardChipDone]}>
+                      <SvgXml xml={REWARD_ICONS.energy} width={11} height={11} />
+                      <Text style={[styles.rewardChipText, { color: m.done ? '#10b981' : '#06b6d4' }]}>
+                        {m.done ? t('missoes.energyEarned') : t('missoes.energyReward')}
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 {m.done
                   ? <Text style={styles.missionRowCheck}>✓</Text>
@@ -182,10 +187,12 @@ export default function Missoes({ sessions, userProfile, onOpenTriage }: Props) 
                 </Text>
               </View>
             </View>
-            <View style={styles.rewardHint}>
-              <SvgXml xml={REWARD_ICONS.ticket} width={13} height={13} />
-              <Text style={styles.rewardHintText}>{t('missoes.weeklyRewardHint')}</Text>
-            </View>
+            {MONETIZATION_ENABLED && (
+              <View style={styles.rewardHint}>
+                <SvgXml xml={REWARD_ICONS.ticket} width={13} height={13} />
+                <Text style={styles.rewardHintText}>{t('missoes.weeklyRewardHint')}</Text>
+              </View>
+            )}
             <View style={styles.missionProgressTrack}>
               <View style={[
                 styles.missionProgressFill,
@@ -207,12 +214,14 @@ export default function Missoes({ sessions, userProfile, onOpenTriage }: Props) 
                     ]} />
                     <View style={{ flex: Math.max(0, m.target - m.current) }} />
                   </View>
-                  <View style={[styles.rewardChip, styles.rewardChipTicket, m.done && styles.rewardChipDone]}>
-                    <SvgXml xml={REWARD_ICONS.ticket} width={11} height={11} />
-                    <Text style={[styles.rewardChipText, { color: m.done ? '#10b981' : '#f59e0b' }]}>
-                      {m.done ? t('missoes.ticketEarned') : t('missoes.ticketReward')}
-                    </Text>
-                  </View>
+                  {MONETIZATION_ENABLED && (
+                    <View style={[styles.rewardChip, styles.rewardChipTicket, m.done && styles.rewardChipDone]}>
+                      <SvgXml xml={REWARD_ICONS.ticket} width={11} height={11} />
+                      <Text style={[styles.rewardChipText, { color: m.done ? '#10b981' : '#f59e0b' }]}>
+                        {m.done ? t('missoes.ticketEarned') : t('missoes.ticketReward')}
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 {m.done
                   ? <Text style={styles.missionRowCheck}>✓</Text>
