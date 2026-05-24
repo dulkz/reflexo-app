@@ -77,3 +77,4 @@ Branch finalizada e estável.
 
 - PR #2 (5bf0fb2): accuracy real populada no sync (alvo, radar, sequência)
 - PR #3 (ecff601): card de perfil público no ranking (modal com posição, tempo médio, partidas)
+- README.md criado com visão geral do projeto
