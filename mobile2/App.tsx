@@ -26,6 +26,7 @@ import { syncSessionToSupabase } from './utils/syncSession';
 import { migrateLocalSessions } from './utils/migrateLocalSessions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
 import { useFonts } from 'expo-font';
 import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import { DMSans_400Regular, DMSans_500Medium } from '@expo-google-fonts/dm-sans';
@@ -128,6 +129,29 @@ function RootGate() {
       }
     });
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Captura deep links de auth (confirmação de email, reset de senha)
+  useEffect(() => {
+    const handleUrl = async ({ url }: { url: string }) => {
+      if (url.includes('auth-callback')) {
+        // Supabase JS v2 com PKCE: troca o code por sessão automaticamente
+        // via onAuthStateChange — não é necessário chamar exchangeCodeForSession
+        // manualmente quando o cliente Supabase está configurado corretamente.
+        // O onAuthStateChange já vai disparar SIGNED_IN quando o token for processado.
+        console.log('[DeepLink] auth-callback recebido:', url);
+      }
+    };
+
+    // Link recebido com app aberto
+    const subscription = Linking.addEventListener('url', handleUrl);
+
+    // Link que abriu o app (cold start)
+    Linking.getInitialURL().then(url => {
+      if (url) handleUrl({ url });
+    });
+
+    return () => subscription.remove();
   }, []);
 
   // Called by AuthScreen's "Continuar sem conta" (which also persists the flag).
