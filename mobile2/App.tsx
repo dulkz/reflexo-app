@@ -19,6 +19,10 @@ import Missoes from './screens/Missoes';
 import ArchetypeEvolution from './screens/ArchetypeEvolution';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingFlow from './screens/onboarding/OnboardingFlow';
+import AuthScreen from './screens/Auth';
+import { supabase } from './lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Session } from '@supabase/supabase-js';
 import { ModeKey, MODE_COLORS } from './utils/levels';
 import {
   SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
@@ -72,13 +76,62 @@ export default function App() {
   return (
     <I18nextProvider i18n={i18n}>
       <SafeAreaProvider>
-        <AppInner />
+        <RootGate />
       </SafeAreaProvider>
     </I18nextProvider>
   );
 }
 
-function AppInner() {
+// Auth gate — plays the splash first, then checks the Supabase session and the
+// persisted guest flag. Splash always shows first (new or returning users).
+// After splash: no session and not guest → AuthScreen; otherwise → the app.
+function RootGate() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [guest, setGuest] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
+
+  useEffect(() => {
+    // Restore persisted session + guest flag on startup, in parallel.
+    Promise.all([
+      supabase.auth.getSession(),
+      AsyncStorage.getItem('reflexo_guest'),
+    ]).then(([{ data }, guestFlag]) => {
+      setSession(data.session);
+      setGuest(guestFlag === 'true');
+      setAuthChecked(true);
+    });
+    // React to login/logout (and token refresh) for the rest of the app's lifetime.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Called by AuthScreen's "Continuar sem conta" (which also persists the flag).
+  const handleContinueAsGuest = useCallback(() => setGuest(true), []);
+
+  // 1. Splash always first — stays until its animation ends AND the auth/guest
+  //    check resolves, so the screen beneath is decided before it lifts.
+  if (!splashDone || !authChecked) {
+    return (
+      <View style={styles.root}>
+        <Splash onAnimationComplete={() => setSplashDone(true)} />
+      </View>
+    );
+  }
+
+  // 2/3/4. Splash done and auth known → decide what to show.
+  if (session || guest) {
+    return <AppInner isGuest={!session} />;
+  }
+  return <AuthScreen onContinueAsGuest={handleContinueAsGuest} />;
+}
+
+function AppInner({ isGuest }: { isGuest: boolean }) {
+  // isGuest — reservado para uso futuro (aba Global mostra "Faça login para ver o
+  // ranking" quando convidado). Sem leitor ainda; passado pelo RootGate.
+  void isGuest;
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('jogar');
@@ -123,12 +176,6 @@ function AppInner() {
   const pendingTriage = useRef(false);
   // Prevent re-offering triage if dismissed in this app session
   const dismissedThisSession = useRef(false);
-
-  // Splash screen — shown once per app open
-  const [splashVisible, setSplashVisible] = useState(true);
-  const splashOpacity = useRef(new Animated.Value(1)).current;
-  const dataReadyRef  = useRef(false);
-  const animDoneRef   = useRef(false);
 
   // Onboarding — shown once on first app open ever (persisted flag)
   const [onboardingVisible, setOnboardingVisible] = useState(false);
@@ -180,15 +227,6 @@ function AppInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModeUnlock, firstModeUnlock]);
 
-  const tryExitSplash = useCallback(() => {
-    if (!dataReadyRef.current || !animDoneRef.current) return;
-    Animated.timing(splashOpacity, { toValue: 0, duration: 300, useNativeDriver: true })
-      .start(() => {
-        setSplashVisible(false);
-        if (onboardingNeededRef.current) setOnboardingVisible(true);
-      });
-  }, []); // splashOpacity is a stable Animated.Value ref
-
   useEffect(() => {
     Promise.all([
       loadSessions().then(async (s) => {
@@ -213,16 +251,17 @@ function AppInner() {
       ensureInstallDate().then(setInstallDate),
       preloadSounds(),
     ]).then(() => {
-      dataReadyRef.current = true;
       // If the user already played their first game in a previous session but never
       // saw the triage prompt, offer it now (no pending continuation — pure init case).
       if (hasPlayedFirstGameRef.current && !hasSeenTriagePromptRef.current) {
         pendingNavRef.current = null;
         setShowTriagePrompt(true);
       }
-      tryExitSplash();
+      // Splash now lives in RootGate (shown before AppInner mounts). Trigger the
+      // first-open onboarding here, once startup data has finished loading.
+      if (onboardingNeededRef.current) setOnboardingVisible(true);
     });
-  }, [tryExitSplash]);
+  }, []);
 
   // Fade+scale entrance animation for the triage prompt card.
   useEffect(() => {
@@ -797,18 +836,6 @@ function AppInner() {
           })()}
         </TouchableOpacity>
       </Modal>
-
-      {/* Splash — absoluteFill overlay, shown once on app open */}
-      {splashVisible && (
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: splashOpacity, zIndex: 200 }]}>
-          <Splash
-            onAnimationComplete={() => {
-              animDoneRef.current = true;
-              tryExitSplash();
-            }}
-          />
-        </Animated.View>
-      )}
 
       {/* Onboarding modal — first-open only, persisted via reflexo_onboarding_done_v1 */}
       <Modal
