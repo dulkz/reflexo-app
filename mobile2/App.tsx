@@ -737,7 +737,8 @@ function AppInner() {
                 activeOpacity={0.7}
               >
                 <View style={[styles.tabItemCard, active && styles.tabItemCardActive]}>
-                  <SvgXml xml={tab.icon.replace(/#FFFFFF/g, active ? '#3b82f6' : '#FFFFFF')} width={24} height={24} />
+                  {/* Mesmo tamanho/posição em ambos os estados — apenas a cor muda */}
+                  <SvgXml xml={tab.icon.replace(/#FFFFFF/g, active ? '#00E5CC' : '#7a8aa0')} width={24} height={24} />
                   <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>{t(tab.labelKey)}</Text>
                 </View>
               </TouchableOpacity>
@@ -938,7 +939,10 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 8,
   },
-  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, paddingHorizontal: 4 },
+  // flex:1 → cada item ocupa fatia igual; minHeight 44 garante área de toque ≥ 44x44pt.
+  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingVertical: 4, paddingHorizontal: 4 },
+  // Container interno com dimensões/padding IDÊNTICOS em todos os estados.
+  // Estado inativo = totalmente transparente; só a cor do ícone/label distingue.
   tabItemCard: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -947,17 +951,18 @@ const styles = StyleSheet.create({
     height: 60,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.09)',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'transparent',
   },
+  // Estado ativo: APENAS cor de fundo/borda mudam — mesmas dimensões e padding.
   tabItemCardActive: {
-    backgroundColor: 'rgba(59,130,246,0.15)',
-    borderColor: 'rgba(59,130,246,0.3)',
+    backgroundColor: '#00E5CC18',
+    borderColor: '#00E5CC55',
   },
   tabLabel: { fontSize: 12, fontWeight: '700', color: '#7a8aa0', letterSpacing: 0.3 },
-  tabLabelActive: { color: '#3b82f6' },
+  tabLabelActive: { color: '#00E5CC' },
 
   // ── Triage prompt (first-game intercept) ─────────────────────────────────────
   triagePromptOverlay: {
