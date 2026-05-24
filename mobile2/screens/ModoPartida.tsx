@@ -193,18 +193,28 @@ export default function ModoPartida({ onComplete, onBack }: Props) {
     );
   };
 
+  // Visual aprovado pelo conselho (mesmo do mini-jogo OB1): anel externo tracejado +
+  // círculo interno (escuro aguardando / verde quando acende) + texto abaixo.
   const renderWaiting = () => (
     <View style={[styles.centeredFull, { pointerEvents: 'none' }]}>
-      <Text style={styles.waitingDots}>· · ·</Text>
+      <View style={styles.targetArea}>
+        <View style={styles.ring} />
+        <View style={[styles.innerCircle, styles.innerCircleWaiting]} />
+      </View>
+      <Text style={styles.waitLabel}>{t('match.waiting')}</Text>
     </View>
   );
 
   const renderSignal = () => (
     <View style={[styles.centeredFull, { pointerEvents: 'none' }]}>
-      <Animated.View style={[
-        styles.circle,
-        { opacity: circleOpacity, transform: [{ scale: circleScale }] },
-      ]} />
+      <View style={styles.targetArea}>
+        <View style={styles.ring} />
+        <Animated.View style={[
+          styles.innerCircle, styles.innerCircleGo,
+          { opacity: circleOpacity, transform: [{ scale: circleScale }] },
+        ]} />
+      </View>
+      <Text style={styles.goLabel}>{t('match.tapNow')}</Text>
     </View>
   );
 
@@ -403,6 +413,38 @@ const styles = StyleSheet.create({
     shadowRadius: 40,
   },
 
+  // ── Alvo de toque (anel tracejado + círculo interno + label) — visual OB1 ────
+  targetArea: {
+    width: 200, height: 200,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  ring: {
+    position: 'absolute',
+    width: 200, height: 200, borderRadius: 100,
+    borderWidth: 2, borderColor: 'rgba(0,255,68,0.20)',
+    borderStyle: 'dashed',
+  },
+  innerCircle: { width: 140, height: 140, borderRadius: 70 },
+  innerCircleWaiting: {
+    backgroundColor: '#1E1E1E',
+    borderWidth: 1, borderColor: '#2A2A2A',
+  },
+  innerCircleGo: {
+    backgroundColor: '#00FF44',
+    elevation: 20,
+    shadowColor: '#00FF44',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9, shadowRadius: 40,
+  },
+  waitLabel: {
+    marginTop: 28, fontSize: 15, fontWeight: '700',
+    color: '#4a5a7b', letterSpacing: 2,
+  },
+  goLabel: {
+    marginTop: 28, fontSize: 18, fontWeight: '900',
+    color: '#00FF44', letterSpacing: 4,
+  },
+
   resultNum:     { fontSize: 92, fontWeight: '900', letterSpacing: -3, lineHeight: 98 },
   msUnit:        { fontSize: 22, fontWeight: '600', color: '#555', letterSpacing: 2, marginTop: 4 },
   levelPill:     { borderRadius: 20, paddingHorizontal: 22, paddingVertical: 8, marginTop: 20 },
@@ -429,7 +471,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', gap: 18, alignItems: 'center',
   },
   introIcon: {
-    width: 84, height: 84, borderRadius: 42,
+    width: 84, height: 84, borderRadius: 42, alignSelf: 'center',
     backgroundColor: 'rgba(59,130,246,0.10)',
     borderWidth: 1, borderColor: 'rgba(59,130,246,0.25)',
     alignItems: 'center', justifyContent: 'center',

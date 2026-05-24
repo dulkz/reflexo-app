@@ -85,7 +85,9 @@
     "waitHint": "Aguarde a tela escura — toque assim que o círculo verde aparecer",
     "waitWarn": "Tocar antes = falsa largada (500 ms fixo)",
     "startRound": "INICIAR RODADA {{round}}",
-    "ready": "READY"
+    "ready": "READY",
+    "waiting": "aguarde...",
+    "tapNow": "TOQUE!"
   },
 
   "target": {

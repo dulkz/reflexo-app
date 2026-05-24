@@ -85,7 +85,9 @@
     "waitHint": "Wait for the dark screen — tap as soon as the green circle appears",
     "waitWarn": "Tapping early = false start (fixed 500 ms)",
     "startRound": "START ROUND {{round}}",
-    "ready": "READY"
+    "ready": "READY",
+    "waiting": "wait...",
+    "tapNow": "TAP!"
   },
 
   "target": {

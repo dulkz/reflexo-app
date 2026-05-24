@@ -252,18 +252,16 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
     const keys: ModeKey[] = ['partida', 'radar', 'sequencia', 'alvo'];
     return keys.map(k => {
       const mSessions = sessions.filter(s => s.mode === k);
-      const best = stats.bestScoreByMode[k];
+      // melhor tempo médio = melhor score de sessão; melhor tempo absoluto = melhor hit individual
+      const bestAvg = stats.bestScoreByMode[k];
+      const bestAbs = mSessions.length > 0
+        ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
+        : null;
       const bestAcc = stats.bestAccByMode[k];
       const lastFatigue = mSessions.length > 0 && mSessions[0].fatigueIndex !== undefined
         ? mSessions[0].fatigueIndex
         : null;
-      const bestAlvoRt = k === 'alvo' && mSessions.length > 0
-        ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
-        : null;
-      const bestRadarRt = k === 'radar' && mSessions.length > 0
-        ? Math.min(...mSessions.map(s => s.bestTime ?? s.score))
-        : null;
-      return { key: k, count: mSessions.length, best, bestAcc, lastFatigue, bestAlvoRt, bestRadarRt };
+      return { key: k, count: mSessions.length, bestAvg, bestAbs, bestAcc, lastFatigue };
     });
   }, [sessions, stats]);
 
@@ -806,10 +804,9 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
         <Text style={styles.sectionTitle}>{t('profile.byMode')}</Text>
         {modeBreakdown.map(m => {
           const mc = MODE_COLORS[m.key];
-          const displayScore = m.key === 'alvo' && m.bestAlvoRt !== null ? m.bestAlvoRt
-                             : m.key === 'radar' && m.bestRadarRt !== null ? m.bestRadarRt
-                             : m.best;
-          const lvl = displayScore !== null ? getLevelForMode(displayScore, m.key) : null;
+          const hasData = m.bestAbs !== null && m.bestAvg !== null;
+          const lvlAbs = m.bestAbs !== null ? getLevelForMode(m.bestAbs, m.key) : null;
+          const lvlAvg = m.bestAvg !== null ? getLevelForMode(m.bestAvg, m.key) : null;
 
           return (
             <View key={m.key} style={styles.modeCard}>
@@ -821,25 +818,27 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
                 <Text style={styles.modeSub}>{t(`profile.modeDesc.${m.key}`)}</Text>
               </View>
               <View style={styles.modeRight}>
-                {displayScore !== null && lvl ? (
+                {hasData && lvlAbs && lvlAvg ? (
                   <>
-                    <Text style={[styles.modeScore, { color: lvl.color }]}>{displayScore} ms</Text>
-                    <View style={[styles.modeLevelPill, { backgroundColor: lvl.bg }]}>
-                      <Text style={[styles.modeLevelText, { color: lvl.color }]} numberOfLines={1}>
-                        {t(`levels.${lvl.labelKey}.label` as any)}
+                    {/* DOIS valores sempre visíveis: melhor absoluto + melhor média */}
+                    <View style={styles.modeStatLine}>
+                      <Text style={[styles.modeScore, { color: lvlAbs.color }]}>{m.bestAbs} ms</Text>
+                      <Text style={styles.modeStatLabel}>{t('history.stats.absLabel')}</Text>
+                    </View>
+                    <View style={styles.modeStatLine}>
+                      <Text style={[styles.modeScoreSecondary, { color: lvlAvg.color }]}>{m.bestAvg} ms</Text>
+                      <Text style={styles.modeStatLabel}>{t('history.stats.avgBestLabel')}</Text>
+                    </View>
+                    <View style={[styles.modeLevelPill, { backgroundColor: lvlAvg.bg }]}>
+                      <Text style={[styles.modeLevelText, { color: lvlAvg.color }]} numberOfLines={1}>
+                        {t(`levels.${lvlAvg.labelKey}.label` as any)}
                       </Text>
                     </View>
-                    {m.key === 'alvo' && (
-                      <Text style={styles.modeExtra}>{t('profile.bestReflexTime')}</Text>
-                    )}
                     {m.key === 'alvo' && m.bestAcc !== null && (
                       <Text style={styles.modeExtra}>{Math.round(m.bestAcc * 100)}% acc</Text>
                     )}
                     {m.key === 'sequencia' && m.lastFatigue !== null && m.lastFatigue !== undefined && (
                       <Text style={styles.modeExtra}>{m.lastFatigue.toFixed(1)}% {t('profile.fatigue')}</Text>
-                    )}
-                    {m.key === 'radar' && (
-                      <Text style={[styles.modeExtra, { color: mc.accent }]}>{t('profile.bestReflexTime')}</Text>
                     )}
                     {m.key === 'radar' && m.bestAcc !== null && (
                       <Text style={[styles.modeExtra, { color: mc.accent }]}>{t('profile.accuracy')}: {Math.round(m.bestAcc * 100)}%</Text>
@@ -1262,7 +1261,10 @@ const styles = StyleSheet.create({
   modeIconText: { fontSize: 24 },
   modeName: { fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
   modeSub: { fontSize: 11, color: '#3a4a6b' },
-  modeRight: { alignItems: 'flex-end', gap: 3, minWidth: 64 },
+  modeRight: { alignItems: 'flex-end', gap: 4, minWidth: 96 },
+  modeStatLine: { alignItems: 'flex-end' },
+  modeStatLabel: { fontSize: 9, color: '#3a4a6b', fontWeight: '600', letterSpacing: 0.3 },
+  modeScoreSecondary: { fontSize: 14, fontWeight: '800' },
   modeScore: { fontSize: 16, fontWeight: '800' },
   modeLevelPill: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   modeLevelText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
