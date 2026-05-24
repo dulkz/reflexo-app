@@ -55,24 +55,23 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
   const fetchRanking = useCallback(async (selectedMode: GameMode, silent = false) => {
     if (!silent) setLoading(true);
     try {
-      // A view `ranking` deve ter colunas: user_id, username, archetype, avg_rt, session_count, mode
-      // Filtra pelo modo, ordena por avg_rt ASC, mínimo 3 sessões (já filtrado na view ou aqui)
+      // View `ranking` (Supabase): user_id, username, archetype, mode, avg_rt_global,
+      // session_count, rank_position. O mínimo de 3 sessões já é filtrado na própria view.
       const { data, error } = await supabase
         .from('ranking')
-        .select('user_id, username, archetype, avg_rt, session_count')
+        .select('user_id, username, archetype, avg_rt_global, session_count, rank_position')
         .eq('mode', selectedMode)
-        .gte('session_count', 3)
-        .order('avg_rt', { ascending: true })
+        .order('avg_rt_global', { ascending: true })
         .limit(50);
 
       if (error) throw error;
 
-      const entries: RankingEntry[] = (data ?? []).map((row, i) => ({
-        position: i + 1,
+      const entries: RankingEntry[] = (data ?? []).map((row) => ({
+        position: row.rank_position,
         user_id: row.user_id,
         username: row.username ?? 'Anônimo',
         archetype: row.archetype ?? '—',
-        avg_rt: row.avg_rt,
+        avg_rt: row.avg_rt_global,
         session_count: row.session_count,
       }));
 

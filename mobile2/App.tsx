@@ -24,6 +24,10 @@ import AuthScreen from './screens/Auth';
 import { supabase } from './lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
+import { useFonts } from 'expo-font';
+import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
+import { DMSans_400Regular, DMSans_500Medium } from '@expo-google-fonts/dm-sans';
+import { SpaceMono_400Regular } from '@expo-google-fonts/space-mono';
 import { ModeKey, MODE_COLORS } from './utils/levels';
 import {
   SessionRecord, loadSessions, saveSession, getBestByMode, loadOnboardingDone,
@@ -92,6 +96,12 @@ function RootGate() {
   const [guest, setGuest] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
+  const [fontsLoaded] = useFonts({
+    BebasNeue_400Regular,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    SpaceMono_400Regular,
+  });
 
   useEffect(() => {
     // Restore persisted session + guest flag on startup, in parallel.
@@ -113,9 +123,9 @@ function RootGate() {
   // Called by AuthScreen's "Continuar sem conta" (which also persists the flag).
   const handleContinueAsGuest = useCallback(() => setGuest(true), []);
 
-  // 1. Splash always first — stays until its animation ends AND the auth/guest
-  //    check resolves, so the screen beneath is decided before it lifts.
-  if (!splashDone || !authChecked) {
+  // 1. Splash always first — stays until its animation ends, the auth/guest check
+  //    resolves, AND the custom fonts finish loading, so everything is ready first.
+  if (!splashDone || !authChecked || !fontsLoaded) {
     return (
       <View style={styles.root}>
         <Splash onAnimationComplete={() => setSplashDone(true)} />
