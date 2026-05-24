@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflexo — Estados de Erro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#080B10; --bg1:#0F1520; --bg2:#1A2030; --bg3:#252D3E;
+  --green:#4AFFA3; --green-dim:rgba(74,255,163,0.10);
+  --red:#FF5757; --red-dim:rgba(255,87,87,0.12); --red-border:rgba(255,87,87,0.28);
+  --amber:#FFB547; --amber-dim:rgba(255,181,71,0.11);
+  --purple:#7B6EF6; --purple-dim:rgba(123,110,246,0.12);
+  --text0:#EDF0F7; --text1:#8892A4; --text2:#4A5268;
+  --border:rgba(255,255,255,0.06); --border-mid:rgba(255,255,255,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:#040608;
+  font-family:'DM Sans',sans-serif;
+  padding:48px 24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:56px;
+}
+.sec-hd{text-align:center;max-width:580px;}
+.sec-eyebrow{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);margin-bottom:6px;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text0);letter-spacing:.5px;margin-bottom:5px;}
+.sec-sub{font-size:12px;color:var(--text1);line-height:1.6;}
+
+.mode-section{width:100%;max-width:1060px;}
+.mode-label{font-size:11px;font-family:'Space Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.mode-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.05);}
+
+.frames-row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;}
+.fw{display:flex;flex-direction:column;align-items:center;gap:7px;}
+.flbl{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);text-align:center;}
+.ftype{font-size:9px;font-family:'Space Mono',monospace;color:var(--amber);}
+
+.phone{
+  width:175px;
+  background:var(--bg0);
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,0.07);
+  overflow:hidden;
+}
+.screen{
+  min-height:340px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  padding:16px;
+  position:relative;
+  overflow:hidden;
+}
+
+/* Error flash overlay */
+.err-flash{
+  position:absolute;
+  inset:0;
+  background:var(--red);
+  opacity:0.14;
+  pointer-events:none;
+}
+
+/* Error border on screen */
+.screen.err-border{
+  border:1.5px solid rgba(255,87,87,0.35);
+}
+
+/* Shake — via CSS animation */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  15%{transform:translateX(-6px);}
+  30%{transform:translateX(6px);}
+  45%{transform:translateX(-4px);}
+  60%{transform:translateX(4px);}
+  75%{transform:translateX(-2px);}
+  90%{transform:translateX(2px);}
+}
+.shaking{animation:shake 0.4s ease-out;}
+
+/* Circle states */
+.c-stage{position:relative;width:110px;height:110px;display:flex;align-items:center;justify-content:center;}
+.c-ring-err{position:absolute;inset:-8px;border-radius:50%;border:1.5px solid var(--red);opacity:0.4;}
+.c-ring-err2{position:absolute;inset:-16px;border-radius:50%;border:1px dashed var(--red);opacity:0.2;}
+.c-core-err{width:110px;height:110px;border-radius:50%;background:rgba(255,87,87,0.12);border:2px solid var(--red);display:flex;align-items:center;justify-content:center;}
+.c-inner-err{width:44px;height:44px;border-radius:50%;background:rgba(255,87,87,0.25);}
+
+/* Early tap — grey idle + red flash */
+.c-core-idle{width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,87,87,0.4);display:flex;align-items:center;justify-content:center;}
+
+/* Penalty badge */
+.penalty{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  border-radius:8px;
+  padding:6px 12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.penalty-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red);line-height:1;}
+.penalty-lbl{font-size:10px;color:var(--red);font-family:'Space Mono',monospace;opacity:0.8;}
+
+/* Hint text */
+.err-hint{font-size:10px;color:var(--red);font-family:'Space Mono',monospace;letter-spacing:.04em;text-align:center;opacity:0.9;}
+.err-sub{font-size:10px;color:var(--text1);text-align:center;line-height:1.5;}
+
+/* Progress info */
+.round-info{font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);text-align:center;}
+
+/* Alvo grid */
+.alvo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;}
+.alvo-c{border-radius:50%;aspect-ratio:1;}
+.alvo-c.wrong{box-shadow:0 0 0 3px var(--red),0 0 20px rgba(255,87,87,0.3);}
+.alvo-c.correct{box-shadow:0 0 0 2px rgba(74,255,163,0.3);}
+
+/* Seq circle */
+.seq-c{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;}
+.seq-ring-e{position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(255,87,87,0.3);}
+.seq-wrong{background:rgba(255,87,87,0.12);border:2px solid var(--red);}
+
+/* Radar circles */
+.radar-cross{position:relative;width:140px;height:160px;flex-shrink:0;}
+.rc{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.rc-idle{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);}
+.rc-wrong{border:2px solid var(--red);background:rgba(255,87,87,0.10);}
+.rc-active{border:2px solid var(--amber);background:rgba(255,181,71,0.08);}
+.rc-active-core{width:22px;height:22px;border-radius:50%;background:var(--amber);}
+
+/* X mark */
+.x-mark{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--red);}
+
+/* Stats row */
+.stats-mini{display:flex;gap:8px;justify-content:center;}
+.stat-m{background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:6px 10px;text-align:center;}
+.stat-m-val{font-size:14px;font-weight:700;font-family:'Space Mono',monospace;color:var(--text0);line-height:1;}
+.stat-m-lbl{font-size:8px;color:var(--text2);font-family:'Space Mono',monospace;margin-top:2px;}
+
+/* Continue btn */
+.btn-cont{background:var(--bg2);border:0.5px solid var(--border-mid);border-radius:8px;padding:9px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--text1);letter-spacing:.4px;width:100%;}
+
+/* Spec table */
+.spec-wrap{width:100%;max-width:1060px;}
+.spec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.spec-card{background:rgba(255,255,255,0.025);border:0.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;}
+.spec-card-title{font-size:11px;font-weight:600;color:var(--text0);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.spec-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;}
+.spec-key{font-size:10px;font-family:'Space Mono',monospace;color:var(--amber);width:70px;flex-shrink:0;margin-top:1px;}
+.spec-val{font-size:11px;color:var(--text1);line-height:1.5;}
+
+.divider{width:100%;max-width:1060px;height:1px;background:rgba(255,255,255,0.04);}
+
+.ann{background:rgba(255,255,255,0.025);border:0.5px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px 13px;display:flex;gap:10px;margin-bottom:6px;}
+.ann-ico{font-size:13px;flex-shrink:0;margin-top:1px;}
+.ann-txt{font-size:12px;color:var(--text1);line-height:1.55;}
+.ann-txt strong{color:var(--text0);}
+.anns{width:100%;max-width:1060px;display:flex;flex-direction:column;}
+</style>
+</head>
+<body>
+
+<div class="sec-hd">
+  <div class="sec-eyebrow">Gameplay — estados de erro</div>
+  <div class="sec-title">Feedback negativo por modo</div>
+  <div class="sec-sub">Cada erro tem três camadas: visual (cor + forma), temporal (duração) e háptico (tipo de vibração). O feedback precisa ser imediato, claro e não punitivo demais.</div>
+</div>
+
+<!-- ══════ PARTIDA ══════ -->
+<div class="mode-section">
+  <div class="mode-label">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/></svg>
+    Modo Partida — toque antecipado
+  </div>
+  <div class="frames-row">
+
+    <!-- Estado normal de espera -->
+    <div class="fw">
+      <div class="flbl">Normal · aguardando</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="round-info">RODADA 3 / 7</div>
+          <div class="c-stage">
+            <div style="position:absolute;inset:-8px;border-radius:50%;border:1px dashed rgba(74,255,163,0.15);"></div>
+            <div style="position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(74,255,163,0.25);"></div>
+            <div style="width:110px;height:110px;border-radius:50%;background:rgba(74,255,163,0.05);display:flex;align-items:center;justify-content:center;">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(74,255,163,0.15);"></div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">aguarde o sinal...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toque antecipado — flash + X -->
+    <div class="fw">
+      <div class="flbl">Erro · toque antecipado</div>
+      <div class="ftype">0ms → 600ms</div>
+      <div class="phone">
+        <div class="screen err-border">
+          <div class="err-flash"></div>
+          <div class="round-info" style="color:var(--red);opacity:0.7;">RODADA 3 / 7</div>
+          <div class="c-stage">
+            <div class="c-ring-err"></div>
+            <div class="c-ring-err2"></div>
+            <div class="c-core-err">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);">✕</div>
+            </div>
+          </div>
+          <div class="err-hint">muito cedo</div>
+          <div class="penalty">
+            <div class="penalty-num">+150</div>
+            <div class="penalty-lbl">ms de<br>penalidade</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recovery — volta ao normal -->
+    <div class="fw">
+      <div class="flbl">Recovery · 600ms</div>
+      <div class="ftype">600ms → 1200ms</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="round-info">RODADA 3 / 7</div>
+          <div class="c-stage">
+            <div style="position:absolute;inset:-8px;border-radius:50%;border:1px dashed rgba(255,87,87,0.15);"></div>
+            <div style="position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,87,87,0.2);"></div>
+            <div style="width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,87,87,0.2);display:flex;align-items:center;justify-content:center;">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,87,87,0.10);"></div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:rgba(255,87,87,0.5);font-family:'Space Mono',monospace;">aguarde...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Volta ao normal completo -->
+    <div class="fw">
+      <div class="flbl">Retomada · 1200ms+</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="round-info">RODADA 3 / 7 — tentativa extra</div>
+          <div class="c-stage">
+            <div style="position:absolute;inset:-8px;border-radius:50%;border:1px dashed rgba(74,255,163,0.15);"></div>
+            <div style="position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(74,255,163,0.25);"></div>
+            <div style="width:110px;height:110px;border-radius:50%;background:rgba(74,255,163,0.05);display:flex;align-items:center;justify-content:center;">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(74,255,163,0.15);"></div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">aguarde o sinal...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ ALVO ══════ -->
+<div class="mode-section">
+  <div class="mode-label">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>
+    Modo Alvo — círculo errado tocado
+  </div>
+  <div class="frames-row">
+
+    <!-- Normal -->
+    <div class="fw">
+      <div class="flbl">Normal · jogando</div>
+      <div class="phone">
+        <div class="screen">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;">
+            <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;text-transform:uppercase;">Toque no círculo</div>
+            <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border-radius:20px;padding:4px 10px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#4AFFA3;"></div>
+              <div style="font-size:10px;font-family:'Space Mono',monospace;font-weight:700;color:#4AFFA3;">VERDE</div>
+            </div>
+          </div>
+          <div class="alvo-grid">
+            <div class="alvo-c" style="background:#4169E1;width:64px;height:64px;margin:0 auto;"></div>
+            <div class="alvo-c" style="background:#F97316;width:64px;height:64px;margin:0 auto;"></div>
+            <div class="alvo-c" style="background:#8B5CF6;width:64px;height:64px;margin:0 auto;"></div>
+            <div class="alvo-c correct" style="background:#4AFFA3;width:64px;height:64px;margin:0 auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Erro — círculo errado (laranja) tocado -->
+    <div class="fw">
+      <div class="flbl">Erro · toque errado</div>
+      <div class="ftype">0ms → 500ms</div>
+      <div class="phone">
+        <div class="screen err-border">
+          <div class="err-flash"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;">
+            <div style="font-size:9px;color:var(--red);font-family:'Space Mono',monospace;text-transform:uppercase;">Círculo errado</div>
+            <div style="display:flex;align-items:center;gap:6px;background:rgba(255,87,87,0.10);border-radius:20px;padding:4px 10px;border:1px solid rgba(255,87,87,0.25);">
+              <div style="width:8px;height:8px;border-radius:50%;background:#4AFFA3;"></div>
+              <div style="font-size:10px;font-family:'Space Mono',monospace;font-weight:700;color:#4AFFA3;">VERDE</div>
+            </div>
+          </div>
+          <div class="alvo-grid">
+            <div class="alvo-c" style="background:#4169E1;width:64px;height:64px;margin:0 auto;"></div>
+            <!-- WRONG — laranja com ring vermelho -->
+            <div class="alvo-c wrong" style="background:#F97316;width:64px;height:64px;margin:0 auto;position:relative;">
+              <div style="position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:rgba(255,255,255,0.9);">✕</div>
+              </div>
+            </div>
+            <div class="alvo-c" style="background:#8B5CF6;width:64px;height:64px;margin:0 auto;"></div>
+            <div class="alvo-c" style="background:#4AFFA3;width:64px;height:64px;margin:0 auto;"></div>
+          </div>
+          <div class="penalty">
+            <div class="penalty-num">+150</div>
+            <div class="penalty-lbl">ms na<br>média</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado da rodada com erro registrado -->
+    <div class="fw">
+      <div class="flbl">Resultado · com erro</div>
+      <div class="ftype">500ms+</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="round-info">RODADA 1 / 10 — concluída</div>
+          <div style="text-align:center;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--amber);line-height:1;">487</div>
+            <div style="font-size:9px;color:var(--text1);font-family:'Space Mono',monospace;">ms com penalidade</div>
+          </div>
+          <div style="background:var(--red-dim);border:1px solid var(--red-border);border-radius:8px;padding:7px 10px;width:100%;text-align:center;">
+            <div style="font-size:9px;color:var(--red);font-family:'Space Mono',monospace;">+150ms de penalidade aplicada</div>
+            <div style="font-size:9px;color:var(--text2);margin-top:2px;">tempo real: 337ms</div>
+          </div>
+          <div class="stats-mini">
+            <div class="stat-m"><div class="stat-m-val" style="color:var(--green);">1</div><div class="stat-m-lbl">acerto</div></div>
+            <div class="stat-m"><div class="stat-m-val" style="color:var(--red);">1</div><div class="stat-m-lbl">erro</div></div>
+            <div class="stat-m"><div class="stat-m-val">9</div><div class="stat-m-lbl">restam</div></div>
+          </div>
+          <div class="btn-cont">próxima rodada →</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ SEQUÊNCIA ══════ -->
+<div class="mode-section">
+  <div class="mode-label">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5" fill="rgba(139,92,246,0.3)"/><circle cx="15" cy="12" r="5"/></svg>
+    Modo Sequência — NoGo tocado
+  </div>
+  <div class="frames-row">
+
+    <!-- NoGo normal — não tocar -->
+    <div class="fw">
+      <div class="flbl">NoGo · correto (não tocou)</div>
+      <div class="phone">
+        <div class="screen">
+          <div style="width:100%;height:3px;background:rgba(123,110,246,0.15);border-radius:2px;overflow:hidden;">
+            <div style="width:20%;height:3px;background:var(--purple);border-radius:2px;"></div>
+          </div>
+          <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;text-align:center;">4 / 20 · 3 acertos · 0 erros</div>
+          <div class="seq-c seq-wrong" style="border-color:var(--red);background:rgba(255,87,87,0.08);">
+            <div class="seq-ring-e"></div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--red);letter-spacing:.5px;">NOGO</div>
+          </div>
+          <div style="font-size:9px;color:var(--red);font-family:'Space Mono',monospace;">SEGURE O IMPULSO</div>
+          <!-- Timer bar showing time remaining -->
+          <div style="width:100%;height:2px;background:rgba(255,87,87,0.15);border-radius:1px;overflow:hidden;">
+            <div style="width:40%;height:2px;background:var(--red);border-radius:1px;opacity:0.5;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NoGo tocado — ERRO -->
+    <div class="fw">
+      <div class="flbl">Erro · NoGo tocado</div>
+      <div class="ftype">0ms → 700ms</div>
+      <div class="phone">
+        <div class="screen err-border">
+          <div class="err-flash"></div>
+          <div style="width:100%;height:3px;background:rgba(255,87,87,0.2);border-radius:2px;overflow:hidden;">
+            <div style="width:20%;height:3px;background:var(--red);border-radius:2px;"></div>
+          </div>
+          <div style="font-size:9px;color:var(--red);font-family:'Space Mono',monospace;text-align:center;">4 / 20 · 3 acertos · 1 erro</div>
+          <!-- Circle pulsa vermelho intenso -->
+          <div class="seq-c" style="background:rgba(255,87,87,0.22);border:2.5px solid var(--red);box-shadow:0 0 20px rgba(255,87,87,0.3);">
+            <div class="seq-ring-e" style="border-color:rgba(255,87,87,0.4);"></div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--red);">NOGO</div>
+          </div>
+          <div class="err-hint">impulso não controlado</div>
+          <div class="penalty" style="background:rgba(255,87,87,0.15);">
+            <div class="penalty-num">−1</div>
+            <div class="penalty-lbl">acerto<br>descontado</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Retomada rápida -->
+    <div class="fw">
+      <div class="flbl">Retomada · 700ms</div>
+      <div class="phone">
+        <div class="screen">
+          <div style="width:100%;height:3px;background:rgba(123,110,246,0.15);border-radius:2px;overflow:hidden;">
+            <div style="width:25%;height:3px;background:var(--purple);border-radius:2px;"></div>
+          </div>
+          <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;text-align:center;">5 / 20 · 3 acertos · 1 erro</div>
+          <div class="seq-c seq-wrong" style="border-color:rgba(123,110,246,0.3);background:rgba(123,110,246,0.05);">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--text2);letter-spacing:.3px;">...</div>
+          </div>
+          <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">próximo sinal...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fim com erros — resultado -->
+    <div class="fw">
+      <div class="flbl">Resultado · erros registrados</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="round-info">SEQUÊNCIA CONCLUÍDA</div>
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--text2);font-family:'Space Mono',monospace;margin-bottom:4px;">Acertos / Total</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--green);line-height:1;">17<span style="font-size:20px;color:var(--text2);">/20</span></div>
+            <div style="font-size:9px;color:var(--text1);margin-top:2px;">85% de controle inibitório</div>
+          </div>
+          <div style="background:var(--red-dim);border:1px solid var(--red-border);border-radius:8px;padding:7px 10px;width:100%;text-align:center;">
+            <div style="font-size:9px;color:var(--red);font-family:'Space Mono',monospace;">3 NoGo tocados incorretamente</div>
+          </div>
+          <div class="stats-mini">
+            <div class="stat-m"><div class="stat-m-val" style="color:var(--green);">17</div><div class="stat-m-lbl">acertos</div></div>
+            <div class="stat-m"><div class="stat-m-val" style="color:var(--red);">3</div><div class="stat-m-lbl">erros</div></div>
+          </div>
+          <div class="btn-cont">ver resultado completo →</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ RADAR ══════ -->
+<div class="mode-section">
+  <div class="mode-label">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><path d="M8.5 12a3.5 3.5 0 0 1 3.5-3.5"/><path d="M5 12a7 7 0 0 1 7-7"/></svg>
+    Modo Radar — círculo errado tocado
+  </div>
+  <div class="frames-row">
+
+    <!-- Normal -->
+    <div class="fw">
+      <div class="flbl">Normal · ativo (âmbar)</div>
+      <div class="phone">
+        <div class="screen">
+          <div style="display:flex;justify-content:space-between;width:100%;">
+            <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);">RODADA 3/15</div>
+            <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);">DESISTIR</div>
+          </div>
+          <div class="radar-cross">
+            <div class="rc rc-idle" style="width:44px;height:44px;top:0;left:48px;"></div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:54px;left:0;"></div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:54px;left:48px;"></div>
+            <div class="rc rc-active" style="width:44px;height:44px;top:54px;left:96px;">
+              <div style="position:absolute;inset:-6px;border-radius:50%;border:1px dashed rgba(255,181,71,0.35);"></div>
+              <div class="rc-active-core"></div>
+            </div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:108px;left:48px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Erro — círculo errado -->
+    <div class="fw">
+      <div class="flbl">Erro · círculo errado</div>
+      <div class="ftype">0ms → 600ms</div>
+      <div class="phone">
+        <div class="screen err-border">
+          <div class="err-flash"></div>
+          <div style="display:flex;justify-content:space-between;width:100%;">
+            <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--red);">RODADA 3/15</div>
+            <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);">DESISTIR</div>
+          </div>
+          <div class="radar-cross">
+            <!-- top — errado, tocado -->
+            <div class="rc rc-wrong" style="width:44px;height:44px;top:0;left:48px;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--red);">✕</div>
+            </div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:54px;left:0;"></div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:54px;left:48px;"></div>
+            <!-- direita — correto (ainda ativo) -->
+            <div class="rc rc-active" style="width:44px;height:44px;top:54px;left:96px;opacity:0.5;">
+              <div class="rc-active-core"></div>
+            </div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:108px;left:48px;"></div>
+          </div>
+          <div class="penalty">
+            <div class="penalty-num">+200</div>
+            <div class="penalty-lbl">ms na<br>média</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recovery -->
+    <div class="fw">
+      <div class="flbl">Recovery · 600ms</div>
+      <div class="phone">
+        <div class="screen">
+          <div style="display:flex;justify-content:space-between;width:100%;">
+            <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);">RODADA 4/15</div>
+            <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);">DESISTIR</div>
+          </div>
+          <div class="radar-cross">
+            <div class="rc rc-idle" style="width:44px;height:44px;top:0;left:48px;border-color:rgba(255,87,87,0.15);"></div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:54px;left:0;"></div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:54px;left:48px;"></div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:54px;left:96px;"></div>
+            <div class="rc rc-idle" style="width:44px;height:44px;top:108px;left:48px;"></div>
+          </div>
+          <div style="font-size:9px;color:var(--text2);font-family:'Space Mono',monospace;">aguarde o sinal...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════ SPEC TABLE ══════ -->
+<div class="spec-wrap">
+  <div style="font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:12px;">Especificação de feedback — todos os modos</div>
+  <div class="spec-grid">
+
+    <div class="spec-card">
+      <div class="spec-card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/></svg>
+        Partida — toque antecipado
+      </div>
+      <div class="spec-row"><span class="spec-key">Visual</span><span class="spec-val">Flash vermelho tela (opacity 0.14, 200ms). Círculo muda para vermelho com ✕. Border da tela em rgba(255,87,87,0.35).</span></div>
+      <div class="spec-row"><span class="spec-key">Shake</span><span class="spec-val">Círculo faz shake horizontal ±6px em 400ms. Tela não shaka — só o elemento.</span></div>
+      <div class="spec-row"><span class="spec-key">Haptic</span><span class="spec-val">ImpactFeedbackStyle.Medium. Uma vibração curta e clara.</span></div>
+      <div class="spec-row"><span class="spec-key">Penalidade</span><span class="spec-val">+150ms adicionados ao tempo desta tentativa. Badge vermelho exibe o valor.</span></div>
+      <div class="spec-row"><span class="spec-key">Recovery</span><span class="spec-val">600ms depois: círculo volta ao estado idle com bordas ainda levemente avermelhadas (fade em 400ms). Nova tentativa inicia.</span></div>
+      <div class="spec-row"><span class="spec-key">Duração total</span><span class="spec-val">1200ms do erro até próxima tentativa pronta.</span></div>
+    </div>
+
+    <div class="spec-card">
+      <div class="spec-card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>
+        Alvo — círculo errado
+      </div>
+      <div class="spec-row"><span class="spec-key">Visual</span><span class="spec-val">Flash vermelho tela (opacity 0.14, 200ms). Círculo tocado recebe ring vermelho + ✕ sobreposto. Outros círculos ficam inalterados.</span></div>
+      <div class="spec-row"><span class="spec-key">Shake</span><span class="spec-val">Apenas o círculo errado shaka. Outros ficam parados. Isola o erro visualmente.</span></div>
+      <div class="spec-row"><span class="spec-key">Haptic</span><span class="spec-val">NotificationFeedbackType.Error. Vibração de notificação de erro — mais intensa que Impact.</span></div>
+      <div class="spec-row"><span class="spec-key">Penalidade</span><span class="spec-val">+150ms na média da rodada. Badge aparece por 500ms. Tempo real da rodada preservado internamente.</span></div>
+      <div class="spec-row"><span class="spec-key">Recovery</span><span class="spec-val">500ms depois: tela de resultado da rodada aparece com penalidade discriminada ("tempo real: Xms + 150ms penalidade").</span></div>
+      <div class="spec-row"><span class="spec-key">Duração total</span><span class="spec-val">500ms de feedback → resultado da rodada.</span></div>
+    </div>
+
+    <div class="spec-card">
+      <div class="spec-card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5" fill="rgba(139,92,246,0.3)"/><circle cx="15" cy="12" r="5"/></svg>
+        Sequência — NoGo tocado
+      </div>
+      <div class="spec-row"><span class="spec-key">Visual</span><span class="spec-val">Flash vermelho intenso (opacity 0.20, 250ms). Círculo NoGo pulsa vermelho brilhante com box-shadow. Border da tela vermelho.</span></div>
+      <div class="spec-row"><span class="spec-key">Shake</span><span class="spec-val">Tela inteira shaka (não só o círculo) — o impulso não controlado é um erro maior. ±8px, 500ms.</span></div>
+      <div class="spec-row"><span class="spec-key">Haptic</span><span class="spec-val">NotificationFeedbackType.Error + segundo pulso leve 200ms depois. Dois toques: erro + consequência.</span></div>
+      <div class="spec-row"><span class="spec-key">Penalidade</span><span class="spec-val">−1 do contador de acertos. Não é ms — é lógica de controle inibitório. Badge mostra "acerto descontado".</span></div>
+      <div class="spec-row"><span class="spec-key">Recovery</span><span class="spec-val">700ms depois: próximo sinal aparece normalmente. Contador de erros atualizado no topo.</span></div>
+      <div class="spec-row"><span class="spec-key">Duração total</span><span class="spec-val">700ms de feedback → próximo sinal.</span></div>
+    </div>
+
+    <div class="spec-card">
+      <div class="spec-card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><path d="M8.5 12a3.5 3.5 0 0 1 3.5-3.5"/><path d="M5 12a7 7 0 0 1 7-7"/></svg>
+        Radar — círculo errado
+      </div>
+      <div class="spec-row"><span class="spec-key">Visual</span><span class="spec-val">Flash vermelho tela (opacity 0.14, 200ms). Círculo errado recebe border vermelho + ✕. Círculo correto (ativo) fica visível mas esmaece ligeiramente.</span></div>
+      <div class="spec-row"><span class="spec-key">Shake</span><span class="spec-val">Círculo errado shaka. Círculo correto não mexe — usuário vê onde deveria ter tocado.</span></div>
+      <div class="spec-row"><span class="spec-key">Haptic</span><span class="spec-val">NotificationFeedbackType.Error. Uma vibração de erro clara.</span></div>
+      <div class="spec-row"><span class="spec-key">Penalidade</span><span class="spec-val">+200ms na média (maior que Alvo — Radar exige localização espacial). Badge mostra valor.</span></div>
+      <div class="spec-row"><span class="spec-key">Recovery</span><span class="spec-val">600ms depois: todos os círculos voltam ao estado idle. Nova rodada inicia com novo sinal aleatório.</span></div>
+      <div class="spec-row"><span class="spec-key">Duração total</span><span class="spec-val">600ms de feedback → nova rodada.</span></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════ ANNOTATIONS ══════ -->
+<div class="anns">
+  <div class="ann"><div class="ann-ico">🔴</div><div class="ann-txt"><strong>Flash no elemento, não na tela — exceto Sequência.</strong> No Partida, Alvo e Radar o flash vermelho afeta a tela mas o shake fica no elemento errado. Isso isola o erro: o usuário vê exatamente o que tocou de errado. Na Sequência o shake vai para a tela inteira porque tocar no NoGo é um erro de controle do próprio corpo — a consequência é mais global.</div></div>
+  <div class="ann"><div class="ann-ico">📳</div><div class="ann-txt"><strong>Haptic diferenciado por gravidade.</strong> Impact.Medium no Partida (erro menor, só timing). NotificationFeedbackType.Error no Alvo, Sequência e Radar (erro de decisão). Sequência tem dois pulsos hápticos porque o NoGo tocado é o erro mais significativo cognitivamente — o app reconhece a diferença.</div></div>
+  <div class="ann"><div class="ann-ico">⏱</div><div class="ann-txt"><strong>Feedback curto, retomada rápida.</strong> Máximo de 1200ms de interrupção (Partida). A ideia não é punir o usuário com uma pausa longa — é dar feedback claro e voltar ao jogo. Um app de reflexo não pode ter estados de erro que durem 3 segundos.</div></div>
+  <div class="ann"><div class="ann-ico">📊</div><div class="ann-txt"><strong>Penalidade sempre discriminada.</strong> Nas telas de resultado o tempo real é sempre separado da penalidade. "337ms + 150ms de penalidade = 487ms" mostra ao usuário que o app é justo — a penalidade não some no número, ela é explicada. Isso preserva a confiança na precisão das métricas.</div></div>
+  <div class="ann"><div class="ann-ico">🎯</div><div class="ann-txt"><strong>Sequência tem lógica de erro diferente.</strong> Nos outros modos o erro é de velocidade ou posição — penalidade em ms faz sentido. Na Sequência o erro é de controle inibitório — por isso a penalidade é lógica (−1 acerto), não temporal. O resultado final mostra porcentagem de acerto, não tempo médio.</div></div>
+</div>
+
+</body>
+</html>
