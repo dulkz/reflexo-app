@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Reflexo — Icon Set</title>
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --bg-card: #131318;
+    --bg-elev: #1a1a20;
+    --line: rgba(255,255,255,0.08);
+    --line-strong: rgba(255,255,255,0.14);
+    --fg: #ffffff;
+    --fg-dim: rgba(255,255,255,0.55);
+    --fg-mute: rgba(255,255,255,0.35);
+    --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  body {
+    padding: 64px 48px 96px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 48px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-mark {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--fg);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .brand-mark::after {
+    content: "";
+    width: 6px; height: 6px;
+    background: var(--fg);
+    border-radius: 50%;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  h1 span {
+    color: var(--fg-mute);
+    font-weight: 400;
+    margin-left: 8px;
+  }
+  .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-mute);
+    text-align: right;
+    line-height: 1.7;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* SPECS BAR */
+  .specs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    margin-bottom: 56px;
+    overflow: hidden;
+  }
+  .spec {
+    padding: 18px 22px;
+    border-right: 1px solid var(--line);
+  }
+  .spec:last-child { border-right: none; }
+  .spec-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .spec-value {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--fg);
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .section-title h2 {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fg-dim);
+  }
+  .section-title .num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-mute);
+  }
+  .section-title .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ICON GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-bottom: 64px;
+  }
+  .cell {
+    background: var(--bg-card);
+    padding: 36px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background 160ms ease;
+  }
+  .cell:hover { background: var(--bg-elev); }
+  .icon-frame {
+    width: 96px;
+    height: 96px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .icon-frame::before, .icon-frame::after {
+    content: "";
+    position: absolute;
+    background: var(--line-strong);
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+  .icon-frame::before { width: 100%; height: 1px; top: 50%; }
+  .icon-frame::after { height: 100%; width: 1px; left: 50%; }
+  .cell:hover .icon-frame::before,
+  .cell:hover .icon-frame::after { opacity: 1; }
+  .icon-frame svg {
+    width: 56px;
+    height: 56px;
+    position: relative;
+    z-index: 1;
+  }
+  .icon-name {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .icon-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-mute);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* SCALE ROW */
+  .scale-row {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    border: 1px solid var(--line);
+    margin-bottom: 64px;
+  }
+  .scale-cell {
+    padding: 28px 12px 20px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .scale-cell:last-child { border-right: none; }
+  .scale-stack {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    height: 72px;
+  }
+  .scale-stack svg { display: block; }
+  .scale-stack .s16 { width: 16px; height: 16px; }
+  .scale-stack .s24 { width: 24px; height: 24px; }
+  .scale-stack .s32 { width: 32px; height: 32px; }
+  .scale-stack .s48 { width: 48px; height: 48px; }
+  .scale-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* TAB BAR PREVIEW */
+  .preview-block {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+    margin-bottom: 64px;
+  }
+  .preview-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    padding: 28px;
+  }
+  .preview-card h3 {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 22px;
+  }
+  .tabbar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 16px 8px 12px;
+    background: #060608;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    color: var(--fg-mute);
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.active { color: var(--fg); }
+  .tab span {
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  /* MENU PREVIEW */
+  .menu {
+    background: #060608;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px;
+  }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    color: var(--fg-dim);
+    cursor: pointer;
+    transition: all 160ms ease;
+  }
+  .menu-item:hover { background: var(--bg-elev); color: var(--fg); }
+  .menu-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .menu-item span { font-size: 13px; }
+  .menu-item .chev {
+    margin-left: auto;
+    color: var(--fg-mute);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  /* CODE BLOCK */
+  .code {
+    background: #060608;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 20px 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-dim);
+    line-height: 1.7;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .code .k { color: #d4a5ff; }
+  .code .a { color: #8fc8ff; }
+  .code .v { color: #ffd591; }
+  .code .c { color: var(--fg-mute); }
+
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <h1>Reflexo<span>icon system</span></h1>
+    </div>
+    <div class="meta">
+      v1.0 · 8 glyphs<br>
+      24×24 · stroke 1.5
+    </div>
+  </header>
+
+  <!-- SPEC BAR -->
+  <div class="specs">
+    <div class="spec">
+      <div class="spec-label">Format</div>
+      <div class="spec-value">SVG</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">Viewbox</div>
+      <div class="spec-value">0 0 24 24</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">Stroke</div>
+      <div class="spec-value">1.5px · round</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">Color</div>
+      <div class="spec-value">#FFFFFF</div>
+    </div>
+  </div>
+
+  <!-- ICON GRID -->
+  <div class="section-title">
+    <span class="num">01</span>
+    <h2>The Set</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="grid">
+
+    <div class="cell">
+      <div class="icon-frame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/>
+        </svg>
+      </div>
+      <div class="icon-name">Partida</div>
+      <div class="icon-id">match · reaction</div>
+    </div>
+
+    <div class="cell">
+      <div class="icon-frame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="5"/>
+          <circle cx="12" cy="12" r="1.25"/>
+          <path d="M12 1.5v3"/>
+          <path d="M12 19.5v3"/>
+          <path d="M1.5 12h3"/>
+          <path d="M19.5 12h3"/>
+        </svg>
+      </div>
+      <div class="icon-name">Alvo</div>
+      <div class="icon-id">target · color pick</div>
+    </div>
+
+    <div class="cell">
+      <div class="icon-frame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 8h11"/>
+          <path d="M11 5l3 3-3 3"/>
+          <path d="M20 16H9"/>
+          <path d="M13 19l-3-3 3-3"/>
+        </svg>
+      </div>
+      <div class="icon-name">Sequência</div>
+      <div class="icon-id">sequence · go/nogo</div>
+    </div>
+
+    <div class="cell">
+      <div class="icon-frame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 12L18.5 6.5"/>
+          <circle cx="12" cy="12" r="1"/>
+        </svg>
+      </div>
+      <div class="icon-name">Radar</div>
+      <div class="icon-id">radar · locate</div>
+    </div>
+
+    <div class="cell">
+      <div class="icon-frame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>
+          <path d="M7 6H4v1a3 3 0 0 0 3 3"/>
+          <path d="M17 6h3v1a3 3 0 0 1-3 3"/>
+          <path d="M10 14v3h4v-3"/>
+          <path d="M8 20h8"/>
+          <path d="M12 17v3"/>
+        </svg>
+      </div>
+      <div class="icon-name">Conquistas</div>
+      <div class="icon-id">achievements</div>
+    </div>
+
+    <div class="cell">
+      <div class="icon-frame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 4v15a1 1 0 0 0 1 1h16"/>
+          <path d="M7 16l4-5 3.5 3 5-7"/>
+          <circle cx="7" cy="16" r="0.75"/>
+          <circle cx="11" cy="11" r="0.75"/>
+          <circle cx="14.5" cy="14" r="0.75"/>
+          <circle cx="19.5" cy="7" r="0.75"/>
+        </svg>
+      </div>
+      <div class="icon-name">Histórico</div>
+      <div class="icon-id">history · stats</div>
+    </div>
+
+    <div class="cell">
+      <div class="icon-frame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="3.75"/>
+          <path d="M5 20c0-3.5 3.13-6 7-6s7 2.5 7 6"/>
+        </svg>
+      </div>
+      <div class="icon-name">Perfil</div>
+      <div class="icon-id">profile · user</div>
+    </div>
+
+    <div class="cell">
+      <div class="icon-frame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 7c0 3 4 6 4 6s4-3 4-6a4 4 0 0 0-8 0z"/>
+          <circle cx="11" cy="7" r="1.25"/>
+          <path d="M6 12c-1.5.4-2.5 1.1-2.5 2 0 1.4 2.8 2.5 6.5 2.5"/>
+          <path d="M14 14c4.2.2 7 1.3 7 2.7 0 1.5-3.6 2.8-8 2.8"/>
+          <path d="M9.5 19.3l-1.5 1.2"/>
+        </svg>
+      </div>
+      <div class="icon-name">Jornada</div>
+      <div class="icon-id">journey · map</div>
+    </div>
+
+  </div>
+
+  <!-- SCALE -->
+  <div class="section-title">
+    <span class="num">02</span>
+    <h2>Scale Test · 16 / 24 / 32 / 48 px</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="scale-row" id="scaleRow"></div>
+
+  <!-- IN CONTEXT -->
+  <div class="section-title">
+    <span class="num">03</span>
+    <h2>In Context</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="preview-block">
+
+    <div class="preview-card">
+      <h3>Bottom Tab Bar</h3>
+      <div class="tabbar">
+        <div class="tab active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/>
+          </svg>
+          <span>Partida</span>
+        </div>
+        <div class="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 7c0 3 4 6 4 6s4-3 4-6a4 4 0 0 0-8 0z"/>
+            <circle cx="11" cy="7" r="1.25"/>
+            <path d="M6 12c-1.5.4-2.5 1.1-2.5 2 0 1.4 2.8 2.5 6.5 2.5"/>
+            <path d="M14 14c4.2.2 7 1.3 7 2.7 0 1.5-3.6 2.8-8 2.8"/>
+            <path d="M9.5 19.3l-1.5 1.2"/>
+          </svg>
+          <span>Jornada</span>
+        </div>
+        <div class="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.5 4v15a1 1 0 0 0 1 1h16"/>
+            <path d="M7 16l4-5 3.5 3 5-7"/>
+          </svg>
+          <span>Histórico</span>
+        </div>
+        <div class="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="3.75"/>
+            <path d="M5 20c0-3.5 3.13-6 7-6s7 2.5 7 6"/>
+          </svg>
+          <span>Perfil</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-card">
+      <h3>Mode Picker</h3>
+      <div class="menu">
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M13 7l-3.5 6h3l-1 4 3.5-6h-3z"/>
+          </svg>
+          <span>Modo Partida</span>
+          <span class="chev">→</span>
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="5"/>
+            <circle cx="12" cy="12" r="1.25"/>
+            <path d="M12 1.5v3"/><path d="M12 19.5v3"/>
+            <path d="M1.5 12h3"/><path d="M19.5 12h3"/>
+          </svg>
+          <span>Modo Alvo</span>
+          <span class="chev">→</span>
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8h11"/><path d="M11 5l3 3-3 3"/>
+            <path d="M20 16H9"/><path d="M13 19l-3-3 3-3"/>
+          </svg>
+          <span>Modo Sequência</span>
+          <span class="chev">→</span>
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 12L18.5 6.5"/>
+            <circle cx="12" cy="12" r="1"/>
+          </svg>
+          <span>Modo Radar</span>
+          <span class="chev">→</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CODE -->
+  <div class="section-title">
+    <span class="num">04</span>
+    <h2>Source · match.svg</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="code"><span class="c">&lt;!-- 24×24 · stroke 1.5 · #FFFFFF --&gt;</span>
+<span class="k">&lt;svg</span> <span class="a">xmlns</span>=<span class="v">"http://www.w3.org/2000/svg"</span> <span class="a">width</span>=<span class="v">"24"</span> <span class="a">height</span>=<span class="v">"24"</span>
+     <span class="a">viewBox</span>=<span class="v">"0 0 24 24"</span> <span class="a">fill</span>=<span class="v">"none"</span>
+     <span class="a">stroke</span>=<span class="v">"#FFFFFF"</span> <span class="a">stroke-width</span>=<span class="v">"1.5"</span>
+     <span class="a">stroke-linecap</span>=<span class="v">"round"</span> <span class="a">stroke-linejoin</span>=<span class="v">"round"</span><span class="k">&gt;</span>
+  <span class="k">&lt;circle</span> <span class="a">cx</span>=<span class="v">"12"</span> <span class="a">cy</span>=<span class="v">"12"</span> <span class="a">r</span>=<span class="v">"9"</span><span class="k">/&gt;</span>
+  <span class="k">&lt;path</span> <span class="a">d</span>=<span class="v">"M13 7l-3.5 6h3l-1 4 3.5-6h-3z"</span><span class="k">/&gt;</span>
+<span class="k">&lt;/svg&gt;</span></div>
+
+  <footer>
+    <span>Reflexo · Icon System</span>
+    <span>Files in /icons/*.svg</span>
+  </footer>
+
+</div>
+
+<script>
+  // Build scale row by reusing the 8 SVGs in 4 sizes
+  const icons = document.querySelectorAll('.grid .cell');
+  const names = ['partida','alvo','seq','radar','trofeu','hist','perfil','rota'];
+  const scaleRow = document.getElementById('scaleRow');
+  icons.forEach((cell, i) => {
+    const svg = cell.querySelector('svg').outerHTML;
+    const div = document.createElement('div');
+    div.className = 'scale-cell';
+    div.innerHTML = `
+      <div class="scale-stack">
+        <div class="s16">${svg.replace('<svg', '<svg width="16" height="16"')}</div>
+        <div class="s24">${svg.replace('<svg', '<svg width="24" height="24"')}</div>
+        <div class="s32">${svg.replace('<svg', '<svg width="32" height="32"')}</div>
+        <div class="s48">${svg.replace('<svg', '<svg width="48" height="48"')}</div>
+      </div>
+      <div class="scale-label">${names[i]}</div>
+    `;
+    scaleRow.appendChild(div);
+  });
+</script>
+</body>
+</html>
