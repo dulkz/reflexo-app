@@ -22,6 +22,7 @@ import TriageModal from './screens/triage/TriageModal';
 import OnboardingFlow from './screens/onboarding/OnboardingFlow';
 import AuthScreen from './screens/Auth';
 import { supabase } from './lib/supabase';
+import { syncSessionToSupabase } from './utils/syncSession';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
 import { useFonts } from 'expo-font';
@@ -292,6 +293,14 @@ function AppInner({ isGuest }: { isGuest: boolean }) {
     const prevUnlocked = new Set(ACHIEVEMENTS.filter(a => a.unlocked(prevStats)).map(a => a.id));
 
     await saveSession(session);
+
+    // Sync oportunista com Supabase (só se logado, nunca bloqueia)
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+    if (authSession?.user?.id) {
+      syncSessionToSupabase(session, authSession.user.id);
+      // sem await intencional — fire-and-forget
+    }
+
     const updated = await loadSessions();
     setSessions(updated);
 
