@@ -750,10 +750,11 @@
     ],
     "benchmarks": [
       { "name": "Elite visual anticipation", "level": "SUPER-HUMAN" },
+      { "name": "Olympic sprinter (auditory)", "level": "EXTREME ELITE" },
       { "name": "Top F1 driver", "level": "ELITE" },
-      { "name": "Olympic boxer", "level": "ELITE" },
+      { "name": "Olympic sprinter (visual)", "level": "ELITE" },
+      { "name": "Olympic boxer", "level": "VERY GOOD" },
       { "name": "ATP tennis player", "level": "VERY GOOD" },
-      { "name": "Olympic sprinter", "level": "ELITE" },
       { "name": "Healthy adult (25–45)", "level": "GOOD" }
     ],
     "choiceBenchmarks": [

@@ -750,10 +750,11 @@
     ],
     "benchmarks": [
       { "name": "Antecipação visual de elite", "level": "SUPER-HUMANO" },
+      { "name": "Velocista olímpico (auditivo)", "level": "ELITE EXTREMO" },
       { "name": "Piloto de F1 de ponta", "level": "ELITE" },
-      { "name": "Boxeador olímpico", "level": "ELITE" },
+      { "name": "Velocista olímpico (visual)", "level": "ELITE" },
+      { "name": "Boxeador olímpico", "level": "MUITO BOM" },
       { "name": "Tenista ATP", "level": "MUITO BOM" },
-      { "name": "Velocista olímpico", "level": "ELITE" },
       { "name": "Adulto saudável (25–45)", "level": "BOM" }
     ],
     "choiceBenchmarks": [

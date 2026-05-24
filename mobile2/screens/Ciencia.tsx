@@ -43,13 +43,15 @@ function SectionHeader({ kicker, headline }: { kicker: string; headline?: string
 
 // ── Static data (icons, sources, ranges — non-translatable parts) ─────────────
 
+// Valores conferidos contra benchmarks_reflexo.docx (fontes peer-reviewed citadas).
 const BENCHMARK_STATIC = [
-  { icon: MISSION_ICONS.eye,        source: 'McLeod 1987 · Caprioli et al., 2023 (ATP)', range: '50–100 ms',  color: '#00f5ff' },
-  { icon: ARCHETYPE_ICONS.PILOTO,   source: 'Vienna Reaction Apparatus',                  range: '150–250 ms', color: '#10b981' },
-  { icon: MISSION_ICONS.boxing,     source: 'Loturco et al., 2015 · Seleção Brasileira',  range: '160–220 ms', color: '#10b981' },
-  { icon: MISSION_ICONS.tennis,     source: 'Journal of Sports Sciences, 2019',           range: '200–250 ms', color: '#3b82f6' },
-  { icon: ARCHETYPE_ICONS.VELOCISTA,source: 'Lipps et al., 2011 · Sprint start research', range: '170–200 ms', color: '#10b981' },
-  { icon: MISSION_ICONS.person,     source: 'Meta-análise · PMC, 2021',                   range: '200–300 ms', color: '#06b6d4' },
+  { icon: MISSION_ICONS.eye,         source: 'McLeod 1987 · Caprioli et al., 2023 (ATP)',          range: '50–100 ms',  color: '#00f5ff' },
+  { icon: ARCHETYPE_ICONS.VELOCISTA, source: 'Shahshahani et al., 2018 · PLoS ONE · IAAF',         range: '120–160 ms', color: '#8b5cf6' },
+  { icon: ARCHETYPE_ICONS.PILOTO,    source: 'Vienna Reaction Apparatus (Neuhaus et al., PMC)',    range: '150–250 ms', color: '#10b981' },
+  { icon: ARCHETYPE_ICONS.VELOCISTA, source: 'Lipps et al., 2011 · Sprint start research',         range: '170–200 ms', color: '#10b981' },
+  { icon: MISSION_ICONS.boxing,      source: 'Loturco et al., 2015 · J. Athletic Enhancement',     range: '240–260 ms', color: '#3b82f6' },
+  { icon: MISSION_ICONS.tennis,      source: 'Caprioli et al., 2023 · SCITEPRESS (vídeo-análise ATP)', range: '200–250 ms', color: '#3b82f6' },
+  { icon: MISSION_ICONS.person,      source: 'Backyard Brains · Wikipedia Mental Chronometry',     range: '250–270 ms', color: '#06b6d4' },
 ];
 
 const CHOICE_BENCHMARK_STATIC = [
@@ -220,11 +222,9 @@ export function CienciaContent({ userProfile, sessions, showTitle = true }: Prop
           if (b.level === 'SUPER-HUMANO' || b.level === 'SUPER-HUMAN' || b.level === 'IMPOSSÍVEL') {
             if (bestPartidaRt === null || bestPartidaRt >= 100) return null;
           }
-          const isGoal = goalBenchmarkName !== null && BENCHMARK_STATIC[idx].source === BENCHMARK_STATIC[BENCHMARKS_DATA.findIndex(
-            (_, i) => BENCHMARK_STATIC[i].source === goalBenchmarkName,
-          )]?.source;
-          // simpler: match by original Portuguese name via index — goalBenchmarkName is the Portuguese name
-          const originalPtNames = ['Antecipação visual de elite','Piloto de F1 de ponta','Boxeador olímpico','Tenista ATP','Velocista olímpico','Adulto saudável (25–45)'];
+          // Match by original Portuguese name via index — goalBenchmarkName é o nome PT.
+          // O alvo "Velocista olímpico" (meta 160ms) realça a faixa auditiva (120–160).
+          const originalPtNames = ['Antecipação visual de elite','Velocista olímpico','Piloto de F1 de ponta','Velocista olímpico (visual)','Boxeador olímpico','Tenista ATP','Adulto saudável (25–45)'];
           const isGoalCard = goalBenchmarkName !== null && originalPtNames[idx] === goalBenchmarkName;
           return (
             <View
