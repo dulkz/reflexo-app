@@ -1,0 +1,5 @@
+-- URLs de redirect para auth configuradas no Supabase dashboard.
+-- Aplicar manualmente em: Authentication -> URL Configuration -> Redirect URLs
+-- Dev:     exp://localhost:8081/--/auth-callback
+-- Prod:    reflexo://auth-callback
+-- Site URL dev: exp://localhost:8081

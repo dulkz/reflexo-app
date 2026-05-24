@@ -6,6 +6,7 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
+import { getAuthRedirectUrl } from '../lib/linking'
 
 type Mode = 'login' | 'signup' | 'reset'
 
@@ -23,7 +24,9 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
     setLoading(true)
     try {
       if (mode === 'reset') {
-        const { error } = await supabase.auth.resetPasswordForEmail(email)
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: getAuthRedirectUrl(),
+        })
         if (error) {
           Alert.alert('Erro', error.message)
         } else {
@@ -43,7 +46,11 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
           Alert.alert('Nome de usuário obrigatório')
           return
         }
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: getAuthRedirectUrl() },
+        })
         if (error) { Alert.alert('Erro ao cadastrar', error.message); return }
         if (data.user) {
           const { error: profileError } = await supabase
