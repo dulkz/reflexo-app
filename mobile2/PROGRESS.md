@@ -63,7 +63,7 @@ Branch finalizada e estável.
 - [x] Card de perfil público — PR #3 mergeado (ecff601)
 - [x] Popular campo accuracy real — PR #2 mergeado (5bf0fb2)
 - [x] Abrir PR feat/online-ranking → main — PR #1 mergeado (dc4fe27)
-- [ ] Deep link para confirmação de email (produção)
+- [x] Deep link para confirmação de email — PR #5 mergeado (ee43a14)
 - [ ] Normalizar indentação GlobalScreen.tsx (cosmético)
 
 ### Configurações de ambiente (não versionadas)
@@ -78,3 +78,5 @@ Branch finalizada e estável.
 - PR #2 (5bf0fb2): accuracy real populada no sync (alvo, radar, sequência)
 - PR #3 (ecff601): card de perfil público no ranking (modal com posição, tempo médio, partidas)
 - README.md criado com visão geral do projeto
+- PR #4 (9163536): README.md criado
+- PR #5 (ee43a14): deep link de auth (scheme reflexo, expo-linking, handler cold start)
