@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Modal, TextInput,
   Platform, StatusBar as RNStatusBar, TouchableOpacity, Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import i18n, { changeLanguage } from '../i18n';
 import Svg, { Defs, LinearGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
@@ -221,6 +222,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
   const handleLogout = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) await resetMigrationFlag(session.user.id);
+    await AsyncStorage.removeItem('reflexo_guest');
     await supabase.auth.signOut();
     onLogout?.();
   };

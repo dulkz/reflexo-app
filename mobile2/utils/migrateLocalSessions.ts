@@ -32,8 +32,11 @@ export async function migrateLocalSessions(userId: string): Promise<void> {
       played_at:        new Date(s.date).toISOString(),
     }));
 
-    // Insert em lote — Supabase aceita array no insert
-    const { error } = await supabase.from('sessions').insert(rows);
+    // Upsert em lote — ignora duplicatas por (user_id, played_at, mode) na re-migração
+    const { error } = await supabase.from('sessions').upsert(rows, {
+      onConflict: 'user_id,played_at,mode',
+      ignoreDuplicates: true,
+    });
 
     if (error) {
       console.warn('[migrateLocalSessions] insert error:', error.message);
