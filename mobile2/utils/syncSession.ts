@@ -13,13 +13,12 @@ export async function syncSessionToSupabase(
 ): Promise<void> {
   try {
     const { error } = await supabase.from('sessions').insert({
-      user_id:    userId,
-      mode:       session.mode,
-      score:      session.score,       // tempo médio em ms
-      best_time:  session.bestTime,
-      rounds:     session.rounds,
-      played_at:  new Date(session.date).toISOString(),
-      local_id:   session.id,          // idempotência: evita duplicata se reenviar
+      user_id:          userId,
+      mode:             session.mode,
+      avg_rt:           session.score,        // score local = tempo médio em ms
+      rounds_completed: session.rounds,
+      accuracy:         null,                 // não calculado localmente ainda
+      played_at:        new Date(session.date).toISOString(),
     });
     if (error) {
       // Log silencioso — não interrompe o fluxo offline
