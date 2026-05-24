@@ -918,21 +918,36 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
           </View>
         )}
 
-        {/* ── ZONA DE PERIGO ── */}
+        {/* ── Limpar dados — discreto, confirmação em duas etapas ── */}
         <View style={styles.dangerZone}>
           <TouchableOpacity
             style={styles.dangerButton}
             onPress={() => {
+              // 1ª etapa
               Alert.alert(
-                t('profile.clearDataConfirmTitle'),
-                t('profile.clearDataConfirmMessage'),
+                t('profile.clearDataStep1Title'),
+                t('profile.clearDataStep1Message'),
                 [
                   { text: t('common.cancel'), style: 'cancel' },
-                  { text: t('profile.clearDataBtn'), style: 'destructive', onPress: onClearData },
+                  {
+                    text: t('profile.clearDataStep1Confirm'),
+                    style: 'destructive',
+                    onPress: () => {
+                      // 2ª etapa — confirmação final
+                      Alert.alert(
+                        t('profile.clearDataStep2Title'),
+                        undefined,
+                        [
+                          { text: t('profile.clearDataStep2Cancel'), style: 'cancel' },
+                          { text: t('profile.clearDataStep2Confirm'), style: 'destructive', onPress: onClearData },
+                        ],
+                      );
+                    },
+                  },
                 ],
               );
             }}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
           >
             <Text style={styles.dangerButtonText}>{t('profile.clearData')}</Text>
           </TouchableOpacity>
@@ -1356,11 +1371,10 @@ const styles = StyleSheet.create({
   },
   identityLangFlag: { fontSize: 16, lineHeight: 18 },
 
-  // ── Danger zone ───────────────────────────────────────────────────────────
+  // ── Limpar dados — discreto, secundário (sem borda/fundo, texto cinza) ──────
   dangerZone: { marginTop: 24, alignItems: 'center' },
   dangerButton: {
-    borderWidth: 1, borderColor: '#ef4444', borderRadius: 10,
     paddingHorizontal: 24, paddingVertical: 10,
   },
-  dangerButtonText: { fontSize: 13, fontWeight: '700', color: '#ef4444', letterSpacing: 0.5 },
+  dangerButtonText: { fontSize: 13, fontWeight: '600', color: '#4a5a7b', letterSpacing: 0.3 },
 });
