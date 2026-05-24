@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  FlatList, ActivityIndicator, RefreshControl,
+  FlatList, ActivityIndicator, RefreshControl, Modal,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 
@@ -40,6 +40,7 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<RankingEntry | null>(null);
 
   // Pega o user_id da sessão atual
   useEffect(() => {
@@ -124,7 +125,11 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
     const isMe = item.user_id === currentUserId;
     const crown = CROWN[item.position];
     return (
-      <View style={[styles.rankCard, isMe && styles.rankCardMe]}>
+      <TouchableOpacity
+        style={[styles.rankCard, isMe && styles.rankCardMe]}
+        onPress={() => setSelectedUser(item)}
+        activeOpacity={0.75}
+      >
         <View style={styles.rankPosition}>
           {crown
             ? <Text style={styles.crown}>{crown}</Text>
@@ -142,12 +147,74 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
         <Text style={[styles.rankTime, isMe && styles.rankTimeMe]}>
           {formatTime(item.avg_rt)}
         </Text>
-      </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderProfileModal = () => {
+    if (!selectedUser) return null;
+    const isMe = selectedUser.user_id === currentUserId;
+    return (
+      <Modal
+        visible={!!selectedUser}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedUser(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setSelectedUser(null)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.profileCard}>
+            {/* Header */}
+            <View style={styles.profileHeader}>
+              <Text style={styles.profileUsername}>
+                {selectedUser.username}{isMe ? ' (você)' : ''}
+              </Text>
+              <Text style={styles.profileArchetype}>{selectedUser.archetype}</Text>
+            </View>
+
+            {/* Stats */}
+            <View style={styles.profileStats}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>#{selectedUser.position}</Text>
+                <Text style={styles.statLabel}>POSIÇÃO</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{formatTime(selectedUser.avg_rt)}</Text>
+                <Text style={styles.statLabel}>TEMPO MÉDIO</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{selectedUser.session_count}</Text>
+                <Text style={styles.statLabel}>PARTIDAS</Text>
+              </View>
+            </View>
+
+            {/* Modo atual */}
+            <Text style={styles.profileMode}>
+              modo: {MODES.find(m => m.key === mode)?.label ?? mode.toUpperCase()}
+            </Text>
+
+            {/* Fechar */}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSelectedUser(null)}
+            >
+              <Text style={styles.closeButtonText}>FECHAR</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <>
+      {renderProfileModal()}
+      <View style={styles.container}>
       {/* Header */}
       <Text style={styles.screenTitle}>GLOBAL</Text>
 
@@ -196,7 +263,8 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
           }
         />
       )}
-    </View>
+      </View>
+    </>
   );
 }
 
@@ -336,5 +404,83 @@ const styles = StyleSheet.create({
   },
   rankTimeMe: {
     color: '#00E5CC',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  profileCard: {
+    backgroundColor: '#0D1530',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1E2D4A',
+    padding: 24,
+    width: '100%',
+    gap: 20,
+  },
+  profileHeader: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  profileUsername: {
+    fontSize: 22,
+    color: '#00E5CC',
+    fontFamily: 'BebasNeue_400Regular',
+    letterSpacing: 3,
+  },
+  profileArchetype: {
+    fontSize: 11,
+    color: '#4A5568',
+    fontFamily: 'DMSans_400Regular',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  profileStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  statItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  statValue: {
+    fontSize: 20,
+    color: '#E2E8F0',
+    fontFamily: 'SpaceMono_400Regular',
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: '#1E2D4A',
+  },
+  statLabel: {
+    fontSize: 9,
+    color: '#4A5568',
+    fontFamily: 'DMSans_400Regular',
+    letterSpacing: 1,
+  },
+  profileMode: {
+    fontSize: 11,
+    color: '#4A5568',
+    fontFamily: 'DMSans_400Regular',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  closeButton: {
+    borderWidth: 1,
+    borderColor: '#1E2D4A',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 12,
+    color: '#7a8aa0',
+    fontFamily: 'DMSans_500Medium',
+    letterSpacing: 1,
   },
 });
