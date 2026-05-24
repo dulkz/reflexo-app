@@ -1,13 +1,14 @@
 # VERSÃO FINAL — Reflexo App (feat/goal-redesign-final)
 
-Data: 2026-05-23
+Data: 2026-05-24
 Branch: feat/goal-redesign-final
 TypeScript: `npx tsc --noEmit` → 0 erros (rodar de dentro de mobile2/)
 App principal: mobile2/ (NUNCA mobile/)
 
 Documento de fechamento do redesign aprovado pelo conselho (GRUPOS 1–6) + segunda
-leva de mudanças (GRUPOS 7–9: navegação 3 tabs, tutoriais de modo, correções pontuais).
-Checkpoints por grupo: CHECKPOINT_1..5.md e CHECKPOINT_7..9.md (raiz do repo).
+leva (GRUPOS 7–9: navegação 3 tabs, tutoriais de modo, correções) + terceira leva
+(GRUPOS 10–13: UX polish, ordem/desbloqueio de modos, Alvo reformulado, benchmarks).
+Checkpoints por grupo: CHECKPOINT_1..5.md, CHECKPOINT_7..9.md e CHECKPOINT_10..13.md (raiz do repo).
 
 ---
 
@@ -88,6 +89,37 @@ Checkpoints por grupo: CHECKPOINT_1..5.md e CHECKPOINT_7..9.md (raiz do repo).
   energia quando premium. Flag default `false` (sem impacto em produção).
 - Alvo: texto → "Leia a cor indicada e toque no círculo correto" (PT/EN).
 - Penalidade do Alvo unificada em **+150ms** (valor real do código) em tutorial e textos.
+
+### GRUPO 10 — Correções visuais e UX (CHECKPOINT_10.md)
+- Tab bar com mais padding e labels mais legíveis.
+- Tutorial do Modo Partida unificado em layout único (mesmo padrão do Alvo): removida a
+  duplicação de título; visual + descrição centralizados.
+- Botão voltar padronizado nos 4 modos — Radar in-game usava "DESISTIR" à direita; agora
+  usa a seta ← padrão à esquerda como os demais.
+- Histórico por modo no Perfil: cada card mostra DOIS valores (melhor absoluto + melhor
+  média) sempre visíveis, sem expandir.
+- Conquistas secretas: badge SECRET passa a **substituir** a raridade (fim da sobreposição).
+
+### GRUPO 11 — Ordem e desbloqueio de modos (CHECKPOINT_11.md)
+- Nova ordem em toda a app: **Partida → Radar → Sequência → Alvo**.
+- Desbloqueio progressivo: cada modo libera após 1 sessão completa do anterior (Partida
+  sempre liberado). Estado derivado das sessões e persistido em AsyncStorage
+  (`mode_unlocked_{modeKey}`); chaves resetam em "Limpar dados".
+- Cards bloqueados: cadeado + "Complete [modo anterior] para desbloquear" (não-clicável).
+- Ao desbloquear: haptic Success + toast "MODO DESBLOQUEADO" (enfileirado atrás de
+  evolução/conquista/marco).
+
+### GRUPO 12 — Modo Alvo reformulado (CHECKPOINT_12.md)
+- Choice RT puro com **4 círculos em posições FIXAS e permanentes** (azul TL, laranja TR,
+  roxo BL, verde BR), sempre visíveis. Prompt "TOQUE O [COR]" só no signal. Toque errado
+  +150ms; timeout 1500ms = +200ms (1700ms). 10 rodadas, score = média de TODAS (sem descarte).
+- `ALVO_LEVELS` recalibrado: ELITE <250 · MUITO BOM <320 · BOM <420 · AQUECENDO <550 · INICIANDO ≥550.
+- Tutorial com legenda das 4 posições fixas.
+
+### GRUPO 13 — Benchmarks da Ciência (CHECKPOINT_13.md)
+- Valores de Ciencia.tsx conferidos contra `benchmarks_reflexo.docx`.
+- Boxeador olímpico 160–220 → **240–260 ms** (visual); Velocista separado em **auditivo
+  120–160 ms** e **visual 170–200 ms**; adulto médio → 250–270 ms. Todos com fonte citada.
 
 ---
 

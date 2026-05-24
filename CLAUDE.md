@@ -8,11 +8,17 @@ App principal: mobile2/ (TypeScript — NUNCA usar mobile/)
 Branch de trabalho: feat/goal-redesign-final
 GitHub: dulkz/reflexo-app
 
-## Estado Final (2026-05-23)
-Redesign do conselho CONCLUÍDO — GRUPOS 1 a 6 implementados e commitados em
-feat/goal-redesign-final. tsc --noEmit = 0 erros. Detalhes do que foi entregue,
-pendências conhecidas e próximos passos em VERSAO_FINAL.md. Checkpoints por grupo:
-CHECKPOINT_1..5.md. O checklist abaixo está todo marcado como referência histórica.
+## Estado Final (2026-05-24)
+Redesign do conselho CONCLUÍDO (GRUPOS 1 a 6) + polish/funcionalidades (GRUPOS 10 a 13),
+todos commitados em feat/goal-redesign-final. tsc --noEmit = 0 erros. Detalhes do que foi
+entregue, pendências conhecidas e próximos passos em VERSAO_FINAL.md. Checkpoints por grupo:
+CHECKPOINT_1..5.md e CHECKPOINT_10..13.md. O checklist abaixo está todo marcado como referência histórica.
+
+Destaques GRUPOS 10–13:
+- UX polish: tab bar, tutorial Partida unificado, botão voltar padronizado, histórico por modo (2 valores), badge secreta.
+- Ordem dos modos: Partida → Radar → Sequência → Alvo, com desbloqueio progressivo persistido (mode_unlocked_{key}).
+- Modo Alvo reformulado: choice RT puro com posições fixas (ver Mecânicas).
+- Benchmarks da Ciência conferidos contra benchmarks_reflexo.docx.
 
 ---
 
@@ -152,9 +158,17 @@ Referência: reflexo-arquetipo-evolucao.html
 ## Mecânicas de Jogo (canônico — não alterar sem justificativa)
 
 Partida: 7 rodadas, descarta 2 piores, score = média das 5 melhores. Jitter 1000-4000ms. Queimada +300ms.
-Alvo: 10 rodadas, choice RT por cor, grid 2x2, prompt TOQUE O [COR]. Toque errado +200ms. Timeout 1500ms.
+Alvo (reformulado GRUPO 12): choice RT puro com 4 círculos em posições FIXAS e permanentes
+  (azul=top-left, laranja=top-right, roxo=bottom-left, verde=bottom-right), sempre visíveis em
+  todas as fases. Durante waiting: sem prompt. Durante signal: prompt "TOQUE O [COR]". Toque errado
+  +150ms + flash + shake. Timeout 1500ms = +200ms (total 1700ms). 10 rodadas, score = média de
+  TODAS as rodadas (sem descarte).
 Sequência: 15 rodadas, Go/NoGo, 75% Go, 25% NoGo vermelho. Antecipado +150ms. NoGo tocado +200ms + haptic duplo.
 Radar: 15 rodadas, 5 círculos em cruz, 1 acende por rodada. Toque errado +200ms. Timeout 1500ms.
+
+Ordem dos modos (GRUPO 11): Partida → Radar → Sequência → Alvo. Desbloqueio progressivo
+(cada modo libera após 1 sessão completa do anterior; Partida sempre liberado), persistido
+em AsyncStorage com chave mode_unlocked_{modeKey}.
 
 ---
 
