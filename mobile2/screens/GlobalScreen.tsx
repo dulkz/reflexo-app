@@ -132,7 +132,7 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
         onPress={() => setSelectedUser(item)}
         activeOpacity={0.75}
         accessibilityRole="button"
-        accessibilityLabel={`Ver perfil de ${item.username}`}
+        accessibilityLabel={t('global.viewProfile', { username: item.username })}
       >
         <View style={styles.rankPosition}>
           {crown

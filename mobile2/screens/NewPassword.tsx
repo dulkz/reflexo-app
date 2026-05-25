@@ -5,6 +5,7 @@ import {
   Platform, Alert, ScrollView
 } from 'react-native'
 import { supabase } from '../lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 // Tela de definição de nova senha — exibida pelo RootGate quando o evento
 // PASSWORD_RECOVERY é emitido (usuário clicou no link de reset de senha).
@@ -13,33 +14,34 @@ import { supabase } from '../lib/supabase'
 type Props = { onDone: () => void }
 
 export default function NewPasswordScreen({ onDone }: Props) {
+  const { t } = useTranslation()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit() {
     if (password.length < 6) {
-      Alert.alert('Senha muito curta', 'A senha deve ter ao menos 6 caracteres.')
+      Alert.alert(t('auth.passwordTooShort'))
       return
     }
     if (password !== confirm) {
-      Alert.alert('As senhas não coincidem')
+      Alert.alert(t('auth.passwordMismatch'))
       return
     }
     setLoading(true)
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) {
-        Alert.alert('Erro ao redefinir', error.message)
+        Alert.alert(t('auth.error'), error.message)
         return
       }
       Alert.alert(
-        'Senha redefinida',
-        'Sua nova senha foi salva. Você já está conectado.',
-        [{ text: 'OK', onPress: onDone }],
+        t('auth.passwordUpdated'),
+        t('auth.passwordUpdatedMsg'),
+        [{ text: t('common.ok'), onPress: onDone }],
       )
     } catch (err) {
-      Alert.alert('Erro', 'Não foi possível redefinir a senha. Verifique sua conexão.')
+      Alert.alert(t('auth.errorNoConnection'), t('auth.errorNoConnectionMsg'))
     } finally {
       setLoading(false)
     }
@@ -61,14 +63,14 @@ export default function NewPasswordScreen({ onDone }: Props) {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.logo}>REFLEXO</Text>
-        <Text style={styles.subtitle}>nova senha</Text>
+        <Text style={styles.subtitle}>{t('auth.newPasswordTitle')}</Text>
 
         <View style={styles.card}>
-          <Text style={styles.title}>Defina sua nova senha</Text>
+          <Text style={styles.title}>{t('auth.newPasswordPrompt')}</Text>
 
           <TextInput
             style={styles.input}
-            placeholder="Nova senha"
+            placeholder={t('auth.newPassword')}
             placeholderTextColor="#4A5A7B"
             value={password}
             onChangeText={setPassword}
@@ -78,7 +80,7 @@ export default function NewPasswordScreen({ onDone }: Props) {
 
           <TextInput
             style={styles.input}
-            placeholder="Confirmar nova senha"
+            placeholder={t('auth.confirmPassword')}
             placeholderTextColor="#4A5A7B"
             value={confirm}
             onChangeText={setConfirm}
@@ -93,12 +95,12 @@ export default function NewPasswordScreen({ onDone }: Props) {
           >
             {loading
               ? <ActivityIndicator color="#0A0F1E" />
-              : <Text style={styles.buttonText}>SALVAR NOVA SENHA</Text>
+              : <Text style={styles.buttonText}>{t('auth.savePassword')}</Text>
             }
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.forgotBtn} onPress={handleCancel}>
-            <Text style={styles.forgotText}>Cancelar</Text>
+            <Text style={styles.forgotText}>{t('auth.cancelLogout')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

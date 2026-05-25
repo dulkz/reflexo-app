@@ -45,7 +45,17 @@
     "error": "Erro",
     "errorLogin": "Erro ao entrar",
     "errorSignup": "Erro ao cadastrar",
-    "errorGeneric": "Algo deu errado. Tente novamente."
+    "errorGeneric": "Algo deu errado. Tente novamente.",
+    "newPasswordTitle": "Nova Senha",
+    "newPasswordPrompt": "Defina sua nova senha",
+    "newPassword": "Nova senha",
+    "confirmPassword": "Confirmar senha",
+    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
+    "passwordMismatch": "As senhas não coincidem",
+    "savePassword": "SALVAR NOVA SENHA",
+    "cancelLogout": "Cancelar (sair da conta)",
+    "passwordUpdated": "Senha atualizada!",
+    "passwordUpdatedMsg": "Sua senha foi alterada com sucesso."
   },
 
   "global": {
@@ -62,7 +72,8 @@
     "tempoMedio": "TEMPO MÉDIO",
     "partidas": "PARTIDAS",
     "modo": "modo",
-    "fechar": "FECHAR"
+    "fechar": "FECHAR",
+    "viewProfile": "Ver perfil de {{username}}"
   },
 
   "home": {
