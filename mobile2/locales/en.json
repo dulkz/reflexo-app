@@ -21,6 +21,50 @@
     "languageChangedMessage": "Some changes may require restarting the app to take effect across all screens."
   },
 
+  "auth": {
+    "subtitle": "reaction speed",
+    "login": "Sign in",
+    "signup": "Sign up",
+    "reset": "Reset password",
+    "usernamePublic": "Public username",
+    "email": "Email",
+    "password": "Password",
+    "btnLogin": "SIGN IN",
+    "btnSignup": "SIGN UP",
+    "btnReset": "SEND EMAIL",
+    "forgotPassword": "Forgot my password",
+    "backToLogin": "Back to login",
+    "continueAsGuest": "Continue without an account",
+    "usernameRequired": "Username required",
+    "resetSentTitle": "Email sent",
+    "resetSentMsg": "Check your inbox to reset your password.",
+    "accountCreated": "Account created!",
+    "accountCreatedMsg": "Check your email to confirm your account before signing in.",
+    "errorNoConnection": "No connection",
+    "errorNoConnectionMsg": "Check your internet and try again.",
+    "error": "Error",
+    "errorLogin": "Sign in error",
+    "errorSignup": "Sign up error",
+    "errorGeneric": "Something went wrong. Please try again."
+  },
+
+  "global": {
+    "title": "GLOBAL",
+    "guestMessage": "Sign in to see\nthe global ranking",
+    "noResults": "No results yet.",
+    "noResultsHint": "Play 3 matches to show up!",
+    "youSuffix": " (you)",
+    "modePartida": "MATCH",
+    "modeRadar": "RADAR",
+    "modeSequencia": "SEQUENCE",
+    "modeAlvo": "TARGET",
+    "posicao": "POSITION",
+    "tempoMedio": "AVG TIME",
+    "partidas": "MATCHES",
+    "modo": "mode",
+    "fechar": "CLOSE"
+  },
+
   "home": {
     "appName": "REFLEXO",
     "greeting": "Hey, {{name}}",

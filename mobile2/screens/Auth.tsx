@@ -7,6 +7,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
 import { getAuthRedirectUrl } from '../lib/linking'
+import { useTranslation } from 'react-i18next'
 
 type Mode = 'login' | 'signup' | 'reset'
 
@@ -17,6 +18,7 @@ const isNetworkError = (msg: string) =>
   /fetch failed|network request failed|failed to fetch|networkerror/i.test(msg)
 
 export default function AuthScreen({ onContinueAsGuest }: Props) {
+  const { t } = useTranslation()
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,13 +34,13 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
           redirectTo: getAuthRedirectUrl(),
         })
         if (error && isNetworkError(error.message)) {
-          Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.')
+          Alert.alert(t('auth.errorNoConnection'), t('auth.errorNoConnectionMsg'))
           return
         }
         if (error) {
-          Alert.alert('Erro', error.message)
+          Alert.alert(t('auth.error'), error.message)
         } else {
-          Alert.alert('Email enviado', 'Verifique sua caixa de entrada para redefinir a senha.')
+          Alert.alert(t('auth.resetSentTitle'), t('auth.resetSentMsg'))
           setMode('login')
         }
         return
@@ -49,13 +51,13 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
       if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error && isNetworkError(error.message)) {
-          Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.')
+          Alert.alert(t('auth.errorNoConnection'), t('auth.errorNoConnectionMsg'))
           return
         }
-        if (error) Alert.alert('Erro ao entrar', error.message)
+        if (error) Alert.alert(t('auth.errorLogin'), error.message)
       } else {
         if (!username.trim()) {
-          Alert.alert('Nome de usuário obrigatório')
+          Alert.alert(t('auth.usernameRequired'))
           return
         }
         const { data, error } = await supabase.auth.signUp({
@@ -64,10 +66,10 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
           options: { emailRedirectTo: getAuthRedirectUrl() },
         })
         if (error && isNetworkError(error.message)) {
-          Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.')
+          Alert.alert(t('auth.errorNoConnection'), t('auth.errorNoConnectionMsg'))
           return
         }
-        if (error) { Alert.alert('Erro ao cadastrar', error.message); return }
+        if (error) { Alert.alert(t('auth.errorSignup'), error.message); return }
         if (data.user) {
           // Trigger já criou o perfil — atualiza só o username se o usuário digitou um diferente
           const { error: profileError } = await supabase
@@ -77,17 +79,17 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
           if (profileError) console.warn('[Auth] update username error:', profileError.message)
         }
         Alert.alert(
-          'Conta criada!',
-          'Verifique seu email para confirmar o cadastro antes de fazer login.',
+          t('auth.accountCreated'),
+          t('auth.accountCreatedMsg'),
           [{ text: 'OK' }]
         )
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       if (isNetworkError(msg)) {
-        Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.')
+        Alert.alert(t('auth.errorNoConnection'), t('auth.errorNoConnectionMsg'))
       } else {
-        Alert.alert('Erro', 'Algo deu errado. Tente novamente.')
+        Alert.alert(t('auth.error'), t('auth.errorGeneric'))
       }
     } finally {
       setLoading(false)
@@ -106,7 +108,7 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.logo}>REFLEXO</Text>
-        <Text style={styles.subtitle}>velocidade de reação</Text>
+        <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
         <View style={styles.card}>
           {!isReset && (
@@ -115,25 +117,25 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
                 style={[styles.tabBtn, mode === 'login' && styles.tabActive]}
                 onPress={() => setMode('login')}
               >
-                <Text style={[styles.tabText, mode === 'login' && styles.tabTextActive]}>Entrar</Text>
+                <Text style={[styles.tabText, mode === 'login' && styles.tabTextActive]}>{t('auth.login')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.tabBtn, mode === 'signup' && styles.tabActive]}
                 onPress={() => setMode('signup')}
               >
-                <Text style={[styles.tabText, mode === 'signup' && styles.tabTextActive]}>Criar conta</Text>
+                <Text style={[styles.tabText, mode === 'signup' && styles.tabTextActive]}>{t('auth.signup')}</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {isReset && (
-            <Text style={styles.resetTitle}>Recuperar senha</Text>
+            <Text style={styles.resetTitle}>{t('auth.reset')}</Text>
           )}
 
           {mode === 'signup' && (
             <TextInput
               style={styles.input}
-              placeholder="Nome de usuário público"
+              placeholder={t('auth.usernamePublic')}
               placeholderTextColor="#4A5A7B"
               value={username}
               onChangeText={setUsername}
@@ -144,7 +146,7 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
 
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder={t('auth.email')}
             placeholderTextColor="#4A5A7B"
             value={email}
             onChangeText={setEmail}
@@ -155,7 +157,7 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
           {!isReset && (
             <TextInput
               style={styles.input}
-              placeholder="Senha"
+              placeholder={t('auth.password')}
               placeholderTextColor="#4A5A7B"
               value={password}
               onChangeText={setPassword}
@@ -171,7 +173,7 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
             {loading
               ? <ActivityIndicator color="#0A0F1E" />
               : <Text style={styles.buttonText}>
-                  {mode === 'login' ? 'ENTRAR' : mode === 'signup' ? 'CRIAR CONTA' : 'ENVIAR EMAIL'}
+                  {mode === 'login' ? t('auth.btnLogin') : mode === 'signup' ? t('auth.btnSignup') : t('auth.btnReset')}
                 </Text>
             }
           </TouchableOpacity>
@@ -181,7 +183,7 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
               style={styles.forgotBtn}
               onPress={() => setMode('reset')}
             >
-              <Text style={styles.forgotText}>Esqueci minha senha</Text>
+              <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
             </TouchableOpacity>
           )}
 
@@ -190,7 +192,7 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
               style={styles.forgotBtn}
               onPress={() => setMode('login')}
             >
-              <Text style={styles.forgotText}>Voltar para o login</Text>
+              <Text style={styles.forgotText}>{t('auth.backToLogin')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -201,7 +203,7 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
             onContinueAsGuest?.()
           }}
         >
-          <Text style={styles.skip}>Continuar sem conta</Text>
+          <Text style={styles.skip}>{t('auth.continueAsGuest')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
