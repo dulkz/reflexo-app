@@ -103,3 +103,29 @@ Branch finalizada e estável.
 - Package Android: com.dulks.reflexo
 - Scheme: reflexo
 - Supabase Redirect URLs configurados: reflexo://auth-callback e exp://localhost:8081/--/auth-callback
+
+### Status atual do build (2026-05-25)
+- Limite de builds EAS free atingido — reseta em 2026-06-01
+- GitHub Actions configurado e funcionando (PR #10, workflow build-android.yml)
+- Quando o limite resetar, o próximo push na main vai disparar o build automaticamente
+- APK ficará disponível em: https://expo.dev/accounts/dulkz/projects/reflexo-app/builds
+
+### Para retomar em 2026-06-01
+1. Verificar se o splash gate fix foi buildado (PR #9 — fix/splash-gate-fallbacks)
+2. Fazer um push vazio para disparar o workflow:
+   git commit --allow-empty -m "ci: trigger build apos reset do limite EAS"
+   git push origin main
+3. Acompanhar em: https://github.com/dulkz/reflexo-app/actions
+4. Instalar o APK gerado no celular e executar o checklist de validação
+
+### Checklist de validação do APK
+- [ ] App abre sem travar no splash
+- [ ] Criar conta nova → email de confirmação chega
+- [ ] Link do email abre o app (deep link reflexo://)
+- [ ] Login com conta confirmada funciona
+- [ ] Continuar sem conta funciona
+- [ ] Logout volta para tela de auth
+- [ ] Jogar uma partida completa
+- [ ] Sessão aparece no ranking Global
+- [ ] Card de perfil abre ao tocar no nome
+- [ ] Reset de senha: email chega e link abre o app
