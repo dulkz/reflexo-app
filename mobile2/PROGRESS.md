@@ -99,10 +99,8 @@ Branch finalizada e estável.
 - Google Play Console: aguardando aprovação de identidade
 
 ### Pendências i18n registradas para futuro
-- progress() das conquistas (strings dinâmicas, requer mudança de interface)
-- ambitions.ts name/description e milestone labels (muitos consumidores)
-- milestone labels das ambições (strings dinâmicas com valores interpolados)
-- progress() das conquistas (requer mudança de interface Achievement)
+- milestone labels das ambições e progress() das conquistas (strings dinâmicas com valores interpolados — requer mudança de interface Achievement)
+- ambitions.ts name/description (muitos consumidores entrelaçados)
 - ARCHETYPE_NAMES em achievements.ts (usado internamente em progress())
 
 ---
