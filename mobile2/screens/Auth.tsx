@@ -53,10 +53,12 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
         })
         if (error) { Alert.alert('Erro ao cadastrar', error.message); return }
         if (data.user) {
+          // Trigger já criou o perfil — atualiza só o username se o usuário digitou um diferente
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert({ id: data.user.id, username: username.trim(), archetype: 'EXPLORADOR' })
-          if (profileError) Alert.alert('Erro ao criar perfil', profileError.message)
+            .update({ username: username.trim() })
+            .eq('id', data.user.id)
+          if (profileError) console.warn('[Auth] update username error:', profileError.message)
         }
         Alert.alert(
           'Conta criada!',
