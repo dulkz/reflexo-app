@@ -21,6 +21,7 @@ import ArchetypeEvolution from './screens/ArchetypeEvolution';
 import TriageModal from './screens/triage/TriageModal';
 import OnboardingFlow from './screens/onboarding/OnboardingFlow';
 import AuthScreen from './screens/Auth';
+import NewPassword from './screens/NewPassword';
 import { supabase } from './lib/supabase';
 import { syncSessionToSupabase } from './utils/syncSession';
 import { migrateLocalSessions } from './utils/migrateLocalSessions';
@@ -99,6 +100,7 @@ function RootGate() {
   const [guest, setGuest] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
+  const [recovery, setRecovery] = useState(false);
   const [fontsLoaded, fontError] = useFonts({
     BebasNeue_400Regular,
     DMSans_400Regular,
@@ -129,6 +131,10 @@ function RootGate() {
       if (event === 'SIGNED_OUT') {
         setGuest(false);
       }
+      // Recuperação de senha via deep link → exibe a tela de nova senha
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecovery(true);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -137,11 +143,24 @@ function RootGate() {
   useEffect(() => {
     const handleUrl = async ({ url }: { url: string }) => {
       if (url.includes('auth-callback')) {
-        // Supabase JS v2 com PKCE: troca o code por sessão automaticamente
-        // via onAuthStateChange — não é necessário chamar exchangeCodeForSession
-        // manualmente quando o cliente Supabase está configurado corretamente.
-        // O onAuthStateChange já vai disparar SIGNED_IN quando o token for processado.
-        console.log('[DeepLink] auth-callback recebido:', url);
+        try {
+          // exchangeCodeForSession espera o code (string), não o URL completo.
+          // Extrai o code do query param do deep link (fluxo PKCE).
+          const { queryParams } = Linking.parse(url);
+          const code = typeof queryParams?.code === 'string' ? queryParams.code : null;
+          if (!code) {
+            console.warn('[DeepLink] auth-callback sem code');
+            return;
+          }
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            console.warn('[DeepLink] exchangeCodeForSession error:', error.message);
+          } else if (data.session) {
+            console.log('[DeepLink] sessão estabelecida via deep link');
+          }
+        } catch (err) {
+          console.warn('[DeepLink] handler error:', err);
+        }
       }
     };
 
@@ -176,6 +195,11 @@ function RootGate() {
         <Splash onAnimationComplete={() => setSplashDone(true)} />
       </View>
     );
+  }
+
+  // Password recovery (deep link) tem prioridade — força a tela de nova senha.
+  if (recovery) {
+    return <NewPassword onDone={() => setRecovery(false)} />;
   }
 
   // 2/3/4. Splash done and auth known → decide what to show.
