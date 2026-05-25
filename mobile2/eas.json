@@ -5,6 +5,30 @@
       "android": {
         "buildType": "apk"
       }
+    },
+    "preview-ios": {
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "aab"
+      },
+      "ios": {}
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "PREENCHER",
+        "ascAppId": "PREENCHER",
+        "appleTeamId": "PREENCHER"
+      }
     }
   }
 }
