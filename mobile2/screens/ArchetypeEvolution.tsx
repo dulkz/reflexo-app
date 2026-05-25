@@ -65,7 +65,7 @@ export default function ArchetypeEvolution({ toId, onContinue }: Props) {
   ).current;
 
   // ── Letter-by-letter name + XP counter (JS-driven state) ──────────────────────
-  const fullName = arch.name;
+  const fullName = t('archetypes.' + arch.id);
   const [revealed, setRevealed] = useState(0);
   const [displayedXp, setDisplayedXp] = useState(0);
 
@@ -227,7 +227,7 @@ export default function ArchetypeEvolution({ toId, onContinue }: Props) {
               <SvgXml xml={nextDef.icon} width={26} height={26} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.nextLabel}>{t('evolution.next')}</Text>
-                <Text style={[styles.nextName, { color: nextDef.color }]}>{nextDef.name} →</Text>
+                <Text style={[styles.nextName, { color: nextDef.color }]}>{t('archetypes.' + nextDef.id)} →</Text>
               </View>
             </View>
           ) : (

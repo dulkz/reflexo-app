@@ -251,12 +251,12 @@ export default function Home({
           <View style={styles.arqTop}>
             <View style={{ flex: 1 }}>
               <Text style={styles.arqEyebrow}>{t('home.archetypeCurrent')}</Text>
-              <Text style={styles.arqName}>{archInfo.arch.name}</Text>
+              <Text style={styles.arqName}>{t('archetypes.' + archInfo.arch.id)}</Text>
             </View>
             {archInfo.next && (
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.arqNextLabel}>{t('home.archetypeNext')}</Text>
-                <Text style={styles.arqNextVal}>{archInfo.next.name} →</Text>
+                <Text style={styles.arqNextVal}>{t('archetypes.' + archInfo.next.id)} →</Text>
               </View>
             )}
           </View>
