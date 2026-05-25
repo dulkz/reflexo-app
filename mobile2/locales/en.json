@@ -525,6 +525,25 @@
       "improving": "↓ Improved {{delta}} ms in the last {{n}} sessions",
       "declining": "↑ +{{delta}} ms — keep training to regain the pace",
       "consistent": "Perfect consistency in recent sessions"
+    },
+    "avatarNames": {
+      "initial":    "Default",
+      "explorador": "Explorer",
+      "iniciante":  "Beginner",
+      "resistente": "The Resistant",
+      "velocista":  "The Speedster",
+      "atirador":   "The Shooter",
+      "piloto":     "F1 Pilot",
+      "boxeador":   "Boxer",
+      "tenista":    "Tennis Player",
+      "mestre":     "Master",
+      "ninja":      "Ninja",
+      "cientista":  "Scientist",
+      "robo":       "Robot",
+      "cacador":    "Hunter",
+      "fantasma":   "The Return",
+      "chama":      "Flame",
+      "diamante":   "Diamond"
     }
   },
 

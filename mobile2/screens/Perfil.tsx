@@ -1037,7 +1037,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
                             >
                               {cellContent}
                             </TouchableOpacity>
-                            <Text style={styles.avatarCellName} numberOfLines={1}>{av.name}</Text>
+                            <Text style={styles.avatarCellName} numberOfLines={1}>{t('profile.avatarNames.' + av.id, { defaultValue: av.name })}</Text>
                           </View>
                         );
                       })}

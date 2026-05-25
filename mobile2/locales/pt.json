@@ -525,6 +525,25 @@
       "improving": "↓ Melhorou {{delta}} ms nas últimas {{n}} sessões",
       "declining": "↑ +{{delta}} ms — continue treinando para retomar o ritmo",
       "consistent": "Consistência perfeita nas últimas sessões"
+    },
+    "avatarNames": {
+      "initial":    "Inicial",
+      "explorador": "Explorador",
+      "iniciante":  "Iniciante",
+      "resistente": "Resistente",
+      "velocista":  "Velocista",
+      "atirador":   "Atirador",
+      "piloto":     "Piloto F1",
+      "boxeador":   "Boxeador",
+      "tenista":    "Tenista",
+      "mestre":     "Mestre",
+      "ninja":      "Ninja",
+      "cientista":  "Cientista",
+      "robo":       "Robô",
+      "cacador":    "Caçador",
+      "fantasma":   "O Retorno",
+      "chama":      "Chama",
+      "diamante":   "Diamante"
     }
   },
 
