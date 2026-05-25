@@ -1,0 +1,8 @@
+-- Preparação para build iOS (2026-05-25)
+-- Nenhuma alteração de schema necessária para iOS.
+-- Configurações alteradas:
+-- - app.json: ios.bundleIdentifier = com.dulks.reflexo
+-- - app.json: removidas permissões RECORD_AUDIO e MODIFY_AUDIO_SETTINGS
+-- - eas.json: adicionados profiles preview-ios e production
+-- - GitHub Actions: build-ios.yml criado (workflow_dispatch manual)
+-- - PRIVACY_POLICY.md criado (placeholder — preencher email de contato)
