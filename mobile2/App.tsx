@@ -99,7 +99,7 @@ function RootGate() {
   const [guest, setGuest] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     BebasNeue_400Regular,
     DMSans_400Regular,
     DMSans_500Medium,
@@ -114,6 +114,8 @@ function RootGate() {
     ]).then(([{ data }, guestFlag]) => {
       setSession(data.session);
       setGuest(guestFlag === 'true');
+      setAuthChecked(true);
+    }).catch(() => {
       setAuthChecked(true);
     });
     // React to login/logout (and token refresh) for the rest of the app's lifetime.
@@ -154,12 +156,21 @@ function RootGate() {
     return () => subscription.remove();
   }, []);
 
+  // Timeout de segurança: libera o splash após 8s mesmo se algo falhar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      setSplashDone(true);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Called by AuthScreen's "Continuar sem conta" (which also persists the flag).
   const handleContinueAsGuest = useCallback(() => setGuest(true), []);
 
   // 1. Splash always first — stays until its animation ends, the auth/guest check
   //    resolves, AND the custom fonts finish loading, so everything is ready first.
-  if (!splashDone || !authChecked || !fontsLoaded) {
+  if (!splashDone || !authChecked || (!fontsLoaded && !fontError)) {
     return (
       <View style={styles.root}>
         <Splash onAnimationComplete={() => setSplashDone(true)} />
