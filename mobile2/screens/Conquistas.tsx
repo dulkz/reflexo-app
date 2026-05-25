@@ -200,8 +200,8 @@ export function ConquistasContent({ sessions, userProfile, onUpdateProfile, show
                           <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{t(`achievements.rarity.${a.rarity}` as any)}</Text>
                         </View>
                         <SvgXml xml={a.icon} width={28} height={28} />
-                        <Text style={styles.name}>{a.name}</Text>
-                        <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                        <Text style={styles.name}>{t('achievements.achievementData.' + a.id + '.name', { defaultValue: a.name })}</Text>
+                        <Text style={styles.desc} numberOfLines={2}>{t('achievements.achievementData.' + a.id + '.description', { defaultValue: a.description })}</Text>
                         <View style={[styles.progressBar, styles.progressBarDone]}>
                           <Text style={[styles.progressLabel, styles.progressLabelDone]}>
                             {unlockDate
@@ -265,8 +265,8 @@ export function ConquistasContent({ sessions, userProfile, onUpdateProfile, show
                       <Text style={[styles.rarityBadgeText, { color: cfg.cor }]}>{t(`achievements.rarity.${r}` as any)}</Text>
                     </View>
                     <SvgXml xml={a.icon} width={28} height={28} />
-                    <Text style={styles.name}>{a.name}</Text>
-                    <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                    <Text style={styles.name}>{t('achievements.achievementData.' + a.id + '.name', { defaultValue: a.name })}</Text>
+                    <Text style={styles.desc} numberOfLines={2}>{t('achievements.achievementData.' + a.id + '.description', { defaultValue: a.description })}</Text>
                     <View style={styles.progressBar}>
                       <Text style={styles.progressLabel}>{a.progress(stats)}</Text>
                     </View>
@@ -324,8 +324,8 @@ export function ConquistasContent({ sessions, userProfile, onUpdateProfile, show
                                 <Text style={[styles.rarityBadgeText, { color: SECRET_COLOR }]}>{t('achievements.secret_badge')}</Text>
                               </View>
                               <SvgXml xml={a.icon} width={28} height={28} />
-                              <Text style={styles.name}>{a.name}</Text>
-                              <Text style={styles.desc} numberOfLines={2}>{a.description}</Text>
+                              <Text style={styles.name}>{t('achievements.achievementData.' + a.id + '.name', { defaultValue: a.name })}</Text>
+                              <Text style={styles.desc} numberOfLines={2}>{t('achievements.achievementData.' + a.id + '.description', { defaultValue: a.description })}</Text>
                               <View style={[styles.progressBar, styles.progressBarDone]}>
                                 <Text style={[styles.progressLabel, styles.progressLabelDone]}>
                                   {unlockDate
@@ -402,7 +402,7 @@ export function ConquistasContent({ sessions, userProfile, onUpdateProfile, show
                   ]}
                   numberOfLines={1}
                 >
-                  ✦ {selectedForTitle.title} ✦
+                  ✦ {t('achievements.achievementData.' + selectedForTitle.id + '.title', { defaultValue: selectedForTitle.title })} ✦
                 </Text>
                 <Text style={styles.titleModalHint}>{t('achievements.titleSubtitleHint')}</Text>
                 {isEquipped ? (

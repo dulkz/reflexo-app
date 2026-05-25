@@ -172,7 +172,7 @@ export default function Home({
                   ]}
                   numberOfLines={1}
                 >
-                  ✦ {equippedAchievement.title} ✦
+                  ✦ {t('achievements.achievementData.' + equippedAchievement.id + '.title', { defaultValue: equippedAchievement.title })} ✦
                 </Text>
               </View>
             );

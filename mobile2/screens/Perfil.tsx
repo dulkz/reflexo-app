@@ -455,7 +455,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
                     ]}
                     numberOfLines={1}
                   >
-                    ✦ {equippedAchievement.title} ✦
+                    ✦ {t('achievements.achievementData.' + equippedAchievement.id + '.title', { defaultValue: equippedAchievement.title })} ✦
                   </Text>
                 </View>
               );
@@ -651,7 +651,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
                 <SvgXml xml={nextAchievementInfo.a.icon} width={22} height={22} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.ltKicker}>{t('profile.nextAchievement')}</Text>
-                  <Text style={styles.ltTitle}>{nextAchievementInfo.a.name}</Text>
+                  <Text style={styles.ltTitle}>{t('achievements.achievementData.' + nextAchievementInfo.a.id + '.name', { defaultValue: nextAchievementInfo.a.name })}</Text>
                   <Text style={styles.ltSub}>{nextAchievementInfo.a.progress(stats)}</Text>
                 </View>
                 <Text style={styles.ltPct}>{Math.round(nextAchievementInfo.pct * 100)}%</Text>

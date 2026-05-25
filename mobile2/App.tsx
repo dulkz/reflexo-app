@@ -935,8 +935,8 @@ function AppInner({ isGuest }: { isGuest: boolean }) {
                   <Text style={[styles.achieveToastBadgeText, { color: rcfg.cor }]}>{t(`achievements.rarity.${a.rarity}` as any)}</Text>
                 </View>
                 <SvgXml xml={a.icon} width={28} height={28} />
-                <Text style={[styles.toastTitle, { color: '#fff' }]}>{a.name}</Text>
-                <Text style={styles.achieveToastDesc}>{a.description}</Text>
+                <Text style={[styles.toastTitle, { color: '#fff' }]}>{t('achievements.achievementData.' + a.id + '.name', { defaultValue: a.name })}</Text>
+                <Text style={styles.achieveToastDesc}>{t('achievements.achievementData.' + a.id + '.description', { defaultValue: a.description })}</Text>
                 <Text style={styles.toastSub}>{t('achievements.tapToContinue')}</Text>
               </Animated.View>
             );
