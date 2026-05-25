@@ -83,6 +83,7 @@ Branch finalizada e estável.
 - PR #11 (e76f715): fixes pos-teste — trigger auto-perfil, ranking min(avg_rt), tutorial ciano, aviso email cadastro
 - PR #12 (d2db96f): preparacao iOS — bundleIdentifier, permissions, eas profiles, expo-localization fix
 - PR #13 (26b6dc3): pendencias auditoria — RLS versionada, deep link exchangeCodeForSession, tela de reset de senha
+- PR #14 (d925120): auth sem internet — mensagem de erro amigavel
 
 ---
 
@@ -169,7 +170,7 @@ Branch finalizada e estável.
 - [x] Reset de senha — tela de nova senha (updateUser) — PR #13
 - [x] Deep link — exchangeCodeForSession no handler + flowType pkce — PR #13
 - [x] RLS policies — versionadas em migrations/0008 — PR #13
-- [ ] Auth sem internet — adicionar mensagem de erro
+- [x] Auth sem internet — mensagem de erro amigavel — PR #14
 - [ ] expo-asset peer dep — verificar se causa crash em produção
 - [ ] i18n — Auth.tsx e GlobalScreen.tsx (PT hardcoded)
 - [ ] Acessibilidade — accessibilityLabel nos elementos principais
