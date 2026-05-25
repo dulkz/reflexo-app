@@ -4,6 +4,7 @@ import {
   FlatList, ActivityIndicator, RefreshControl, Modal,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 type GameMode = 'partida' | 'radar' | 'sequencia' | 'alvo';
 
@@ -20,11 +21,11 @@ interface GlobalScreenProps {
   isGuest?: boolean;
 }
 
-const MODES: { key: GameMode; label: string }[] = [
-  { key: 'partida',   label: 'PARTIDA' },
-  { key: 'radar',     label: 'RADAR' },
-  { key: 'sequencia', label: 'SEQUÊNCIA' },
-  { key: 'alvo',      label: 'ALVO' },
+const MODES: { key: GameMode; labelKey: string }[] = [
+  { key: 'partida',   labelKey: 'global.modePartida' },
+  { key: 'radar',     labelKey: 'global.modeRadar' },
+  { key: 'sequencia', labelKey: 'global.modeSequencia' },
+  { key: 'alvo',      labelKey: 'global.modeAlvo' },
 ];
 
 const CROWN: Record<number, string> = { 1: '👑', 2: '🥈', 3: '🥉' };
@@ -35,6 +36,7 @@ function formatTime(ms: number): string {
 }
 
 export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<GameMode>('partida');
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -111,10 +113,10 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
   if (isGuest) {
     return (
       <View style={styles.container}>
-        <Text style={styles.screenTitle}>GLOBAL</Text>
+        <Text style={styles.screenTitle}>{t('global.title')}</Text>
         <Text style={styles.globeEmoji}>🌐</Text>
         <Text style={styles.guestMessage}>
-          Faça login para ver{'\n'}o ranking global
+          {t('global.guestMessage')}
         </Text>
       </View>
     );
@@ -140,7 +142,7 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
         </View>
         <View style={styles.rankInfo}>
           <Text style={[styles.rankUsername, isMe && styles.rankUsernameMe]} numberOfLines={1}>
-            {item.username}{isMe ? ' (você)' : ''}
+            {item.username}{isMe ? t('global.youSuffix') : ''}
           </Text>
           <Text style={styles.rankArchetype}>{item.archetype}</Text>
         </View>
@@ -170,7 +172,7 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
             {/* Header */}
             <View style={styles.profileHeader}>
               <Text style={styles.profileUsername}>
-                {selectedUser.username}{isMe ? ' (você)' : ''}
+                {selectedUser.username}{isMe ? t('global.youSuffix') : ''}
               </Text>
               <Text style={styles.profileArchetype}>{selectedUser.archetype}</Text>
             </View>
@@ -179,23 +181,23 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
             <View style={styles.profileStats}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>#{selectedUser.position}</Text>
-                <Text style={styles.statLabel}>POSIÇÃO</Text>
+                <Text style={styles.statLabel}>{t('global.posicao')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{formatTime(selectedUser.avg_rt)}</Text>
-                <Text style={styles.statLabel}>TEMPO MÉDIO</Text>
+                <Text style={styles.statLabel}>{t('global.tempoMedio')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{selectedUser.session_count}</Text>
-                <Text style={styles.statLabel}>PARTIDAS</Text>
+                <Text style={styles.statLabel}>{t('global.partidas')}</Text>
               </View>
             </View>
 
             {/* Modo atual */}
             <Text style={styles.profileMode}>
-              modo: {MODES.find(m => m.key === mode)?.label ?? mode.toUpperCase()}
+              {t('global.modo')}: {t(MODES.find(m => m.key === mode)?.labelKey ?? '')}
             </Text>
 
             {/* Fechar */}
@@ -203,7 +205,7 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
               style={styles.closeButton}
               onPress={() => setSelectedUser(null)}
             >
-              <Text style={styles.closeButtonText}>FECHAR</Text>
+              <Text style={styles.closeButtonText}>{t('global.fechar')}</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
@@ -216,7 +218,7 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
       {renderProfileModal()}
       <View style={styles.container}>
         {/* Header */}
-        <Text style={styles.screenTitle}>GLOBAL</Text>
+        <Text style={styles.screenTitle}>{t('global.title')}</Text>
 
         {/* Seletor de modo */}
         <View style={styles.modeSelectorRow}>
@@ -228,7 +230,7 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
               activeOpacity={0.7}
             >
               <Text style={[styles.modeChipText, mode === m.key && styles.modeChipTextActive]}>
-                {m.label}
+                {t(m.labelKey)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -257,7 +259,7 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>
-                  Nenhum resultado ainda.{'\n'}Jogue 3 partidas para aparecer!
+                  {t('global.noResults')}{'\n'}{t('global.noResultsHint')}
                 </Text>
               </View>
             }

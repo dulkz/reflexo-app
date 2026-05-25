@@ -21,6 +21,50 @@
     "languageChangedMessage": "Algumas mudanças podem precisar de um reinício do app para serem aplicadas em todas as telas."
   },
 
+  "auth": {
+    "subtitle": "velocidade de reação",
+    "login": "Entrar",
+    "signup": "Criar conta",
+    "reset": "Recuperar senha",
+    "usernamePublic": "Nome de usuário público",
+    "email": "Email",
+    "password": "Senha",
+    "btnLogin": "ENTRAR",
+    "btnSignup": "CRIAR CONTA",
+    "btnReset": "ENVIAR EMAIL",
+    "forgotPassword": "Esqueci minha senha",
+    "backToLogin": "Voltar para o login",
+    "continueAsGuest": "Continuar sem conta",
+    "usernameRequired": "Nome de usuário obrigatório",
+    "resetSentTitle": "Email enviado",
+    "resetSentMsg": "Verifique sua caixa de entrada para redefinir a senha.",
+    "accountCreated": "Conta criada!",
+    "accountCreatedMsg": "Verifique seu email para confirmar o cadastro antes de fazer login.",
+    "errorNoConnection": "Sem conexão",
+    "errorNoConnectionMsg": "Verifique sua internet e tente novamente.",
+    "error": "Erro",
+    "errorLogin": "Erro ao entrar",
+    "errorSignup": "Erro ao cadastrar",
+    "errorGeneric": "Algo deu errado. Tente novamente."
+  },
+
+  "global": {
+    "title": "GLOBAL",
+    "guestMessage": "Faça login para ver\no ranking global",
+    "noResults": "Nenhum resultado ainda.",
+    "noResultsHint": "Jogue 3 partidas para aparecer!",
+    "youSuffix": " (você)",
+    "modePartida": "PARTIDA",
+    "modeRadar": "RADAR",
+    "modeSequencia": "SEQUÊNCIA",
+    "modeAlvo": "ALVO",
+    "posicao": "POSIÇÃO",
+    "tempoMedio": "TEMPO MÉDIO",
+    "partidas": "PARTIDAS",
+    "modo": "modo",
+    "fechar": "FECHAR"
+  },
+
   "home": {
     "appName": "REFLEXO",
     "greeting": "Olá, {{name}}",
