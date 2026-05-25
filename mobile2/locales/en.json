@@ -45,7 +45,17 @@
     "error": "Error",
     "errorLogin": "Sign in error",
     "errorSignup": "Sign up error",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "newPasswordTitle": "New Password",
+    "newPasswordPrompt": "Set your new password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordMismatch": "Passwords do not match",
+    "savePassword": "SAVE NEW PASSWORD",
+    "cancelLogout": "Cancel (sign out)",
+    "passwordUpdated": "Password updated!",
+    "passwordUpdatedMsg": "Your password has been changed successfully."
   },
 
   "global": {
@@ -62,7 +72,8 @@
     "tempoMedio": "AVG TIME",
     "partidas": "MATCHES",
     "modo": "mode",
-    "fechar": "CLOSE"
+    "fechar": "CLOSE",
+    "viewProfile": "View {{username}}'s profile"
   },
 
   "home": {
