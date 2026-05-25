@@ -92,10 +92,18 @@ Branch finalizada e estável.
 - PR #20 (980bb7d): i18n missões semanais — 22 chaves missionLabels em en/pt
 - PR #21 (715a6a8): i18n conquistas — 44 chaves achievementData (name/title/description) em en/pt
 - PR #22 (e7f28ce): i18n avatares — 17 chaves avatarNames em en/pt
+- APK preview gerado (build EAS): https://expo.dev/artifacts/eas/iPfDzFCe9oH9zaYq2HENEz.apk
+- Frames de marketing criados: 8 screenshots PT + 8 screenshots EN (reflexo_store_frames.html / reflexo_store_frames_EN.html)
+- Descrições da loja escritas: PT e EN (curta 80 chars + longa 4000 chars)
+- Apple Developer Account: pagamento confirmado, ativação em processamento (até 48h)
+- Google Play Console: aguardando aprovação de identidade
 
 ### Pendências i18n registradas para futuro
 - progress() das conquistas (strings dinâmicas, requer mudança de interface)
 - ambitions.ts name/description e milestone labels (muitos consumidores)
+- milestone labels das ambições (strings dinâmicas com valores interpolados)
+- progress() das conquistas (requer mudança de interface Achievement)
+- ARCHETYPE_NAMES em achievements.ts (usado internamente em progress())
 
 ---
 
