@@ -80,6 +80,7 @@ Branch finalizada e estável.
 - README.md criado com visão geral do projeto
 - PR #4 (9163536): README.md criado
 - PR #5 (ee43a14): deep link de auth (scheme reflexo, expo-linking, handler cold start)
+- PR #11 (e76f715): fixes pos-teste — trigger auto-perfil, ranking min(avg_rt), tutorial ciano, aviso email cadastro
 
 ---
 
