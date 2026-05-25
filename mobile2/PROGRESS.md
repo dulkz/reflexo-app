@@ -81,6 +81,7 @@ Branch finalizada e estável.
 - PR #4 (9163536): README.md criado
 - PR #5 (ee43a14): deep link de auth (scheme reflexo, expo-linking, handler cold start)
 - PR #11 (e76f715): fixes pos-teste — trigger auto-perfil, ranking min(avg_rt), tutorial ciano, aviso email cadastro
+- PR #12 (d2db96f): preparacao iOS — bundleIdentifier, permissions, eas profiles, expo-localization fix
 
 ---
 
@@ -88,10 +89,13 @@ Branch finalizada e estável.
 **Atualizado em: 2026-05-24**
 
 ### Pronto para fazer
-- [ ] Rebuild nativo com EAS (eas build) — necessário para scheme reflexo:// ativar
+- [x] Rebuild nativo com EAS — feito (EAS Starter $19/mês contratado)
+- [x] Gerar APK standalone — feito (https://expo.dev/artifacts/eas/rWzKBbW52c94Yr13tYbCL5.apk)
+- [x] ios.bundleIdentifier configurado — PR #12
+- [x] Permissões desnecessárias removidas — PR #12
+- [x] expo-localization versão corrigida — PR #12
 - [ ] Testar deep link no APK: confirmação de email + reset de senha
 - [ ] Se deep link não fechar sessão automaticamente: adicionar supabase.auth.exchangeCodeForSession(url) no handler de App.tsx (lib/linking.ts já está pronto)
-- [ ] Gerar APK standalone para distribuição (eas build --platform android --profile preview)
 - [ ] Testar ranking com múltiplos usuários reais
 - [ ] Publicar na Play Store / App Store
 
@@ -130,3 +134,41 @@ Branch finalizada e estável.
 - [ ] Sessão aparece no ranking Global
 - [ ] Card de perfil abre ao tocar no nome
 - [ ] Reset de senha: email chega e link abre o app
+
+---
+
+## Checklist pré-lançamento lojas
+**Atualizado em: 2026-05-25**
+
+### Play Store (Android) — quase pronto
+- [x] APK gerado e testado
+- [x] package: com.dulks.reflexo
+- [x] Permissões revisadas
+- [x] Ícone 1024x1024
+- [ ] Gerar AAB (production): eas build --platform android --profile production
+- [ ] Conta Google Play Console ($25 único)
+- [ ] Screenshots (mínimo 2, máximo 8)
+- [ ] Descrição do app (curta e longa)
+- [ ] Política de privacidade publicada em URL pública
+- [ ] Classificação de conteúdo (questionário no Play Console)
+
+### App Store (iOS) — configurado, aguardando conta
+- [x] bundleIdentifier: com.dulks.reflexo
+- [x] scheme: reflexo (deep link)
+- [x] eas.json profile preview-ios e production configurados
+- [x] GitHub Actions build-ios.yml criado
+- [ ] Apple Developer Account ($99/ano) — https://developer.apple.com/programs/enroll/
+- [ ] Após conta: eas build --platform ios --profile preview-ios
+- [ ] Preencher appleId/ascAppId/appleTeamId no eas.json
+- [ ] Screenshots iPhone e iPad
+- [ ] Preencher email em PRIVACY_POLICY.md
+- [ ] Política de privacidade publicada em URL pública
+
+### Pendências técnicas (da auditoria)
+- [ ] Reset de senha — criar tela de nova senha (updateUser)
+- [ ] Deep link — chamar exchangeCodeForSession no handler (App.tsx:144)
+- [ ] RLS policies — versionar no código (migrations)
+- [ ] Auth sem internet — adicionar mensagem de erro
+- [ ] expo-asset peer dep — verificar se causa crash em produção
+- [ ] i18n — Auth.tsx e GlobalScreen.tsx (PT hardcoded)
+- [ ] Acessibilidade — accessibilityLabel nos elementos principais
