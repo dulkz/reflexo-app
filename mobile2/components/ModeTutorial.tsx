@@ -12,6 +12,7 @@ const BG2   = '#111a2e';
 const BG3   = '#1e2d45';
 const GREEN = '#10b981';
 const RED   = '#ef4444';
+const CYAN  = '#00E5CC'; // ciano do design system — sinal do tutorial do modo Partida
 const TEXT0 = '#e2e8f0';
 const TEXT1 = '#7a8aa0';
 const TEXT2 = '#4a5a7b';
@@ -86,7 +87,7 @@ export default function ModeTutorial({ modeKey }: Props) {
       </Pressable>
 
       <View style={styles.visualArea}>
-        {modeKey === 'partida'   && <PartidaTutorial color={color} reduceMotion={reduceMotion} />}
+        {modeKey === 'partida'   && <PartidaTutorial reduceMotion={reduceMotion} />}
         {modeKey === 'alvo'      && <AlvoTutorial reduceMotion={reduceMotion} />}
         {modeKey === 'sequencia' && <SequenciaTutorial reduceMotion={reduceMotion} />}
         {modeKey === 'radar'     && <RadarTutorial color={color} reduceMotion={reduceMotion} />}
@@ -101,7 +102,7 @@ interface SubProps {
 }
 
 // ── Partida — círculo grande acende + dedo toca ───────────────────────────────
-function PartidaTutorial({ color = '#3b82f6', reduceMotion }: SubProps) {
+function PartidaTutorial({ reduceMotion }: SubProps) {
   const { t } = useTranslation();
   const lit   = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
   const scale = useRef(new Animated.Value(1)).current;
@@ -138,8 +139,8 @@ function PartidaTutorial({ color = '#3b82f6', reduceMotion }: SubProps) {
     return () => loop.stop();
   }, [reduceMotion, lit, scale, dotOpacity, dotY]);
 
-  const bg     = lit.interpolate({ inputRange: [0, 1], outputRange: [BG2, color] });
-  const border = lit.interpolate({ inputRange: [0, 1], outputRange: [BG3, color] });
+  const bg     = lit.interpolate({ inputRange: [0, 1], outputRange: [BG2, CYAN] });
+  const border = lit.interpolate({ inputRange: [0, 1], outputRange: [BG3, CYAN] });
 
   // Column layout — mirrors AlvoTutorial: visual on top, single centered
   // explanation below (no duplicated mode title; that's the screen's job).

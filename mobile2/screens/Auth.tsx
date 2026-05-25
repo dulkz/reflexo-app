@@ -58,6 +58,11 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
             .insert({ id: data.user.id, username: username.trim(), archetype: 'EXPLORADOR' })
           if (profileError) Alert.alert('Erro ao criar perfil', profileError.message)
         }
+        Alert.alert(
+          'Conta criada!',
+          'Verifique seu email para confirmar o cadastro antes de fazer login.',
+          [{ text: 'OK' }]
+        )
       }
     } finally {
       setLoading(false)
