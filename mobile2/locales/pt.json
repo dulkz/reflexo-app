@@ -448,7 +448,17 @@
     "continue": "Continuar treinando"
   },
 
+  "archetypes": {
+    "EXPLORADOR": "EXPLORADOR",
+    "EM_EVOLUCAO": "EM EVOLUÇÃO",
+    "RESISTENTE": "O RESISTENTE",
+    "ATIRADOR": "O ATIRADOR",
+    "VELOCISTA": "O VELOCISTA",
+    "PILOTO": "O PILOTO"
+  },
+
   "profile": {
+    "logout": "SAIR DA CONTA",
     "title": "PERFIL",
     "editProfile": "EDITAR PERFIL",
     "name": "NOME",

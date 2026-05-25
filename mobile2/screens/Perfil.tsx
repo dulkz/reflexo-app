@@ -491,13 +491,13 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
             <SvgXml xml={archetype.icon} width={34} height={34} />
             <View style={{ flex: 1 }}>
               <Text style={styles.archetypeKicker}>{t('profile.archetype')}</Text>
-              <Text style={[styles.archetypeName, { color: archetype.color }]}>{archetype.name}</Text>
+              <Text style={[styles.archetypeName, { color: archetype.color }]}>{t('archetypes.' + archetype.id)}</Text>
             </View>
             {nextDef && (
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.archetypeNextKicker}>{t('profile.nextShort')}</Text>
                 <Text style={[styles.archetypeNextVal, { color: nextDef.color }]} numberOfLines={1}>
-                  {nextDef.name} →
+                  {t('archetypes.' + nextDef.id)} →
                 </Text>
               </View>
             )}
@@ -597,7 +597,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
                           ]}
                           numberOfLines={1}
                         >
-                          {archDef.name}
+                          {t('archetypes.' + archDef.id)}
                         </Text>
                       </View>
                       {i < ARCHETYPE_CHAIN.length - 1 && (
@@ -673,7 +673,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
                 <SvgXml xml={nextDef.icon} width={24} height={24} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.ltKicker}>{t('profile.nextArchetypeSection')}</Text>
-                  <Text style={[styles.ltTitle, { color: nextDef.color }]}>{nextDef.name}</Text>
+                  <Text style={[styles.ltTitle, { color: nextDef.color }]}>{t('archetypes.' + nextDef.id)}</Text>
                   <Text style={styles.ltSub}>
                     {t('profile.criteriaDone', {
                       done: archetype.targetCriteria.filter(c => c.done(stats)).length,
@@ -741,7 +741,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
                     <View key={pa.id} style={styles.completedItem}>
                       <Text style={styles.completedCheck}>✓</Text>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.completedLabel}>{ARCHETYPES[pa.id].name}</Text>
+                        <Text style={styles.completedLabel}>{t('archetypes.' + pa.id)}</Text>
                         <Text style={styles.completedSub}>{pa.tagline}</Text>
                       </View>
                       <Text style={styles.completedTag}>{t('profile.archetypeLabel')}</Text>
@@ -760,7 +760,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
               <Text style={styles.paraVirarKicker}>{t('profile.nextArchetype')}</Text>
               <View style={styles.paraVirarTarget}>
                 <SvgXml xml={nextDef.icon} width={24} height={24} />
-                <Text style={[styles.paraVirarName, { color: nextDef.color }]}>{nextDef.name}</Text>
+                <Text style={[styles.paraVirarName, { color: nextDef.color }]}>{t('archetypes.' + nextDef.id)}</Text>
               </View>
             </View>
             {archetype.targetCriteria.map(c => {
@@ -969,7 +969,7 @@ export default function Perfil({ sessions, userProfile, onOpenTriage, onUpdatePr
 
         {/* Logout — encerra a sessão; o RootGate volta ao AuthScreen */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
-          <Text style={styles.logoutButtonText}>SAIR DA CONTA</Text>
+          <Text style={styles.logoutButtonText}>{t('profile.logout')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 24 }} />

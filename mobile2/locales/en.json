@@ -448,7 +448,17 @@
     "continue": "Keep training"
   },
 
+  "archetypes": {
+    "EXPLORADOR": "EXPLORER",
+    "EM_EVOLUCAO": "EVOLVING",
+    "RESISTENTE": "THE RESISTANT",
+    "ATIRADOR": "THE SHOOTER",
+    "VELOCISTA": "THE SPEEDSTER",
+    "PILOTO": "THE PILOT"
+  },
+
   "profile": {
+    "logout": "SIGN OUT",
     "title": "PROFILE",
     "editProfile": "EDIT PROFILE",
     "name": "NAME",
