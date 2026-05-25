@@ -85,6 +85,7 @@ Branch finalizada e estável.
 - PR #13 (26b6dc3): pendencias auditoria — RLS versionada, deep link exchangeCodeForSession, tela de reset de senha
 - PR #14 (d925120): auth sem internet — mensagem de erro amigavel
 - PR #15 (69d5afa): i18n Auth e GlobalScreen — secoes auth e global nos locales
+- PR #16 (7a77cf3): expo-asset peer dep corrigido + acessibilidade basica (9 elementos)
 
 ---
 
@@ -172,9 +173,9 @@ Branch finalizada e estável.
 - [x] Deep link — exchangeCodeForSession no handler + flowType pkce — PR #13
 - [x] RLS policies — versionadas em migrations/0008 — PR #13
 - [x] Auth sem internet — mensagem de erro amigavel — PR #14
-- [ ] expo-asset peer dep — verificar se causa crash em produção
+- [x] expo-asset peer dep — verificar se causa crash em produção — PR #16
 - [x] i18n — Auth.tsx e GlobalScreen.tsx (PT hardcoded) — PR #15
-- [ ] Acessibilidade — accessibilityLabel nos elementos principais
+- [x] Acessibilidade — accessibilityLabel nos elementos principais — PR #16
 
 > Nota PR #13: o reset de senha precisa de teste em build/device real (depende
 > da Redirect URL reflexo://auth-callback no dashboard Supabase e do fluxo PKCE
