@@ -80,3 +80,26 @@ Branch finalizada e estável.
 - README.md criado com visão geral do projeto
 - PR #4 (9163536): README.md criado
 - PR #5 (ee43a14): deep link de auth (scheme reflexo, expo-linking, handler cold start)
+
+---
+
+## Próximos passos — Produção
+**Atualizado em: 2026-05-24**
+
+### Pronto para fazer
+- [ ] Rebuild nativo com EAS (eas build) — necessário para scheme reflexo:// ativar
+- [ ] Testar deep link no APK: confirmação de email + reset de senha
+- [ ] Se deep link não fechar sessão automaticamente: adicionar supabase.auth.exchangeCodeForSession(url) no handler de App.tsx (lib/linking.ts já está pronto)
+- [ ] Gerar APK standalone para distribuição (eas build --platform android --profile preview)
+- [ ] Testar ranking com múltiplos usuários reais
+- [ ] Publicar na Play Store / App Store
+
+### Configurações de produção pendentes
+- Site URL do Supabase: trocar exp://localhost:8081 para reflexo://auth-callback antes de publicar nas lojas
+- Variáveis de ambiente: garantir que .env está configurado no ambiente de build do EAS
+
+### Notas técnicas
+- EAS projectId já configurado no app.json: 38fbd96b-f8a7-4bdd-9d91-39c30c716345
+- Package Android: com.dulks.reflexo
+- Scheme: reflexo
+- Supabase Redirect URLs configurados: reflexo://auth-callback e exp://localhost:8081/--/auth-callback
