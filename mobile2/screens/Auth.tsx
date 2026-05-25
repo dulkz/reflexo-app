@@ -116,12 +116,16 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
               <TouchableOpacity
                 style={[styles.tabBtn, mode === 'login' && styles.tabActive]}
                 onPress={() => setMode('login')}
+                accessibilityRole="button"
+                accessibilityLabel={t('auth.login')}
               >
                 <Text style={[styles.tabText, mode === 'login' && styles.tabTextActive]}>{t('auth.login')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.tabBtn, mode === 'signup' && styles.tabActive]}
                 onPress={() => setMode('signup')}
+                accessibilityRole="button"
+                accessibilityLabel={t('auth.signup')}
               >
                 <Text style={[styles.tabText, mode === 'signup' && styles.tabTextActive]}>{t('auth.signup')}</Text>
               </TouchableOpacity>
@@ -169,6 +173,8 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
             style={styles.button}
             onPress={handleSubmit}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel={mode === 'login' ? t('auth.btnLogin') : mode === 'signup' ? t('auth.btnSignup') : t('auth.btnReset')}
           >
             {loading
               ? <ActivityIndicator color="#0A0F1E" />
@@ -182,6 +188,8 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
             <TouchableOpacity
               style={styles.forgotBtn}
               onPress={() => setMode('reset')}
+              accessibilityRole="link"
+              accessibilityLabel={t('auth.forgotPassword')}
             >
               <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
             </TouchableOpacity>
@@ -191,6 +199,8 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
             <TouchableOpacity
               style={styles.forgotBtn}
               onPress={() => setMode('login')}
+              accessibilityRole="link"
+              accessibilityLabel={t('auth.backToLogin')}
             >
               <Text style={styles.forgotText}>{t('auth.backToLogin')}</Text>
             </TouchableOpacity>
@@ -198,6 +208,8 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
         </View>
 
         <TouchableOpacity
+          accessibilityRole="link"
+          accessibilityLabel={t('auth.continueAsGuest')}
           onPress={async () => {
             await AsyncStorage.setItem('reflexo_guest', 'true')
             onContinueAsGuest?.()

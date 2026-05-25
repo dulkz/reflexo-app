@@ -131,6 +131,8 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
         style={[styles.rankCard, isMe && styles.rankCardMe]}
         onPress={() => setSelectedUser(item)}
         activeOpacity={0.75}
+        accessibilityRole="button"
+        accessibilityLabel={`Ver perfil de ${item.username}`}
       >
         <View style={styles.rankPosition}>
           {crown
@@ -204,6 +206,8 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setSelectedUser(null)}
+              accessibilityRole="button"
+              accessibilityLabel={t('global.fechar')}
             >
               <Text style={styles.closeButtonText}>{t('global.fechar')}</Text>
             </TouchableOpacity>
@@ -228,6 +232,8 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
               style={[styles.modeChip, mode === m.key && styles.modeChipActive]}
               onPress={() => setMode(m.key)}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={t(m.labelKey)}
             >
               <Text style={[styles.modeChipText, mode === m.key && styles.modeChipTextActive]}>
                 {t(m.labelKey)}
