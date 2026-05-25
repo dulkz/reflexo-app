@@ -82,6 +82,7 @@ Branch finalizada e estável.
 - PR #5 (ee43a14): deep link de auth (scheme reflexo, expo-linking, handler cold start)
 - PR #11 (e76f715): fixes pos-teste — trigger auto-perfil, ranking min(avg_rt), tutorial ciano, aviso email cadastro
 - PR #12 (d2db96f): preparacao iOS — bundleIdentifier, permissions, eas profiles, expo-localization fix
+- PR #13 (26b6dc3): pendencias auditoria — RLS versionada, deep link exchangeCodeForSession, tela de reset de senha
 
 ---
 
@@ -165,10 +166,15 @@ Branch finalizada e estável.
 - [ ] Política de privacidade publicada em URL pública
 
 ### Pendências técnicas (da auditoria)
-- [ ] Reset de senha — criar tela de nova senha (updateUser)
-- [ ] Deep link — chamar exchangeCodeForSession no handler (App.tsx:144)
-- [ ] RLS policies — versionar no código (migrations)
+- [x] Reset de senha — tela de nova senha (updateUser) — PR #13
+- [x] Deep link — exchangeCodeForSession no handler + flowType pkce — PR #13
+- [x] RLS policies — versionadas em migrations/0008 — PR #13
 - [ ] Auth sem internet — adicionar mensagem de erro
 - [ ] expo-asset peer dep — verificar se causa crash em produção
 - [ ] i18n — Auth.tsx e GlobalScreen.tsx (PT hardcoded)
 - [ ] Acessibilidade — accessibilityLabel nos elementos principais
+
+> Nota PR #13: o reset de senha precisa de teste em build/device real (depende
+> da Redirect URL reflexo://auth-callback no dashboard Supabase e do fluxo PKCE
+> no mesmo aparelho). RLS já estava ativa no dashboard; a migration 0008 apenas
+> versiona/documenta as policies para reprodução em ambiente limpo.
