@@ -629,7 +629,31 @@
     "energyReward": "+1 ENERGY",
     "energyEarned": "ENERGY EARNED",
     "ticketReward": "GOLDEN TICKET",
-    "ticketEarned": "TICKET EARNED"
+    "ticketEarned": "TICKET EARNED",
+    "missionLabels": {
+      "week_sessions":      "Play 3 sessions this week",
+      "week_5_sessions":    "Play 5 sessions this week",
+      "streak_3":           "Play 3 days in a row",
+      "streak_7":           "Complete a full week",
+      "streak_today":       "Keep your streak — train today",
+      "two_modes_today":    "Play 2 different modes today",
+      "improve_partida":    "Beat your record in Reaction Mode",
+      "beat_baseline":      "Beat your baseline in Reaction Mode",
+      "sub300":             "Hit under 300ms in Reaction Mode",
+      "top_accuracy":       "Hit 100% accuracy in Target Mode",
+      "no_commission":      "Play Sequence with zero NoGo errors",
+      "next_milestone":     "Reach your next milestone in Reaction Mode",
+      "try_alvo":           "Try Target Mode",
+      "try_sequencia":      "Try Sequence Mode",
+      "try_radar":          "Try Radar Mode",
+      "try_all_modes":      "Play all 4 modes this week",
+      "seq_5_sessions":     "Play 5 Sequence sessions",
+      "alvo_5_sessions":    "Play 5 Target sessions",
+      "radar_5_sessions":   "Play 5 Radar sessions",
+      "radar_100_accuracy": "Hit 100% accuracy in a Radar session",
+      "radar_streak":       "Improve your score in 3 consecutive Radar sessions this week",
+      "morning_session":    "Train before 9am"
+    }
   },
 
   "tutorial": {

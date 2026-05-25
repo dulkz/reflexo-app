@@ -629,7 +629,31 @@
     "energyReward": "+1 ENERGIA",
     "energyEarned": "ENERGIA GANHA",
     "ticketReward": "TICKET DOURADO",
-    "ticketEarned": "TICKET GANHO"
+    "ticketEarned": "TICKET GANHO",
+    "missionLabels": {
+      "week_sessions":      "Jogue 3 sessões esta semana",
+      "week_5_sessions":    "Jogue 5 sessões esta semana",
+      "streak_3":           "Jogue 3 dias seguidos",
+      "streak_7":           "Complete uma semana inteira",
+      "streak_today":       "Mantenha a sequência — treine hoje",
+      "two_modes_today":    "Jogue 2 modos diferentes hoje",
+      "improve_partida":    "Melhore seu recorde no Modo Partida",
+      "beat_baseline":      "Supere seu baseline no Partida",
+      "sub300":             "Atinja menos de 300ms no Modo Partida",
+      "top_accuracy":       "Acerte 100% no Modo Alvo",
+      "no_commission":      "Jogue Sequência sem erros de NoGo",
+      "next_milestone":     "Alcance o próximo marco no Partida",
+      "try_alvo":           "Experimente o Modo Alvo",
+      "try_sequencia":      "Experimente o Modo Sequência",
+      "try_radar":          "Experimente o Modo Radar",
+      "try_all_modes":      "Jogue os 4 modos esta semana",
+      "seq_5_sessions":     "Jogue 5 sessões de Sequência",
+      "alvo_5_sessions":    "Jogue 5 sessões de Alvo",
+      "radar_5_sessions":   "Jogue 5 sessões de Radar",
+      "radar_100_accuracy": "Acerte 100% em uma sessão de Radar",
+      "radar_streak":       "Melhore o score em 3 Radares consecutivos esta semana",
+      "morning_session":    "Treine antes das 9h"
+    }
   },
 
   "tutorial": {

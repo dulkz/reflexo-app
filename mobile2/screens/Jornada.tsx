@@ -306,7 +306,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                 <SvgXml xml={m.icon} width={22} height={22} />
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={[styles.missionRowLabel, m.done && { color: '#10b981' }]} numberOfLines={1}>
-                    {m.label}
+                    {t('missoes.missionLabels.' + m.id, { defaultValue: m.label })}
                   </Text>
                   {m.target > 1 && (
                     <View style={styles.missionMiniTrack}>
@@ -354,7 +354,7 @@ export default function Jornada({ sessions, userProfile, onOpenTriage, onUpdateP
                 <SvgXml xml={m.icon} width={22} height={22} />
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={[styles.missionRowLabel, m.done && { color: '#10b981' }]} numberOfLines={1}>
-                    {m.label}
+                    {t('missoes.missionLabels.' + m.id, { defaultValue: m.label })}
                   </Text>
                   <View style={styles.missionMiniTrack}>
                     <View style={[
