@@ -86,6 +86,8 @@ Branch finalizada e estável.
 - PR #14 (d925120): auth sem internet — mensagem de erro amigavel
 - PR #15 (69d5afa): i18n Auth e GlobalScreen — secoes auth e global nos locales
 - PR #16 (7a77cf3): expo-asset peer dep corrigido + acessibilidade basica (9 elementos)
+- PR #17 (802f706): i18n NewPassword.tsx e GlobalScreen.viewProfile
+- PR #18 (f2a3590): fix username salvo apos confirmacao de email via AsyncStorage
 
 ---
 
