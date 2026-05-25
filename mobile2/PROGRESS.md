@@ -73,7 +73,7 @@ Branch finalizada e estável.
 ---
 
 ## Pós-Fase 2 — melhorias incrementais (branch: main)
-**Última atualização: 2026-05-24**
+**Última atualização: 2026-05-25**
 
 - PR #2 (5bf0fb2): accuracy real populada no sync (alvo, radar, sequência)
 - PR #3 (ecff601): card de perfil público no ranking (modal com posição, tempo médio, partidas)
@@ -89,6 +89,13 @@ Branch finalizada e estável.
 - PR #17 (802f706): i18n NewPassword.tsx e GlobalScreen.viewProfile
 - PR #18 (f2a3590): fix username salvo apos confirmacao de email via AsyncStorage
 - PR #19 (4437aa4): i18n logout e nomes de arquetipos em EN (perfil em formacao adiado)
+- PR #20 (980bb7d): i18n missões semanais — 22 chaves missionLabels em en/pt
+- PR #21 (715a6a8): i18n conquistas — 44 chaves achievementData (name/title/description) em en/pt
+- PR #22 (e7f28ce): i18n avatares — 17 chaves avatarNames em en/pt
+
+### Pendências i18n registradas para futuro
+- progress() das conquistas (strings dinâmicas, requer mudança de interface)
+- ambitions.ts name/description e milestone labels (muitos consumidores)
 
 ---
 
