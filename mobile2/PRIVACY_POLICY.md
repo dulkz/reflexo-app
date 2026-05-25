@@ -25,7 +25,7 @@
 
 ## Exclusão de dados
 Para solicitar exclusão dos seus dados, entre em contato via:
-[PREENCHER EMAIL DE CONTATO]
+reflexoapp@gmail.com
 
 ## Contato
-[PREENCHER EMAIL DE CONTATO]
+reflexoapp@gmail.com
