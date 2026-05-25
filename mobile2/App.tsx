@@ -126,6 +126,24 @@ function RootGate() {
       // Migração one-shot: envia sessões locais ao Supabase no primeiro login
       if (event === 'SIGNED_IN' && newSession?.user?.id) {
         migrateLocalSessions(newSession.user.id); // sem await — fire-and-forget
+        // Aplica username pendente (salvo no cadastro antes da confirmação de email).
+        // Fire-and-forget + try/catch para não travar o fluxo de login.
+        (async () => {
+          try {
+            const pendingUsername = await AsyncStorage.getItem('reflexo_pending_username');
+            if (pendingUsername && newSession?.user?.id) {
+              const { error } = await supabase
+                .from('profiles')
+                .update({ username: pendingUsername })
+                .eq('id', newSession.user.id);
+              if (!error) {
+                await AsyncStorage.removeItem('reflexo_pending_username');
+              }
+            }
+          } catch (e) {
+            console.warn('[Auth] apply pending username error:', e);
+          }
+        })();
       }
       // Logout: zera o estado guest em memória → RootGate volta ao AuthScreen
       if (event === 'SIGNED_OUT') {
