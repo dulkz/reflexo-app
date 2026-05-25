@@ -215,54 +215,54 @@ export default function GlobalScreen({ isGuest }: GlobalScreenProps) {
     <>
       {renderProfileModal()}
       <View style={styles.container}>
-      {/* Header */}
-      <Text style={styles.screenTitle}>GLOBAL</Text>
+        {/* Header */}
+        <Text style={styles.screenTitle}>GLOBAL</Text>
 
-      {/* Seletor de modo */}
-      <View style={styles.modeSelectorRow}>
-        {MODES.map(m => (
-          <TouchableOpacity
-            key={m.key}
-            style={[styles.modeChip, mode === m.key && styles.modeChipActive]}
-            onPress={() => setMode(m.key)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.modeChipText, mode === m.key && styles.modeChipTextActive]}>
-              {m.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Lista */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#00E5CC" size="large" />
-        </View>
-      ) : (
-        <FlatList
-          data={ranking}
-          keyExtractor={item => item.user_id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#00E5CC"
-              colors={['#00E5CC']}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                Nenhum resultado ainda.{'\n'}Jogue 3 partidas para aparecer!
+        {/* Seletor de modo */}
+        <View style={styles.modeSelectorRow}>
+          {MODES.map(m => (
+            <TouchableOpacity
+              key={m.key}
+              style={[styles.modeChip, mode === m.key && styles.modeChipActive]}
+              onPress={() => setMode(m.key)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.modeChipText, mode === m.key && styles.modeChipTextActive]}>
+                {m.label}
               </Text>
-            </View>
-          }
-        />
-      )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Lista */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color="#00E5CC" size="large" />
+          </View>
+        ) : (
+          <FlatList
+            data={ranking}
+            keyExtractor={item => item.user_id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#00E5CC"
+                colors={['#00E5CC']}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  Nenhum resultado ainda.{'\n'}Jogue 3 partidas para aparecer!
+                </Text>
+              </View>
+            }
+          />
+        )}
       </View>
     </>
   );
