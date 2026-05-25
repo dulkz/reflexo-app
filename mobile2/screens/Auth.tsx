@@ -71,12 +71,10 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
         }
         if (error) { Alert.alert(t('auth.errorSignup'), error.message); return }
         if (data.user) {
-          // Trigger já criou o perfil — atualiza só o username se o usuário digitou um diferente
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ username: username.trim() })
-            .eq('id', data.user.id)
-          if (profileError) console.warn('[Auth] update username error:', profileError.message)
+          // Salva o username para aplicar após a confirmação de email (no SIGNED_IN do App.tsx).
+          // UPDATE direto aqui não funciona: signUp com confirmação de email não retorna
+          // sessão, logo não há usuário autenticado para satisfazer a RLS de profiles.
+          await AsyncStorage.setItem('reflexo_pending_username', username.trim())
         }
         Alert.alert(
           t('auth.accountCreated'),
