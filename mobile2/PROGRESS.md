@@ -84,6 +84,7 @@ Branch finalizada e estável.
 - PR #12 (d2db96f): preparacao iOS — bundleIdentifier, permissions, eas profiles, expo-localization fix
 - PR #13 (26b6dc3): pendencias auditoria — RLS versionada, deep link exchangeCodeForSession, tela de reset de senha
 - PR #14 (d925120): auth sem internet — mensagem de erro amigavel
+- PR #15 (69d5afa): i18n Auth e GlobalScreen — secoes auth e global nos locales
 
 ---
 
@@ -172,7 +173,7 @@ Branch finalizada e estável.
 - [x] RLS policies — versionadas em migrations/0008 — PR #13
 - [x] Auth sem internet — mensagem de erro amigavel — PR #14
 - [ ] expo-asset peer dep — verificar se causa crash em produção
-- [ ] i18n — Auth.tsx e GlobalScreen.tsx (PT hardcoded)
+- [x] i18n — Auth.tsx e GlobalScreen.tsx (PT hardcoded) — PR #15
 - [ ] Acessibilidade — accessibilityLabel nos elementos principais
 
 > Nota PR #13: o reset de senha precisa de teste em build/device real (depende
