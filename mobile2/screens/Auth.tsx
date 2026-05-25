@@ -12,6 +12,10 @@ type Mode = 'login' | 'signup' | 'reset'
 
 type Props = { onContinueAsGuest?: () => void }
 
+// Detecta erros de rede (sem internet) nas respostas/exceções do Supabase
+const isNetworkError = (msg: string) =>
+  /fetch failed|network request failed|failed to fetch|networkerror/i.test(msg)
+
 export default function AuthScreen({ onContinueAsGuest }: Props) {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
@@ -27,6 +31,10 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: getAuthRedirectUrl(),
         })
+        if (error && isNetworkError(error.message)) {
+          Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.')
+          return
+        }
         if (error) {
           Alert.alert('Erro', error.message)
         } else {
@@ -40,6 +48,10 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
 
       if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error && isNetworkError(error.message)) {
+          Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.')
+          return
+        }
         if (error) Alert.alert('Erro ao entrar', error.message)
       } else {
         if (!username.trim()) {
@@ -51,6 +63,10 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
           password,
           options: { emailRedirectTo: getAuthRedirectUrl() },
         })
+        if (error && isNetworkError(error.message)) {
+          Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.')
+          return
+        }
         if (error) { Alert.alert('Erro ao cadastrar', error.message); return }
         if (data.user) {
           // Trigger já criou o perfil — atualiza só o username se o usuário digitou um diferente
@@ -65,6 +81,13 @@ export default function AuthScreen({ onContinueAsGuest }: Props) {
           'Verifique seu email para confirmar o cadastro antes de fazer login.',
           [{ text: 'OK' }]
         )
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (isNetworkError(msg)) {
+        Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.')
+      } else {
+        Alert.alert('Erro', 'Algo deu errado. Tente novamente.')
       }
     } finally {
       setLoading(false)
