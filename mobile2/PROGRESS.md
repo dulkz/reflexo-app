@@ -88,6 +88,7 @@ Branch finalizada e estável.
 - PR #16 (7a77cf3): expo-asset peer dep corrigido + acessibilidade basica (9 elementos)
 - PR #17 (802f706): i18n NewPassword.tsx e GlobalScreen.viewProfile
 - PR #18 (f2a3590): fix username salvo apos confirmacao de email via AsyncStorage
+- PR #19 (4437aa4): i18n logout e nomes de arquetipos em EN (perfil em formacao adiado)
 
 ---
 
