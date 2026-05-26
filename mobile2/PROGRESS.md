@@ -97,6 +97,11 @@ Branch finalizada e estável.
 - Descrições da loja escritas: PT e EN (curta 80 chars + longa 4000 chars)
 - Apple Developer Account: pagamento confirmado, ativação em processamento (até 48h)
 - Google Play Console: aguardando aprovação de identidade
+- App Store Connect: app criado como "Reflexo: Train Your Brain" (Bundle ID: com.dulks.reflexo)
+- App Store Connect: descrição PT/EN preenchida, palavras-chave, texto promocional, URL suporte, copyright, conta de revisão configurada
+- Apple Developer: Bundle ID com.dulks.reflexo registrado, Team ID: 3Q4F2AZHDM
+- Screenshots iOS: pendente (aguardando imagens em resolução original — mínimo 1242x2688px)
+- LAUNCH_INFO.md: atualizar appleId, ascAppId e appleTeamId
 
 ### Pendências i18n registradas para futuro
 - milestone labels das ambições e progress() das conquistas (strings dinâmicas com valores interpolados — requer mudança de interface Achievement)
