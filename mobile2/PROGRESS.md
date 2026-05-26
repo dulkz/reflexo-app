@@ -202,3 +202,30 @@ Branch finalizada e estável.
 > da Redirect URL reflexo://auth-callback no dashboard Supabase e do fluxo PKCE
 > no mesmo aparelho). RLS já estava ativa no dashboard; a migration 0008 apenas
 > versiona/documenta as policies para reprodução em ambiente limpo.
+
+---
+
+## Sessão 25/05/2025 — App Store Connect configurado
+
+### Concluído
+- Privacidade do app: e-mail, ID de usuário, conteúdos de jogos configurados
+- URL política de privacidade: https://dulkz.github.io/reflexo-app/mobile2/PRIVACY_POLICY
+- Nome PT: "Reflexo: Treine seu cérebro"
+- Subtítulo: "Missions. Habits. Evolution."
+- Categoria: Saúde e fitness (primária) + Jogos (secundária)
+- Preço: Grátis, 175 países
+- Screenshots PT: 6 imagens iPhone 6.5" carregadas
+- Conta de revisão: reflexoapp@gmail.com / Testreflex12321
+- Dispositivo médico regulamentado: declarado
+- Ícone confirmado: 1024x1024px
+
+### Bloqueador atual
+- Build iOS de produção pendente
+- Login Apple via EAS rejeitou senha — usar App-Specific Password amanhã
+- Gerar em: appleid.apple.com → Segurança → Senhas para apps → "EAS Build"
+
+### Próximos passos
+1. Criar App-Specific Password e rodar: eas build --platform ios --profile production
+2. Associar build à versão 1.0 no App Store Connect
+3. Submeter para revisão Apple
+4. Aguardar Google Play e publicar AAB
