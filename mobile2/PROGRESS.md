@@ -205,7 +205,7 @@ Branch finalizada e estável.
 
 ---
 
-## Sessão 25/05/2025 — App Store Connect configurado
+## Sessão 25/05/2026 — App Store Connect configurado
 
 ### Concluído
 - Privacidade do app: e-mail, ID de usuário, conteúdos de jogos configurados
