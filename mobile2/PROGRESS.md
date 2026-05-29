@@ -229,3 +229,9 @@ Branch finalizada e estável.
 2. Associar build à versão 1.0 no App Store Connect
 3. Submeter para revisão Apple
 4. Aguardar Google Play e publicar AAB
+
+---
+
+## Sessão 28/05/2026 — AUDITORIA 02 pré-lançamento
+
+- AUDITORIA_02_PRE_LAUNCH.md: todos os 7 bloqueadores críticos (C1–C7) da auditoria de 25/05 resolvidos; M1/M2/M4/M5/M6 fechados; M3/M8/M9/M10 ainda abertos como qualidade de produto. Pendências para submit são operacionais: App-Specific Password, build iOS prod, AAB Android, Google Play Console + service-account, screenshots iOS EN, decidir IAP simulado (esconder Premium Card recomendado).
