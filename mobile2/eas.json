@@ -15,7 +15,9 @@
       "android": {
         "buildType": "app-bundle"
       },
-      "ios": {}
+      "ios": {
+        "autoIncrement": true
+      }
     }
   },
   "submit": {
