@@ -154,7 +154,19 @@ export default function Home({
       <View style={[styles.header, { paddingTop: TOP + 12 }]}>
         <View style={styles.headerLeft}>
           <Text style={styles.reflexoSmall}>{t('home.appName')}</Text>
-          <Text style={styles.greeting}>{t('home.greeting', { name: userProfile.name || 'Atleta' })}</Text>
+          <View style={styles.greetingRow}>
+            <Text style={styles.greeting}>{t('home.greeting', { name: userProfile.name || 'Atleta' })}</Text>
+            <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
+              {(() => {
+                const av = (userProfile.selectedAvatar ?? 'initial') !== 'initial'
+                  ? AVATARS.find(a => a.id === userProfile.selectedAvatar)
+                  : null;
+                return av?.icon
+                  ? <SvgXml xml={av.icon} width={42} height={42} />
+                  : <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>;
+              })()}
+            </TouchableOpacity>
+          </View>
           {equippedAchievement && (() => {
             const color = RARITY_CONFIG[equippedAchievement.rarity].cor;
             return (
@@ -195,16 +207,6 @@ export default function Home({
               <Text style={styles.langFlag}>🇺🇸</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.avatar} onPress={onGoToPerfil} activeOpacity={0.8}>
-            {(() => {
-              const av = (userProfile.selectedAvatar ?? 'initial') !== 'initial'
-                ? AVATARS.find(a => a.id === userProfile.selectedAvatar)
-                : null;
-              return av?.icon
-                ? <SvgXml xml={av.icon} width={42} height={42} />
-                : <Text style={styles.avatarLetter}>{(userProfile.name || 'Atleta')[0].toUpperCase()}</Text>;
-            })()}
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -449,6 +451,11 @@ const styles = StyleSheet.create({
   },
   headerLeft: { gap: 2, flex: 1 },
   headerRight: { alignItems: 'flex-end', gap: 6 },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   reflexoSmall: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 4 },
   greeting: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
