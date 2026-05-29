@@ -260,3 +260,14 @@ Branch finalizada e estável.
 - CHECKLIST_LANCAMENTO.md criado — referência pré/atual/pós lançamento
 - Push automático configurado em .claude/settings.local.json
 - Estado final: iOS em revisão Apple, Android aguardando aprovação Google Play
+
+---
+
+## Sessão 29/05/2026 — Google Play: Teste Fechado Alpha enviado
+
+- Declarações de conteúdo resolvidas: ID de publicidade (não usa), FOREGROUND_SERVICE_MEDIA_PLAYBACK removida (expo-audio não utilizado)
+- Segurança dos dados concluída: e-mail, IDs de utilizador, URL de eliminação de conta e dados configuradas
+- versionCode incrementado para 3 (EAS remote)
+- AAB versionCode 3 gerado (commit 2e9912f) e carregado no Google Play
+- Lançamento "1.0.0 - Teste Fechado Alpha" enviado para revisão — faixa Alpha, Brasil
+- Estado: aguardando aprovação Google → após aprovação, partilhar link com 12 testadores → aguardar 14 dias → candidatar-se à produção
