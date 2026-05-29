@@ -50,12 +50,20 @@
 - Service Account Key: ./google-service-account.json (criar após conta)
 
 ### Apple App Store
-- Status: pendente ($99/ano)
+- Status: novo build v2 gerado com correções de paywall — aguardando submit
 - Bundle ID: com.dulks.reflexo
 - Link cadastro: https://developer.apple.com/programs/enroll/
-- appleId: PREENCHER após conta
-- ascAppId: PREENCHER após conta
-- appleTeamId: PREENCHER após conta
+- appleId: bbgsbaumer@gmail.com
+- ascAppId: 6773148534
+- appleTeamId: 3Q4F2AZHDM
+- ASC API Key ID: 5G47HZC874
+- Distribution Certificate Serial: 5E291CB168A5A59959DAF51CDF28C592
+- Distribution Certificate Expiration: 2027-05-28
+- Provisioning Profile ID: 7SNZKNBUJJ
+- Build submetido (v1, anterior às correções paywall): cf878882-61e7-465a-be50-144e3f470a35
+- Build final (v2, com correções paywall): f21ffc47-2172-447f-9526-be60a2f1ca66
+- IPA: https://expo.dev/artifacts/eas/vU7XA8SPeCh5v9cxseKRuA.ipa
+- URL submit: https://expo.dev/accounts/dulkz/projects/reflexo-app/submissions/8a50c0fa-8cb0-4eb0-aa25-30d47c0ac475
 
 ## Builds
 
