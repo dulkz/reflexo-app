@@ -50,6 +50,7 @@ import { UserProfile, defaultUserProfile } from './types/user';
 import { loadUserProfile, saveUserProfile } from './utils/userProfile';
 import { getAmbition } from './utils/ambition';
 import { preloadSounds, playSfx } from './utils/sfx';
+import { MONETIZATION_ENABLED } from './config/monetization';
 import { calculateStreak } from './utils/streak';
 import { ACHIEVEMENTS, Achievement, RARITY_CONFIG, RarityKey } from './config/achievements';
 import { buildUserStats } from './config/archetypes';
@@ -514,17 +515,18 @@ function AppInner({ isGuest }: { isGuest: boolean }) {
     // Premium → energia infinita; período de graça → grátis. Em ambos não consome.
     const unlimited = hasInfiniteEnergy() || isInGracePeriod(installDate);
 
-    if (unlimited || energyData.counts[mode] > 0) {
-      if (!unlimited) {
+    if (unlimited || energyData.counts[mode] > 0 || !MONETIZATION_ENABLED) {
+      if (!unlimited && MONETIZATION_ENABLED) {
         const updated = await consumeEnergy(mode, energyData);
         setEnergyData(updated);
       }
       setActiveTab('jogar');
       setGameScreen(mode as GameScreen);
-    } else {
-      // Sem energia — abre tela de paywall
+    } else if (MONETIZATION_ENABLED) {
+      // Sem energia — abre tela de paywall (só quando monetização está ativa)
       setSemEnergiaMode(mode);
     }
+    // MONETIZATION_ENABLED=false → não abre paywall; energia vira no-op
   }, [energyData, installDate, modeUnlocks]);
 
   // Callback da SemEnergia quando o usuário compra energia:

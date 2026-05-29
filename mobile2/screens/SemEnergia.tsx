@@ -137,60 +137,64 @@ export default function SemEnergia({ mode, energyData, onBack, onEnergyAdded }: 
           <View style={styles.dividerLine} />
         </View>
 
-        {/* ── Pacotes de energia ── */}
-        {ENERGY_PACKAGES.map(pkg => (
-          <TouchableOpacity
-            key={pkg.id}
-            style={styles.packageCard}
-            onPress={() => handleBuyPackage(pkg.energies, pkg.label)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.packageLeft}>
-              <Text style={styles.packageIcon}>⚡</Text>
-              <View>
-                <Text style={styles.packageLabel}>{pkg.label}</Text>
-                <Text style={styles.packageDesc}>
-                  {t('energy.perModeDesc', { energies: pkg.energies })}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.packageRight}>
-              <Text style={styles.packagePrice}>{pkg.price}</Text>
-              <Text style={styles.packageOnce}>{t('energy.once')}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {MONETIZATION_ENABLED && (
+          <>
+            {/* ── Pacotes de energia ── */}
+            {ENERGY_PACKAGES.map(pkg => (
+              <TouchableOpacity
+                key={pkg.id}
+                style={styles.packageCard}
+                onPress={() => handleBuyPackage(pkg.energies, pkg.label)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.packageLeft}>
+                  <Text style={styles.packageIcon}>⚡</Text>
+                  <View>
+                    <Text style={styles.packageLabel}>{pkg.label}</Text>
+                    <Text style={styles.packageDesc}>
+                      {t('energy.perModeDesc', { energies: pkg.energies })}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.packageRight}>
+                  <Text style={styles.packagePrice}>{pkg.price}</Text>
+                  <Text style={styles.packageOnce}>{t('energy.once')}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
 
-        {/* ── Premium ── */}
-        <View style={styles.premiumCard}>
-          <View style={styles.premiumHeader}>
-            <Text style={styles.premiumCrown}>👑</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.premiumTitle}>{t('energy.premium')}</Text>
-              <Text style={styles.premiumDesc}>{t('energy.premiumDesc')}</Text>
-            </View>
-            <View style={styles.bestValueBadge}>
-              <Text style={styles.bestValueText}>{t('energy.best')}</Text>
-            </View>
-          </View>
-
-          {SUBSCRIPTIONS.map(sub => (
-            <TouchableOpacity
-              key={sub.id}
-              style={styles.subOption}
-              onPress={() => handleSubscribe(sub.label, sub.price)}
-              activeOpacity={0.8}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.subLabel}>{sub.label}</Text>
-                {sub.perMonth && (
-                  <Text style={styles.subPerMonth}>{sub.perMonth}</Text>
-                )}
+            {/* ── Premium ── */}
+            <View style={styles.premiumCard}>
+              <View style={styles.premiumHeader}>
+                <Text style={styles.premiumCrown}>👑</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.premiumTitle}>{t('energy.premium')}</Text>
+                  <Text style={styles.premiumDesc}>{t('energy.premiumDesc')}</Text>
+                </View>
+                <View style={styles.bestValueBadge}>
+                  <Text style={styles.bestValueText}>{t('energy.best')}</Text>
+                </View>
               </View>
-              <Text style={styles.subPrice}>{sub.price}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+
+              {SUBSCRIPTIONS.map(sub => (
+                <TouchableOpacity
+                  key={sub.id}
+                  style={styles.subOption}
+                  onPress={() => handleSubscribe(sub.label, sub.price)}
+                  activeOpacity={0.8}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.subLabel}>{sub.label}</Text>
+                    {sub.perMonth && (
+                      <Text style={styles.subPerMonth}>{sub.perMonth}</Text>
+                    )}
+                  </View>
+                  <Text style={styles.subPrice}>{sub.price}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
 
         {/* ── Rodapé modo teste ── */}
         {!MONETIZATION_ENABLED && (
