@@ -69,6 +69,8 @@
 
 ### Android APK (preview)
 - Último build: https://expo.dev/artifacts/eas/rWzKBbW52c94Yr13tYbCL5.apk
+- APK preview final: https://expo.dev/artifacts/eas/iiMmHJ3yHW3G4ugXzC7xXY.apk
+- Build Android preview ID: 8c26f425-7506-4bfa-a293-631d7689f01a
 - Comando: eas build --platform android --profile preview
 
 ### Android AAB (produção — Play Store)

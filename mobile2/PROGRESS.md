@@ -249,3 +249,14 @@ Branch finalizada e estável.
 - Status: Aguardando revisão (até 48h)
 - Screenshots iPad geradas e carregadas (PT + EN, 2064x2752px)
 - Todos os bloqueadores resolvidos antes do submit
+
+---
+
+## Sessão 28/05/2026 — Encerramento
+
+- APK Android preview gerado: https://expo.dev/artifacts/eas/iiMmHJ3yHW3G4ugXzC7xXY.apk
+- Build ID: 8c26f425-7506-4bfa-a293-631d7689f01a
+- GROWTH_STRATEGY.md criado (475 linhas) — posicionamento, ASO, aquisição, retenção, roadmap, impacto, métricas, aprendizados
+- CHECKLIST_LANCAMENTO.md criado — referência pré/atual/pós lançamento
+- Push automático configurado em .claude/settings.local.json
+- Estado final: iOS em revisão Apple, Android aguardando aprovação Google Play
