@@ -239,3 +239,13 @@ Branch finalizada e estável.
 - Código de monetização preservado intacto para uso em projetos futuros
 - fix: paywall e UI de IAP desativados (commit 3bfb60c) — App.tsx + SemEnergia.tsx
 - Novo build iOS sendo gerado com as correções antes do submit final
+
+---
+
+## Sessão 28/05/2026 — SUBMETIDO PARA REVISÃO APPLE 🚀
+
+- App submetido para revisão Apple às 22:57 (horário de Brasília)
+- Build: 1.0.0 (2) — ID: 1712a298-648b-4296-9c57-1b69d9194289
+- Status: Aguardando revisão (até 48h)
+- Screenshots iPad geradas e carregadas (PT + EN, 2064x2752px)
+- Todos os bloqueadores resolvidos antes do submit
