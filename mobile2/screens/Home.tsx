@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   greetingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 10,
   },
   reflexoSmall: { fontSize: 11, fontWeight: '700', color: '#3a4a6b', letterSpacing: 4 },
   greeting: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
